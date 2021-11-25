@@ -1,0 +1,9 @@
+*.swp
+
+*.pyc
+*.ipynb_checkpoints/
+*.ipynb
+**/__pycache__/
+
+.devcontainer/
+.vscode/
