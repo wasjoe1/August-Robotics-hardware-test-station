@@ -11,32 +11,45 @@
 
 # set -o xtrace 
 
+BASE_NAME=$(basename $0)
+
 usage() {
-    echo -e "Usage: $0 [-h] [-r/k] [-t/d]"
+    echo -e "Usage: ${BASE_NAME} [-h] [-r/k] [-t/d]"
     echo -e "-h\t show this Help message"
     echo -e "-r\t start rosbag Recording immediately"
     echo -e "-k\t sKip rosbag recording"
     echo -e "-t\t Tar the logs to home folder only"
     echo -e "-d\t tar the logs to home folder then Delete everything"
-    echo -e "WARNING: use these shortcuts with care"
-    exit 1;
+    # echo -e "WARNING: use these shortcuts with care"
 }
 
 while getopts ":rktdh" opt; do
   case ${opt} in
     r ) 
-        [ ! -z ${START_RECORDING+x} ] && echo -e "Options -r and -k is mutually exclusive" && exit 1
+        if [ ! -z ${START_RECORDING+x} ]; then
+            echo -e "Options -r and -k is mutually exclusive" >&2
+            usage && exit 1
+        fi
         START_RECORDING=0;;
     k ) 
-        [ ! -z ${START_RECORDING+x} ] && echo -e "Options -r and -k is mutually exclusive" && exit 1
+        if [ ! -z ${START_RECORDING+x} ]; then
+            echo -e "Options -r and -k is mutually exclusive" >&2
+            usage && exit 1
+        fi
         START_RECORDING=1;;
     t )
-        [ ! -z ${TAR_LOGS+x} ] && echo -e "Options -t and -d is mutually exclusive" && exit 1
+        if [ ! -z ${TAR_LOGS+x} ]; then
+            echo -e "Options -t and -d is mutually exclusive" >&2
+            usage && exit 1
+        fi
         TAR_LOGS=0;TRASH_ROS_FOLDER=1;;
     d ) 
-        [ ! -z ${TAR_LOGS+x} ] && echo -e "Options -t and -d is mutually exclusive" && exit 1
+        if [ ! -z ${TAR_LOGS+x} ]; then
+            echo -e "Options -t and -d is mutually exclusive" >&2
+            usage && exit 1
+        fi
         TAR_LOGS=0;TRASH_ROS_FOLDER=0;;
-    [h?] ) usage;;
+    [h?] ) usage && exit;;
   esac
 done
 TEMP_LOG=$(mktemp /tmp/rosbag-recorder.XXXXXXXXX.log)
@@ -62,7 +75,7 @@ DEVICE_NAME=${DEVICE_NAME:-LIONEL}
 
 # Prompt if user wants to start recording
 if [ -z ${START_RECORDING+x} ]; then
-    whiptail --yesno "Current device: ${DEVICE_NAME}\nStart rosbag recording now?" 8 78 --defaultno --title ${TUI_TITLE}
+    whiptail --yesno "Current device: ${DEVICE_NAME}\nStart rosbag recording now?" 8 78 --defaultno --title "${TUI_TITLE}"
     START_RECORDING=$?
 fi
 
@@ -76,7 +89,7 @@ if [ ${START_RECORDING} -eq 0 ]; then
     # Refresh the tui until user press "stop"
     STOP_RECORDING=1
     while [ ${STOP_RECORDING} -ne 0 ]; do
-        whiptail --yesno "Current device: ${DEVICE_NAME}\nRosbag is now working in the background...\nPress *Stop* when you are done." 8 78 --defaultno --yes-button "Stop" --no-button "Continue" --title ${TUI_TITLE}
+        whiptail --yesno "Current device: ${DEVICE_NAME}\nRosbag is now working in the background...\nPress *Stop* when you are done." 8 78 --defaultno --yes-button "Stop" --no-button "Continue" --title "${TUI_TITLE}"
         STOP_RECORDING=$?
     done
 
@@ -94,7 +107,7 @@ fi
 
 # Prompt if user wants to packup the logs
 if [ -z ${TAR_LOGS+x} ]; then
-    whiptail --yesno "Rosbag is now *stopped*.\nDo you want me to pack all the logs?" 10 78 --defaultno --title ${TUI_TITLE}
+    whiptail --yesno "Rosbag is now *stopped*.\nDo you want me to pack all the logs?" 10 78 --defaultno --title "${TUI_TITLE}"
     TAR_LOGS=$?
 fi
 
@@ -111,13 +124,16 @@ fi
 
 # Prompt if user wants to cleanup
 if [ -z ${TRASH_ROS_FOLDER+x} ]; then
-    whiptail --yesno "Do you want me to trash EVERYTHING in ~/.ros?" 10 78 --defaultno --title ${TUI_TITLE}
+    whiptail --yesno "Do you want me to trash EVERYTHING in ~/.ros?" 10 78 --defaultno --title "${TUI_TITLE}"
     TRASH_ROS_FOLDER=$?
 fi
 
 if [ ${TRASH_ROS_FOLDER} -eq 0 ]; then
     cd ${HOME} && gio trash ~/.ros/*
-    [ $? -eq 0 ] && echo -e "Cleanup successful! If you want to recue the logs,\nfind it from the trash"
+    [ $? -eq 0 ] && echo -e "Cleanup successful! If you want to recue the logs, you may find it from the trash."
 fi
 
-echo "Done"
+echo "Script completed successfully."
+
+# Future use: dump the django database
+# ./manage.py dumpdata --indent 2 > db.json

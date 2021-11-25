@@ -15,7 +15,7 @@ rosrun rosrun bb_tools dash.py
 
 ## Tools
 
-### dash_v2.sh
+### `dash_v2.py`
 - Displays the current state of the robot on terminal, subscribes to ROS topics.
 - Usage: `rosrun rosrun bb_tools dash_v2.py `
 - Optional web terminal setup:
@@ -30,3 +30,8 @@ rosrun rosrun bb_tools dash.py
   - Preview:
     <img src="pics/tui-1125-preview.gif" alt="drawing" style="width:600px;"/>
     
+### `bag_report.bash`
+- Helper script to record rosbags and optionally pack all logs into a `.tar.gz`
+- Usage: ` ~/catkin_ws/src/augustbot-tools/bb_tools/src/bag_report.bash -h`
+- preview
+  <img src="pics/bag-1125-preview.gif" alt="drawing" style="width:600px;"/>
