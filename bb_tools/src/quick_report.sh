@@ -20,7 +20,7 @@ __base="$(basename ${__file} .sh)"
 __root="$(cd "$(dirname "${__dir}")" && pwd)" # <-- change this as it depends on your app
 
 usage() {
-    echo -e "Usage: ${__base}.sh [-h]"
+    echo -e "Usage: $(basename ${__file}).sh [-h]"
     echo -e "-h\t show this Help message"
     # echo -e "WARNING: use these shortcuts with care"
 }
@@ -46,8 +46,7 @@ BOOTHBOT_DIR="${HOME}/catkin_ws/src/boothbot"
 ( echo "Date: $(date -R)"; echo "Pwd: $(pwd)";
 echo "Device: ${DEVICE_NAME}";)>>$TEMP_REPORT
 
-# pushd $BOOTHBOT_DIR
-pushd ~/aug-robotics/boothbot >/dev/null 2>&1
+pushd $BOOTHBOT_DIR >/dev/null 2>&1
 git rev-parse --is-inside-work-tree
 ( echo "---"; 
 echo "main repo: $(git rev-parse --show-toplevel)";
@@ -83,6 +82,16 @@ git status | sed "s/^/# /g" >>$TEMP_REPORT
 popd
 
 # Open a new editor window, then tar everything
+if [ -z ${EDITOR+x} ]; then
+  if hash nvim; then
+      EDITOR="nvim"
+  elif hash vi; then
+      EDITOR="vi"
+  else
+      >&2 echo "No editor found. Please specify using EDITOR='<command>' $(basename ${__file})"
+      exit 1;
+  fi
+fi
 $EDITOR "$TEMP_REPORT"
 RND_NAME="logs_$(echo $TEMP_REPORT | cut -d'.' -f2)"
 tar --ignore-failed-read -czhf $RND_NAME.tar.gz ~/.ros/log/latest $TEMP_REPORT
