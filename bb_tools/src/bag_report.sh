@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 #############################################
 #
@@ -152,9 +152,10 @@ fi
 
 if [ ${TRASH_ROS_FOLDER} -eq 0 ]; then
     LATEST_DIR="$(readlink -f $HOME/.ros/log/latest)"
-    find .ros/log/ -type d -not -name "$(basename $LATEST_DIR)" -delete
-    find .ros -maxdepth 1 -not -name "log" -delete
-    [ $? -eq 0 ] && echo -e "Cleanup successful! All except the latest logs are gone."
+    find .ros/log/ -mindepth 1 -type d -not -name "$(basename $LATEST_DIR)" -exec rm -rf {} +
+    find .ros/log/ -mindepth 1 -maxdepth 1 -type f -delete
+    find .ros/ -mindepth 1 -maxdepth 1 -not -name "log" -exec rm -rf {} +
+    echo -e "Cleanup finished! All except the latest logs are gone."
 fi
 
 echo "Script completed successfully."
