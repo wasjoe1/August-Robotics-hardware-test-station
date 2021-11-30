@@ -152,9 +152,9 @@ fi
 
 if [ ${TRASH_ROS_FOLDER} -eq 0 ]; then
     LATEST_DIR="$(readlink -f $HOME/.ros/log/latest)"
-    find .ros/log/ -mindepth 1 -type d -not -name "$(basename $LATEST_DIR)" -exec rm -rf {} +
-    find .ros/log/ -mindepth 1 -maxdepth 1 -type f -delete
-    find .ros/ -mindepth 1 -maxdepth 1 -not -name "log" -exec rm -rf {} +
+    find $HOME/.ros/log/ -mindepth 1 -type d -not -name "$(basename $LATEST_DIR)" -exec rm -rf {} +
+    find $HOME/.ros/log/ -mindepth 1 -maxdepth 1 -type f -delete
+    find $HOME/.ros/ -mindepth 1 -maxdepth 1 -not -name "log" -exec rm -rf {} +
     echo -e "Cleanup finished! All except the latest logs are gone."
 fi
 
