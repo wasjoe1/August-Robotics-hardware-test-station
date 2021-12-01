@@ -12,7 +12,7 @@
 set -o errexit
 set -o pipefail
 set -o nounset
-set -o xtrace
+# set -o xtrace
 
 __dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 __file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
@@ -27,7 +27,6 @@ usage() {
     echo -e "Usage: $(basename ${__file}).sh [-h] [-v]"
     echo -e "-h\t show this Help message"
     echo -e "-v\t Verbose output, equiv. to 'set -x'"
-    # echo -e "WARNING: use these shortcuts with care"
 }
 
 while getopts ":hv" opt; do
@@ -54,8 +53,8 @@ trap catch_int SIGHUP SIGINT SIGTERM
 
 # Gethering candidates for cleanup
 ROS_TEMP_DIR="$HOME/.ros"
-CANDIDATE_COUNT="$(find $ROS_TEMP_DIR -type f -name '*.bag.active' -print0 | wc -l)"
-echo "$CANDIDATE_COUNT '.active' bags found"
+# CANDIDATE_COUNT="$(find $ROS_TEMP_DIR -type f -name '*.bag.active' -print0 | wc -l)"
+# echo "$CANDIDATE_COUNT '.active' bags found"
 
 shopt -s globstar
 for file in $ROS_TEMP_DIR/**/*.active; do
@@ -82,7 +81,7 @@ for file in $ROS_TEMP_DIR/**/*.active; do
         read -r -p "This rosbag $(basename ${file:-}) is corrupted, reindex now? [y/N]" response
         case "$response" in
             [yY][eE][sS]|[yY])
-                orig_file="$(echo $file | sed 's/.orig.bag/.bag/g')"
+                orig_file="$(echo $file | sed 's/.bag/.orgi.bag/g')"
                 rosbag reindex $file && rm $orig_file
                 ;;
             *)
