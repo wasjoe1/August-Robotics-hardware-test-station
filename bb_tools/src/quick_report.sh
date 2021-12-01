@@ -66,7 +66,6 @@ BOOTHBOT_DIR="$HOME/catkin_ws/src/boothbot"
 ( echo "Date: $(date -R)"; echo "Pwd: $(pwd)";
 echo "Device: ${DEVICE_NAME}"; )>>$TEMP_REPORT
 
-BOOTHBOT_DIR="$HOME/aug-robotics/boothbot"
 pushd $BOOTHBOT_DIR >/dev/null 2>&1
 git rev-parse --is-inside-work-tree >/dev/null 2>&1 || >&2 echo "Not a git repository: $(pwd)"
 ( echo "---";
