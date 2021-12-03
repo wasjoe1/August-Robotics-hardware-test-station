@@ -1,0 +1,15 @@
+web_addr: localhost:4040
+tunnels:
+  website:
+    addr: 80  # use on large PC of Lionel and PC of GS
+    auth: remote:access # username:passwd when accessing GUI remotely
+    proto: http
+
+  website_cb:
+    addr: 169.254.43.99:80  # use on small PC of Lionel, set `IS_CB` true
+    auth: remote:access # username:passwd when accessing GUI remotely
+    proto: http
+
+  ssh-access:
+    addr: 22
+    proto: tcp

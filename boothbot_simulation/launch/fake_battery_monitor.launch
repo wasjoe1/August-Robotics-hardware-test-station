@@ -1,0 +1,10 @@
+<launch>
+    <arg name="battery_port"      default="/dev/battery_monitor"/> 
+    <arg name="voltage_low_bound" default="24.1"/>
+    <arg name="rate"              default="1.0"/>
+    <node name="battery" pkg="boothbot_simulation" type="fake_battery_monitor.py" output="screen">
+      <param name="voltage_port"    value="$(arg battery_port)"/>
+      <param name="voltage_warning" value="$(arg voltage_low_bound)"/>
+      <param name="rate"            value="$(arg rate)"/>
+    </node>
+</launch>

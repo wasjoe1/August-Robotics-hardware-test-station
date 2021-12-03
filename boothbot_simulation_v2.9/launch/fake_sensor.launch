@@ -1,0 +1,8 @@
+<launch>
+	<node pkg="boothbot_simulation" type="fake_sensor_node.py" respawn="false" name="fake_sensor" output="screen">
+		<param name="lidar_topic_name" value="scan" />
+		<rosparam param="sonar_topic_list">["f_01","f_02","f_03"]</rosparam>
+		<rosparam param="sonar_frame_list">["f_01","f_02","f_03"]</rosparam>
+		<param name="lidar_frame" value="lidar" />
+	</node>
+</launch>

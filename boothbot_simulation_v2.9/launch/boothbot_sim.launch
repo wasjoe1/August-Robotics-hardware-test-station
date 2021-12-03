@@ -1,0 +1,115 @@
+<launch>
+  <!-- whether loading the drivers for real robot or the simulators -->
+  <arg name="gazebo"   default="true"/>
+  <arg name="fake_io"  default="true"/>
+  <arg name="using_dtu"    default="true"/>
+  <arg name="using_twisted"    default="true"/>
+  <arg name="cb_dtu_port"  default="/tmp/fake_cb"/>
+
+  <arg name="boothnumber"   default="false" />
+  <arg name="marking_times" default="1" />
+  <arg name="new_shell" default="True" />
+  <arg name="x_pos" default="0" />
+  <arg name="y_pos" default="0" />
+  <arg name="gs_x_pos" default="0" />
+  <arg name="gs_y_pos" default="0" />
+  <include file="$(find boothbot_simulation)/launch/bringup_sim_booth.launch">
+    <arg name="marking_times" value="$(arg marking_times)" unless="$(arg boothnumber)"/>
+    <arg name="boothnumber"   value="$(arg boothnumber)" />
+    <arg name="new_shell" value="$(arg new_shell)"/>
+    <arg name="run_redis_subs" value="false" />
+    <arg name="x_pos" value="$(arg x_pos)" />
+    <arg name="y_pos" value="$(arg y_pos)" />
+    <arg name="gs_x_pos" value="$(arg gs_x_pos)" />
+    <arg name="gs_y_pos" value="$(arg gs_y_pos)" />
+  </include>
+
+  <arg name="db_goal"    default="true" />
+  <arg name="map_id"     default="1" />
+  <arg name="costmap"    default="true" />
+  <arg name="map_name"   default=""/>
+  <arg name="start_number" default="0" />
+
+  <arg name="random_goal" default="false" />
+  <arg name="random_area" default="1.5, 1.5, 2, 2" /> <!-- Area: x, y, width, height -->
+  <group if="$(arg db_goal)">
+    <node name="goal_distributor" pkg="boothbot_control" type="goal_controller_gazebo.py"
+          unless="$(arg boothnumber)" output="screen">
+      <param name="map_id"           value="$(arg map_id)" />
+    </node>
+    <node name="goal_distributor" pkg="boothbot_control" type="bn_goal_controller.py"
+          if="$(arg boothnumber)" output="screen">
+      <param name="map_id"           value="$(arg map_id)" />
+    </node>
+    <node name="pc_publisher" pkg="boothbot_control" type="point_cloud_publisher.py"
+          if="$(arg costmap)" output="screen">
+      <param name="map_id"      value="$(arg map_id)" />
+    </node>
+  </group>
+
+  <!-- Put twisted communication run here since it cannot be run in small PC and mesh
+       router will be connected on large pc of Lionel.  -->
+  <node name="twisted_comm" pkg="boothbot_nav" type="twisted_comm.py" output="screen"
+        if="$(arg using_twisted)">
+  </node>
+
+<!--
+    Enable two virtual serial ports for DTU communication:
+    socat -d -d pty,raw,echo=0,link=/tmp/fake_gs pty,raw,echo=0,link=/tmp/fake_cb
+-->
+  <arg name="no_gs_master"          default="false"/>
+  <arg name="port_platform"         default="/dev/servos"/>
+  <arg name="fake_cb"               default="true"/>
+  <!-- guiding station master -->
+  <include file="$(find boothbot_nav)/launch/guiding_station_master.launch"
+           unless="$(arg no_gs_master)">
+    <arg name="port_platform"        value="$(arg port_platform)"/>
+    <arg name="fake_cb"              value="$(arg fake_cb)" />
+    <arg name="using_dtu"            value="$(arg using_dtu)"/>
+    <arg name="dtu_port"             value="$(arg cb_dtu_port)"/>
+    <arg name="aux"                  value="false"/>
+  </include>
+
+  <!-- loading the navigation core-->
+  <include file="$(find boothbot_nav)/launch/navigation.launch">
+    <arg name="map_id"        default="$(arg map_id)"/>
+    <arg name="costmap"       default="$(arg costmap)"/>
+  </include>
+
+  <node name="stop_publisher" pkg="rostopic" type="rostopic"
+    args="pub -r 10 /drivers/cmd_vel_mux/input/default geometry_msgs/Twist '{
+          linear: {x: 0.0, y: 0.0, z: 0.0},
+          angular: {x: 0.0, y: 0.0, z: 0.0}
+          }'">
+  </node>
+
+  <node name="boothbot_controller" pkg="boothbot_control" type="boothbot_controller.py" output="screen">
+  </node>
+
+  <!-- only enable scan if gazebo is running  -->
+  <node pkg="laser_filters" type="scan_to_scan_filter_chain" output="screen" name="laser_filter_box" if="$(arg gazebo)">
+    <!-- <remap from="scan" to="scan_filtered_angluar" /> -->
+    <remap from="scan" to="scan" />
+    <remap from="scan_filtered" to="scan_filtered" />
+    <rosparam command="load" file="$(find boothbot_nav)/param/laser_filter_box.yaml" />
+  </node>
+
+  <node name="boothbot_monitor" pkg="boothbot_control"
+        type="boothbot_monitor.py" output="screen">
+    <param name="running_goal_controller" value="$(arg db_goal)" />
+    <param name="running_pc_publisher" value="$(eval arg('db_goal') or arg('costmap'))" />
+  </node>
+  <!-- Data in redis -->
+  <node name="lionel_redis_subs" pkg="boothbot_control"
+        type="lionel_redis_subs.py" output="screen">
+    <param name="voltage" value="false" />
+    <param name="odom" value="true" />
+    <param name="global_plan" value="true" />
+    <param name="bbc_state" value="true" />
+    <param name="navc_state" value="true" />
+    <param name="marking_state" value="true" />
+  </node>
+  <node name="errcode_monitor_bbc" pkg="common"
+        type="errcode_monitor.py" output="screen">
+  </node>
+</launch>

@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+
+changed_files="$(git diff-tree -r --name-only --no-commit-id ORIG_HEAD HEAD)"
+
+# Allows us to read user input below, assigns stdin to keyboard
+# https://stackoverflow.com/questions/3417896/how-do-i-prompt-the-user-from-within-a-commit-msg-hook
+exec < /dev/tty
+
+## Django Migration ##
+migration() {
+    read -p 'Target migration? (00XX/y/N) ' m
+    if [[ "$m" == "y" ]]; then
+        eval "backoffice/manage.py migrate maps"
+        echo "Migrated to newest"
+    elif [[ "$m" =~ ^[0-9]+$ ]]; then
+        m=$(printf "%04d" $m)
+        eval "backoffice/manage.py migrate maps $m"
+        echo "Migrated to $m"
+    fi
+}
+
+## Django collectstatic ##
+collectstatic() {
+    read -p 'Collect statics? (y/N) ' c
+    if [[ "$c" == "y" ]]; then
+        eval "backoffice/manage.py collectstatic --noinput"
+        echo "Collected static files"
+    fi
+}
+
+restartgunicorn() {
+    echo "Restart gunicorn"
+    eval "sudo systemctl restart gunicorn.service"
+}
+
+catkinmake() {
+    read -p 'Do catkin_make? (y/N)' ck
+    if [[ "$ck" == "y" ]]; then
+        eval "cd $HOME/catkin_ws; catkin_make"
+    fi
+}
+
+if [[ "$(whoami)" == "augbooth" ]]; then
+
+    hasm=$(echo "$changed_files" | grep "backoffice\/maps\/migrations\/")
+    if [[ $hasm != "" ]]; then
+        migration
+    fi
+
+    hasc=$(echo "$changed_files" | grep "backoffice\/static\/")
+    if [[ $hasc != "" ]]; then
+        collectstatic
+    fi
+
+    restartgunicorn
+
+fi
+
+catkinmake

@@ -1,0 +1,55 @@
+marking_system_offset:    -0.373
+driving_ratio:            1.1
+laser_offset:             [0.0, 0.0]
+
+# beacon_offset params
+trans_beacon:             [0.0, 0.0, 0.0]
+trans_beacon_rcenter:     [0.0, 0.0, 0.0]
+
+# stamp lift time
+lift_time: 1500
+lift_time_short: 100
+
+# camera_beacon params
+long_cam_laser_dist:      0.03
+short_cam_laser_dist:     0.035
+long_short_cam_angle_offset: -0.012170
+long_cam_min_tracking_dist: 3.0
+servo_parameter:
+  # motor id
+  # platfrom: 0
+  0:
+    tolerance:            [0.0005, 0.001]
+  # horizontal: 1
+  1:
+    tolerance:            0.0005
+    encoder_resolution:   16384
+    zero_offset:          0
+    gear_ratio:           4.8
+    limit_positive:       3.9
+    limit_negative:       -3.9
+  # vertical: 2
+  2:
+    tolerance:            0.001
+    encoder_resolution:   16384
+    zero_offset:          0
+    gear_ratio:           3.333333333333333
+    limit_positive:       0.1
+    limit_negative:       -0.25
+
+inclinometer_pitch_offset: 0.0
+inclinometer_roll_offset: 0.0
+
+new_base: true
+new_shell: true
+is_boothnumber: false
+imu_as_inclinometer: true
+
+long_cam_exposure: 250
+short_cam_exposure: 50
+
+text_roi: [155, 155, 370, 125] # x, y, w, h. Default value from our first BN robot
+
+has_aux_pc: false
+
+battery_turning_pts: [29.4, 24.1, 21.0]  # values: [<full-battery-voltage 100%>, <10%>, <1%>]. Unit: voltage

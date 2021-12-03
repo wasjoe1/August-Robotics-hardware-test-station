@@ -1,0 +1,17 @@
+<launch>
+    <arg name="base_port"       default="/dev/mobile_base"/>
+    <arg name="baudrate"        default="115200"/>
+    <arg name="base_frame"      default="base_footprint"/>
+    <arg name="rate"            default="100"/>
+    <arg name="voltage_warning" default="24.1"/>
+
+    <node name="compassq2" pkg="boothbot_simulation" type="fake_mobile_base.py" output="screen">
+        <param name="port"            value="$(arg base_port)"/>
+        <param name="baudrate"        value="$(arg baudrate)"/>
+        <param name="base_frame"      value="$(arg base_frame)"/>
+        <param name="rate"            value="$(arg rate)"/>
+        <param name="voltage_warning" value="$(arg voltage_warning)"/>
+
+        <remap from="/mb_0/voltage" to="/mb_0/voltage_backup"/>
+    </node>
+</launch>

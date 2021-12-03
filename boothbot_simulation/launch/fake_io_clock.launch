@@ -1,0 +1,4 @@
+<launch>
+    <node pkg="boothbot_simulation" type="fake_io_clock.py" name="fake_io_clock" output="screen">
+    </node>
+</launch>

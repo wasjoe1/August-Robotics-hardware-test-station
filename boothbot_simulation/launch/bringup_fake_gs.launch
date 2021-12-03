@@ -1,0 +1,19 @@
+<launch>
+  <!-- Guiding Station(s) -->
+  <!-- If you want to use fake CB and gazebo with GS, `gs_seq` has to be in [1, 5] -->
+  <include file="$(find boothbot_simulation)/launch/fake_gs.launch">
+    <arg name="fake_gs"       default="true"/>
+    <arg name="launch_twisted_comm" default="false"/>
+    <arg name="gs_seq"        default="1" />
+    <arg name="fake_hostname" default="1" />
+    <arg name="fake_pose"    default="10.0, 10.0, 0.0"/>
+  </include>
+
+  <include file="$(find boothbot_simulation)/launch/fake_gs.launch">
+    <arg name="fake_gs"       default="true"/>
+    <arg name="launch_twisted_comm" default="false"/>
+    <arg name="gs_seq"        default="2" />
+    <arg name="fake_hostname" default="2" />
+    <arg name="fake_pose"    default="35.0, 10.0, 0.0"/>
+  </include>
+</launch>

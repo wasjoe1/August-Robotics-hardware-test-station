@@ -1,0 +1,19 @@
+<launch>
+<master auto="start"/>
+<rosparam command="load" ns="drivers" file="$(find augustbot_base)/config/augustbot_base_parameter.yaml" />
+
+<arg name="use_imu_odom" default="True"/>
+<arg name="enable_side_sonar" default="False"/>
+<arg name="use_small_probe" default="False"/>
+<node pkg="augustbot_base" type="augustbot_base_node" name="augustbot_base_node" output="screen" respawn="false" >
+ <!-- <param name="use_imu_odom" value="$(arg use_imu_odom)" />
+ <param name="enable_side_sonar"  value="$(arg enable_side_sonar)" />
+ <param name="use_small_probe"  value="$(arg use_small_probe)" />
+
+ <remap from="odom_encoder" to="odom" unless="$(arg use_imu_odom)" />
+ <remap from="odom_imu" to="odom" if="$(arg use_imu_odom)"/>
+ <remap from="cmd_vel" to="smooth_cmd_vel" />
+ <remap from="chassis/imu_onboard" to="imu_wit" /> -->
+</node>
+
+</launch>

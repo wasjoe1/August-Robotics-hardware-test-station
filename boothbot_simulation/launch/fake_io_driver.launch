@@ -1,0 +1,25 @@
+<launch>
+    <arg name="have_io_module" default="true"/>
+
+    <arg name="rate"    default="20"/>
+    <arg name="rtu"     default="true"/>
+    <arg name="unit"    default="1" />
+    <arg name="timeout" default="0.5"/>
+    
+    <arg name="serial_io_port"  default="/dev/io_module"/>
+    <arg name="serial_baudrate" default="115200"/>
+    <arg name="tcp_io_port"     default="5020"/>
+    <arg name="tcp_host"        default="192.168.32.91"/>
+    
+    <node name="io" pkg="boothbot_simulation" type="fake_io_driver.py" output="screen" if="$(arg have_io_module)">
+        <param name="rate"    value="$(arg rate)"/>
+        <param name="rtu"     value="$(arg rtu)"/>
+        <param name="unit"    value="$(arg unit)"/>
+        <param name="timeout" value="$(arg timeout)"/>
+
+        <param name="port"     value="$(arg serial_io_port)" if="$(arg rtu)"/>
+        <param name="port"     value="$(arg tcp_io_port)"    unless="$(arg rtu)"/>
+        <param name="baudrate" value="$(arg serial_baudrate)"/>
+        <param name="host"     value="$(arg tcp_host)"/>
+    </node>
+</launch>

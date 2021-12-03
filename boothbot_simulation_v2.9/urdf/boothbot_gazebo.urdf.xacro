@@ -1,0 +1,369 @@
+<?xml version="1.0"?>
+
+<robot name="d1" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <!-- Include all component files -->
+  <xacro:include filename="$(find boothbot_description)/urdf/materials.urdf.xacro" />
+  <xacro:include filename="$(find boothbot_description)/urdf/led_beacon.urdf.xacro" />
+  <xacro:include filename="$(find boothbot_description)/urdf/base.urdf.xacro" />
+  <xacro:include filename="$(find boothbot_description)/urdf/passive_wheel.urdf.xacro" />
+  <xacro:include filename="$(find boothbot_description)/urdf/sensor/imu.urdf.xacro" />
+  <xacro:include filename="$(find boothbot_description)/urdf/sensor/ray.urdf.xacro" />
+  <xacro:include filename="$(find boothbot_description)/urdf/sensor/front_low_sonar.urdf.xacro" />
+  <xacro:include filename="$(find boothbot_description)/urdf/sensor/side_sonar.urdf.xacro" />
+  <xacro:include filename="$(find boothbot_description)/urdf/sensor/rear_sonar.urdf.xacro" />
+
+  <!-- Define a number of dimensions using properties -->
+  <xacro:property name="ground_gap" value="0.0225" />
+  <xacro:property name="base_height" value="0.0925" />
+  <xacro:property name="base_radius" value="0.42" /> <!-- small diameter 0.73 -->
+  <xacro:property name="base_mass" value="30" />
+  <xacro:property name="wheel_width" value="0.046" />
+  <xacro:property name="passive_wheel_radius" value="0.0508" />
+  <xacro:property name="passive_wheel_offset_x" value="0.1742" />
+  <xacro:property name="passive_wheel_offset_y" value="0.142" />
+  <xacro:property name="passive_wheel_offset_z" value="${passive_wheel_radius-ground_gap+0.001}" />
+  <xacro:property name="led_head_x" value="0.1825" />
+  <xacro:property name="led_rear_x" value="-0.1825" />
+  <xacro:property name="led_offset_z" value="${base_height+ground_gap+0.01}" />
+  <xacro:property name="led_height" value="0.78" />
+  <xacro:property name="led_radius" value="0.05" /> 
+  <xacro:property name="ray_edge" value="0.03" />
+
+  <xacro:arg name="new_shell" default="true" />
+
+<!-- patrick_0802 define a base -->
+  <link name="base_footprint">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <box size="0.05 0.05 0.001" />
+        </geometry>
+	<material name="light_grey">
+          <color rgba="0.6 0.6 0.6 1"/>
+	</material>
+      </visual>
+  </link>
+  
+  <!-- Add the base -->
+  <base parent="base_footprint" 
+        height="${base_height}" 
+        radius="${base_radius}" 
+        offset_z="${ground_gap}" 
+        mass="${base_mass}"/>
+  <passive_wheel parent="base" 
+                 attr="front_r" 
+                 offset_x="${passive_wheel_offset_x}"
+                 offset_y="${passive_wheel_offset_y}"
+                 offset_z="${passive_wheel_offset_z}"
+                 width="${wheel_width}"
+                 radius="${passive_wheel_radius}"/>
+  <passive_wheel parent="base" 
+                 attr="front_l" 
+                 offset_x="${passive_wheel_offset_x}"
+                 offset_y="${-passive_wheel_offset_y}"
+                 offset_z="${passive_wheel_offset_z}"
+                 width="${wheel_width}"
+                 radius="${passive_wheel_radius}"/>
+  <passive_wheel parent="base" 
+                 attr="rear_l" 
+                 offset_x="${-passive_wheel_offset_x}"
+                 offset_y="${-passive_wheel_offset_y}"
+                 offset_z="${passive_wheel_offset_z}"
+                 width="${wheel_width}"
+                 radius="${passive_wheel_radius}"/>
+  <passive_wheel parent="base" 
+                 attr="rear_r" 
+                 offset_x="${-passive_wheel_offset_x}"
+                 offset_y="${passive_wheel_offset_y}"
+                 offset_z="${passive_wheel_offset_z}"
+                 width="${wheel_width}"
+                 radius="${passive_wheel_radius}"/>
+  <!-- Add the flag -->
+  <joint name="front_point_flag" type="fixed">
+    <origin xyz="0 0 ${base_height + 0.01}" rpy="0 0 0" />
+    <parent link="base_link"/>
+    <child link="front_flag" />
+  </joint>
+  <link name="front_flag">
+      <visual>
+        <origin xyz="${base_radius/2} 0 0" rpy="0 0 0" />
+        <geometry>
+          <box size="${base_radius} 0.02 0.01" />
+        </geometry>
+	<xacro:insert_block name="material_white"/>
+      </visual>
+  </link>
+  <gazebo reference="front_flag">
+    <material>Gazebo/White</material>
+  </gazebo>
+
+  <joint name="marker_hor_joint" type="fixed">
+    <origin xyz="-0.360 0 0" rpy="0 0 0" />
+    <parent link="base_link"/>
+    <child link="marker_hor_link" />
+  </joint>
+  <link name="marker_hor_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <box size="0.025 0.200 0.010" />
+        </geometry>
+				<xacro:insert_block name="material_white"/>
+      </visual>
+  </link>
+
+  <joint name="marker_ver_joint" type="fixed">
+    <origin xyz="-0.360 0 0" rpy="0 0 0" />
+    <parent link="base_link"/>
+    <child link="marker_ver_link" />
+  </joint>
+  <link name="marker_ver_link">
+      <visual>
+        <origin xyz="-0.075 0 0" rpy="0 0 0" />
+        <geometry>
+          <box size="0.125 0.025 0.010" />
+        </geometry>
+				<xacro:insert_block name="material_white"/>
+      </visual>
+  </link>
+
+  <gazebo reference="front_flag">
+    <material>Gazebo/White</material>
+  </gazebo> 
+
+  <led_beacon parent="front_flag"
+              height="${led_height}"
+              radius="${led_radius}"
+              color="green"
+              offset_x="0.0"
+              offset_y="0.0"
+              offset_z="0.0"
+              mass="0.1"/>
+
+  <!--
+  <led_beacon parent="front_flag"
+              height="${led_height}"
+              radius="${led_radius}"
+              color="blue"
+              offset_x="${led_rear_x}"
+              offset_y="0.0"
+              offset_z="0.0"
+              mass="0.1"/>
+  -->
+
+  <!--
+  <imu_sensor parent="base_link"
+              offset_x="-0.078"
+              offset_y="0"
+              offset_z="0.02"/>
+  -->
+
+  <!--
+  <ray_sensor parent="base_link"
+              frame_name="ray_link_left"
+              offset_x="${base_radius/2}"
+              offset_y="${base_radius/2 - ray_edge*2}"
+              offset_z="${base_height - ray_edge/2}"
+              mass="0.1"
+              size="${ray_edge}" />
+
+  <ray_sensor parent="base_link"
+              frame_name="ray_link_right"
+              offset_x="${base_radius/2}"
+              offset_y="-${base_radius/2 - ray_edge*2}"
+              offset_z="${base_height - ray_edge/2}"
+              mass="0.1"
+              size="${ray_edge}" />
+  -->
+
+  <joint name="laser_joint" type="fixed">
+    <!-- for the old shell -->
+    <xacro:unless value="$(arg new_shell)">
+      <origin xyz="0.2769 0 0.5036" rpy="0 0 3.141592653579" />
+    </xacro:unless>
+
+    <!-- for the new shell -->
+    <xacro:if value="$(arg new_shell)">
+      <origin xyz="0.21 0 0.5036" rpy="0 0 3.141592653579" />
+    </xacro:if>
+
+    <parent link="base_footprint"/>
+    <child link="laser_frame" />
+  </joint>
+  <link name="laser_frame">
+      <visual>
+        <origin xyz="0.4 0 0.01" rpy="0 0 0" />
+        <geometry>
+          <cylinder length="0.02" radius="0.03" />
+        </geometry>
+				<xacro:insert_block name="material_white"/>
+      </visual>
+    <inertial>
+      <mass value="1e-5" />
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6" />
+    </inertial>
+  </link>
+
+<!-- sonar sensors-->
+<front_sonar name="front_sonar" parent="base_footprint">
+  <!-- for the old shell -->
+  <xacro:unless value="$(arg new_shell)">
+    <origin xyz="0.22 0.0 0.4" rpy="0 0 0" />
+  </xacro:unless>
+    
+  <!-- for the new shell -->
+  <xacro:if value="$(arg new_shell)">
+    <origin xyz="0.16 0.0 0.4" rpy="0 0 0" />
+  </xacro:if>
+
+</front_sonar>
+
+<front_lookdown_sonar name="front_lookdown_sonar" parent="base_footprint">
+    <origin xyz="0.3 0.0 0.3" rpy="0 0 0" />
+</front_lookdown_sonar>
+
+<front_low_sonar name="front_low_sonar" parent="base_footprint">
+    <origin xyz="0.3 0.0 0.15" rpy="0 0 0" />
+</front_low_sonar>
+
+<rear_sonar name="rear_sonar" parent="base_footprint">
+    <origin xyz="-0.45 0.0 0.3" rpy="0 0 ${pi}" />
+</rear_sonar>
+
+<side_sonar name="side_sonar" parent="base_footprint">
+    <origin xyz="0.0 0.0 0.15" rpy="0 0 0" />
+</side_sonar>
+
+<xacro:arg name="add_raycast_self_filter_geom" default="false"/>
+  
+  <gazebo>
+    <plugin name="boothbot_controller" filename="libgazebo_ros_planar_move.so">
+      <commandTopic>cmd_vel</commandTopic>
+      <leftFrontJoint>passive_wheel_front_l_joint</leftFrontJoint>
+      <rightFrontJoint>passive_wheel_front_r_joint</rightFrontJoint>
+      <leftRearJoint>passive_wheel_back_l_joint</leftRearJoint>
+      <rightRearJoint>passive_wheel_back_r_joint</rightRearJoint>
+      <odometryTopic>odom</odometryTopic>
+      <odometryFrame>odom</odometryFrame>
+      <odometryRate>80.0</odometryRate>
+      <robotBaseFrame>base_footprint</robotBaseFrame>
+    </plugin>
+  </gazebo>
+
+ <!-- Camera -->
+ <xacro:property name="camera_link" value="0.05" /> <!-- Size of square 'camera' box -->
+ <joint name="camera_joint" type="fixed">
+    <axis xyz="0 1 0" />
+    <origin xyz="${camera_link} 0 1.0" rpy="0 0 0"/>
+    <parent link="base_footprint"/>
+    <child link="camera_link"/>
+  </joint>
+
+  <link name="camera_link">
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+    <box size="${camera_link} ${camera_link} ${camera_link}"/>
+      </geometry>
+    </collision>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+    <box size="${camera_link} ${camera_link} ${camera_link}"/>
+      </geometry>
+      <material name="red"/>
+    </visual>
+
+    <inertial>
+      <mass value="1e-5" />
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6" />
+    </inertial>
+  </link>
+
+<!-- camera -->
+  <gazebo reference="camera_link">
+    <sensor type="camera" name="camera_short">
+      <update_rate>30.0</update_rate>
+      <camera name="head">
+        <horizontal_fov>1.3962634</horizontal_fov>
+        <image>
+          <width>800</width>
+          <height>800</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.02</near>
+          <far>300</far>
+        </clip>
+        <noise>
+          <type>gaussian</type>
+          <!-- Noise is sampled independently per pixel on each frame.
+               That pixel's noise value is added to each of its color
+               channels, which at that point lie in the range [0,1]. -->
+          <mean>0.0</mean>
+          <stddev>0.007</stddev>
+        </noise>
+      </camera>
+      <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+        <alwaysOn>true</alwaysOn>
+        <updateRate>0.0</updateRate>
+        <cameraName>rrbot/camera_short</cameraName>
+        <imageTopicName>image_raw</imageTopicName>
+        <cameraInfoTopicName>camera_info</cameraInfoTopicName>
+        <frameName>camera_link</frameName>
+        <hackBaseline>0.07</hackBaseline>
+        <distortionK1>0.0</distortionK1>
+        <distortionK2>0.0</distortionK2>
+        <distortionK3>0.0</distortionK3>
+        <distortionT1>0.0</distortionT1>
+        <distortionT2>0.0</distortionT2>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+
+ <!-- hokuyo -->
+  <gazebo reference="laser_frame">
+    <sensor type="ray" name="head_hokuyo_sensor">
+      <pose>0 0 0 0 0 3.14</pose>
+      <visualize>false</visualize>
+      <update_rate>10</update_rate>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>720</samples>
+            <resolution>1</resolution>
+            <min_angle>-3.14</min_angle>
+            <max_angle>3.14</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.10</min>
+          <max>16.0</max> <!-- Original: 6.0 -->
+          <resolution>0.01</resolution>
+        </range>
+        <noise>
+          <type>gaussian</type>
+          <!-- Noise parameters based on published spec for Hokuyo laser
+               achieving "+-30mm" accuracy at range < 10m.  A mean of 0.0m and
+               stddev of 0.01m will put 99.7% of samples within 0.03m of the true
+               reading. -->
+          <mean>0.0</mean>
+          <stddev>0.01</stddev>
+        </noise>
+      </ray>
+      <plugin name="gazebo_ros_head_hokuyo_controller" filename="libgazebo_ros_laser.so">
+        <topicName>/scan</topicName>
+        <frameName>laser_frame</frameName>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+
+</robot>
+
+

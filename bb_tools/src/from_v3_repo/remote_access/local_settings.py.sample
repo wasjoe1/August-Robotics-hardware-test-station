@@ -1,0 +1,4 @@
+REGION = "ap" # eu, us, ap
+
+PING_SITE = "bing.com"
+IS_CB = False

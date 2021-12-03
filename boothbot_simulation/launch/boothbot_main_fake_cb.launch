@@ -1,0 +1,64 @@
+<launch>
+  <arg name="map_id" default="1"/>
+
+  <!-- The launch file should remain just launch the robot, all configuration should be passed by another way -->
+  <arg name="aux"           default="false" />
+  <arg name="save_tracking_images" default="false" />
+  <arg name="port_platform" default="/dev/servos"/>
+  <arg name="fake_cb"       default="true"/>
+  <arg name="have_io_module"        default="false"/>
+  <arg name="goto_mark_debug"       default="false"/>
+
+  <!--===================================-->
+  <!--           The modules             -->
+  <!-- Marking    -->
+  <include file="$(find boothbot_marking)/launch/boothbot_marking.launch">
+  </include>
+
+  <!-- Camera Beacon -->
+  <!-- single beacon approach -->
+  <include file="$(find guiding_beacon)/launch/camera_beacon.launch">
+    <arg name="port_platform"        value="$(arg port_platform)"/>
+    <arg name="fake_cb"              value="$(arg fake_cb)" />
+    <arg name="save_tracking_images" value="$(arg save_tracking_images)" />
+    <arg name="redis_host" value="169.254.43.99" if="$(arg aux)" />
+    <arg name="redis_host" value="localhost" unless="$(arg aux)" />
+  </include>
+
+  <!-- Guiding Beacon Manager -->
+  <include file="$(find boothbot_nav)/launch/guiding_beacon_manager.launch">
+    <arg name="fake_cb" value="$(arg fake_cb)" />
+    <arg name="aux" value="$(arg aux)" />
+    <arg name="using_dtu" value="false" />
+  </include>
+
+  <!-- Navigation -->
+  <include file="$(find boothbot_nav)/launch/navigation.launch">
+  </include>
+  <!--===================================-->
+
+  <!--===================================-->
+  <!--           Applications            -->
+  <!-- go to mark controller -->
+  <include file="$(find boothbot_control)/launch/goto_mark_app.launch">
+    <arg name="map_id" value="$(arg map_id)"/>
+    <arg name="debug" value="$(arg goto_mark_debug)"/>
+  </include >
+
+  <!-- initialize_app -->
+  <include file="$(find boothbot_control)/launch/initialize_app.launch">
+  </include>
+  <!--===================================-->
+
+  <!--===================================-->
+  <!--          Robot Manager            -->
+  <!-- Supervisor -->
+  <node name="supervisor" pkg="boothbot_simulation" type="fake_supervisor_ros.py" respawn="false" output="screen">
+  </node>
+
+  <!-- State machine Main / Task Manager -->
+  <node name="task_manager" pkg="boothbot_main" type="task_manager_ros.py" respawn="false" output="screen">
+  </node>
+  <!--===================================-->
+
+</launch>

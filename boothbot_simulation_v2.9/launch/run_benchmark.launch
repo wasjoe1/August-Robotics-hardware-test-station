@@ -1,0 +1,3 @@
+<launch>
+  <node name="benchmark_simulation" pkg="boothbot_simulation" type="run_benchmark.py" output="screen"/>
+</launch>

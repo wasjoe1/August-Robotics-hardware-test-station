@@ -1,0 +1,19 @@
+# 给sonar写入地址请修改下面两个参数
+old_addr: 0xe8
+new_addr: 0xda
+
+# 用于串口通讯
+# USB转485模块可用下面的参数    
+port: "/dev/ttyUSB0"
+
+# 工控机485串口请用这个参数
+#port: "/dev/ttyS0"
+
+# 通讯速率，默认值9600
+baud: 9600    
+
+# sonar地址列表,用于测试
+front_addr: [0xe6,0xd6,0xe8,0xe0,0xd0]
+front_low_addr: [0xda,0xdc,0xde]
+front_lookdown_addr: [0xf8,0xfa,0xfc]
+rear_addr: [0xe2,0xe4,0xea]

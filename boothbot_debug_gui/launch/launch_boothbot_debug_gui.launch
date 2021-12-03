@@ -1,0 +1,13 @@
+
+
+<launch>
+  <!-- Use sim time -->
+  <!-- <arg name="use_sim_time"            default="true" />
+  <param name="/use_sim_time"         value="$(arg use_sim_time)" /> -->
+  <arg name="verbose"               default="true" />
+  <arg name="rate_Hz"                default="10" />
+  <node pkg="boothbot_debug_gui" type="boothbot_debug_gui" name="boothbot_debug_gui" output="screen" launch-prefix="" >
+    <param name="verbose"                  value="$(arg verbose)"/>
+    <param name="rate_Hz"                  value="$(arg rate_Hz)"/>
+  </node>
+</launch>

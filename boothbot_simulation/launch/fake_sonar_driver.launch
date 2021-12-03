@@ -1,0 +1,37 @@
+<launch>
+  <arg name="sonar1_port"                default="/dev/ttyS0"/> <!-- No effect in simulation -->
+  <arg name="sonar1_update_rate"         default="20"/>
+  <arg name="sonar1_enable_front_sonar"  default="true"/>
+  <arg name="sonar1_enable_rear_sonar"   default="true"/>
+  <arg name="sonar1_enable_side"         default="false"/>
+  <arg name="sonar1_use_small_probe"     default="false"/>
+  <arg name="sonar1_use_low_pass_filter" default="false"/>      <!-- No effect in simulation -->
+
+  <node name="sonar_driver1" pkg="boothbot_simulation" type="fake_sonar_driver.py" output="screen">
+    <param name="port"                value="$(arg sonar1_port)"/>
+    <param name="sonar_update_rate"   value="$(arg sonar1_update_rate)"/>
+    <param name="enable_front"        value="$(arg sonar1_enable_front_sonar)"/>
+    <param name="enable_rear"         value="$(arg sonar1_enable_rear_sonar)"/>
+    <param name="enable_side"         value="$(arg sonar1_enable_side)"/>
+    <param name="use_small_probe"     value="$(arg sonar1_use_small_probe)"/>
+    <param name="use_low_pass_filter" value="$(arg sonar1_use_low_pass_filter)"/>
+  </node>
+
+  <arg name="sonar2_port"                default="/dev/sonar2"/> <!-- No effect in simulation -->
+  <arg name="sonar2_update_rate"         default="20"/>
+  <arg name="sonar2_enable_front_sonar"  default="false"/>
+  <arg name="sonar2_enable_rear_sonar"   default="false"/>
+  <arg name="sonar2_enable_side"         default="true"/>
+  <arg name="sonar2_use_small_probe"     default="false"/>
+  <arg name="sonar2_use_low_pass_filter" default="false"/>      <!-- No effect in simulation -->
+
+  <node name="sonar_driver2" pkg="boothbot_simulation" type="fake_sonar_driver.py" output="screen">
+    <param name="port"                value="$(arg sonar2_port)"/>
+    <param name="sonar_update_rate"   value="$(arg sonar2_update_rate)"/>
+    <param name="enable_front"        value="$(arg sonar2_enable_front_sonar)"/>
+    <param name="enable_rear"         value="$(arg sonar2_enable_rear_sonar)"/>
+    <param name="enable_side"         value="$(arg sonar2_enable_side)"/>
+    <param name="use_small_probe"     value="$(arg sonar2_use_small_probe)"/>
+    <param name="use_low_pass_filter" value="$(arg sonar2_use_low_pass_filter)"/>
+  </node>
+</launch>
