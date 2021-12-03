@@ -1,0 +1,9 @@
+<launch>
+    <arg name="imu_port"  default="/dev/imu"/>
+    <arg name="rate"      default="150"/>
+
+    <node name="wit_imu_driver" pkg="boothbot_simulation" type="fake_imu_driver.py" output="screen">
+      <param name="imu_port" value="$(arg imu_port)"/>
+      <param name="rate"     value="$(arg rate)"/>
+    </node>
+</launch>

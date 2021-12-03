@@ -1,0 +1,12 @@
+<launch>
+    <arg name="is_boothnumber" default="false"/>
+    <arg name="status_hz" default="1"/>
+    <arg name="boot_delay" default="10"/>
+
+    <node pkg="boothbot_simulation" type="fake_check_server.py" name="check_server" output="screen">
+        <param name="is_boothnumber" value="$(arg is_boothnumber)"/>
+        <param name="status_hz" value="$(arg status_hz)"/>
+        <param name="boot_delay" value="$(arg boot_delay)"/>
+    </node>
+
+</launch>

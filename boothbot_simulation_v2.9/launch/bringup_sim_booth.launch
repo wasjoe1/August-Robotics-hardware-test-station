@@ -1,0 +1,73 @@
+<launch>
+  <arg name="marking_times"     default="1" />
+  <arg name="boothnumber"       default="false"/>
+  <arg name="new_shell"         default="true"/>
+  
+  <!-- Loading boothbot fake node  -->
+  <include file="$(find boothbot_simulation)/launch/fake_base.launch">
+  </include>
+  
+  <!-- Loading cmd_vel_mux nodelet -->
+  <include file="$(find boothbot_control)/launch/include/cmd_vel_mux_nodelet.launch.xml">
+  </include>
+
+  <!-- Spawn robot model based on description -->
+  <param name="robot_description" command="xacro --inorder '$(find boothbot_simulation)/urdf/boothbot_gazebo.urdf.xacro'" />
+  <arg name="x_pos"             default="0.0"/>
+  <arg name="y_pos"             default="0.0"/>
+  <arg name="z_pos"             default="0.0"/>
+  <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" 
+        args="-urdf -model boothbot -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos) -param robot_description" /> 
+ 
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
+
+  <!-- Establishing fake io -->
+  <node name="isn_iod" pkg="boothbot_driver" type="ink_stamp_node.py" output="screen" unless="$(arg boothnumber)">
+    <!-- <param name="host"                  value="192.168.43.91"/> -->
+    <param name="port"          value="none"/>
+    <param name="timeout"       value="2"/>
+    <param name="fake_io"       value="true" />
+    <param name="marking_times" value="$(arg marking_times)" />
+  </node>
+  <node name="bn_painter" pkg="boothbot_driver" type="boothnumber_painter.py" output="screen" if="$(arg boothnumber)">
+    <param name="bn_port"       value="none"/>
+    <param name="io_port"       value="none"/>
+    <param name="fake_io"       value="true" />
+  </node>
+  <!-- ================================================================= -->
+
+  <!-- Loading the robot_pose_ekf node -->
+  <include file="$(find boothbot_control)/launch/include/robot_pose_ekf.launch.xml">
+  </include>
+
+  <node name="hardware_monitor" pkg="boothbot_control" type="hardware_monitor.py" output="screen">
+    <param name="running_mb"    value="false" />
+    <param name="running_imu"   value="false" />
+    <param name="running_sonar" value="false" />
+  </node>
+
+  <!-- Enable lionel redis sub script.
+       BUT by default, when launching rom boothbot_gazebo, it's false-->
+  <arg name="run_redis_subs"    default="true" />
+  <node name="lionel_redis_subs" pkg="boothbot_control"
+        type="lionel_redis_subs.py" output="screen" if="$(arg run_redis_subs)">
+    <param name="voltage"       value="false" />
+    <param name="odom"          value="false" />
+    <param name="global_plan"   value="false" />
+    <param name="bbc_state"     value="false" />
+    <param name="navc_state"    value="false" />
+    <param name="marking_state" value="true" />
+  </node>
+
+  <node name="errcode_monitor_hw" pkg="common"
+        type="errcode_monitor.py" output="screen">
+  </node>
+
+  <!-- Spawn dummy guiding station model based on description -->
+  <arg name="gs_x_pos"          default="0.0"/>
+  <arg name="gs_y_pos"          default="0.0"/>
+  <arg name="gs_z_pos"          default="0.0"/>
+  <param name="gs_description" command="xacro --inorder '$(find boothbot_simulation)/urdf/guiding_station.urdf.xacro'" />
+  <node name="spawn_gs_urdf" pkg="gazebo_ros" type="spawn_model" 
+        args="-urdf -model guiding_station -x $(arg gs_x_pos) -y $(arg gs_y_pos) -z $(arg gs_z_pos) -param gs_description" /> 
+</launch>

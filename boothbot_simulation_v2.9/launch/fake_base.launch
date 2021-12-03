@@ -1,0 +1,14 @@
+<launch>
+
+  <node pkg="boothbot_simulation" type="fake_base_node.py" respawn="false" name="fake_base" output="screen">
+    <param name="pub_map_to_odom"             value="false"/>
+  </node>
+
+	<node pkg="boothbot_simulation" type="fake_sensor_node.py" respawn="false" name="fake_sensor" output="screen">
+		<param name="lidar_topic_name" value="scan" />
+		<rosparam param="sonar_topic_list">["sonar/f_01","sonar/f_02","sonar/f_03"]</rosparam>
+		<rosparam param="sonar_frame_list">["sonar/f_01","sonar/f_02","sonar/f_03"]</rosparam>
+		<param name="lidar_frame" value="laser_frame" />
+	</node>
+
+</launch>

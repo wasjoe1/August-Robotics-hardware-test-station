@@ -1,0 +1,54 @@
+<launch>
+  <include file="$(find boothbot_description)/launch/description.launch">
+  </include>
+
+  <include file="$(find boothbot_driver)/launch/cmd_vel_mux_nodelet.launch">
+  </include>
+
+  <node name="stop_publisher" pkg="rostopic" type="rostopic"
+    args="pub -r 10 /cmd_vel_mux/input/default geometry_msgs/Twist '{
+          linear: {x: 0.0, y: 0.0, z: 0.0},
+          angular: {x: 0.0, y: 0.0, z: 0.0}
+          }'">
+  </node>
+
+  <include file="$(find boothbot_simulation)/launch/fake_lidar_driver.launch">
+  </include>
+
+  <include file="$(find boothbot_simulation)/launch/fake_sonar_driver.launch">
+  </include>
+
+  <include file="$(find boothbot_simulation)/launch/fake_mobile_base.launch">
+  </include>
+
+  <include file="$(find boothbot_simulation)/launch/fake_imu_driver.launch">
+  </include>
+
+  <include file="$(find boothbot_simulation)/launch/fake_battery_monitor.launch">
+  </include>
+
+  <include file="$(find boothbot_simulation)/launch/fake_io_driver.launch">
+  </include>
+
+  <include file="$(find boothbot_simulation)/launch/fake_check_server.launch"/>
+
+  <include file="$(find boothbot_simulation)/launch/fake_track_server.launch"/>
+
+  <include file="$(find boothbot_simulation)/launch/fake_io_clock.launch"/>
+
+  <arg name="is_use_redis" default="false"/>
+  <group if="$(arg is_use_redis)">
+    <node name="chassis_usage_recorder" pkg="boothbot_driver" type="chassis_usage_recorder.py" output="screen">
+      <param name="new_base" value="false"/>
+    </node>
+
+    <node name="hardware_monitor" pkg="boothbot_control" type="hardware_monitor.py" output="screen">
+      <param name="running_mb" value="true" />
+      <param name="running_imu" value="true" />
+      <param name="running_sonar" value="true" />
+    </node>
+
+    <node name="errcode_monitor_hw" pkg="common" type="errcode_monitor.py" output="screen">
+    </node>
+  </group>
+</launch>

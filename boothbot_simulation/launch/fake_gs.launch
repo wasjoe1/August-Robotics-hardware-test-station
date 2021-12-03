@@ -1,0 +1,65 @@
+<launch>
+  <arg name="fake_gs"       default="true"/>
+  <!-- If you want to use fake CB and gazebo with GS, `gs_seq` has to be in [1, 5] -->
+  <arg name="gs_seq"        default="1" />
+  <arg name="port_platform" default="/dev/servos"/>
+  <arg name="no_tracker"    default="false"/>
+  <arg name="no_laser"      default="false"/>
+
+  <arg name="dtu"           default="false" />
+  <arg name="dtu_port"      default="/dev/dtu" />
+  <arg name="twisted"       default="true" />
+
+  <arg name="test_gs_pose"    default="false"/>
+  <arg name="fake_pose"    default="53.0, 14.0, 0.0"/>
+
+  <!-- Add this value since we are running simulator GSs on same PC -->
+  <arg name="fake_hostname" default="" />
+
+  <!-- Only one twisted_comm should be launched even for multiple GSs. -->
+  <!-- Set to false after launching the first GS.                      -->
+  <arg name="launch_twisted_comm" default="true"/>
+
+  <!-- Twisted Comm -->
+  <include file="$(find boothbot_nav)/launch/twisted_comm.launch" if="$(arg launch_twisted_comm)">
+    <arg name="fixed_lan_ip" value="true"/>
+    <arg name="lan_port_ip"  value="127.0.0.1"/>
+  </include>
+
+  <node name="$(anon gs_dtu_comm)" pkg="guiding_beacon" type="gs_dtu_comm.py" output="screen"
+        if="$(arg dtu)">
+    <param name="dev_name"    value="gs_$(arg gs_seq)"/>
+    <param name="dtu_port"    value="$(arg dtu_port)"/>
+    <param name="fake_hostname" value="$(arg fake_hostname)"/>
+  </node>
+  <node name="$(anon gs_twisted_comm)" pkg="guiding_beacon" type="gs_twisted_comm.py" output="screen"
+        if="$(arg twisted)">
+    <param name="dev_name"    value="gs_$(arg gs_seq)"/>
+    <param name="fake_hostname" value="$(arg fake_hostname)"/>
+    <param name="fixed_host_ip" value="true"/>
+    <param name="host_ip" value="127.0.0.1"/>
+  </node>
+  
+  <node name="$(anon fake_gs)" pkg="guiding_beacon" type="fake_station_node.py" output="screen">
+    <param name="station_name"  value="gs_$(arg gs_seq)" />
+    <param name="is_gs"         value="true" />
+    <param name="using_dtu"     value="$(arg dtu)" />
+    <param name="fake_pose"     value="$(arg fake_pose)" />
+  </node>
+
+  <!-- Node names should be anonymous, as multiple simulated GSs may run in the same PC -->
+  <node name="$(anon gs_monitor)" pkg="guiding_beacon"
+        type="gs_monitor.py" output="screen">
+    <param name="gs_seq"   value="gs_$(arg gs_seq)" />
+  </node>
+  <node name="$(anon gs_redis_subs)" pkg="guiding_beacon"
+        type="gs_redis_subs.py" output="screen">
+    <param name="gs_seq"   value="gs_$(arg gs_seq)" />
+  </node>
+  <node name="$(anon gs_cali_redis)" pkg="guiding_beacon"
+        type="gs_cali_redis_subs.py" output="screen">
+  </node>
+  <node name="$(anon errcode_monitor_gs)" pkg="common"
+        type="errcode_monitor.py" output="screen">
+  </node>
+</launch>

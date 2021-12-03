@@ -1,0 +1,60 @@
+<launch>
+<master auto="start"/>
+<rosparam command="load" ns="drivers" file="$(find augustbot_base)/config/augustbot_base_parameter.yaml" />
+
+<arg name="is_bring_up" default="False"/>
+<arg name="use_imu_odom" default="True"/>
+<arg name="enable_side_sonar" default="False"/>
+<arg name="use_small_probe" default="False"/>
+
+<group unless="$(arg is_bring_up)">
+ <node pkg="augustbot_base" type="augustbot_base_node" name="augustbot_base_node" output="screen" respawn="false" >
+  <!-- <param name="use_imu_odom" value="$(arg use_imu_odom)" />
+  <param name="enable_side_sonar"  value="$(arg enable_side_sonar)" />
+  <param name="use_small_probe"  value="$(arg use_small_probe)" />
+
+  <remap from="odom_encoder" to="odom" unless="$(arg use_imu_odom)" />
+  <remap from="odom_imu" to="odom" if="$(arg use_imu_odom)"/>
+  <remap from="cmd_vel" to="smooth_cmd_vel" />
+  <remap from="chassis/imu_onboard" to="imu_wit" /> -->
+ </node>
+
+ <arg name="status_hz" default="1"/>
+     <node pkg="boothbot_perception" type="track_server.py" name="track_server" output="log">
+         <param name="status_hz" value="$(arg status_hz)"/>
+     </node>
+</group>
+
+<arg name="port_platform" default="/dev/servos"/>
+  <arg name="fake_cb"       default="false"/>
+  <arg name="no_tracker"    default="false"/>
+  <arg name="save_tracking_images" default="false" />
+  <arg name="cb_name"       default="cb_0" />
+  <!-- If running on small PC, GSM will pass large PC redis host -->
+  <arg name="redis_host"  default="localhost"/>
+  <group unless="$(arg fake_cb)">
+
+    <node name="cb_0" pkg="guiding_beacon" type="camera_beacon_node.py" output="log">
+      <param name="cb_name"       value="$(arg cb_name)"/>
+      <param name="port"              value="$(arg port_platform)"/>
+      <param name="fake_tracker"      value="$(arg no_tracker)"/>
+      <param name="save_tracking_images" value="$(arg save_tracking_images)" />
+      <param name="redis_host" value="$(arg redis_host)" />
+    </node>
+  </group>
+
+  <group if="$(arg fake_cb)">
+    <node name="fake_cb" pkg="guiding_beacon" type="fake_station_node.py" output="log">
+      <param name="station_name" value="$(arg cb_name)"/>
+      <param name="is_gs" value="false" />
+      <param name="using_dtu" value="false" />
+    </node>
+  </group>
+
+  <node name="cb_redis" pkg="guiding_beacon" type="cb_redis_subs.py" output="log">
+    <param name="cb_name" value="$(arg cb_name)" />
+    <param name="redis_host" value="$(arg redis_host)" />
+    <param name="cb_name"       value="cb_0"/>
+  </node>
+
+</launch>
