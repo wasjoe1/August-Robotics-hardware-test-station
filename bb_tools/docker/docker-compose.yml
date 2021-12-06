@@ -16,7 +16,7 @@ services:
       - CONTAINER_NAME=backoffice
       - TERM=xterm-256color
       - DISPLAY=:0
-    command: /home/augbooth/catkin_ws/src/boothbot/boothbot_simulation/setup/boothbot-configs/backoffice.bash
+    command: /home/augbooth/catkin_ws/src/augustbot-tools/boothbot_simulation/setup/boothbot-configs/backoffice.bash
     network_mode: "host"
     depends_on:
       - db
@@ -38,7 +38,7 @@ services:
       - CONTAINER_NAME=roscore
       - TERM=xterm-256color
       - DISPLAY=:0
-    command: /home/augbooth/catkin_ws/src/boothbot/boothbot_simulation/setup/boothbot-configs/roscore.bash
+    command: /home/augbooth/catkin_ws/src/augustbot-tools/boothbot_simulation/setup/boothbot-configs/roscore.bash
     network_mode: "host"
     depends_on:
       - db
@@ -64,7 +64,7 @@ services:
       - TERM=xterm-256color
       - QT_X11_NO_MITSHM=1
       - DISPLAY=:0
-    command: /home/augbooth/catkin_ws/src/boothbot/boothbot_simulation/setup/boothbot-configs/bringup_hardware.bash
+    command: /home/augbooth/catkin_ws/src/augustbot-tools/boothbot_simulation/setup/boothbot-configs/bringup_hardware.bash
     network_mode: "host"
     depends_on:
       - db
@@ -92,7 +92,7 @@ services:
       - DISPLAY
       - TERM=xterm-256color
       - QT_X11_NO_MITSHM=1
-    command: /home/augbooth/catkin_ws/src/boothbot/boothbot_simulation/setup/boothbot-configs/boothbot_main.bash
+    command: /home/augbooth/catkin_ws/src/augustbot-tools/boothbot_simulation/setup/boothbot-configs/boothbot_main.bash
     network_mode: "host"
     depends_on:
       - backoffice
@@ -122,7 +122,7 @@ services:
       - DISPLAY
       - TERM=xterm-256color
       - QT_X11_NO_MITSHM=1
-    command: /home/augbooth/catkin_ws/src/boothbot/boothbot_simulation/setup/boothbot-configs/bringup_fake_gs.bash
+    command: /home/augbooth/catkin_ws/src/augustbot-tools/boothbot_simulation/setup/boothbot-configs/bringup_fake_gs.bash
     network_mode: "host"
     depends_on:
       - db
@@ -176,7 +176,7 @@ services:
       - "/etc/localtime:/etc/localtime:ro"
       - ${CATKIN_WS_PATH}:/home/augbooth/catkin_ws:rw
       - ${BOOTHBOT_LOG_PATH}:/home/augbooth/.ros/log:rw
-    command: /home/augbooth/catkin_ws/src/boothbot/boothbot_simulation/setup/boothbot-configs/twisted.bash
+    command: /home/augbooth/catkin_ws/src/augustbot-tools/boothbot_simulation/setup/boothbot-configs/twisted.bash
     environment:
       - CONTAINER_NAME=twisted
 
