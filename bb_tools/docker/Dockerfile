@@ -69,6 +69,7 @@ RUN apt-get update \
         python-rosinstall \
         python-rosinstall-generator \
         python-wstool \
+        iproute2 \
     && rm -rf /var/lib/apt/lists/*
 
 # Install python2 packages
@@ -86,7 +87,7 @@ RUN mkdir -p ${HOME}/.local/lib/python2.7/site-packages && \
     chown -R ${USERNAME}:${USERNAME} ${HOME}/.local
 
 # Entrypoint for ros
-COPY ./scripts/ros_entrypoint.sh /ros_entrypoint.sh 
+COPY ./scripts/ros_entrypoint.sh /ros_entrypoint.sh
 RUN chmod 755 /ros_entrypoint.sh
 
 COPY ./scripts/build.bash /build.bash
