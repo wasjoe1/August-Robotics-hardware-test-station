@@ -24,6 +24,9 @@ gs_id_list = ""
 init_goal_result = None
 gotomark_goal_result = None
 
+# Env. variable from os
+HOME_PATH = os.environ.get('HOME')
+
 # TODO: Check that the map exists in the database.
 def is_map_id_valid(input_string):
     pattern = re.compile('(0|([1-9][0-9]*))$')
@@ -75,7 +78,7 @@ if __name__ == "__main__":
     if not robot_client.wait_for_server(timeout=rospy.Duration(10.0)):
         rospy.logerr('Cannot connect to server... Please make sure fake Lionel is running.')
         sys.exit(1)
-    
+
     # Run init pose.
     rospy.loginfo("Running init pose...")
     init_goal = bbmsgs.BoothbotTaskGoal()
@@ -98,7 +101,7 @@ if __name__ == "__main__":
     if not init_goal_result.result == bbmsgs.BoothbotTaskResult.SUCCEEDED:
         rospy.logerr("Init pose failed!")
         sys.exit(1)
-    
+
     rospy.loginfo("Init pose succeeded!")
 
     # Run goto-mark
@@ -124,15 +127,17 @@ if __name__ == "__main__":
     if not gotomark_goal_result.result == bbmsgs.BoothbotTaskResult.SUCCEEDED:
         rospy.logerr("Goto-mark failed!")
         sys.exit(1)
-    
+
     rospy.loginfo("Goto-mark succeeded!")
 
     # Create link to log.
     # TODO: Use environment variables to store the correct path.
-    log_dir = os.path.realpath("/home/augbooth/.ros/log/latest")
+    _log_dir = HOME_PATH + ".ros/log/latest"
+    # log_dir = os.path.realpath("/home/augbooth/.ros/log/latest") #Aviod using absolute dir
+    log_dir = os.path.realpath(_log_dir)
     log_path = log_dir + "/rosout.log"
 
-    target_dir = "/home/augbooth/catkin_ws/src/boothbot/boothbot_simulation/reports"
+    target_dir = "../reports"
     target_log_suffix = datetime.now().strftime("%Y%m%d%H%M%S")
     target_path = target_dir + "/rosout-" + target_log_suffix + ".log"
     os.symlink(log_path, target_path)

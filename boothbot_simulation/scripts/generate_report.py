@@ -42,7 +42,6 @@ def main():
         if data is None:
             report.logerr("Type check failed. Data will be ignored: \n\t {}".format(line))
             continue
-            
         report.add_data(code, data)
 
     file.close()
@@ -55,7 +54,7 @@ if __name__ == "__main__":
 
     # Store report to file.
     # TODO: Use environment variables to store the correct path.
-    target_dir = "/home/augbooth/catkin_ws/src/boothbot/boothbot_simulation/reports"
+    target_dir = "../reports"
     target_report_suffix = datetime.now().strftime("%Y%m%d%H%M%S")
     target_report_path = target_dir + "/report-" + target_report_suffix + ".json"
 
