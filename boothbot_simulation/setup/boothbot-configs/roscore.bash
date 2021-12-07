@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -i
 source /opt/ros/melodic/setup.bash;
 
 /home/augbooth/catkin_ws/src/boothbot/docker/scripts/build.bash;

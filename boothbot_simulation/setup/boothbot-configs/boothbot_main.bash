@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/bin/bash -i
+## -i is needed for sourcing from a file in a script, but soure .bashrc directly will return warning
 source /opt/ros/melodic/setup.bash;
 
 echo "" >> /home/augbooth/.bashrc;
@@ -25,4 +26,12 @@ cd /home/augbooth/catkin_ws/src/boothbot/backoffice;
 pip install -e .
 
 source /home/augbooth/catkin_ws/devel/setup.bash;
+
+# As sourcing .bashrc won't work within a bash script, using this way to work around
+source ./env.bash;
+
+echo "Now launch boothbot_main"
+
+stdbuf -o L roslaunch --wait boothbot_main boothbot_main.launch fake_cb:=true using_dtu:=false fake_chassis_usb:=true fixed_lan_ip:=true
+
 tail -f /dev/null
