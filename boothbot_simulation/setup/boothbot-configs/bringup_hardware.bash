@@ -23,7 +23,7 @@ done
 source /home/augbooth/catkin_ws/devel/setup.bash;
 
 # As sourcing .bashrc won't work within a bash script, using this way to work around
-source ./env.bash;
+source /home/augbooth/catkin_ws/src/augustbot-tools/boothbot_simulation/setup/boothbot-configs/env.bash;
 
 stdbuf -o L roslaunch --wait  boothbot_simulation bringup_fake_hardware.launch
 tail -f /dev/null
