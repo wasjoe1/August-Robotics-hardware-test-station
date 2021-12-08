@@ -1,5 +1,4 @@
 #!/bin/bash -i
-## -i is needed for sourcing from a file in a script, but soure .bashrc directly will return warning
 source /opt/ros/melodic/setup.bash;
 
 echo "" >> /home/augbooth/.bashrc;
@@ -28,10 +27,14 @@ pip install -e .
 source /home/augbooth/catkin_ws/devel/setup.bash;
 
 # As sourcing .bashrc won't work within a bash script, using this way to work around
-source ./env.bash;
+source /home/augbooth/catkin_ws/src/augustbot-tools/boothbot_simulation/setup/boothbot-configs/env.bash;
+
+# This two export need to exec after 'source ./env.bash;'
+echo "export GIT_HEAD=${GIT_HEAD}" >> /home/augbooth/.bashrc;
+echo "export TODAY=`date +%y-%m-%d` # This is the current branch name" >> /home/augbooth/.bashrc;
 
 echo "Now launch boothbot_main"
 
-stdbuf -o L roslaunch --wait boothbot_main boothbot_main.launch fake_cb:=true using_dtu:=false fake_chassis_usb:=true fixed_lan_ip:=true
+stdbuf -o L roslaunch --wait boothbot_main boothbot_main.launch fake_cb:=true using_dtu:=false fake_chassis_usb:=true fixed_lan_ip:=true silent_imu_check:=true
 
 tail -f /dev/null
