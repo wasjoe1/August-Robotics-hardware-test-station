@@ -26,6 +26,21 @@ gotomark_goal_result = None
 
 # Env. variable from os
 HOME_PATH = os.environ.get('HOME')
+GIT_HEAD = os.environ.get('GIT_HEAD')
+YMD = os.environ.get('TODAY')
+
+if GIT_HEAD is not None and YMD is not None:
+    REPORT_PATH = HOME_PATH + "/Simulation_Reports/" + YMD + "-" + GIT_HEAD
+    # try:
+    #     os.mkdir(HOME_PATH + "/Simulation_Reports/" + YMD + "-" + GIT_HEAD)
+    # except OSError:
+    #     pass
+else:
+    REPORT_PATH = HOME_PATH + "/Simulation_Reports/UnknownBranch"
+try:
+    os.mkdir(REPORT_PATH)
+except OSError:
+    pass
 
 # TODO: Check that the map exists in the database.
 def is_map_id_valid(input_string):
@@ -132,12 +147,12 @@ if __name__ == "__main__":
 
     # Create link to log.
     # TODO: Use environment variables to store the correct path.
-    _log_dir = HOME_PATH + ".ros/log/latest"
+    _log_dir = HOME_PATH + "/.ros/log/latest"
     # log_dir = os.path.realpath("/home/augbooth/.ros/log/latest") #Aviod using absolute dir
     log_dir = os.path.realpath(_log_dir)
     log_path = log_dir + "/rosout.log"
 
-    target_dir = "../reports"
+    target_dir = REPORT_PATH #"../reports"
     target_log_suffix = datetime.now().strftime("%Y%m%d%H%M%S")
     target_path = target_dir + "/rosout-" + target_log_suffix + ".log"
     os.symlink(log_path, target_path)
