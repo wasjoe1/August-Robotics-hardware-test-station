@@ -70,6 +70,7 @@ RUN apt-get update \
         python-rosinstall-generator \
         python-wstool \
         iproute2 \
+        libncurses5-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Install python2 packages
