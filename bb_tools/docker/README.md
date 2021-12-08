@@ -18,6 +18,8 @@ git submodule init && git submodule update
     `mkdir ~/boothbot_sim_data && echo "export BOOTHBOT_DB_PATH=~/boothbot_sim_data" >> ~/.bashrc`
 4. Place to store simulation report; Could be wherever you want
     `mkdir ~/boothbot_sim_reports && echo "export SIMULATION_REPORT_PATH=~/boothbot_sim_reports" >> ~/.bashrc`
+5. Boothbot simulation image name
+    `export BOOTHBOT_IMAGE="lionel-sim"`
 
 ### 3. Change the path to the path of boothbot repo on your pc in line 12 in `boothbot/docker/docker-compose.yml`
 ```xml
@@ -33,9 +35,9 @@ volumes:
 
     `#e.g. cd /home/augbooth/catkin_ws/src/augustbot-tools/bb_tools/docker`
 
-2. Build Dockerfile to create the image `lionel`.
+2. Build Dockerfile to create the image `lionel-sim`.
 
-   `docker build -t lionel .`
+   `docker build -t lionel-sim .`
 
 ### 5. Run below command in `augustbot-tools/bb_tools/docker`
 ```bash
