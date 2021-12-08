@@ -64,6 +64,7 @@ docker-compose up -d
     `python run_simulation.py`
     then follow the instruction displayed on terminal
 
+    **NOTE: This could only used in the boothbot_main container, as it involved some environment varibles that has only been load into boothbot_main container**
 ### 8. Generate a test report
 1. Excute the `generate_report.py` script
     file path should be the output of the pervious step
@@ -71,10 +72,12 @@ docker-compose up -d
 
     or any rosout.log file in log folder
 
+    **NOTE: This could only used in the boothbot_main container, as it involved some environment varibles that has only been load into boothbot_main container**
 ### 9. Terminate the docker container
 1. Go to the terminal for launching `docker-compose up -d`.
 
-2. Stop all Docker containers by running `docker-compose down`. **NOTE: This is necessary to ensure that the log for each simulation is stored separately. The report generator only summarizes the first job in the log.**
+2. Stop all Docker containers by running `docker-compose down`.
+    **NOTE: This is necessary to ensure that the log for each simulation is stored separately. The report generator only summarizes the first job in the log.**
 
 
 
