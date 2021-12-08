@@ -6,6 +6,7 @@ echo "export TC_HOST_IP=127.0.0.1 # this is your large PC IP" >> /home/augbooth/
 echo "export GS_LAN_PORT=lo # this is GS pc LAN port" >> /home/augbooth/.bashrc;
 echo "export PTY_DTU=1 # when using PTY as DTU." >> /home/augbooth/.bashrc;
 echo "source /home/augbooth/catkin_ws/devel/setup.bash" >> /home/augbooth/.bashrc;
+echo "alias simulation='cd /home/augbooth/catkin_ws/src/augustbot-tools/boothbot_simulation/scripts'" >> /home/augbooth/.bashrc;
 
 sudo chown augbooth:augbooth /dev/dtu
 
