@@ -1,4 +1,9 @@
+## For x86 Processor
 FROM osrf/ros:melodic-desktop-full
+
+#TODO: This should be follow the method used in cicd, use the most up to date image
+## For ARM Processor
+# FROM arm64v8/ros:melodic
 
 ENV USERNAME=augbooth
 ENV HOME /home/${USERNAME}
@@ -69,6 +74,8 @@ RUN apt-get update \
         python-rosinstall \
         python-rosinstall-generator \
         python-wstool \
+        iproute2 \
+        libncurses5-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Install python2 packages
@@ -86,7 +93,7 @@ RUN mkdir -p ${HOME}/.local/lib/python2.7/site-packages && \
     chown -R ${USERNAME}:${USERNAME} ${HOME}/.local
 
 # Entrypoint for ros
-COPY ./scripts/ros_entrypoint.sh /ros_entrypoint.sh 
+COPY ./scripts/ros_entrypoint.sh /ros_entrypoint.sh
 RUN chmod 755 /ros_entrypoint.sh
 
 COPY ./scripts/build.bash /build.bash

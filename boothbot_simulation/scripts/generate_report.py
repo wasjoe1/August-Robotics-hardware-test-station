@@ -13,6 +13,24 @@ from report.json_formatter import JsonReportFormatter
 import os
 from datetime import datetime
 
+# Env. variable from os
+HOME_PATH = os.environ.get('HOME')
+GIT_HEAD = os.environ.get('GIT_HEAD')
+YMD = os.environ.get('TODAY')
+
+if GIT_HEAD is not None and YMD is not None:
+    REPORT_PATH = HOME_PATH + "/Simulation_Reports/" + YMD + "-" + GIT_HEAD
+    # try:
+    #     os.mkdir(HOME_PATH + "/Simulation_Reports/" + YMD + "-" + GIT_HEAD)
+    # except OSError:
+    #     pass
+else:
+    REPORT_PATH = HOME_PATH + "/Simulation_Reports/UnknownBranch"
+try:
+    os.mkdir(REPORT_PATH)
+except OSError:
+    pass
+
 def main():
     file = None
     file_path = None
@@ -42,7 +60,6 @@ def main():
         if data is None:
             report.logerr("Type check failed. Data will be ignored: \n\t {}".format(line))
             continue
-            
         report.add_data(code, data)
 
     file.close()
@@ -55,7 +72,7 @@ if __name__ == "__main__":
 
     # Store report to file.
     # TODO: Use environment variables to store the correct path.
-    target_dir = "/home/augbooth/catkin_ws/src/boothbot/boothbot_simulation/reports"
+    target_dir = REPORT_PATH #"../reports"
     target_report_suffix = datetime.now().strftime("%Y%m%d%H%M%S")
     target_report_path = target_dir + "/report-" + target_report_suffix + ".json"
 

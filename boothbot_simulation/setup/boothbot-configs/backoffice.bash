@@ -21,6 +21,9 @@ done
 
 source /home/augbooth/catkin_ws/devel/setup.bash;
 
+# As sourcing .bashrc won't work within a bash script, using this way to work around
+source ./env.bash;
+
 cd /home/augbooth/catkin_ws/src/boothbot/backoffice;
 ./manage.py migrate;
 ./manage.py runserver 0.0.0.0:8000
