@@ -3,7 +3,7 @@ FROM osrf/ros:melodic-desktop-full
 
 #TODO: This should be follow the method used in cicd, use the most up to date image
 ## For ARM Processor
-# FROM arm64v8/ros:latest
+# FROM arm64v8/ros:melodic
 
 ENV USERNAME=augbooth
 ENV HOME /home/${USERNAME}
