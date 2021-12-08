@@ -3,7 +3,7 @@ FROM osrf/ros:melodic-desktop-full
 
 #TODO: This should be follow the method used in cicd, use the most up to date image
 ## For ARM Processor
-# FROM nvcr.io/nvidian/nvidia-l4t-base:r32.6
+# FROM arm64v8/ros:latest
 
 ENV USERNAME=augbooth
 ENV HOME /home/${USERNAME}
