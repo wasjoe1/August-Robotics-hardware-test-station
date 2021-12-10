@@ -10,7 +10,7 @@ from pymodbus.client.sync import ModbusSerialClient
 from pymodbus.exceptions import ModbusIOException
 
 from common.enums import ConnectStatus
-from common.gs_settings import HAS_AUX_PC, NEW_BASE, IMU_AS_INCLINOMETER, \
+from boothbot_common.settings import HAS_AUX_PC, NEW_BASE, IMU_AS_INCLINOMETER, \
     IS_BOOTHNUMBER
 from port_diagnose_cb import cb_check_diagnose
 from utils import format_print
