@@ -24,6 +24,7 @@ source /home/augbooth/catkin_ws/devel/setup.bash;
 
 # As sourcing .bashrc won't work within a bash script, using this way to work around
 source /home/augbooth/catkin_ws/src/augustbot-tools/boothbot_simulation/setup/boothbot-configs/env.bash;
+echo "export DEVICE_CONFIG_PATH=${DEVICE_CONFIG_PATH}" >> /home/augbooth/.bashrc;
 
 stdbuf -o L roslaunch --wait  boothbot_simulation bringup_fake_hardware.launch
 tail -f /dev/null

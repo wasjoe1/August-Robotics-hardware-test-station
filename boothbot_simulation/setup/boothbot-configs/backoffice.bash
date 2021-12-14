@@ -22,8 +22,11 @@ done
 source /home/augbooth/catkin_ws/devel/setup.bash;
 
 # As sourcing .bashrc won't work within a bash script, using this way to work around
-source ./env.bash;
+source /home/augbooth/catkin_ws/src/augustbot-tools/boothbot_simulation/setup/boothbot-configs/env.bash;
+
+echo "export DEVICE_CONFIG_PATH=${DEVICE_CONFIG_PATH}" >> /home/augbooth/.bashrc;
 
 cd /home/augbooth/catkin_ws/src/boothbot/backoffice;
 ./manage.py migrate;
+./manage.py collectstatic --noinput
 ./manage.py runserver 0.0.0.0:8000

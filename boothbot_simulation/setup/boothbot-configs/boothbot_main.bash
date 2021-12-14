@@ -33,6 +33,7 @@ source /home/augbooth/catkin_ws/src/augustbot-tools/boothbot_simulation/setup/bo
 # This two export need to exec after 'source ./env.bash;'
 echo "export GIT_HEAD=${GIT_HEAD}" >> /home/augbooth/.bashrc;
 echo "export TODAY=`date +%y-%m-%d` # This is the current branch name" >> /home/augbooth/.bashrc;
+echo "export DEVICE_CONFIG_PATH=${DEVICE_CONFIG_PATH}" >> /home/augbooth/.bashrc;
 
 echo "Now launch boothbot_main"
 

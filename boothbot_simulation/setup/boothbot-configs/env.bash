@@ -21,3 +21,6 @@ fi
 # boothbot_branch="$(cat ${CATKIN_WS_PATH}/src/boothbot/.git/HEAD|cut -d' ' -f2- -d/|cut -f2- -d/)"
 
 export GIT_HEAD=${boothbot_branch}
+
+# local config path
+export DEVICE_CONFIG_PATH="${CATKIN_WS_PATH}/local"
