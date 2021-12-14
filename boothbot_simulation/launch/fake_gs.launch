@@ -50,8 +50,8 @@
   <!-- Node names should be anonymous, as multiple simulated GSs may run in the same PC -->
   <!-- <node name="$(anon gs_monitor)" pkg="guiding_beacon"
         type="gs_monitor.py" output="screen">
-    <param name="gs_seq"   value="gs_$(arg gs_seq)" /> -->
-  </node>
+    <param name="gs_seq"   value="gs_$(arg gs_seq)" />
+  </node> -->
   <node name="$(anon gs_redis_subs)" pkg="guiding_beacon"
         type="gs_redis_subs.py" output="screen">
     <param name="gs_seq"   value="gs_$(arg gs_seq)" />
@@ -60,6 +60,6 @@
         type="gs_cali_redis_subs.py" output="screen">
   </node>
   <!-- <node name="$(anon errcode_monitor_gs)" pkg="common"
-        type="errcode_monitor.py" output="screen"> -->
-  </node>
+        type="errcode_monitor.py" output="screen">
+  </node> -->
 </launch>
