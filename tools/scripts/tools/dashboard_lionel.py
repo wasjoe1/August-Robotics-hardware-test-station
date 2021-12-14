@@ -3,7 +3,7 @@ import redis
 
 from common.redis_keys import BOOTHBOT_STATE, NAVC_STATE, MK_STATE, CB_STATE
 from common.errcode import BBC_FID, NAVC_FID, IS_FID, CB_FID, BN_FID
-from common.gs_settings import MSR_HOST, REDIS_PORT, IS_BOOTHNUMBER
+from boothbot_common.settings import MSR_HOST, REDIS_PORT, IS_BOOTHNUMBER
 
 from dashboard_states import DashboardStates
 
