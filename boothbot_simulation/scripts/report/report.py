@@ -7,7 +7,7 @@ from enum import Enum
 from transitions import Machine
 
 from common.py_logger import PyLogging
-from common.datacode import DataCode
+from boothbot_common.datacode import DataCode
 
 class ReportState(Enum):
     """
@@ -112,7 +112,7 @@ class Report(PyLogging):
         ]
         for p in component_list:
             is_data_consumed = is_data_consumed or p.add_data(code, data)
-        
+
         if not is_data_consumed:
             self.logerr(self.UNEXPECTED_DATA_MSG.format(self.state.name, code, data))
         elif locAttempt.is_complete():
@@ -124,7 +124,7 @@ class Report(PyLogging):
             self.error_list.append(ErrorMessage())
         elif self.init_pose.is_complete():
             self.to_PRE_GOTOMARK()
-        
+
         return is_data_consumed
 
     ### PRE_GOTOMARK State ###
@@ -315,7 +315,7 @@ class MapSetup:
 class BoothbotSetup:
     def __init__(self):
         self.init_pose = None
-    
+
     def add_data(self, code, data):
         is_data_consumed = False
         if code == DataCode.INIT_GUESS_POSE:
@@ -438,7 +438,8 @@ class InitPose:
 
     @property
     def duration(self):
-        return self.end_time - self.start_time
+        if self.is_complete:
+            return self.end_time - self.start_time
 
 class GotoMark:
     def __init__(self):

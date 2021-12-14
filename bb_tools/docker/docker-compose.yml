@@ -10,7 +10,11 @@ services:
       - "/etc/timezone:/etc/timezone:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ${BACKOFFICE_LOG}:${BACKOFFICE_LOG}:rw
       - ${CATKIN_WS_PATH}:/home/augbooth/catkin_ws:rw
+      - ${CATKIN_WS_PATH}/local/image:/home/augbooth/catkin_ws/local/image:rw
+      - ${HOME}/.local/lib:/home/augbooth/.local/lib:rw
+      - ${HOME}/.config:/home/augbooth/.config:rw
       - ${BOOTHBOT_LOG_PATH}:/home/augbooth/.ros/log:rw
     environment:
       - CONTAINER_NAME=backoffice
@@ -32,6 +36,8 @@ services:
     volumes:
       - "/etc/timezone:/etc/timezone:ro"
       - "/etc/localtime:/etc/localtime:ro"
+      - ${HOME}/.local/lib:/home/augbooth/.local/lib:rw
+      - ${HOME}/.config:/home/augbooth/.config:rw
       - ${CATKIN_WS_PATH}:/home/augbooth/catkin_ws:rw
       - ${BOOTHBOT_LOG_PATH}:/home/augbooth/.ros/log:rw
     environment:
@@ -54,6 +60,8 @@ services:
       - /tmp/.docker.xauth:/tmp/.docker.xauth:rw
       - "/etc/timezone:/etc/timezone:ro"
       - "/etc/localtime:/etc/localtime:ro"
+      - ${HOME}/.local/lib:/home/augbooth/.local/lib:rw
+      - ${HOME}/.config:/home/augbooth/.config:rw
       - ${CATKIN_WS_PATH}:/home/augbooth/catkin_ws:rw
       - ${BOOTHBOT_LOG_PATH}:/home/augbooth/.ros/log:rw
     environment:
@@ -83,9 +91,12 @@ services:
       - /dev/boothbot_main:/dev/dtu:rw
       - "/etc/timezone:/etc/timezone:ro"
       - "/etc/localtime:/etc/localtime:ro"
+      - ${HOME}/.local/lib:/home/augbooth/.local/lib:rw
+      - ${HOME}/.config:/home/augbooth/.config:rw
       - ${CATKIN_WS_PATH}:/home/augbooth/catkin_ws:rw
       - ${BOOTHBOT_LOG_PATH}:/home/augbooth/.ros/log:rw
       - ${SIMULATION_REPORT_PATH}:/home/augbooth/Simulation_Reports:rw
+      - ${CATKIN_WS_PATH}/local/maps:/home/augbooth/catkin_ws/local/maps:rw
     environment:
       - CONTAINER_NAME=boothbot_main
       - TESSDATA_PREFIX=/usr/local/share/tessdata
@@ -115,6 +126,8 @@ services:
       - /tmp/.docker.xauth:/tmp/.docker.xauth:rw
       - "/etc/timezone:/etc/timezone:ro"
       - "/etc/localtime:/etc/localtime:ro"
+      - ${HOME}/.local/lib:/home/augbooth/.local/lib:rw
+      - ${HOME}/.config:/home/augbooth/.config:rw
       - ${CATKIN_WS_PATH}:/home/augbooth/catkin_ws:rw
       - /dev/fake_gs:/dev/dtu:rw
       - ${BOOTHBOT_LOG_PATH}:/home/augbooth/.ros/log:rw
@@ -139,7 +152,7 @@ services:
       - "/etc/timezone:/etc/timezone:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - ${CATKIN_WS_PATH}/src/augustbot-tools/boothbot_simulation/setup/boothbot-configs/nginx.conf:/etc/nginx/conf.d/default.conf
-      - ${CATKIN_WS_PATH}/src/augustbot-tools/backoffice/:/var/www/backoffice:rw
+      - ${CATKIN_WS_PATH}/src/boothbot/backoffice/:/var/www/backoffice:rw
     environment:
       - CONTAINER_NAME=nginx
     network_mode: "host"

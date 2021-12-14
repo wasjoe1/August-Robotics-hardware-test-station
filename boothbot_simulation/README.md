@@ -13,7 +13,7 @@ Last updated on: Nov. 25, 2021.
 1. Copy the file `docker/config/device_name.yaml` into the `common/scripts/common/` directory.
 1. Copy the file `docker/config/local_settings.py` into the  `backoffice/backoffice/lionel/` directory.
 
-## 2. Launching Docker Images 
+## 2. Launching Docker Images
 1. Go to `docker/` directory.
 1. Update the settings (e.g., the path to the catkin workspace) in the `.env` file if necessary.
 1. Bringup Docker images specified in `docker-compose.yml`.
@@ -29,7 +29,12 @@ Last updated on: Nov. 25, 2021.
 ## 3. Running the Simulation
 
 ### 1. Real Map
-1. Go to `http://localhost:8000`.
+
+1. If running on local machine
+   Go to `http://localhost:8000`.
+2. If running on remote machine
+   Go to `http://${USER}.local:8000`.
+
 1. Prepare real map as usual.
 
 ### 2. Fake Drivers

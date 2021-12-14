@@ -6,7 +6,7 @@ from __future__ import print_function
 import re
 import sys
 
-from common.datacode import DataCode
+from boothbot_common.datacode import DataCode
 from report.report import Report
 from report.json_formatter import JsonReportFormatter
 

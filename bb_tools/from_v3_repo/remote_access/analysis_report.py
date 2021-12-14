@@ -9,7 +9,7 @@ sys.path.append(backoffice_dir)
 # End of Setup Django environment
 
 import settings
-from common.gs_settings import DEVICE_NAME
+from boothbot_common.settings import DEVICE_NAME
 from controls.log_utils import get_analysis_summary
 
 def get_summary():

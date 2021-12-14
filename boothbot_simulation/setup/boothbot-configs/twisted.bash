@@ -19,5 +19,8 @@ fi
 sleep 1
 done
 
+source /home/augbooth/catkin_ws/src/augustbot-tools/boothbot_simulation/setup/boothbot-configs/env.bash;
+echo "export DEVICE_CONFIG_PATH=${DEVICE_CONFIG_PATH}" >> /home/augbooth/.bashrc;
+
 source /home/augbooth/catkin_ws/devel/setup.bash;
-python /home/augbooth/catkin_ws/src/boothbot/common/scripts/common/twisted_server.py;
+python /home/augbooth/catkin_ws/src/boothbot-config/common/scripts/common/twisted_server.py;

@@ -17,8 +17,9 @@ from boothbot_msgs.ros_interfaces import \
     MODULES_PERCEPT_TRACK_SHORT_IMAGE, \
     MODULES_PERCEPT_TRACK_STATUS
 from common import Logging
-import common.gs_settings as gbsets
-from common.errcode import ErrCode
+# import common.gs_settings as gbsets
+from boothbot_perception import settings as gbsets
+# from common.errcode import ErrCode
 from std_srvs.srv import TriggerResponse
 from sensor_msgs.msg import Image, CameraInfo
 
