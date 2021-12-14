@@ -14,8 +14,8 @@ from boothbot_msgs.ros_interfaces import \
     MODULES_PERCEPT_ACT_CHECK, \
     MODULES_PERCEPT_SRV_CHECK, \
     MODULES_PERCEPT_CHECK_STATUS
-from common.errcode import ErrCode
-from common.gs_settings import LIONEL_SAVE_FOLDER
+# from common.errcode import ErrCode        # Not exist anymore
+from boothbot_perception import settings as gbsets
 from common import Logging
 
 # NOTE: This code is copied from boothbot_perception/scripts/boothbot_perception/check_server.py with only minor changes.
