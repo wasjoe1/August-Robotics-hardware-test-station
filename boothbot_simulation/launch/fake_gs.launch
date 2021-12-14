@@ -39,7 +39,7 @@
     <param name="fixed_host_ip" value="true"/>
     <param name="host_ip" value="127.0.0.1"/>
   </node>
-  
+
   <node name="$(anon fake_gs)" pkg="guiding_beacon" type="fake_station_node.py" output="screen">
     <param name="station_name"  value="gs_$(arg gs_seq)" />
     <param name="is_gs"         value="true" />
@@ -48,9 +48,9 @@
   </node>
 
   <!-- Node names should be anonymous, as multiple simulated GSs may run in the same PC -->
-  <node name="$(anon gs_monitor)" pkg="guiding_beacon"
+  <!-- <node name="$(anon gs_monitor)" pkg="guiding_beacon"
         type="gs_monitor.py" output="screen">
-    <param name="gs_seq"   value="gs_$(arg gs_seq)" />
+    <param name="gs_seq"   value="gs_$(arg gs_seq)" /> -->
   </node>
   <node name="$(anon gs_redis_subs)" pkg="guiding_beacon"
         type="gs_redis_subs.py" output="screen">
@@ -59,7 +59,7 @@
   <node name="$(anon gs_cali_redis)" pkg="guiding_beacon"
         type="gs_cali_redis_subs.py" output="screen">
   </node>
-  <node name="$(anon errcode_monitor_gs)" pkg="common"
-        type="errcode_monitor.py" output="screen">
+  <!-- <node name="$(anon errcode_monitor_gs)" pkg="common"
+        type="errcode_monitor.py" output="screen"> -->
   </node>
 </launch>
