@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>bb_tools</name>
+  <name>boothbot_fleet_tools</name>
   <version>0.0.0</version>
   <description>The bb_debug package</description>
 

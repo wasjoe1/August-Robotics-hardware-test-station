@@ -1,0 +1,74 @@
+
+ARG BASE_IMAGE=osrf/ros:noetic-desktop-full
+FROM ${BASE_IMAGE}
+
+ENV USERNAME=augbooth
+ENV HOME /home/${USERNAME}
+
+# Use bash to replace sh
+RUN rm /bin/sh && ln -s /bin/bash /bin/sh
+
+# Add new user
+RUN useradd -m ${USERNAME} && \
+    usermod -aG sudo ${USERNAME} && \
+    usermod -aG dialout ${USERNAME} && \
+    usermod -aG video ${USERNAME} && \
+    echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+
+# Create catkin_ws and other required directory
+RUN mkdir -p ${HOME}/catkin_ws/src && \
+    mkdir -p ${HOME}/.ros && \
+    chown -R ${USERNAME}:${USERNAME} ${HOME}/.ros
+
+# Install system-related dependences
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        software-properties-common \
+        build-essential \
+        gfortran \
+        cmake \
+        git \
+        curl \
+        file \
+        tar \
+        python3-dev \
+        python3-pip \
+        python3-numpy \
+        python3-distutils \
+        python3-setuptools \
+        python3-catkin-tools \
+    && rm -rf /var/lib/apt/lists/*
+
+# Add apt-key for ros packages
+RUN curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add -
+
+# Install ros-related dependences
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        iproute2 \
+        libncurses5-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install python2 packages
+COPY ./requirements.txt ${HOME}
+RUN pip3 install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip3 install --no-cache-dir -r ${HOME}/requirements.txt && \
+    rm -f ${HOME}/requirements.txt
+
+RUN grep -qxF "source /opt/ros/noetic/setup.bash" ~/.bashrc || echo 'source /opt/ros/noetic/setup.bash' >> ~/.bashrc;
+
+# Alternate way to install
+RUN mkdir -p ${HOME}/.local/lib/python3.8/site-packages && \
+    echo "/home/augbooth/catkin_ws/src/boothbot-fleet/fleet_gui" > ${HOME}/.local/lib/python3.8/site-packages/fleet_gui.egg-link && \
+    echo "/home/augbooth/catkin_ws/src/boothbot-fleet/fleet_gui" > ${HOME}/.local/lib/python3.8/site-packages/easy-install.pth && \
+    chown -R ${USERNAME}:${USERNAME} ${HOME}/.local
+
+# Entrypoint for ros
+COPY ./ros_entrypoint.sh /ros_entrypoint.sh
+RUN chmod 755 /ros_entrypoint.sh
+
+USER ${USERNAME}
+WORKDIR ${HOME}
+
+CMD ["/bin/bash", "source", " ~/.bashrc"]
+ENTRYPOINT ["/bin/bash", "/ros_entrypoint.sh"]
