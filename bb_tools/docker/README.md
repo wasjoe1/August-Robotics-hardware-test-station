@@ -89,7 +89,10 @@ docker-compose up -d
     **NOTE: This is necessary to ensure that the log for each simulation is stored separately. The report generator only summarizes the first job in the log.**
 
 
-
+### Notes:
+1. Fake_gs_setup:
+    modify the `bringup_fake_gs.launch` file under `boothbot_simulation/launch`,
+    there is some template in `boothbot_simulation/launch/fake_gs_template`
 
 
 ### Ensure the config/setting files **exist**
