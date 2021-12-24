@@ -8,7 +8,6 @@
 ```bash
 git submodule init && git submodule update
 ```
-
 ### 2. Ensure the following environment & folder **exist**
 1. Catkin workspace path; This Should be the catkin_ws that you stored you boothbot repo
     `echo "export CATKIN_WS_PATH=~/catkin_ws" >> ~/.bashrc`
@@ -22,6 +21,12 @@ git submodule init && git submodule update
     `mkdir ~/boothbot_sim/backoffice -f && echo "export BACKOFFICE_LOG=~/boothbot_sim/backoffice" >> ~/.bashrc`
 6. Boothbot simulation image name
     `export BOOTHBOT_IMAGE="lionel-sim"`
+
+OR
+
+Run the simulation-env-setup script
+   `cd ~/catkin/src/augustbot-tools/bb_tools/docker/script`
+   `./simulation-env-setup.sh`
 
 ### 3. Change the path to the path of boothbot repo on your pc in line 12 in `boothbot/docker/docker-compose.yml`
 ```xml
