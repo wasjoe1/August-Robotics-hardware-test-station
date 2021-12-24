@@ -115,6 +115,7 @@ services:
       - "/etc/timezone:/etc/timezone:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - ${HOME}/.local/lib:/home/augbooth/.local/lib:rw
+      - ${BACKOFFICE_LOG}:/var/log/boothbot-backoffice:rw
       - ${HOME}/.config:/home/augbooth/.config:rw
       - ${CATKIN_WS_PATH}:/home/augbooth/catkin_ws:rw
       - ${BOOTHBOT_LOG_PATH}:/home/augbooth/.ros:rw
