@@ -1,0 +1,1 @@
+docker build -t boothbot-fleet:v0.1 -f Dockerfile-fleet-manager ./

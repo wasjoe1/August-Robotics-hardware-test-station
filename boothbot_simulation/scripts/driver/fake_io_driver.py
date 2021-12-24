@@ -19,7 +19,7 @@ from pymodbus.client.sync import ModbusTcpClient
 # V3.0 archi
 from boothbot_msgs.ros_interfaces import DRIVERS_IO_STATUS, DRIVERS_IO_PDO, DRIVERS_IO_SRV_CMD
 import boothbot_msgs.srv as bbsrvs
-from boothbot_marking.states import IOStates
+from boothbot_marking.constants import IOStates
 from boothbot_marking.io_auto_off_timer import IOAutoOffTimer
 
 # For simulation purposes
@@ -95,11 +95,11 @@ class FakeIODriver(Logging):
         self.msg_status = DRIVERS_IO_STATUS.type()
         self.msg_status.stamp = rospy.Time.now()
         self.msg_status.state = IOStates.INIT.name
- 
+
         pub_pdo = rospy.Publisher(DRIVERS_IO_PDO.name, DRIVERS_IO_PDO.type, queue_size=1)
         msg_pdo = DRIVERS_IO_PDO.type()
         msg_pdo.stamp = rospy.Time.now()
- 
+
         rospy.Service(DRIVERS_IO_SRV_CMD.name, DRIVERS_IO_SRV_CMD.type, self._srv_cmd_handler)
 
         # FIXME: hardware might not respond so fast, a hard delay trying to wait the hardware.
