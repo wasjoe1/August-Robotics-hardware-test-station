@@ -8,18 +8,25 @@
 ```bash
 git submodule init && git submodule update
 ```
-
 ### 2. Ensure the following environment & folder **exist**
 1. Catkin workspace path; This Should be the catkin_ws that you stored you boothbot repo
     `echo "export CATKIN_WS_PATH=~/catkin_ws" >> ~/.bashrc`
 2. Place to store boothbot simulation's log; Could be wherever you want
-    `echo "export BOOTHBOT_LOG_PATH=~/.ros/log" >> ~/.bashrc`
+    `mkdir ~/.ros/boothbot_simulation/logs -p echo "export BOOTHBOT_LOG_PATH=~/.ros/boothbot_simulation/logs" >> ~/.bashrc`
 3. Simulation Data Storage; Could be wherever you want
-    `mkdir ~/boothbot_sim_data && echo "export BOOTHBOT_DB_PATH=~/boothbot_sim_data" >> ~/.bashrc`
+    `mkdir ~/boothbot_sim/data -p && echo "export BOOTHBOT_DB_PATH=~/boothbot_sim/data" >> ~/.bashrc`
 4. Place to store simulation report; Could be wherever you want
-    `mkdir ~/boothbot_sim_reports && echo "export SIMULATION_REPORT_PATH=~/boothbot_sim_reports" >> ~/.bashrc`
-5. Boothbot simulation image name
+    `mkdir ~/boothbot_sim/reports -p && echo "export SIMULATION_REPORT_PATH=~/boothbot_sim/reports" >> ~/.bashrc`
+5. Create backoffice path
+    `mkdir ~/boothbot_sim/backoffice -f && echo "export BACKOFFICE_LOG=~/boothbot_sim/backoffice" >> ~/.bashrc`
+6. Boothbot simulation image name
     `export BOOTHBOT_IMAGE="lionel-sim"`
+
+OR
+
+Run the simulation-env-setup script
+   `cd ~/catkin/src/augustbot-tools/bb_tools/docker/script`
+   `./simulation-env-setup.sh`
 
 ### 3. Change the path to the path of boothbot repo on your pc in line 12 in `boothbot/docker/docker-compose.yml`
 ```xml
@@ -82,7 +89,10 @@ docker-compose up -d
     **NOTE: This is necessary to ensure that the log for each simulation is stored separately. The report generator only summarizes the first job in the log.**
 
 
-
+### Notes:
+1. Fake_gs_setup:
+    modify the `bringup_fake_gs.launch` file under `boothbot_simulation/launch`,
+    there is some template in `boothbot_simulation/launch/fake_gs_template`
 
 
 ### Ensure the config/setting files **exist**

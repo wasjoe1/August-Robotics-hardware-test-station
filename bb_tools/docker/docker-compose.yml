@@ -10,12 +10,12 @@ services:
       - "/etc/timezone:/etc/timezone:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - ${BACKOFFICE_LOG}:${BACKOFFICE_LOG}:rw
+      - ${BACKOFFICE_LOG}:/var/log/boothbot-backoffice:rw
       - ${CATKIN_WS_PATH}:/home/augbooth/catkin_ws:rw
       - ${CATKIN_WS_PATH}/local/image:/home/augbooth/catkin_ws/local/image:rw
       - ${HOME}/.local/lib:/home/augbooth/.local/lib:rw
       - ${HOME}/.config:/home/augbooth/.config:rw
-      - ${BOOTHBOT_LOG_PATH}:/home/augbooth/.ros/log:rw
+      - ${BOOTHBOT_LOG_PATH}:/home/augbooth/.ros:rw
     environment:
       - CONTAINER_NAME=backoffice
       - TERM=xterm-256color
@@ -39,7 +39,7 @@ services:
       - ${HOME}/.local/lib:/home/augbooth/.local/lib:rw
       - ${HOME}/.config:/home/augbooth/.config:rw
       - ${CATKIN_WS_PATH}:/home/augbooth/catkin_ws:rw
-      - ${BOOTHBOT_LOG_PATH}:/home/augbooth/.ros/log:rw
+      - ${BOOTHBOT_LOG_PATH}:/home/augbooth/.ros:rw
     environment:
       - CONTAINER_NAME=roscore
       - TERM=xterm-256color
@@ -48,6 +48,29 @@ services:
     network_mode: "host"
     depends_on:
       - db
+
+  # rosbag:
+  #   container_name: rosbag
+  #   image: ${BOOTHBOT_IMAGE}
+  #   user: augbooth
+  #   privileged: true
+  #   restart: always
+  #   volumes:
+  #     - /tmp/.X11-unix:/tmp/.X11-unix:rw
+  #     - /tmp/.docker.xauth:/tmp/.docker.xauth:rw
+  #     - "/etc/timezone:/etc/timezone:ro"
+  #     - "/etc/localtime:/etc/localtime:ro"
+  #     - ${HOME}/.local/lib:/home/augbooth/.local/lib:rw
+  #     - ${HOME}/.config:/home/augbooth/.config:rw
+  #     - ${CATKIN_WS_PATH}:/home/augbooth/catkin_ws:rw
+  #     - ${BOOTHBOT_LOG_PATH}:/home/augbooth/.ros:rw
+  #   environment:
+  #     - CONTAINER_NAME=rosbag
+  #   command: rosbag record -o /home/augbooth/.ros/bag -a --split --duration=30m --exclude='(.*depth_camera.*)'
+  #   network_mode: "host"
+  #   depends_on:
+  #     - roscore
+  #     - boothbot_main
 
   bringup_hardware:
     container_name: bringup_hardware
@@ -63,7 +86,7 @@ services:
       - ${HOME}/.local/lib:/home/augbooth/.local/lib:rw
       - ${HOME}/.config:/home/augbooth/.config:rw
       - ${CATKIN_WS_PATH}:/home/augbooth/catkin_ws:rw
-      - ${BOOTHBOT_LOG_PATH}:/home/augbooth/.ros/log:rw
+      - ${BOOTHBOT_LOG_PATH}:/home/augbooth/.ros:rw
     environment:
       - CONTAINER_NAME=bringup_hardware
       - TESSDATA_PREFIX=/usr/local/share/tessdata
@@ -92,9 +115,10 @@ services:
       - "/etc/timezone:/etc/timezone:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - ${HOME}/.local/lib:/home/augbooth/.local/lib:rw
+      - ${BACKOFFICE_LOG}:/var/log/boothbot-backoffice:rw
       - ${HOME}/.config:/home/augbooth/.config:rw
       - ${CATKIN_WS_PATH}:/home/augbooth/catkin_ws:rw
-      - ${BOOTHBOT_LOG_PATH}:/home/augbooth/.ros/log:rw
+      - ${BOOTHBOT_LOG_PATH}:/home/augbooth/.ros:rw
       - ${SIMULATION_REPORT_PATH}:/home/augbooth/Simulation_Reports:rw
       - ${CATKIN_WS_PATH}/local/maps:/home/augbooth/catkin_ws/local/maps:rw
     environment:
@@ -130,7 +154,7 @@ services:
       - ${HOME}/.config:/home/augbooth/.config:rw
       - ${CATKIN_WS_PATH}:/home/augbooth/catkin_ws:rw
       - /dev/fake_gs:/dev/dtu:rw
-      - ${BOOTHBOT_LOG_PATH}:/home/augbooth/.ros/log:rw
+      - ${BOOTHBOT_LOG_PATH}:/home/augbooth/.ros:rw
     environment:
       - CONTAINER_NAME=bringup_fake_gs
       - TESSDATA_PREFIX=/usr/local/share/tessdata
@@ -191,7 +215,7 @@ services:
       - "/etc/timezone:/etc/timezone:ro"
       - "/etc/localtime:/etc/localtime:ro"
       - ${CATKIN_WS_PATH}:/home/augbooth/catkin_ws:rw
-      - ${BOOTHBOT_LOG_PATH}:/home/augbooth/.ros/log:rw
+      - ${BOOTHBOT_LOG_PATH}:/home/augbooth/.ros:rw
     command: /home/augbooth/catkin_ws/src/augustbot-tools/boothbot_simulation/setup/boothbot-configs/twisted.bash
     environment:
       - CONTAINER_NAME=twisted
