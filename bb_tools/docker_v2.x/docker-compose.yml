@@ -1,0 +1,203 @@
+version: "3"
+services:
+  backoffice:
+    container_name: backoffice
+    image: ${BOOTHBOT_IMAGE}
+    user: augbooth
+    privileged: true
+    restart: always
+    volumes:
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ${BACKOFFICE_LOG}:${BACKOFFICE_LOG}:rw
+      - ${CATKIN_WS_PATH}:/home/augbooth/catkin_ws:rw
+      - ${CATKIN_WS_PATH}/local/image:/home/augbooth/catkin_ws/local/image:rw
+      - ${HOME}/.local/lib:/home/augbooth/.local/lib:rw
+      - ${HOME}/.config:/home/augbooth/.config:rw
+      - ${BOOTHBOT_LOG_PATH}:/home/augbooth/.ros/log:rw
+    environment:
+      - CONTAINER_NAME=backoffice
+      - TERM=xterm-256color
+      - DISPLAY=:0
+    command: /home/augbooth/catkin_ws/src/augustbot-tools/boothbot_simulation/setup/boothbot-configs/backoffice.bash
+    network_mode: "host"
+    depends_on:
+      - db
+      - redis
+      - roscore
+
+  roscore:
+    container_name: roscore
+    image: ${BOOTHBOT_IMAGE}
+    user: augbooth
+    privileged: true
+    restart: always
+    volumes:
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - ${HOME}/.local/lib:/home/augbooth/.local/lib:rw
+      - ${HOME}/.config:/home/augbooth/.config:rw
+      - ${CATKIN_WS_PATH}:/home/augbooth/catkin_ws:rw
+      - ${BOOTHBOT_LOG_PATH}:/home/augbooth/.ros/log:rw
+    environment:
+      - CONTAINER_NAME=roscore
+      - TERM=xterm-256color
+      - DISPLAY=:0
+    command: /home/augbooth/catkin_ws/src/augustbot-tools/boothbot_simulation/setup/boothbot-configs/roscore.bash
+    network_mode: "host"
+    depends_on:
+      - db
+
+  bringup_hardware:
+    container_name: bringup_hardware
+    image: ${BOOTHBOT_IMAGE}
+    user: augbooth
+    privileged: true
+    restart: always
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - /tmp/.docker.xauth:/tmp/.docker.xauth:rw
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - ${HOME}/.local/lib:/home/augbooth/.local/lib:rw
+      - ${HOME}/.config:/home/augbooth/.config:rw
+      - ${CATKIN_WS_PATH}:/home/augbooth/catkin_ws:rw
+      - ${BOOTHBOT_LOG_PATH}:/home/augbooth/.ros/log:rw
+    environment:
+      - CONTAINER_NAME=bringup_hardware
+      - TESSDATA_PREFIX=/usr/local/share/tessdata
+      - XAUTHORITY=/tmp/.docker.xauth
+      - DISPLAY
+      - TERM=xterm-256color
+      - QT_X11_NO_MITSHM=1
+      - DISPLAY=:0
+    command: /home/augbooth/catkin_ws/src/augustbot-tools/boothbot_simulation/setup/boothbot-configs/bringup_hardware.bash
+    network_mode: "host"
+    depends_on:
+      - db
+      - backoffice
+      - roscore
+
+  boothbot_main:
+    container_name: boothbot_main
+    image: ${BOOTHBOT_IMAGE}
+    user: augbooth
+    privileged: true
+    restart: always
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - /tmp/.docker.xauth:/tmp/.docker.xauth:rw
+      - /dev/boothbot_main:/dev/dtu:rw
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - ${HOME}/.local/lib:/home/augbooth/.local/lib:rw
+      - ${HOME}/.config:/home/augbooth/.config:rw
+      - ${CATKIN_WS_PATH}:/home/augbooth/catkin_ws:rw
+      - ${BOOTHBOT_LOG_PATH}:/home/augbooth/.ros/log:rw
+      - ${SIMULATION_REPORT_PATH}:/home/augbooth/Simulation_Reports:rw
+      - ${CATKIN_WS_PATH}/local/maps:/home/augbooth/catkin_ws/local/maps:rw
+    environment:
+      - CONTAINER_NAME=boothbot_main
+      - TESSDATA_PREFIX=/usr/local/share/tessdata
+      - XAUTHORITY=/tmp/.docker.xauth
+      - DISPLAY
+      - TERM=xterm-256color
+      - QT_X11_NO_MITSHM=1
+      # - CATKIN_WS_PATH=${CATKIN_WS_PATH}
+      # - BOOTHBOT_LOG_PATH=${BOOTHBOT_LOG_PATH}
+    command: /home/augbooth/catkin_ws/src/augustbot-tools/boothbot_simulation/setup/boothbot-configs/boothbot_main.bash
+    network_mode: "host"
+    depends_on:
+      - backoffice
+      - db
+      - roscore
+      - bringup_hardware
+      - bringup_fake_gs
+
+  bringup_fake_gs:
+    container_name: bringup_fake_gs
+    image: ${BOOTHBOT_IMAGE}
+    user: augbooth
+    privileged: true
+    restart: always
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - /tmp/.docker.xauth:/tmp/.docker.xauth:rw
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - ${HOME}/.local/lib:/home/augbooth/.local/lib:rw
+      - ${HOME}/.config:/home/augbooth/.config:rw
+      - ${CATKIN_WS_PATH}:/home/augbooth/catkin_ws:rw
+      - /dev/fake_gs:/dev/dtu:rw
+      - ${BOOTHBOT_LOG_PATH}:/home/augbooth/.ros/log:rw
+    environment:
+      - CONTAINER_NAME=bringup_fake_gs
+      - TESSDATA_PREFIX=/usr/local/share/tessdata
+      - XAUTHORITY=/tmp/.docker.xauth
+      - DISPLAY
+      - TERM=xterm-256color
+      - QT_X11_NO_MITSHM=1
+    command: /home/augbooth/catkin_ws/src/augustbot-tools/boothbot_simulation/setup/boothbot-configs/bringup_fake_gs.bash
+    network_mode: "host"
+    depends_on:
+      - db
+      - backoffice
+      - roscore
+
+  nginx:
+    container_name: nginx
+    restart: always
+    volumes:
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - ${CATKIN_WS_PATH}/src/augustbot-tools/boothbot_simulation/setup/boothbot-configs/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ${CATKIN_WS_PATH}/src/boothbot/backoffice/:/var/www/backoffice:rw
+    environment:
+      - CONTAINER_NAME=nginx
+    network_mode: "host"
+    depends_on:
+      - backoffice
+    image: "nginx:1.21.3"
+
+  redis:
+    container_name: redis
+    restart: always
+    network_mode: "host"
+    environment:
+      - CONTAINER_NAME=redis
+    image: "redis"
+
+  db:
+    container_name: db
+    image: "postgres:9.5.22"
+    network_mode: "host"
+    restart: always
+    volumes:
+      - ${BOOTHBOT_DB_PATH}:/var/lib/postgresql/data
+    environment:
+      - CONTAINER_NAME=db
+      - POSTGRES_DB=hallmap
+      - POSTGRES_USER=augbooth
+      - POSTGRES_PASSWORD=aug
+
+  twisted:
+    container_name: twisted
+    user: "augbooth"
+    image: ${BOOTHBOT_IMAGE}
+    network_mode: "host"
+    restart: always
+    volumes:
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+      - ${CATKIN_WS_PATH}:/home/augbooth/catkin_ws:rw
+      - ${BOOTHBOT_LOG_PATH}:/home/augbooth/.ros/log:rw
+    command: /home/augbooth/catkin_ws/src/augustbot-tools/boothbot_simulation/setup/boothbot-configs/twisted.bash
+    environment:
+      - CONTAINER_NAME=twisted
+
+  adminer:
+    container_name: adminer
+    image: "adminer"
+    network_mode: "host"
+    restart: always
