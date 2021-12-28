@@ -23,6 +23,7 @@ services:
     command: "/home/augbooth/docker/scripts/roscore.bash"
     volumes:
       - /home/pat/catkin_ws/local:/home/augbooth/catkin_ws/local:rw
+      - /home/pat/catkin_ws/local/roslogs:/home/augbooth/.ros:rw
       - /home/pat/catkin_ws/local/backoffice/logs:/var/log/boothbot-backoffice:rw
       - /home/pat/docker/catkin_ws:/home/augbooth/catkin_ws:rw
       - /home/pat/a_ws/boothbot_ws/boothbot:/home/augbooth/catkin_ws/src/boothbot:rw
