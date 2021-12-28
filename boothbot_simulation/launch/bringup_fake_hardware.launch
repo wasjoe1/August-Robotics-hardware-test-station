@@ -30,7 +30,7 @@
   <include file="$(find boothbot_simulation)/launch/fake_io_driver.launch">
   </include>
 
-  <include file="$(find boothbot_simulation)/launch/fake_check_server.launch"/>
+  <include file="$(find boothbot_perception)/launch/fake_check_server.launch"/>
 
   <include file="$(find boothbot_simulation)/launch/fake_track_server.launch"/>
 

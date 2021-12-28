@@ -1,0 +1,97 @@
+version: "3"
+
+# {{ catkin_workspace }} = /home/pat/catkin_ws/local/catkin_ws
+# {{ config_file_path }} = /home/pat/catkin_ws/local
+# {{ code_repo_path }} = /home/pat/a_ws/boothbot_ws/boothbot_v2
+services:
+  db:
+    extends:
+      file: ./common-services.yml
+      service: db
+
+  redis:
+    extends:
+      file: ./common-services.yml
+      service: redis
+
+  roscore:
+    extends:
+      file: ./common-services.yml
+      service: lionel
+    restart: "no"
+    container_name: roscore
+    command: "/home/augbooth/docker/scripts/roscore.bash"
+    volumes:
+      - /home/pat/catkin_ws/local:/home/augbooth/catkin_ws/local:rw
+      - /home/pat/catkin_ws/local/backoffice/logs:/var/log/boothbot-backoffice:rw
+      - /home/pat/docker/catkin_ws:/home/augbooth/catkin_ws:rw
+      - /home/pat/a_ws/boothbot_ws/boothbot:/home/augbooth/catkin_ws/src/boothbot:rw
+      - /home/pat/a_ws/boothbot_ws/boothbot-config:/home/augbooth/catkin_ws/src/boothbot-config:rw
+      - /home/pat/a_ws/augustbot_ws/augustbot-tools:/home/augbooth/catkin_ws/src/augustbot-tools:rw
+    environment:
+      - CONTAINER_NAME=roscore
+
+  backoffice:
+    extends:
+      service: roscore
+    container_name: backoffice
+    command: "/home/augbooth/docker/scripts/backoffice.bash"
+    environment:
+      - CONTAINER_NAME=backoffice
+    depends_on:
+      - db
+      - redis
+      - roscore
+
+  nginx:
+    extends:
+      file: ./common-services.yml
+      service: nginx
+    volumes:
+      # for v3.1 and later
+      - ./config/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - /home/pat/a_ws/boothbot_ws/boothbot/backoffice:/var/www/backoffice:rw
+    depends_on:
+      - backoffice
+
+  twisted:
+    extends:
+      service: roscore
+    container_name: twisted
+    command: "/home/augbooth/docker/scripts/twisted.bash"
+    environment:
+      - CONTAINER_NAME=twisted
+    depends_on:
+      - db
+      - redis
+      - roscore
+
+  bringup_fake_hardware:
+    extends:
+      service: roscore
+    container_name: bringup_fake_hardware
+    command: "/home/augbooth/docker/scripts/bringup_fake_hardware.bash"
+    environment:
+      - CONTAINER_NAME=bringup_fake_hardware
+    depends_on:
+      - roscore
+
+  boothbot_main:
+    extends:
+      service: roscore
+    container_name: boothbot_main
+    command: "/home/augbooth/docker/scripts/boothbot_main.bash"
+    environment:
+      - CONTAINER_NAME=boothbot_main
+    depends_on:
+      - bringup_fake_hardware
+
+  bringup_fake_gs:
+    extends:
+      service: roscore
+    container_name: bringup_fake_gs
+    command: "/home/augbooth/docker/scripts/bringup_fake_gs.bash"
+    environment:
+      - CONTAINER_NAME=bringup_fake_gs
+    depends_on:
+      - bringup_fake_hardware
