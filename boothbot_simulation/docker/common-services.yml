@@ -31,9 +31,8 @@ services:
       - POSTGRES_USER=augbooth
       - POSTGRES_PASSWORD=aug
 
-  lionel:
-    container_name: lionel
-    image: "boothbot:v3.0"
+  boothbot:
+    container_name: boothbot
     user: "augbooth"
     privileged: true
     network_mode: "host"
@@ -44,9 +43,9 @@ services:
       - /dev:/dev:rw
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-      - ./scripts:/home/augbooth/docker/scripts:rw
+      - ./config/scripts:/home/augbooth/docker/scripts:rw
     environment:
-      - CONTAINER_NAME=lionel
+      - CONTAINER_NAME=boothbot
       - XAUTHORITY=/tmp/.docker.xauth
       - DISPLAY
       - TERM=xterm-256color

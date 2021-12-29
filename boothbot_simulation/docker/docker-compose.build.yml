@@ -1,0 +1,33 @@
+version: "3"
+
+services:
+  db:
+    extends:
+      file: ./common-services.yml
+      service: db
+
+  redis:
+    extends:
+      file: ./common-services.yml
+      service: redis
+
+  build:
+    extends:
+      file: ./common-services.yml
+      service: boothbot
+    image: ${BOOTHBOT_IMAGE}
+    restart: "no"
+    container_name: build
+    command: "/home/augbooth/docker/scripts/build.bash"
+    volumes:
+      - ${DEVICE_CONFIG_PATH}:/home/augbooth/catkin_ws/local:rw
+      - ${ROS_HOME}:/home/augbooth/.ros:rw
+      - ${BOOTHBOT_BACKOFFICE_LOG_PATH}:/var/log/boothbot-backoffice:rw
+      - ${CATKIN_WS_PATH}:/home/augbooth/catkin_ws:rw
+      - ${BOOTHBOT_REPO_PATH}:/home/augbooth/catkin_ws/src/boothbot:rw
+      - /home/pat/a_ws/boothbot_ws/boothbot-config:/home/augbooth/catkin_ws/src/boothbot-config:rw
+      - /home/pat/a_ws/augustbot_ws/augustbot-tools:/home/augbooth/catkin_ws/src/augustbot-tools:rw
+    environment:
+      - CONTAINER_NAME=build
+    depends_on:
+      - db  # for building backoffice objects
