@@ -18,7 +18,7 @@ that developers could test their code at their own PC.
 1. cd `boothbot_simulation/docker`
 2. edit `setup.bash` with your own local environments
 3. source setup.bash
-4. dc_build
+4. dc_build, kill&exit after finished.
 5. dc up
 
 It's running. Use `dc_debug` to attach on `roscore` container for debugging
