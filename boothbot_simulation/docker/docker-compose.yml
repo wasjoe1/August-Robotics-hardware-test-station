@@ -30,6 +30,7 @@ services:
       - ${BOOTHBOT_REPO_PATH}:/home/augbooth/catkin_ws/src/boothbot:rw
       - ${BOOTHBOT_CONFIG_REPO_PATH}:/home/augbooth/catkin_ws/src/boothbot-config:rw
       - ${AUGUSTBOT_TOOLS_REPO_PATH}:/home/augbooth/catkin_ws/src/augustbot-tools:rw
+      - ./config/sample:/home/augbooth/catkin_ws/local/settings:rw
     environment:
       - CONTAINER_NAME=roscore
       - ROS_MASTER_URI

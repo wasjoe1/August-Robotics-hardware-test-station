@@ -1,0 +1,110 @@
+serial_number: sample
+manufacture_date: !!str 2021-12-28
+global:
+  new_base: true # (deprecating....) big wheels version base
+  new_shell: true # (deprecating....) green shell?
+  is_boothnumber: false
+  using_chassis_io: true
+  imu_as_inclinometer: true
+  has_aux_pc: false
+  connect_timeout: 100. # second
+  inialize_timeout: 100. # second
+  tolerance_xy: 0.005 # m
+  tolerance_rz: 0.005 # rad
+  marking_system_offset: -0.373
+  GS_LAN_PORT: lo
+
+# (01~09) Management
+supervisor:
+  node_code: 1
+task_manager:
+  node_code: 2
+
+# (10~19) Apps
+error_handler:
+  node_code: 11
+goto_mark_app:
+  node_code: 12
+initialize_app:
+  node_code: 13
+  wait_map_timeout: 10. # second
+mgs_cali_app:
+  node_code: 14
+
+# (20~39) Modules
+navigation_module:
+  node_code: 21
+  trans_beacon:             [0.0, 0.0, 0.0]
+  trans_beacon_rcenter:     [0.0, 0.0, 0.0]
+marking_module:
+  node_code: 22
+  lift_time: 2
+  lift_time_short: 1
+gbm_module:
+  node_code: 24
+gb_module:
+  node_code: 25
+  laser_offset: [0.0, 0.0]
+portal_module:
+  node_code: 27
+
+# (50~79) Drivers
+chassis_driver:
+  node_code: 50
+  driving_ratio: 1.1
+  inclinometer_pitch_offset: 0.0
+  inclinometer_roll_offset: 0.0
+io_driver:
+  node_code: 51
+sonar_driver:
+  node_code: 52
+depcam_driver:
+  node_code: 53
+  rs_pose_xyz: [0.3, 0.0, 0.53]
+  rs_pose_rpy: [0.0, 0.513, 0.0]
+servos_driver:
+  node_code: 54
+  servo_parameter:
+    # motor id
+    # platfrom: 0
+    0:
+      tolerance:            [0.0005, 0.001]
+    # horizontal: 1
+    1:
+      tolerance:            0.0005
+      encoder_resolution:   16384
+      zero_offset:          7116
+      gear_ratio:           4.8
+      limit_positive:       3.9
+      limit_negative:       -3.9
+    # vertical: 2
+    2:
+      tolerance:            0.001
+      encoder_resolution:   16384
+      zero_offset:          1819.8
+      gear_ratio:           3.333333333333333
+      limit_positive:       0.1
+      limit_negative:       -0.25
+dtu_driver:
+  node_code: 55
+twisted_driver:
+  node_code: 56
+lidar_driver:
+  node_code: 57
+map_pcd_driver:
+  node_code: 58
+goal_db_driver:
+  node_code: 59
+tracker_driver:
+  node_code: 60
+  long_cam_laser_dist:      0.03
+  short_cam_laser_dist:     0.035
+  long_short_cam_angle_offset: -0.005053
+  long_cam_min_tracking_dist: 3.0
+  long_cam_exposure: 250
+  short_cam_exposure: 50
+checker_driver:
+  node_code: 61
+  text_roi: [155, 155, 370, 125] # x, y, w, h. Default value from our first BN robot
+
+battery_turning_pts: [29.4, 24.1, 21.0]  # values: [<full-battery-voltage 100%>, <10%>, <1%>]. Unit: voltage
