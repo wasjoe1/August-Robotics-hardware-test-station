@@ -21,12 +21,13 @@ services:
     command: "/home/augbooth/docker/scripts/roscore.bash"
     volumes:
       - ${DEVICE_CONFIG_PATH}:/home/augbooth/catkin_ws/local:rw
+      - ${BOOTHBOT_PYTHON_SITE_PACKAGES}:/home/augbooth/.local/lib/python2.7/site-packages:rw
       - ${ROS_HOME}:/home/augbooth/.ros:rw
       - ${BOOTHBOT_BACKOFFICE_LOG_PATH}:/var/log/boothbot-backoffice:rw
       - ${CATKIN_WS_PATH}:/home/augbooth/catkin_ws:rw
       - ${BOOTHBOT_REPO_PATH}:/home/augbooth/catkin_ws/src/boothbot:rw
-      - /home/pat/a_ws/boothbot_ws/boothbot-config:/home/augbooth/catkin_ws/src/boothbot-config:rw
-      - /home/pat/a_ws/augustbot_ws/augustbot-tools:/home/augbooth/catkin_ws/src/augustbot-tools:rw
+      - ${BOOTHBOT_CONFIG_REPO_PATH}:/home/augbooth/catkin_ws/src/boothbot-config:rw
+      - ${AUGUSTBOT_TOOLS_REPO_PATH}:/home/augbooth/catkin_ws/src/augustbot-tools:rw
     environment:
       - CONTAINER_NAME=roscore
       - ROS_MASTER_URI

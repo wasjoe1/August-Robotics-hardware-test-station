@@ -44,6 +44,17 @@ function waiting_roscore () {
 
 source /opt/ros/melodic/setup.bash
 source ${CATKIN_WS_PATH}/devel/setup.bash
-echo $ROS_MASTER_URI
-echo $ROS_HOSTNAME
-echo $ROS_IP
+echo "=============================USAGE======================================="
+echo "CONTAINER_NAME:$CONTAINER_NAME"
+echo "ROS_MASTER_URI:$ROS_MASTER_URI"
+if [ ! -n "$ROS_HOSTNAME" ]; then
+    unset ROS_HOSTNAME
+else
+    echo "  ROS_HOSTNAME:$ROS_HOSTNAME"
+fi
+
+if [ ! -n "$ROS_IP" ]; then
+    unset ROS_IP
+else
+    echo "        ROS_IP:$ROS_IP"
+fi
