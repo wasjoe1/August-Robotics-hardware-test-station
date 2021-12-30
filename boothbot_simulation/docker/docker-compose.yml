@@ -5,11 +5,13 @@ services:
     extends:
       file: ./common-services.yml
       service: db
+    restart: "no"
 
   redis:
     extends:
       file: ./common-services.yml
       service: redis
+    restart: "no"
 
   roscore:
     extends:
@@ -53,6 +55,7 @@ services:
     extends:
       file: ./common-services.yml
       service: nginx
+    restart: "no"
     volumes:
       # for v3.1 and later
       - ./config/nginx.conf:/etc/nginx/conf.d/default.conf:ro
