@@ -51,7 +51,7 @@ fi
 export _FILE_PATH=$(dirname $(readlink -f "$0"))
 
 function dc_build () {
-    docker-compose -f $_FILE_PATH/docker-compose.build.yml up
+    docker-compose -f $_FILE_PATH/docker-compose.build.yml up build
 }
 
 function dc () {
