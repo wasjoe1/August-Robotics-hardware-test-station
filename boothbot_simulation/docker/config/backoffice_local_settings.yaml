@@ -1,0 +1,11 @@
+DATABASES:
+  default:
+    ENGINE: "django.db.backends.postgresql"
+    NAME: "hallmap"
+    USER: "augbooth"
+    PASSWORD: "aug"
+    HOST: "localhost"
+    PORT: "5432"
+
+DEBUG: false
+BO_SERVER_MODE: false
