@@ -1,0 +1,46 @@
+version: "3"
+
+# {{ catkin_workspace }} = /home/pat/catkin_ws/local/catkin_ws
+# {{ config_file_path }} = /home/pat/catkin_ws/local
+# {{ code_repo_path }} = /home/pat/a_ws/boothbot_ws/boothbot_v2
+services:
+  db:
+    extends:
+      file: ./common-services.yml
+      service: db
+
+  redis:
+    extends:
+      file: ./common-services.yml
+      service: redis
+
+  nginx:
+    extends:
+      file: ./common-services.yml
+      service: nginx
+    volumes:
+      # for v3.1 and later
+      - /home/pat/catkin_ws/local/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - /home/pat/a_ws/boothbot_ws/boothbot_v2/backoffice:/var/www/backoffice:rw
+
+  backoffice:
+    extends:
+      file: ./common-services.yml
+      service: lionel
+    restart: always
+    container_name: backoffice
+    command: "/home/augbooth/docker/scripts/backoffice.bash"
+    volumes:
+      - /home/pat/catkin_ws/local:/home/augbooth/local:ro
+      - /home/pat/catkin_ws/local/backoffice/django_info.log:/var/log/boothbot-backoffice/django_info.log:rw
+      - /home/pat/catkin_ws/local/catkin_ws:/home/augbooth/catkin_ws:rw
+      - /home/pat/a_ws/boothbot_ws/boothbot_v2:/home/augbooth/catkin_ws/src/boothbot:rw
+      - /home/pat/catkin_ws/local/device_name.yaml:/home/augbooth/catkin_ws/src/boothbot/common/scripts/common/device_name.yaml:ro
+    environment:
+      - CONTAINER_NAME=backoffice
+      # - ROS_MASTER_URI=http://localhost:11311
+      # - ROS_HOSTNAME=localhost
+    depends_on:
+      - db
+      - redis
+      - nginx

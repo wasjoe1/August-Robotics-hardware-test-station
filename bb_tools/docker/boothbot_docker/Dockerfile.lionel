@@ -1,0 +1,104 @@
+#
+# this dockerfile roughly follows the 'Ubuntu install of ROS Melodic' from:
+#   http://wiki.ros.org/melodic/Installation/Ubuntu
+#
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+ENV LANG en_US.UTF-8
+
+# add new sudo user
+ENV USERNAME augbooth
+ENV HOME /home/$USERNAME
+RUN useradd -m $USERNAME && \
+        echo "$USERNAME:$USERNAME" | chpasswd && \
+        usermod --shell /bin/bash $USERNAME && \
+        usermod -aG sudo $USERNAME && \
+        usermod -aG dialout $USERNAME && \
+        usermod -aG video $USERNAME && \
+        mkdir -p /etc/sudoers.d && \
+        echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/$USERNAME && \
+        chmod 0440 /etc/sudoers.d/$USERNAME && \
+        # Replace 1000 with your user/group id
+        usermod  --uid 1000 $USERNAME && \
+        groupmod --gid 1000 $USERNAME
+RUN chown -R $USERNAME:$USERNAME $HOME
+
+#
+# install packages
+#
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    software-properties-common \
+    python-pip \
+    libffi-dev \
+    python-catkin-tools \
+    libgoogle-glog-dev \
+    ros-melodic-rospy-message-converter \
+    ros-melodic-yocs-velocity-smoother \
+    ros-melodic-image-transport \
+    ros-melodic-vision-msgs \
+    ros-melodic-yocs-cmd-vel-mux \
+    ros-melodic-robot-localization \
+    ros-melodic-spatio-temporal-voxel-layer \
+    ros-melodic-range-sensor-layer \
+    ros-melodic-serial \
+    ros-melodic-robot-upstart \
+    ros-melodic-map-server \
+    ros-melodic-move-base \
+    ros-melodic-global-planner \
+    ros-melodic-teb-local-planner \
+    ros-melodic-bfl \
+    libncurses5-dev \
+    && add-apt-repository -y ppa:alex-p/tesseract-ocr \
+    && apt install -y --no-install-recommends tesseract-ocr \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip3 install --no-cache-dir --upgrade pip setuptools wheel
+RUN pip2 install --no-cache-dir --upgrade pip setuptools wheel
+
+COPY ./packages/requirements_py3.txt ./requirements_py3.txt
+RUN pip3 install --no-cache-dir -r requirements_py3.txt && \
+    rm requirements_py3.txt
+
+COPY ./packages/requirements_py2.txt ./requirements_py2.txt
+RUN pip2 install --no-cache-dir -r requirements_py2.txt && \
+    rm requirements_py2.txt
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    ros-melodic-librealsense2 \
+    ros-melodic-realsense2-camera \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    ros-melodic-tf2-sensor-msgs \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/cuda/bin
+ENV LD_LIBRARY_PATH: /usr/local/cuda/lib64
+RUN ln -s /usr/include/locale.h /usr/include/xlocale.h
+RUN pip3 install --no-cache-dir --verbose pycuda
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    ros-melodic-joy \
+    && rm -rf /var/lib/apt/lists/*
+RUN pip2 install --no-cache-dir --verbose PyYAML==3.12
+RUN pip3 install --no-cache-dir --verbose PyYAML==3.12
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    iproute2 \
+    iputils-ping \
+    && rm -rf /var/lib/apt/lists/*
+#
+# setup entrypoint
+#
+COPY ./packages/ros_entrypoint.sh /home/$USERNAME/ros_entrypoint.sh
+ENTRYPOINT ["/home/augbooth/ros_entrypoint.sh"]
+CMD ["bash"]
+WORKDIR /home/$USERNAME

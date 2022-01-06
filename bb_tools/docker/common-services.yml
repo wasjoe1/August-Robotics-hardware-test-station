@@ -1,0 +1,53 @@
+version: "3"
+services:
+  nginx:
+    container_name: nginx
+    image: "nginx:1.21.3"
+    restart: always
+    network_mode: "host"
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+
+  redis:
+    container_name: redis
+    image: "redis:latest"
+    restart: always
+    network_mode: "host"
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+
+  db:
+    container_name: db
+    image: "postgres:9.5.22"
+    network_mode: "host"
+    restart: always
+    volumes:
+      - /var/lib/postgresql/data:/var/lib/postgresql/data
+    environment:
+      - CONTAINER_NAME=db
+      - POSTGRES_DB=hallmap
+      - POSTGRES_USER=augbooth
+      - POSTGRES_PASSWORD=aug
+
+  lionel:
+    container_name: lionel
+    image: "boothbot:v3.0"
+    user: "augbooth"
+    privileged: true
+    network_mode: "host"
+    command: tail -f /dev/null
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - /tmp/.docker.xauth:/tmp/.docker.xauth:rw
+      - /dev:/dev:rw
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - ./scripts:/home/augbooth/docker/scripts:rw
+    environment:
+      - CONTAINER_NAME=lionel
+      - XAUTHORITY=/tmp/.docker.xauth
+      - DISPLAY
+      - TERM=xterm-256color
+      - QT_X11_NO_MITSHM=1

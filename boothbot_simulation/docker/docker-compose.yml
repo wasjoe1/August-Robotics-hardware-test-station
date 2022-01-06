@@ -1,0 +1,107 @@
+version: "3"
+
+services:
+  db:
+    extends:
+      file: ./common-services.yml
+      service: db
+    restart: "no"
+
+  redis:
+    extends:
+      file: ./common-services.yml
+      service: redis
+    restart: "no"
+
+  roscore:
+    extends:
+      file: ./common-services.yml
+      service: boothbot
+    image: ${BOOTHBOT_IMAGE}
+    restart: "no"
+    container_name: roscore
+    command: "/home/augbooth/docker/scripts/roscore.bash"
+    volumes:
+      - ${DOCKER_CONTENT_PATH}:/home/augbooth/docker
+      - ${BOOTHBOT_BACKOFFICE_LOG_PATH}:/var/log/boothbot-backoffice
+      - ${BOOTHBOT_PYTHON_SITE_PACKAGES}:/home/augbooth/.local/lib/python2.7/site-packages:rw
+      - ${DOCKER_CATKIN_WS_MIRROR_PATH}:/home/augbooth/catkin_ws
+      - ${ROS_HOME}:/home/augbooth/.ros:rw
+      - ${DEVICE_SETTING_PATH}:/home/augbooth/catkin_ws/local/settings:rw
+      - ${BOOTHBOT_REPO_PATH}:/home/augbooth/catkin_ws/src/boothbot:rw
+      - ${BOOTHBOT_CONFIG_REPO_PATH}:/home/augbooth/catkin_ws/src/boothbot-config:rw
+      - ${AUGUSTBOT_TOOLS_REPO_PATH}:/home/augbooth/catkin_ws/src/augustbot-tools:rw
+    environment:
+      - CONTAINER_NAME=roscore
+      - ROS_MASTER_URI
+      - ROS_HOSTNAME
+      - ROS_IP
+    # services with depends_on cannot be extended
+    # depends_on:
+    #   - db  # for building backoffice objects
+
+  backoffice:
+    extends:
+      service: roscore
+    container_name: backoffice
+    command: "/home/augbooth/docker/scripts/backoffice.bash"
+    environment:
+      - CONTAINER_NAME=backoffice
+    depends_on:
+      - db
+      - redis
+      - roscore
+
+  nginx:
+    extends:
+      file: ./common-services.yml
+      service: nginx
+    restart: "no"
+    volumes:
+      # for v3.1 and later
+      - ./config/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ${BOOTHBOT_REPO_PATH}/backoffice:/var/www/backoffice:rw
+    depends_on:
+      - backoffice
+
+  twisted:
+    extends:
+      service: roscore
+    container_name: twisted
+    command: "/home/augbooth/docker/scripts/twisted.bash"
+    environment:
+      - CONTAINER_NAME=twisted
+    depends_on:
+      - db
+      - redis
+      - roscore
+
+  bringup_fake_hardware:
+    extends:
+      service: roscore
+    container_name: bringup_fake_hardware
+    command: "/home/augbooth/docker/scripts/bringup_fake_hardware.bash"
+    environment:
+      - CONTAINER_NAME=bringup_fake_hardware
+    depends_on:
+      - roscore
+
+  boothbot_main:
+    extends:
+      service: roscore
+    container_name: boothbot_main
+    command: "/home/augbooth/docker/scripts/boothbot_main.bash"
+    environment:
+      - CONTAINER_NAME=boothbot_main
+    depends_on:
+      - bringup_fake_hardware
+
+  bringup_fake_gs:
+    extends:
+      service: roscore
+    container_name: bringup_fake_gs
+    command: "/home/augbooth/docker/scripts/bringup_fake_gs.bash"
+    environment:
+      - CONTAINER_NAME=bringup_fake_gs
+    depends_on:
+      - bringup_fake_hardware

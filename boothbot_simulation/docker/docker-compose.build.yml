@@ -1,0 +1,19 @@
+version: "3"
+
+services:
+  db:
+    extends:
+      file: ./docker-compose.yml
+      service: db
+    restart: "no"
+
+  build:
+    extends:
+      file: ./docker-compose.yml
+      service: roscore
+    container_name: build
+    command: "/home/augbooth/docker/scripts/build.bash"
+    environment:
+      - CONTAINER_NAME=build
+    depends_on:
+      - db  # for building backoffice objects
