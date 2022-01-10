@@ -44,8 +44,8 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
       - ./config/scripts:/home/augbooth/docker/scripts:rw
-      - ./config/backoffice_local_settings.yaml:/home/augbooth/catkin_ws/local/backoffice/local_settings.yaml
-      - ./config/maps:/home/augbooth/catkin_ws/local/maps/0
+      - ./config/backoffice_local_settings.yaml:/home/augbooth/catkin_ws/local/backoffice/local_settings.yaml:rw
+      - ./config/maps:/home/augbooth/catkin_ws/local/maps/0:rw
     environment:
       - CONTAINER_NAME=boothbot
       - XAUTHORITY=/tmp/.docker.xauth

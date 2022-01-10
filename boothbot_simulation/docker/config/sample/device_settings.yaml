@@ -4,7 +4,7 @@ global:
   new_base: true # (deprecating....) big wheels version base
   new_shell: true # (deprecating....) green shell?
   is_boothnumber: false
-  using_chassis_io: true
+  using_chassis_io: false
   imu_as_inclinometer: true
   has_aux_pc: false
   connect_timeout: 100. # second

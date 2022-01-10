@@ -8,20 +8,23 @@ export _SETUP_DONE="Not done!"
 
 # CAUSION: make sure the folders on blow are user accessable
 export DOCKER_CONTENT_PATH="/home/pat/catkin_ws/docker"
+export DEVICE_SETTING_PATH="$_FILE_DIR_PATH/config/sample"
+
+## -=Autogenerable by `dc_gen_docker_mirror_dir`=-
 export BOOTHBOT_BACKOFFICE_LOG_PATH="$DOCKER_CONTENT_PATH/backoffice_log"
 export BOOTHBOT_PYTHON_SITE_PACKAGES="$DOCKER_CONTENT_PATH/site-packages"
 export DOCKER_CATKIN_WS_MIRROR_PATH="$DOCKER_CONTENT_PATH/catkin_ws"
 export ROS_HOME="$DOCKER_CONTENT_PATH/catkin_ws/local/roslogs"
 export BOOTHBOT_MAPS="$DOCKER_CONTENT_PATH/catkin_ws/local/maps"
-export DEVICE_SETTING_PATH="$_FILE_DIR_PATH/config/sample"
+## -=Autogenerable by `dc_gen_docker_mirror_dir`=-
 
 export BOOTHBOT_REPO_PATH="/home/pat/catkin_ws/src/boothbot"
 export BOOTHBOT_CONFIG_REPO_PATH="/home/pat/catkin_ws/src/boothbot-config"
 export AUGUSTBOT_TOOLS_REPO_PATH="/home/pat/catkin_ws/src/augustbot-tools"
 
 export BOOTHBOT_IMAGE="augustrobotics/lionel-x86:v3.1"
-export ROS_MASTER_URI
-export ROS_HOSTNAME
+export ROS_MASTER_URI=http://localhost:11311
+export ROS_HOSTNAME=localhost
 export ROS_IP
 ################################################################################
 
@@ -48,6 +51,8 @@ function dc_gen_docker_mirror_dir () {
   mkdir -p $BOOTHBOT_PYTHON_SITE_PACKAGES
   echo "Creating $DOCKER_CATKIN_WS_MIRROR_PATH"
   mkdir -p $DOCKER_CATKIN_WS_MIRROR_PATH
+  echo "Creating backoffice local settings folder"
+  mkdir -p $DOCKER_CATKIN_WS_MIRROR_PATH/local/backoffice
   echo "Creating $ROS_HOME"
   mkdir -p $ROS_HOME
   echo "Creating $BOOTHBOT_MAPS"

@@ -25,7 +25,7 @@ export TODAY=`date +%y-%m-%d`
 
 # local config path
 export DEVICE_CONFIG_PATH="${CATKIN_WS_PATH}/local"
-
+source $DEVICE_CONFIG_PATH/settings/env.bash
 
 # Collect Device Information and Show
 function waiting_roscore () {
