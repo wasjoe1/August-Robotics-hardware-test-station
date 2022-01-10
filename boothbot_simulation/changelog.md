@@ -8,9 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 ## [Unreleased]
 ### Added
 
+
 ### Changed
 - Changed env setting in `setup.bash`, for optimize quick launch process
 - Fixed some issue for first setup the running env
+- Fixed permission issue of backoffice folder under local, it cause GUI send ROS action failed.
 
 ### Removed
 
