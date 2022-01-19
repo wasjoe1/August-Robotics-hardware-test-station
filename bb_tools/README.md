@@ -1,7 +1,7 @@
 # README.md
 
 This repo is a testground for debug tools (BoothBot-related).
-As these are all python scripts, no dependency is listed in `package.xml` 
+As these are all python scripts, no dependency is listed in `package.xml`
 or `CMakeList.txt`. You have need a working `catkin_ws` to use this tools.
 
 ## TL;DR
@@ -10,7 +10,7 @@ or `CMakeList.txt`. You have need a working `catkin_ws` to use this tools.
 cd ~/catkin_ws/src && git clone git@gitee.com:august-robotics/augustbot-tools.git
 cd augustbot-tools/bb-tools && python3 -m pip install -r requirements.txt
 cd ~/catkin_ws && catkin_make # or catkin build
-rosrun rosrun bb_tools dash.py 
+rosrun rosrun bb_tools dash.py
 ```
 
 ## Tools
@@ -19,7 +19,7 @@ rosrun rosrun bb_tools dash.py
 - Displays the current state of the robot on terminal, subscribes to ROS topics.
 - Usage: `rosrun rosrun bb_tools dash_v2.py `
 - Optional web terminal setup:
-  - 
+  -
     ```bash
     # Web terminal/docker
     docker pull wettyoss/wetty
@@ -29,9 +29,10 @@ rosrun rosrun bb_tools dash.py
   - Then head to `http://<MACHINE-IP>:3000/wetty` and type your password
   - Preview:
     <img src="pics/tui-1125-preview.gif" alt="drawing" style="width:600px;"/>
-    
-### `bag_report.bash`
+
+### `bag_report.sh`
 - Helper script to record rosbags and optionally pack all logs into a `.tar.gz`
-- Usage: ` ~/catkin_ws/src/augustbot-tools/bb_tools/src/bag_report.bash -h`
+- Usage: ` ~/catkin_ws/src/augustbot-tools/bb_tools/src/bag_report.sh`
+- use the '-h' option to check the shortcut flags
 - preview
   <img src="pics/bag-1125-preview.gif" alt="drawing" style="width:600px;"/>
