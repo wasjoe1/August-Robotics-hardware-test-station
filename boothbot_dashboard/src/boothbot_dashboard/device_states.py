@@ -6,9 +6,6 @@ class DeviceStates(Enum):
     """
     Enum for device states
     """
-    #ON = Text("打开/on", style='green')
-    #OFF = Text("关闭/off", style='red')
-    #OFFLINE = Text("离线/offline", style='grey46')
     OFFLINE = 0
     ON = 1
     OFF = 2
@@ -19,7 +16,8 @@ class DeviceStates(Enum):
     OUT = 7
     PRESSED = 8
     RELEASED = 9
-    UNKNOWN = 10
+    ERROR = 10
+    UNKNOWN = 11
 
 if __name__ == "__main__":
     print(DeviceStates.ON, DeviceStates.ON.name, DeviceStates.ON.value)
