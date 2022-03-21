@@ -79,4 +79,4 @@ class SonarData(Placeholder):
             height=self.height,
         )
     def on_mount(self):
-        self.set_interval(1, self.refresh)
+        self.set_interval(0.2, self.refresh)
