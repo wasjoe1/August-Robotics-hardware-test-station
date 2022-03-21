@@ -27,7 +27,7 @@ class DeviceModule(Placeholder):
             color = "green"
         elif device.state == DeviceStates.OFF:
             color = "grey46"
-        elif device.state == DeviceStates.OFFLINE:
+        elif device.state == DeviceStates.OFFLINE or device.state == DeviceStates.ERROR:
             color = "red"
         return color
 
