@@ -30,6 +30,9 @@ class IO:
             self._io_value[i] = is_set(value, i)
 
     def set_io(self, io_number, update=True, timeout=0.0):
+        """
+        update: if True, update io status immediately
+        """
         if not self._io_value[io_number]:
             self._io_value[io_number] = True
             self._io_timeouts[io_number] = timeout
@@ -37,6 +40,9 @@ class IO:
                 self.update()
 
     def reset_io(self, io_number, update=True):
+        """
+        update: if True, update io status immediately
+        """
         if self._io_value[io_number]:
             self._io_value[io_number] = False
             if update:
