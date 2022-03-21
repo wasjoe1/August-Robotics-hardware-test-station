@@ -24,64 +24,7 @@ from boothbot_msgs.ros_interfaces import (
 
 from boothbot_common.error_code import ErrCode
 
-# FIXME: remove this after finishing the sonar
-from textual.widgets import Placeholder
-from rich.text import Text
-from rich.console import RenderableType
-from rich.panel import Panel
-from rich.align import Align
-from rich import box
-
-
-class SonarSensor:
-    def __init__(self, name, msg_type):
-        self.min = 0.0
-        self.max = 0.0
-        self.data = 0.0
-        self.name = name
-
-        rospy.Subscriber(
-            msg_type.name,
-            msg_type.type,
-            self._sonar_data_cb)
-
-    def _sonar_data_cb(self, msg):
-        self.min = msg.min_range
-        self.max = msg.max_range
-        self.data = msg.range
-
-class SonarData(Placeholder):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.f_01 = SonarSensor("f_01", DRIVERS_SONARS_F_01)
-        self.f_02 = SonarSensor("f_02", DRIVERS_SONARS_F_02)
-        self.f_03 = SonarSensor("f_03", DRIVERS_SONARS_F_03)
-        self.r_01 = SonarSensor("r_01", DRIVERS_SONARS_R_01)
-        self.r_02 = SonarSensor("r_02", DRIVERS_SONARS_R_02)
-        self.r_03 = SonarSensor("r_03", DRIVERS_SONARS_R_03)
-        self.left_01 = SonarSensor("left_01", DRIVERS_SONARS_LEFT_01)
-        self.left_02 = SonarSensor("left_02", DRIVERS_SONARS_LEFT_02)
-        self.right_01 = SonarSensor("right_01", DRIVERS_SONARS_RIGHT_01)
-        self.right_02 = SonarSensor("right_02", DRIVERS_SONARS_RIGHT_02)
-
-    def _convert(self) -> Text:
-        text = Text("Sonar Data")
-        return text
-
-    def render(self) -> RenderableType:
-        return Panel(
-            Align.center(
-                self._convert(), vertical="middle"
-            ),
-            title=self.name,
-            border_style="blue",
-            box=box.ROUNDED,
-            style=self.style,
-            height=self.height,
-        )
-
-
-class Sonars(Device):
+class SonarStatus(Device):
     def __init__(self, number, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.data = ["N/A"] * number
@@ -102,10 +45,10 @@ class Chassis(DeviceModule):
         self.estop = Device("E-Stop")
         self.power = Device("<R> | Power")
         self.chassis = Device("<0> | Chassis")
-        self.left_sonar = Sonars(number=2, name="Left Sonars")
-        self.right_sonar = Sonars(number=2, name="Right Sonars")
-        self.front_sonar = Sonars(number=3, name="Front Sonars")
-        self.rear_sonar = Sonars(number=3, name="Rear Sonars")
+        self.left_sonar = SonarStatus(number=2, name="Left Sonars")
+        self.right_sonar = SonarStatus(number=2, name="Right Sonars")
+        self.front_sonar = SonarStatus(number=3, name="Front Sonars")
+        self.rear_sonar = SonarStatus(number=3, name="Rear Sonars")
         self.battery = Device("Battery")
         self.imu = Device("IMU")
         self.depth_camera = Device("Depth Camera")
