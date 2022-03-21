@@ -75,6 +75,9 @@ class Marking(DeviceModule):
         self.l_actuator_up()
         self.stencil_in()
         self.brush_up()
+
+    def on_mount(self):
+        self.set_interval(10, self.refresh)
         
     def _chassis_io_cb(self, msg):
         def is_set(x, n):
@@ -138,8 +141,6 @@ class Marking(DeviceModule):
         else:
             self.s_actuator.state = DeviceStates.OUT
 
-        self.refresh()
-
     def _percept_check_status_cb(self, msg):
         if msg.state == "RUNNING":
             self.camera.state = DeviceStates.ON
@@ -148,7 +149,6 @@ class Marking(DeviceModule):
                 self.camera.state = DeviceStates.OFF
             else:
                 self.camera.state = DeviceStates.OFFLINE
-        self.refresh()
 
     def toggle_k1(self):
         self.io.toggle_io(BIT_EDGE_1)
@@ -242,6 +242,7 @@ class MarkingCamera(Image):
             return False
         return True
 
+    # Trigger the makring camera to take a picture
     def check(self):
         self.checker.reset()
         if not self.wait_for_server("WAITING_BG", 1):
@@ -256,7 +257,6 @@ class MarkingCamera(Image):
         self.checker.capture_mk()
         while self.checker.state != "WAITING_BG":
             time.sleep(1)
-
 
     def on_check_result(self, state, result):
         fname = result.fname
