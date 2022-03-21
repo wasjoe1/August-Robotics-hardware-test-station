@@ -5,7 +5,8 @@ from boothbot_io import IO
 
 from textual.widgets import Header, Footer
 from marking import Marking, MarkingCamera
-from chassis import Chassis, SonarData
+from chassis import Chassis
+from sonar_data import SonarData
 from camera_beacon import CameraBeacon, TrackingCameras
 from comm import Comm
 import rospy
