@@ -48,13 +48,23 @@ class SonarData(Placeholder):
         self.r_01 = SonarSensor("r_01", DRIVERS_SONARS_R_01)
         self.r_02 = SonarSensor("r_02", DRIVERS_SONARS_R_02)
         self.r_03 = SonarSensor("r_03", DRIVERS_SONARS_R_03)
-        self.left_01 = SonarSensor("left_01", DRIVERS_SONARS_LEFT_01)
-        self.left_02 = SonarSensor("left_02", DRIVERS_SONARS_LEFT_02)
+        self.left_01  = SonarSensor("left_01", DRIVERS_SONARS_LEFT_01)
+        self.left_02  = SonarSensor("left_02", DRIVERS_SONARS_LEFT_02)
         self.right_01 = SonarSensor("right_01", DRIVERS_SONARS_RIGHT_01)
         self.right_02 = SonarSensor("right_02", DRIVERS_SONARS_RIGHT_02)
 
     def _convert(self) -> Text:
-        text = Text("Sonar Data")
+        text = Text("")
+        text.append(f"{self.f_01.name}: {self.f_01.data}\n")
+        text.append(f"{self.f_02.name}: {self.f_02.data}\n")
+        text.append(f"{self.f_03.name}: {self.f_03.data}\n")
+        text.append(f"{self.r_01.name}: {self.r_01.data}\n")
+        text.append(f"{self.r_02.name}: {self.r_02.data}\n")
+        text.append(f"{self.r_03.name}: {self.r_03.data}\n")
+        text.append(f"{self.left_01.name}: {self.left_01.data}\n")
+        text.append(f"{self.left_02.name}: {self.left_02.data}\n")
+        text.append(f"{self.right_01.name}: {self.right_01.data}\n")
+        text.append(f"{self.right_02.name}: {self.right_02.data}\n")
         return text
 
     def render(self) -> RenderableType:
