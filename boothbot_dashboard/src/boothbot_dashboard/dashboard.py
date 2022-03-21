@@ -1,13 +1,19 @@
+#!/usr/bin/env python3.7
 from textual.app import App
 
 from boothbot_io import IO
 
 from textual.widgets import Header, Footer
 from marking import Marking, MarkingCamera
-from chassis import Chassis, Sonar
+from chassis import Chassis, SonarData
 from camera_beacon import CameraBeacon, TrackingCameras
 from comm import Comm
 import rospy
+
+# ignore ResourceWarning from rospy
+# https://stackoverflow.com/questions/26563711/disabling-python-3-2-resourcewarning
+import warnings
+warnings.simplefilter("ignore", ResourceWarning)
 
 class HwTestApp(App):
     def __init__(self, *args, **kwargs):
@@ -19,7 +25,7 @@ class HwTestApp(App):
         self.cb = CameraBeacon(self.io, name="Camera Beacon")
         self.marking = Marking(self.io, name="Marking")
         self.comm = Comm(name="Communication")
-        self.sonar = Sonar(name="Sonar")
+        self.sonar = SonarData(name="Sonar")
         self.tracking_cameras = TrackingCameras(name="Tracking Cameras")
         self.marking_cameras = MarkingCamera(name="Marking Camera")
 
@@ -74,9 +80,6 @@ class HwTestApp(App):
     async def action_toggle_rear_sonar(self):
         self.chassis.toggle_rear_sonar()
 
-    async def action_cali_imu(self):
-        pass
-
     async def on_load(self):
         await self.bind("q", "quit", "Quit")
         await self.bind("l", "toggle_led", show=False)
@@ -97,8 +100,6 @@ class HwTestApp(App):
         await self.bind("0", "toggle_enable", show=False)
 
         await self.bind("r", "toggle_power", show=False)
-        await self.bind("c", "cali_imu", "IMU:Cali")
-        await self.bind("i", "save_imu", "IMU:Save")
 
     async def on_mount(self) -> None:
         """Make a simple grid arrangement."""
