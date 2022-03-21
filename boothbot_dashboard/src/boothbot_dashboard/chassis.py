@@ -8,16 +8,6 @@ from boothbot_msgs.ros_interfaces import (
     DRIVERS_CHASSIS_STATUS,
     DRIVERS_SONARS_SET_REAR,
     DRIVERS_SONARS_STATUS,
-    DRIVERS_SONARS_F_01,
-    DRIVERS_SONARS_F_02,
-    DRIVERS_SONARS_F_03,
-    DRIVERS_SONARS_R_01,
-    DRIVERS_SONARS_R_02,
-    DRIVERS_SONARS_R_03,
-    DRIVERS_SONARS_LEFT_01,
-    DRIVERS_SONARS_LEFT_02,
-    DRIVERS_SONARS_RIGHT_01,
-    DRIVERS_SONARS_RIGHT_02,
     DRIVERS_DEPTH_CAMERA_DEPTH_REGISTERED_POINTS,
     DRIVERS_LIDAR_SCAN_FILTERED,
 )
@@ -157,7 +147,7 @@ class Chassis(DeviceModule):
         error_set = set(msg.errorcodes)
 
         if error_set & set(front_sonar_errors):
-            self.front_sonar.state = DeviceStates.OFFLINE
+            self.front_sonar.state = DeviceStates.ERROR
         else:
             if self.rear_sonar_enabled:
                 self.front_sonar.state = DeviceStates.OFF
@@ -165,7 +155,7 @@ class Chassis(DeviceModule):
                 self.front_sonar.state = DeviceStates.ON
 
         if error_set & set(rear_sonar_errors):
-            self.rear_sonar.state = DeviceStates.OFFLINE
+            self.rear_sonar.state = DeviceStates.ERROR
         else:
             if self.rear_sonar_enabled:
                 self.rear_sonar.state = DeviceStates.ON 
@@ -173,12 +163,12 @@ class Chassis(DeviceModule):
                 self.rear_sonar.state = DeviceStates.OFF
 
         if error_set & set(left_sonar_errors):
-            self.left_sonar.state = DeviceStates.OFFLINE
+            self.left_sonar.state = DeviceStates.ERROR
         else:
             self.left_sonar.state = DeviceStates.ON
 
         if error_set & set(right_sonar_errors):
-            self.right_sonar.state = DeviceStates.OFFLINE
+            self.right_sonar.state = DeviceStates.ERROR
         else:
             self.right_sonar.state = DeviceStates.ON
 
