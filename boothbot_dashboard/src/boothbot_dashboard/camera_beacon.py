@@ -37,7 +37,7 @@ class CameraBeacon(DeviceModule):
         super().__init__(*args, **kwargs)
         self.io = io
 
-        self.led = Device("<l> | LED")
+        self.led = Device("<L> | LED")
         self.h_motor = Device("Horizontal Motor")
         self.h_encoder = Encoder("Horizontal Encoder")
         self.v_motor = Device("Vertical Motor")
