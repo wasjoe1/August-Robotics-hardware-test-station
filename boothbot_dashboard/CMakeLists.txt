@@ -13,7 +13,6 @@ find_package(catkin REQUIRED COMPONENTS
   boothbot_marking
   boothbot_msgs
   boothbot_perception
-  ros_numpy
   ros_topic
   rospy
 )
@@ -110,7 +109,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES boothbot_dashboard
-#  CATKIN_DEPENDS boothbot_common boothbot_driver boothbot_marking boothbot_msgs boothbot_perception ros_numpy ros_topic rospy
+#  CATKIN_DEPENDS boothbot_common boothbot_driver boothbot_marking boothbot_msgs boothbot_perception  ros_topic rospy
 #  DEPENDS system_lib
 )
 
