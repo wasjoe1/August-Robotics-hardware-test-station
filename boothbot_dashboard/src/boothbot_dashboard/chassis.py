@@ -168,10 +168,9 @@ class Chassis(DeviceModule):
         else:
             self.lidar.state = DeviceStates.OFFLINE
 
-
-
     def on_mount(self):
         self.set_interval(5, self.hz_monitor)
+        self.set_interval(1, self.refresh)
 
     def _sonars_status_cb(self, msg):
         text_array = ("OK", "ERR")
@@ -240,9 +239,6 @@ class Chassis(DeviceModule):
         else:
             self.right_sonar.state = DeviceStates.ON
 
-        self.refresh()
-
-
     def _chassis_status_cb(self, msg):
         if msg.dyn_power:
             self.estop.state = DeviceStates.PRESSED if not msg.estop_off else DeviceStates.RELEASED
@@ -252,7 +248,6 @@ class Chassis(DeviceModule):
         self.chassis.state = DeviceStates.ON if msg.enabled else DeviceStates.OFF
         #self.left_sonar.state = DeviceStates.ON if msg.side_sonar else DeviceStates.OFF
         self.imu.state = DeviceStates.ON if msg.imu_online else DeviceStates.OFF
-        self.refresh()
 
     def toggle_enable(self):
         if self.chassis.state == DeviceStates.ON:
