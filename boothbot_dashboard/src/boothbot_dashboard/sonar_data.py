@@ -55,16 +55,10 @@ class SonarData(Placeholder):
 
     def _convert(self) -> Text:
         text = Text("")
-        text.append(f"{self.f_01.name:9s}: {self.f_01.data:.2f}\n")
-        text.append(f"{self.f_02.name:9s}: {self.f_02.data:.2f}\n")
-        text.append(f"{self.f_03.name:9s}: {self.f_03.data:.2f}\n")
-        text.append(f"{self.r_01.name:9s}: {self.r_01.data:.2f}\n")
-        text.append(f"{self.r_02.name:9s}: {self.r_02.data:.2f}\n")
-        text.append(f"{self.r_03.name:9s}: {self.r_03.data:.2f}\n")
-        text.append(f"{self.left_01.name:9s}: {self.left_01.data:.2f}\n")
-        text.append(f"{self.left_02.name:9s}: {self.left_02.data:.2f}\n")
-        text.append(f"{self.right_01.name:9s}: {self.right_01.data:.2f}\n")
-        text.append(f"{self.right_02.name:9s}: {self.right_02.data:.2f}\n")
+        text.append(f"{self.f_01.data:.2f} {self.f_02.data:.2f} {self.f_03.data:.2f}\n")
+        text.append(f"{self.left_01.data:.2f}    {self.right_01.data:.2f}\n")
+        text.append(f"{self.left_02.data:.2f}    {self.right_02.data:.2f}\n")
+        text.append(f"{self.r_01.data:.2f} {self.r_02.data:.2f} {self.r_03.data:.2f}\n")
         return text
 
     def render(self) -> RenderableType:
