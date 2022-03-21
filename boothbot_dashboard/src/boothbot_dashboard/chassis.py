@@ -146,21 +146,15 @@ class Chassis(DeviceModule):
 
         error_set = set(msg.errorcodes)
 
-        if error_set & set(front_sonar_errors):
-            self.front_sonar.state = DeviceStates.ERROR
+        if self.rear_sonar_enabled:
+            self.front_sonar.state = DeviceStates.OFF
         else:
-            if self.rear_sonar_enabled:
-                self.front_sonar.state = DeviceStates.OFF
-            else:
-                self.front_sonar.state = DeviceStates.ON
+            self.front_sonar.state = DeviceStates.ON
 
-        if error_set & set(rear_sonar_errors):
-            self.rear_sonar.state = DeviceStates.ERROR
+        if self.rear_sonar_enabled:
+            self.rear_sonar.state = DeviceStates.ON 
         else:
-            if self.rear_sonar_enabled:
-                self.rear_sonar.state = DeviceStates.ON 
-            else:
-                self.rear_sonar.state = DeviceStates.OFF
+            self.rear_sonar.state = DeviceStates.OFF
 
         if error_set & set(left_sonar_errors):
             self.left_sonar.state = DeviceStates.ERROR
