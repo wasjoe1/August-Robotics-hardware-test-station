@@ -34,16 +34,16 @@ class HwTestApp(App):
         self.cb.toggle_led()
 
     async def action_cb_left(self):
-        pass
+        self.cb.move("left", 30)
 
     async def action_cb_right(self):
-        pass
+        self.cb.move("right", 30)
 
     async def action_cb_up(self):
-        pass
+        self.cb.move("up", 2)
 
     async def action_cb_down(self):
-        pass
+        self.cb.move("down", 2)
 
     async def action_toggle_k1(self):
         self.marking.toggle_k1()
@@ -143,5 +143,5 @@ class HwTestApp(App):
         )
 
 
-rospy.init_node('dashboard', log_level=rospy.INFO)
+rospy.init_node('dashboard', log_level=rospy.WARN)
 HwTestApp.run(title="Lionel Hardware Test", log="textual.log")

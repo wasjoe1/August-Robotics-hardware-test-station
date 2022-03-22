@@ -1,4 +1,5 @@
 import cv2
+import math
 import rospy
 import ros_numpy
 import numpy as np
@@ -6,6 +7,7 @@ from device_module import DeviceModule, Image
 from device_states import DeviceStates
 from device import Device
 from boothbot_perception.track_client import TargetTracker
+from boothbot_driver.stepper_client import StepperPlatformINF
 from boothbot_common.error_code import ErrCode
 from boothbot_msgs.ros_interfaces import (
     MODULES_PERCEPT_TRACK_LONG_IMAGE,
@@ -30,7 +32,7 @@ class Encoder(Device):
         if self.state == DeviceStates.OFFLINE:
             return self.state.name
         else:
-            return f"{self.state.name:7s} {self.encoder_value:5d}"
+            return f"{self.state.name:7s} {math.degrees(self.encoder_value):.02f}\u00b0"
 
 class CameraBeacon(DeviceModule):
     def __init__(self, io, *args, **kwargs):
@@ -44,6 +46,8 @@ class CameraBeacon(DeviceModule):
         self.v_encoder = Encoder("Vertical Encoder")
         self.l_camera = Device("Long Camera")
         self.s_camera = Device("Short Camera")
+
+        self.stepper = StepperPlatformINF()
 
         self.append(self.led)
         self.append(self.h_motor)
@@ -85,8 +89,8 @@ class CameraBeacon(DeviceModule):
 
     def _stepper_joint_callback(self, msg):
         if len(msg.enc_val) == 2:
-            self.h_encoder.encoder_value= msg.enc_val[0]
-            self.v_encoder.encoder_value = msg.enc_val[1]
+            self.h_encoder.encoder_value= msg.enc_pos[0]
+            self.v_encoder.encoder_value = msg.enc_pos[1]
 
     def _stepper_status_callback(self, msg):
         if ErrCode.STEPPER_ERR_H_MOTOR.value in msg.errorcodes:
@@ -126,6 +130,32 @@ class CameraBeacon(DeviceModule):
 
     def toggle_led(self):
         self.io.toggle_io(BIT_LED)
+
+    def move(self, direction, degrees=5):
+        if self.h_motor.state == DeviceStates.OFFLINE or self.v_motor.state == DeviceStates.OFFLINE:
+            return
+
+        h = self.h_encoder.encoder_value
+        v = self.v_encoder.encoder_value
+
+        if direction == "up":
+            v -= math.radians(degrees)
+            if v <= math.radians(-8):
+                v = math.radians(-8)
+        elif direction == "down":
+            v += math.radians(degrees)
+            if v >= math.radians(8):
+                v = math.radians(8)
+        elif direction == "left":
+            h += math.radians(degrees)
+            if h >= math.radians(180):
+                h = math.radians(180)
+        elif direction == "right":
+            h -= math.radians(degrees)
+            if h <= -math.radians(180):
+                h = -math.radians(180)
+
+        self.stepper.move_absolute(h, v)
 
     def on_mount(self):
         self.set_interval(1, self.refresh)
