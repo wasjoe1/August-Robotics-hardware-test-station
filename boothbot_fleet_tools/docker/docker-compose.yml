@@ -1,0 +1,42 @@
+version: "3"
+
+services:
+  db:
+    extends:
+      file: ./common-services.yml
+      service: db
+    restart: "no"
+
+  redis:
+    extends:
+      file: ./common-services.yml
+      service: redis
+    restart: "no"
+
+  nginx:
+    extends:
+      file: ./common-services.yml
+      service: nginx
+    restart: "no"
+    depends_on:
+      - fleet
+
+  roscore:
+    extends:
+      file: ./common-services.yml
+      service: fleet
+    container_name: roscore
+    command: "/home/augbooth/docker/scripts/roscore.bash"
+    restart: "no"
+
+  fleet:
+    extends:
+      file: ./common-services.yml
+      service: fleet
+    container_name: fleet
+    command: "/home/augbooth/docker/scripts/start.bash"
+    restart: "no"
+    depends_on:
+      - roscore
+      - redis
+      - db

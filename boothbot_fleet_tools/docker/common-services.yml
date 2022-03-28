@@ -2,16 +2,17 @@ version: "3"
 services:
   nginx:
     container_name: nginx
-    image: "nginx:1.21.3"
+    image: "nginx:1.21.6-alpine"
     restart: always
     network_mode: "host"
     volumes:
+      - ${FLEET_REPO}/deployment/fleet.conf:/etc/nginx/conf.d/default.conf:ro
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
 
   redis:
     container_name: redis
-    image: "redis:latest"
+    image: "redis:6.2.6-alpine"
     restart: always
     network_mode: "host"
     volumes:
@@ -20,7 +21,7 @@ services:
 
   db:
     container_name: db
-    image: "postgres:9.5.22"
+    image: "postgres:14.2-alpine"
     network_mode: "host"
     restart: always
     volumes:
@@ -31,24 +32,24 @@ services:
       - POSTGRES_USER=augbooth
       - POSTGRES_PASSWORD=aug
 
-  lionel:
-    container_name: lionel
-    image: "boothbot-fleet:v0.1"
+  fleet:
+    container_name: fleet
+    image: "boothbot_fleet:latest"
     user: "augbooth"
     privileged: true
     network_mode: "host"
     command: tail -f /dev/null
     volumes:
+      - ${FLEET_REPO}:/home/augbooth/catkin_ws/src/boothbot_fleet:rw
+      - ${LOCAL_CATKIN_WS}/build:/home/augbooth/catkin_ws/build:rw
+      - ${LOCAL_CATKIN_WS}/devel:/home/augbooth/catkin_ws/devel:rw
+      - ${LOCAL_CATKIN_WS}/roslog:/home/augbooth/.ros/log:rw
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - /tmp/.docker.xauth:/tmp/.docker.xauth:rw
-      - /dev:/dev:rw
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-      - ./scripts:/home/augbooth/docker/scripts:rw
-      - ./scripts/bashrc:/home/augbooth/.bashrc:rw
-      - ./scripts/swmaster.sh:/home/augbooth/swmaster.sh:rw
     environment:
-      - CONTAINER_NAME=lionel
+      - CONTAINER_NAME=boothbot
       - XAUTHORITY=/tmp/.docker.xauth
       - DISPLAY
       - TERM=xterm-256color
