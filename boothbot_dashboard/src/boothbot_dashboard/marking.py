@@ -29,26 +29,146 @@ from boothbot_marking.settings import (
 
 from boothbot_perception.check_client import MarkChecker
 
+class CtrlIO(Device):
+    def __init__(self, io, bit, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.io = io
+        self.bit = bit
+
+    def toggle(self):
+        self.io.toggle(self.bit)
+
+    def update(self, value):
+        def is_set(x, n):
+            return x & (1 << n) != 0
+        self.state = DeviceStates.ON if is_set(value, self.bit) else DeviceStates.OFF
+
+class CtrlIOPair(Device):
+    def __init__(self, io, push_bit, pull_bit,  *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.io = io
+        self.push_bit = push_bit
+        self.pull_bit = pull_bit
+        self.pushed = False
+
+    def push(self):
+        if not self.pushed:
+            self.io.set_io(self.push_bit, update=False, timeout=2)
+            self.io.reset_io(self.pull_bit, update=False)
+            self.io.update()
+            self.pushed = True
+
+    def pull(self):
+        if self.pushed:
+            self.io.set_io(self.pull_bit, update=False, timeout=2)
+            self.io.reset_io(self.push_bit, update=False)
+            self.io.update()
+            self.pushed = False
+
+    def update(self, value):
+        def is_set(x, n):
+            return x & (1 << n) != 0
+        pull_state = is_set(value, self.pull_bit)
+        push_state = is_set(value, self.push_bit)
+
+        if pull_state == push_state:
+            self.state = DeviceStates.HOLD
+        elif pull_state:
+            self.state = DeviceStates.PULL
+        else:
+            self.state = DeviceStates.PUSH
+
+    def toggle(self):
+        if self.position == "PUSH":
+            self.pull()
+        elif self.position == "PULL":
+            self.push()
+        else:
+            pass
+
+class LActuator(CtrlIOPair):
+    def __init__(self, io, *args, **kwargs):
+        super().__init__(io, BIT_LINEAR_LONG_DOWN, BIT_LINEAR_LONG_UP, *args, **kwargs)
+        self.up = self.pull
+        self.down = self.push
+
+    def show_text(self):
+        if self.state == DeviceStates.HOLD:
+            return "HOLD"
+        elif self.state == DeviceStates.PULL:
+            return "DOWN"
+        else:
+            return "UP"
+
+class SActuator(CtrlIOPair):
+    def __init__(self, io, *args, **kwargs):
+        super().__init__(io, BIT_STENCIL_OUT, BIT_STENCIL_IN, *args, **kwargs)
+        self.in = self.pull
+        self.out = self.push
+
+    def show_text(self):
+        if self.state == DeviceStates.HOLD:
+            return "HOLD"
+        elif self.state == DeviceStates.PULL:
+            return "OUT"
+        else:
+            return "IN"
+
+
+class Brush(CtrlIOPair):
+    def __init__(self, io, *args, **kwargs):
+        super().__init__(io, BIT_BRUSH_DOWN, BIT_BRUSH_UP, *args, **kwargs)
+        self.up = self.pull
+        self.down = self.push
+
+    def show_text(self):
+        if self.state == DeviceStates.HOLD:
+            return "HOLD"
+        elif self.state == DeviceStates.PULL:
+            return "DOWN"
+        else:
+            return "UP"
+
+
+class CameraState(Device):
+    def __init__(self, device, message, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.device = device
+
+        rospy.Subscriber(
+            message.name,
+            message.type,
+            self._cb)
+
+    def _cb(self, msg):
+        if msg.state == "RUNNING":
+            self.state = DeviceStates.ON
+        else:
+            if os.path.exists(self.device):
+                self.state = DeviceStates.OFF
+            else:
+                self.state = DeviceStates.OFFLINE
+
 class Marking(DeviceModule):
     def __init__(self, io, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         # Marking
-        self.K1         = Device("<1> | K1")
-        self.K2         = Device("<2> | K2")
-        self.K3         = Device("<3> | K3")
-        self.K4         = Device("<4> | K4")
-        self.l_actuator = Device("<5> | Mark")
-        self.s_actuator = Device("<6> | Stencil")
-        self.in_pump    = Device("<7> | In Pump")
-        self.out_pump   = Device("<8> | Out Pump")
-        self.brush      = Device("<9> | Brush")
-        self.camera     = Device("Marking Camera")
+        self.k1         = CtrlIO(io, BIT_EDGE_1, name="<1> | K1")
+        self.k2         = CtrlIO(io, BIT_EDGE_2, name="<2> | K2")
+        self.k3         = CtrlIO(io, BIT_EDGE_3, name="<3> | K3")
+        self.k4         = CtrlIO(io, BIT_EDGE_4, name="<4> | K4")
+        self.l_actuator = LActuator(io, name="<5> | Mark")
+        self.s_actuator = SActuator(io, name="<6> | Stencil")
+        self.in_pump    = CtrlIO(io, BIT_PUMP_IN_TRAY,   name="<7> | In Pump")
+        self.out_pump   = CtrlIO(io, BIT_DRAIN_OUT_TRAY, name="<8> | Out Pump")
+        self.brush      = Brush(io, name="<9> | Brush")
+        self.camera     = CameraState("/dev/camera_marking", MODULES_PERCEPT_CHECK_STATUS, "Marking Camera")
 
-        self.append(self.K1)
-        self.append(self.K2)
-        self.append(self.K3)
-        self.append(self.K4)
+        self.append(self.k1)
+        self.append(self.k2)
+        self.append(self.k3)
+        self.append(self.k4)
         self.append(self.l_actuator)
         self.append(self.s_actuator)
         self.append(self.in_pump)
@@ -56,173 +176,58 @@ class Marking(DeviceModule):
         self.append(self.brush)
         self.append(self.camera)
 
-        self.io = io
-        self.last_l_actuator_cmd = "up"
-        self.last_s_actuator_cmd = "in"
-        self.last_brush_cmd = "up"
-
-
-        rospy.Subscriber(
-            MODULES_PERCEPT_CHECK_STATUS.name,
-            MODULES_PERCEPT_CHECK_STATUS.type,
-            self._percept_check_status_cb)
-
         rospy.Subscriber(
             DRIVERS_CHASSIS_IO.name,
             DRIVERS_CHASSIS_IO.type,
             self._chassis_io_cb)
 
-        self.l_actuator_up()
-        self.stencil_in()
-        self.brush_up()
+        self.l_actuator.pull()
+        self.s_actuator.pull()
+        self.brush.pull()
 
     def on_mount(self):
         self.set_interval(10, self.refresh)
-        
+
     def _chassis_io_cb(self, msg):
-        def is_set(x, n):
-            return x & (1 << n) != 0
         value = int(msg.io_state)
-
-        if is_set(value, BIT_EDGE_1):
-            self.K1.state = DeviceStates.ON
-        else:
-            self.K1.state = DeviceStates.OFF
-
-        if is_set(value, BIT_EDGE_2):
-            self.K2.state = DeviceStates.ON
-        else:
-            self.K2.state = DeviceStates.OFF
-
-        if is_set(value, BIT_EDGE_3):
-            self.K3.state = DeviceStates.ON
-        else:
-            self.K3.state = DeviceStates.OFF
-
-        if is_set(value, BIT_EDGE_4):
-            self.K4.state = DeviceStates.ON
-        else:
-            self.K4.state = DeviceStates.OFF
-
-        if is_set(value, BIT_PUMP_IN_TRAY):
-            self.in_pump.state = DeviceStates.ON
-        else:
-            self.in_pump.state = DeviceStates.OFF
-
-        if is_set(value, BIT_DRAIN_OUT_TRAY):
-            self.out_pump.state = DeviceStates.ON
-        else:
-            self.out_pump.state = DeviceStates.OFF
-
-        long_up = is_set(value, BIT_LINEAR_LONG_UP)
-        long_down = is_set(value, BIT_LINEAR_LONG_DOWN)
-        if long_up == long_down:
-            self.l_actuator.state = DeviceStates.HOLD
-        elif long_up and not long_down:
-            self.l_actuator.state = DeviceStates.UP
-        else:
-            self.l_actuator.state = DeviceStates.DOWN
-
-        brush_up = is_set(value, BIT_BRUSH_UP)
-        brush_down = is_set(value, BIT_BRUSH_DOWN)
-        if brush_up == brush_down:
-            self.brush.state = DeviceStates.HOLD
-        elif brush_up and not brush_down:
-            self.brush.state = DeviceStates.UP
-        else:
-            self.brush.state = DeviceStates.DOWN
-
-        stencil_in = is_set(value, BIT_STENCIL_IN)
-        stencil_out = is_set(value, BIT_STENCIL_OUT)
-        if stencil_in == stencil_out:
-            self.s_actuator.state = DeviceStates.HOLD
-        elif stencil_in and not stencil_out:
-            self.s_actuator.state = DeviceStates.IN
-        else:
-            self.s_actuator.state = DeviceStates.OUT
-
-    def _percept_check_status_cb(self, msg):
-        if msg.state == "RUNNING":
-            self.camera.state = DeviceStates.ON
-        else:
-            if os.path.exists("/dev/camera_marking"):
-                self.camera.state = DeviceStates.OFF
-            else:
-                self.camera.state = DeviceStates.OFFLINE
+        self.k1.update(value)
+        self.k2.update(value)
+        self.k3.update(value)
+        self.k4.update(value)
+        self.in_pump.update(value)
+        self.out_pump.update(value)
+        self.l_actuator.update(value)
+        self.s_actuator.update(value)
+        self.brush.update(value)
 
     def toggle_k1(self):
-        self.io.toggle_io(BIT_EDGE_1)
+        self.k1.toggle()
 
     def toggle_k2(self):
-        self.io.toggle_io(BIT_EDGE_2)
+        self.k2.toggle()
 
     def toggle_k3(self):
-        self.io.toggle_io(BIT_EDGE_3)
+        self.k3.toggle()
 
     def toggle_k4(self):
-        self.io.toggle_io(BIT_EDGE_4)
+        self.k4.toggle()
 
     def toggle_in_pump(self):
-        self.io.toggle_io(BIT_PUMP_IN_TRAY)
+        self.in_pump.toggle()
 
     def toggle_out_pump(self):
-        self.io.toggle_io(BIT_DRAIN_OUT_TRAY)
-
-    def l_actuator_up(self):
-        self.last_l_actuator_cmd = "up"
-        self.io.set_io(BIT_LINEAR_LONG_UP, update=False, timeout=2)
-        self.io.reset_io(BIT_LINEAR_LONG_DOWN, update=False)
-        self.io.update()
-
-    def l_actuator_down(self):
-        self.last_l_actuator_cmd = "down"
-        self.io.set_io(BIT_LINEAR_LONG_DOWN, update=False, timeout=2)
-        self.io.reset_io(BIT_LINEAR_LONG_UP, update=False)
-        self.io.update()
+        self.out_pump.toggle()
 
     def toggle_l_actuator(self):
-        if self.last_l_actuator_cmd == "down":
-            self.l_actuator_up()
-        else:
-            self.l_actuator_down()
-
-    def stencil_in(self):
-        self.last_s_actuator_cmd = "in"
-        self.io.set_io(BIT_STENCIL_IN, update=False, timeout=2)
-        self.io.reset_io(BIT_STENCIL_OUT, update=False)
-        self.io.update()
-
-    def stencil_out(self):
-        self.last_s_actuator_cmd = "out"
-        self.io.set_io(BIT_STENCIL_OUT, update=False, timeout=2)
-        self.io.reset_io(BIT_STENCIL_IN, update=False)
-        self.io.update()
+        self.l_actuator.toggle()
 
     def toggle_stencil(self):
-        if self.last_l_actuator_cmd == "down":
-            self.l_actuator_up()
-
-        if self.last_s_actuator_cmd == "out":
-            self.stencil_in()
-        else:
-            self.stencil_out()  
-
-    def brush_up(self):
-        self.io.set_io(BIT_BRUSH_UP, update=False, timeout=1)
-        self.io.reset_io(BIT_BRUSH_DOWN, update=False)
-        self.io.update()
-
-    def brush_down(self):
-        self.io.set_io(BIT_BRUSH_DOWN, update=False, timeout=1)
-        self.io.reset_io(BIT_BRUSH_UP, update=False)
-        self.io.update()
+        self.l_actuator.up()
+        self.s_actuator.toggle()
 
     def toggle_brush(self):
-        if self.last_brush_cmd == "down":
-            self.last_brush_cmd = "up"
-            self.brush_up()
-        else:
-            self.last_brush_cmd = "down"
+        self.brush.toggle()
+
 
 class MarkingCamera(Image):
     def __init__(self, *args, **kwargs):
