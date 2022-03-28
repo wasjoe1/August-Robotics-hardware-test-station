@@ -9,15 +9,11 @@ class DeviceStates(Enum):
     OFFLINE = 0
     ON = 1
     OFF = 2
-    UP = 3
-    DOWN = 4
+    PULL = 3
+    PUSH = 4
     HOLD = 5
-    IN = 6
-    OUT = 7
-    PRESSED = 8
-    RELEASED = 9
-    ERROR = 10
-    UNKNOWN = 11
+    ERROR = 6
+    UNKNOWN = 7
 
 if __name__ == "__main__":
     print(DeviceStates.ON, DeviceStates.ON.name, DeviceStates.ON.value)
