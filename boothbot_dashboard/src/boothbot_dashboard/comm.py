@@ -63,7 +63,7 @@ class Router(Device):
                 self.state = DeviceStates.ON
             else:
                 self.ip_address = ""
-                self.router.state = DeviceStates.OFFLINE
+                self.state = DeviceStates.OFFLINE
 
 class Comm(DeviceModule):
     def __init__(self, *args, **kwargs):
