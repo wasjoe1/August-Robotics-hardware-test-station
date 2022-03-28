@@ -36,7 +36,7 @@ class CtrlIO(Device):
         self.bit = bit
 
     def toggle(self):
-        self.io.toggle(self.bit)
+        self.io.toggle_io(self.bit)
 
     def update(self, value):
         def is_set(x, n):
@@ -79,19 +79,17 @@ class CtrlIOPair(Device):
             self.state = DeviceStates.PUSH
 
     def toggle(self):
-        if self.position == "PUSH":
+        if self.pushed:
             self.pull()
-        elif self.position == "PULL":
-            self.push()
         else:
-            pass
+            self.push()
 
 class LActuator(CtrlIOPair):
     def __init__(self, io, *args, **kwargs):
         super().__init__(io, BIT_LINEAR_LONG_DOWN, BIT_LINEAR_LONG_UP, *args, **kwargs)
         self.up = self.pull
-        self.down = self.push
 
+    @property
     def show_text(self):
         if self.state == DeviceStates.HOLD:
             return "HOLD"
@@ -100,12 +98,12 @@ class LActuator(CtrlIOPair):
         else:
             return "UP"
 
+
 class SActuator(CtrlIOPair):
     def __init__(self, io, *args, **kwargs):
         super().__init__(io, BIT_STENCIL_OUT, BIT_STENCIL_IN, *args, **kwargs)
-        self.in = self.pull
-        self.out = self.push
 
+    @property
     def show_text(self):
         if self.state == DeviceStates.HOLD:
             return "HOLD"
@@ -118,9 +116,8 @@ class SActuator(CtrlIOPair):
 class Brush(CtrlIOPair):
     def __init__(self, io, *args, **kwargs):
         super().__init__(io, BIT_BRUSH_DOWN, BIT_BRUSH_UP, *args, **kwargs)
-        self.up = self.pull
-        self.down = self.push
 
+    @property
     def show_text(self):
         if self.state == DeviceStates.HOLD:
             return "HOLD"
