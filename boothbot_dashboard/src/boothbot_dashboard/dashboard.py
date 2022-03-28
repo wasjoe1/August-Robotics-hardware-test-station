@@ -1,15 +1,15 @@
 #!/usr/bin/env python3.7
+import rospy
+
 from textual.app import App
+from textual.widgets import Header, Footer
 
 from boothbot_io import IO
-
-from textual.widgets import Header, Footer
 from marking import Marking, MarkingCamera
 from chassis import Chassis
 from sonar_data import SonarData
 from camera_beacon import CameraBeacon, TrackingCameras
 from comm import Comm
-import rospy
 
 # ignore ResourceWarning from rospy
 # https://stackoverflow.com/questions/26563711/disabling-python-3-2-resourcewarning
@@ -21,7 +21,6 @@ class HwTestApp(App):
         super().__init__(*args, **kwargs)
 
         self.io = IO()
-
         self.chassis = Chassis(name="Chassis")
         self.cb = CameraBeacon(self.io, name="Camera Beacon")
         self.marking = Marking(self.io, name="Marking")
@@ -99,7 +98,6 @@ class HwTestApp(App):
         await self.bind("8", "toggle_out_pump", show=False)
         await self.bind("9", "toggle_brush", show=False)
         await self.bind("0", "toggle_enable", show=False)
-
         await self.bind("r", "toggle_power", show=False)
 
     async def on_mount(self) -> None:
