@@ -186,6 +186,7 @@ class Chassis(DeviceModule):
             DRIVERS_SONARS_SET_REAR.type)
 
         self._rear_sonar_enabled = False
+        self.rear_sonar.state = DeviceStates.OFF
         self.set_rear_sonar(self.rear_sonar_enabled)
 
     @property
