@@ -23,6 +23,8 @@ RUN mkdir -p ${HOME}/catkin_ws/src && \
 RUN apt-get update && apt-get install -y \
     ros-noetic-rospy-message-converter \
     python3-pip \
+    avahi-utils \
+    libnss-mdns \
     curl
 
 # Install python deps
