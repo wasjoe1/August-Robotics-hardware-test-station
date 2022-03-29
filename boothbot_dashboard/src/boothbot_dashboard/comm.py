@@ -19,7 +19,7 @@ class DTU(Device):
     @property
     def show_text(self):
         if self.state == DeviceStates.ERROR:
-            return self.error_message
+            return f"{self.error_message:10s}"
         if self.state == DeviceStates.ON:
             return f"{self.state.name:7s} channel:{self.config['channel']:3d}"
         else:
