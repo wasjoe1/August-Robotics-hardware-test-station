@@ -185,8 +185,16 @@ class Chassis(DeviceModule):
             DRIVERS_SONARS_SET_REAR.name,
             DRIVERS_SONARS_SET_REAR.type)
 
-        self.rear_sonar_enabled = False
+        self._rear_sonar_enabled = False
         self.set_rear_sonar(self.rear_sonar_enabled)
+
+    @property
+    def rear_sonar_enabled(self):
+        return self._rear_sonar_enabled
+
+    @rear_sonar_enabled.setter
+    def rear_sonar_enabled(self, value):
+        self._rear_sonar_enabled = value
 
     def on_mount(self):
         self.set_interval(5, self.depth_camera.update)

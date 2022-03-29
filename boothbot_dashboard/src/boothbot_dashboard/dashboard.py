@@ -79,6 +79,7 @@ class HwTestApp(App):
 
     async def action_toggle_rear_sonar(self):
         self.chassis.toggle_rear_sonar()
+        self.sonar.rear_sonar_enabled = self.chassis.rear_sonar_enabled
 
     async def on_load(self):
         await self.bind("q", "quit", "Quit")

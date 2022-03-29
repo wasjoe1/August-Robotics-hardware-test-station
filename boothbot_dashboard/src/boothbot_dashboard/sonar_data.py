@@ -52,13 +52,30 @@ class SonarData(Placeholder):
         self.left_02  = SonarSensor("left_02", DRIVERS_SONARS_LEFT_02)
         self.right_01 = SonarSensor("right_01", DRIVERS_SONARS_RIGHT_01)
         self.right_02 = SonarSensor("right_02", DRIVERS_SONARS_RIGHT_02)
+        self._rear_sonar_enabled = False
+
+    @property
+    def rear_sonar_enabled(self):
+        return self._rear_sonar_enabled
+
+    @rear_sonar_enabled.setter
+    def rear_sonar_enabled(self, value):
+        self._rear_sonar_enabled = value
+        self.refresh()
 
     def _convert(self):
         str = ""
-        str += f"[yellow]{self.f_01.data:.2f}{' ':4s}{self.f_02.data:.2f}{' ':4s}{self.f_03.data:.2f}[/yellow]\n\n\n\n"
+        if self.rear_sonar_enabled:
+            str += f"[grey]{self.f_01.data:.2f}{' ':4s}{self.f_02.data:.2f}{' ':4s}{self.f_03.data:.2f}[/yellow]\n\n\n\n"
+        else:
+            str += f"[yellow]{self.f_01.data:.2f}{' ':4s}{self.f_02.data:.2f}{' ':4s}{self.f_03.data:.2f}[/yellow]\n\n\n\n"
         str += f"[green]{self.left_01.data:.2f}     \u25b2      {self.right_01.data:.2f}\n\n\n\n\n\n[/]"
         str += f"[green]{self.left_02.data:.2f}            {self.right_02.data:.2f}\n\n\n\n[/]"
-        str += f"[green]{self.r_01.data:.2f}    {self.r_02.data:.2f}    {self.r_03.data:.2f}[/]"
+        if self.rear_sonar_enabled:
+            str += f"[green]{self.r_01.data:.2f}    {self.r_02.data:.2f}    {self.r_03.data:.2f}[/]"
+        else:
+            str += f"[grey]{self.r_01.data:.2f}    {self.r_02.data:.2f}    {self.r_03.data:.2f}[/]"
+
         return str
 
     def render(self) -> RenderableType:
