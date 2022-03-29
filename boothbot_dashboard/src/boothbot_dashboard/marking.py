@@ -122,9 +122,9 @@ class Brush(CtrlIOPair):
         if self.state == DeviceStates.HOLD:
             return "HOLD"
         elif self.state == DeviceStates.PULL:
-            return "DOWN"
-        else:
             return "UP"
+        else:
+            return "DOWN"
 
 
 class CameraState(Device):
