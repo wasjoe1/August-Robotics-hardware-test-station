@@ -42,7 +42,7 @@ class Chassis(DeviceModule):
         super().__init__(*args, **kwargs)
 
         # CHASSIS
-        self.estop = Stop("E-Stop")
+        self.estop = EStop("E-Stop")
         self.power = Device("<R> | Power")
         self.chassis = Device("<0> | Chassis")
         self.left_sonar = SonarStatus(number=2, name="Left Sonars")
