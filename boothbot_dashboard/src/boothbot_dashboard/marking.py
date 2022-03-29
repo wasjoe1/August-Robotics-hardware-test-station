@@ -182,20 +182,25 @@ class Marking(DeviceModule):
         self.s_actuator.pull()
         self.brush.pull()
 
+        self.last_io_state = 0
+
     def on_mount(self):
         self.set_interval(1, self.refresh)
 
     def _chassis_io_cb(self, msg):
         value = int(msg.io_state)
-        self.k1.update(value)
-        self.k2.update(value)
-        self.k3.update(value)
-        self.k4.update(value)
-        self.in_pump.update(value)
-        self.out_pump.update(value)
-        self.l_actuator.update(value)
-        self.s_actuator.update(value)
-        self.brush.update(value)
+        if value != self.last_io_state:
+            self.k1.update(value)
+            self.k2.update(value)
+            self.k3.update(value)
+            self.k4.update(value)
+            self.in_pump.update(value)
+            self.out_pump.update(value)
+            self.l_actuator.update(value)
+            self.s_actuator.update(value)
+            self.brush.update(value)
+            self.last_io_state = value
+            self.refresh()
 
     def toggle_k1(self):
         self.k1.toggle()
