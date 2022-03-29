@@ -26,13 +26,23 @@ class SonarStatus(Device):
     def set_data(self, data, i):
         self.data[i] = data
     
+class EStop(Device):
+    @property
+    def show_text(self):
+        return "RELEASED" if self.state == DeviceStates.ON else "PRESSED" if self.state == DeviceStates.OFF else self.state.name
+
+    def update(self, msg):
+        if msg.dyn_power:
+            self.state = DeviceStates.OFF if not msg.estop_off else DeviceStates.ON
+        else:
+            self.state = DeviceStates.UNKNOWN
 
 class Chassis(DeviceModule):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         # CHASSIS
-        self.estop = Device("E-Stop")
+        self.estop = Stop("E-Stop")
         self.power = Device("<R> | Power")
         self.chassis = Device("<0> | Chassis")
         self.left_sonar = SonarStatus(number=2, name="Left Sonars")
