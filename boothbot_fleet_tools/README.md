@@ -1,3 +1,6 @@
+This scripts are mainly for development use, as them are already
+integrated into our CI/CD repository.
+
 How to Use?
 ----
 0. Go to `docker` directory;
