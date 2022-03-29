@@ -177,10 +177,7 @@ class Chassis(DeviceModule):
             self.right_sonar.state = DeviceStates.ON
 
     def _chassis_status_cb(self, msg):
-        if msg.dyn_power:
-            self.estop.state = DeviceStates.PRESSED if not msg.estop_off else DeviceStates.RELEASED
-        else:
-            self.estop.state = DeviceStates.UNKNOWN
+        self.estop.update(msg)
         self.power.state = DeviceStates.ON if msg.dyn_power else DeviceStates.OFF
         self.chassis.state = DeviceStates.ON if msg.enabled else DeviceStates.OFF
         #self.left_sonar.state = DeviceStates.ON if msg.side_sonar else DeviceStates.OFF
