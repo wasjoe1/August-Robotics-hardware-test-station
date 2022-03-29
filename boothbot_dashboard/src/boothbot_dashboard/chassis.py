@@ -15,16 +15,39 @@ from boothbot_msgs.ros_interfaces import (
 from boothbot_common.error_code import ErrCode
 
 class SonarStatus(Device):
-    def __init__(self, number, *args, **kwargs):
+    def __init__(self, code, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.data = ["N/A"] * number
+        self.code = code
+        self.data = ["N/A"] * len(code)
+
+        rospy.Subscriber(
+            DRIVERS_SONARS_STATUS.name,
+            DRIVERS_SONARS_STATUS.type,
+            self._cb)
 
     @property
     def show_text(self):
-        return f"{self.state.name:7s} {self.data}"
+        if self.state == DeviceStates.OFF:
+            return f"{self.state.name:7s}"
+        else:
+            return f"{self.state.name:7s} {self.data}"
 
-    def set_data(self, data, i):
-        self.data[i] = data
+    def _cb(self, msg):
+        if self.state == DeviceStates.OFF:
+            return
+
+        error_set = set(msg.errorcodes)
+
+        for i, each in enumerate(self.code):
+            if each in error_set:
+                self.data[i] = "ERR"
+            else:
+                self.data[i] = "OK"
+
+        if "ERR" in self.data:
+            self.state = DeviceStates.ERROR
+        else:
+            self.state = DeviceStates.ON
 
 
 class EStop(Device):
@@ -111,10 +134,33 @@ class Chassis(DeviceModule):
         self.estop = EStop("E-Stop")
         self.power = Power("<R> | Power")
         self.wheels = Wheels("<0> | Wheels")
-        self.left_sonar = SonarStatus(number=2, name="Left Sonars")
-        self.right_sonar = SonarStatus(number=2, name="Right Sonars")
-        self.front_sonar = SonarStatus(number=3, name="Front Sonars")
-        self.rear_sonar = SonarStatus(number=3, name="Rear Sonars")
+
+        left_sonar_error_codes = [
+            ErrCode.OA_ERR_SONAR_LEFT_01_DATA.value,
+            ErrCode.OA_ERR_SONAR_LEFT_02_DATA.value
+        ]
+        self.left_sonar = SonarStatus(left_sonar_error_codes, name="Left Sonars")
+
+        right_sonar_error_codes = [
+            ErrCode.OA_ERR_SONAR_RIGHT_01_DATA.value,
+            ErrCode.OA_ERR_SONAR_RIGHT_02_DATA.value
+        ]
+        self.right_sonar = SonarStatus(right_sonar_error_codes, name="Right Sonars")
+
+        front_sonar_error_codes = [
+            ErrCode.OA_ERR_SONAR_FRONT_01_DATA.value,
+            ErrCode.OA_ERR_SONAR_FRONT_02_DATA.value,
+            ErrCode.OA_ERR_SONAR_FRONT_03_DATA.value
+        ]
+        self.front_sonar = SonarStatus(front_sonar_error_codes, name="Front Sonars")
+
+        rear_sonar_error_codes = [
+            ErrCode.OA_ERR_SONAR_REAR_01_DATA.value,
+            ErrCode.OA_ERR_SONAR_REAR_02_DATA.value,
+            ErrCode.OA_ERR_SONAR_REAR_03_DATA.value
+        ]
+        self.rear_sonar = SonarStatus(rear_sonar_error_codes, name="Rear Sonars")
+
         self.imu = Device("IMU")
         self.depth_camera = FreqChecker(DRIVERS_DEPTH_CAMERA_DEPTH_REGISTERED_POINTS, name="Depth Camera")
         self.lidar = FreqChecker(DRIVERS_LIDAR_SCAN_FILTERED, name="LIDAR")
@@ -135,11 +181,6 @@ class Chassis(DeviceModule):
             DRIVERS_CHASSIS_STATUS.type,
             self._chassis_status_cb)
 
-        rospy.Subscriber(
-            DRIVERS_SONARS_STATUS.name,
-            DRIVERS_SONARS_STATUS.type,
-            self._sonars_status_cb)
-
         self.set_rear_sonar = rospy.ServiceProxy(
             DRIVERS_SONARS_SET_REAR.name,
             DRIVERS_SONARS_SET_REAR.type)
@@ -151,67 +192,6 @@ class Chassis(DeviceModule):
         self.set_interval(5, self.depth_camera.update)
         self.set_interval(5, self.lidar.update)
         self.set_interval(1, self.refresh)
-
-    def _sonars_status_cb(self, msg):
-        text_array = ("OK", "ERR")
-        action_array = [
-            {"code":ErrCode.OA_ERR_SONAR_FRONT_01_DATA.value, "text":text_array, "dev":self.front_sonar, "index":0},
-            {"code":ErrCode.OA_ERR_SONAR_FRONT_02_DATA.value, "text":text_array, "dev":self.front_sonar, "index":1},
-            {"code":ErrCode.OA_ERR_SONAR_FRONT_03_DATA.value, "text":text_array, "dev":self.front_sonar, "index":2},
-            {"code":ErrCode.OA_ERR_SONAR_REAR_01_DATA.value,  "text":text_array, "dev":self.rear_sonar,  "index":0},
-            {"code":ErrCode.OA_ERR_SONAR_REAR_02_DATA.value,  "text":text_array, "dev":self.rear_sonar,  "index":1},
-            {"code":ErrCode.OA_ERR_SONAR_REAR_03_DATA.value,  "text":text_array, "dev":self.rear_sonar,  "index":2},
-            {"code":ErrCode.OA_ERR_SONAR_LEFT_01_DATA.value,  "text":text_array, "dev":self.left_sonar,  "index":0},
-            {"code":ErrCode.OA_ERR_SONAR_LEFT_02_DATA.value,  "text":text_array, "dev":self.left_sonar,  "index":1},    
-            {"code":ErrCode.OA_ERR_SONAR_RIGHT_01_DATA.value, "text":text_array, "dev":self.right_sonar, "index":0},
-            {"code":ErrCode.OA_ERR_SONAR_RIGHT_02_DATA.value, "text":text_array, "dev":self.right_sonar, "index":1},
-        ]
-        front_sonar_errors = [
-                ErrCode.OA_ERR_SONAR_FRONT_01_DATA.value,
-                ErrCode.OA_ERR_SONAR_FRONT_02_DATA.value,
-                ErrCode.OA_ERR_SONAR_FRONT_03_DATA.value
-        ]
-        rear_sonar_errors = [
-                ErrCode.OA_ERR_SONAR_REAR_01_DATA.value,
-                ErrCode.OA_ERR_SONAR_REAR_02_DATA.value,
-                ErrCode.OA_ERR_SONAR_REAR_03_DATA.value
-        ]
-        left_sonar_errors = [
-                ErrCode.OA_ERR_SONAR_LEFT_01_DATA.value,
-                ErrCode.OA_ERR_SONAR_LEFT_02_DATA.value
-        ]
-        right_sonar_errors = [
-                ErrCode.OA_ERR_SONAR_RIGHT_01_DATA.value,
-                ErrCode.OA_ERR_SONAR_RIGHT_02_DATA.value
-        ]
-
-        for each in action_array:
-            if each["code"] in msg.errorcodes:
-                each["dev"].set_data(each["text"][1], each["index"])
-            else:
-                each["dev"].set_data(each["text"][0], each["index"])
-
-        error_set = set(msg.errorcodes)
-
-        if self.rear_sonar_enabled:
-            self.front_sonar.state = DeviceStates.OFF
-        else:
-            self.front_sonar.state = DeviceStates.ON
-
-        if self.rear_sonar_enabled:
-            self.rear_sonar.state = DeviceStates.ON 
-        else:
-            self.rear_sonar.state = DeviceStates.OFF
-
-        if error_set & set(left_sonar_errors):
-            self.left_sonar.state = DeviceStates.ERROR
-        else:
-            self.left_sonar.state = DeviceStates.ON
-
-        if error_set & set(right_sonar_errors):
-            self.right_sonar.state = DeviceStates.ERROR
-        else:
-            self.right_sonar.state = DeviceStates.ON
 
     def _chassis_status_cb(self, msg):
         self.estop.update(msg)
@@ -230,6 +210,13 @@ class Chassis(DeviceModule):
         result = self.set_rear_sonar(not self.rear_sonar_enabled)
         if result.success:
             self.rear_sonar_enabled = not self.rear_sonar_enabled
+
+        if self.rear_sonar_enabled:
+            self.front_sonar.state = DeviceStates.OFF
+            self.rear_sonar.state = DeviceStates.ON
+        else:
+            self.front_sonar.state = DeviceStates.ON
+            self.rear_sonar.state = DeviceStates.OFF
 
 
 
