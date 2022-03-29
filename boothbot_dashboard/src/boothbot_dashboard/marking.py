@@ -56,6 +56,7 @@ class CtrlIOPair(Device):
             self.io.set_io(self.push_bit, update=False, timeout=2)
             self.io.reset_io(self.pull_bit, update=False)
             self.io.update()
+            self.state = DeviceStates.PUSH
             self.pushed = True
 
     def pull(self):
@@ -63,6 +64,7 @@ class CtrlIOPair(Device):
             self.io.set_io(self.pull_bit, update=False, timeout=2)
             self.io.reset_io(self.push_bit, update=False)
             self.io.update()
+            self.state = DeviceStates.PULL
             self.pushed = False
 
     def update(self, value):
