@@ -37,6 +37,27 @@ class EStop(Device):
         else:
             self.state = DeviceStates.UNKNOWN
 
+
+class Wheels(Device):
+    @property
+    def show_text(self):
+        return "ON" if self.state == DeviceStates.ON else "OFF"
+
+    def update(self, msg):
+        self.state = DeviceStates.ON if msg.enabled else DeviceStates.OFF
+
+    def toggle(self):
+        if self.state == DeviceStates.ON:
+            DRIVERS_CHASSIS_SRV_CMD.service_call(
+                command='ENABLE',
+                parameter='OFF'
+            )
+        else:
+            DRIVERS_CHASSIS_SRV_CMD.service_call(
+                command='ENABLE',
+                parameter='ON'
+            )
+
 class FreqChecker(Device):
     def __init__(self, topic, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -56,6 +77,7 @@ class FreqChecker(Device):
         else:
             self.state = DeviceStates.OFFLINE
 
+
 class Chassis(DeviceModule):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -63,7 +85,7 @@ class Chassis(DeviceModule):
         # CHASSIS
         self.estop = EStop("E-Stop")
         self.power = Device("<R> | Power")
-        self.wheels = Device("<0> | Wheels")
+        self.wheels = Wheels("<0> | Wheels")
         self.left_sonar = SonarStatus(number=2, name="Left Sonars")
         self.right_sonar = SonarStatus(number=2, name="Right Sonars")
         self.front_sonar = SonarStatus(number=3, name="Front Sonars")
@@ -92,21 +114,6 @@ class Chassis(DeviceModule):
             DRIVERS_SONARS_STATUS.name,
             DRIVERS_SONARS_STATUS.type,
             self._sonars_status_cb)
-
-
-        self.hz_checker = rostopic.ROSTopicHz(5)
-
-        rospy.Subscriber(
-            DRIVERS_DEPTH_CAMERA_DEPTH_REGISTERED_POINTS.name,
-            DRIVERS_DEPTH_CAMERA_DEPTH_REGISTERED_POINTS.type,
-            self.hz_checker.callback_hz,
-            callback_args=DRIVERS_DEPTH_CAMERA_DEPTH_REGISTERED_POINTS.name)
-
-        rospy.Subscriber(
-            DRIVERS_LIDAR_SCAN_FILTERED.name,
-            DRIVERS_LIDAR_SCAN_FILTERED.type,
-            self.hz_checker.callback_hz,
-            callback_args=DRIVERS_LIDAR_SCAN_FILTERED.name)
 
         self.set_rear_sonar = rospy.ServiceProxy(
             DRIVERS_SONARS_SET_REAR.name,
@@ -184,21 +191,12 @@ class Chassis(DeviceModule):
     def _chassis_status_cb(self, msg):
         self.estop.update(msg)
         self.power.state = DeviceStates.ON if msg.dyn_power else DeviceStates.OFF
-        self.wheels.state = DeviceStates.ON if msg.enabled else DeviceStates.OFF
+        self.wheels.update(msg)
         #self.left_sonar.state = DeviceStates.ON if msg.side_sonar else DeviceStates.OFF
         self.imu.state = DeviceStates.ON if msg.imu_online else DeviceStates.OFF
 
     def toggle_enable(self):
-        if self.wheels.state == DeviceStates.ON:
-            DRIVERS_CHASSIS_SRV_CMD.service_call(
-                command='ENABLE',
-                parameter='OFF'
-            )
-        else:
-            DRIVERS_CHASSIS_SRV_CMD.service_call(
-                command='ENABLE',
-                parameter='ON'
-            )
+        self.wheels.toggle()
 
     def toggle_power(self):
         if self.power.state == DeviceStates.ON:
