@@ -198,8 +198,8 @@ class Chassis(DeviceModule):
         self._rear_sonar_enabled = value
 
     def on_mount(self):
-        self.set_interval(1, self.depth_camera.update)
-        self.set_interval(1, self.lidar.update)
+        self.set_interval(5, self.depth_camera.update)
+        self.set_interval(5, self.lidar.update)
         self.set_interval(1, self.refresh)
 
     def _chassis_status_cb(self, msg):
