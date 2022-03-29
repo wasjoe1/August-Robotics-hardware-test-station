@@ -21,7 +21,7 @@ class DTU(Device):
         if self.state == DeviceStates.ERROR:
             return f"{self.error_message:10s}"
         if self.state == DeviceStates.ON:
-            return f"{self.state.name:7s} channel:{self.config['channel']:3d}"
+            return f"channel:{self.config['channel']:3d}"
         else:
             return f"{self.state.name:7s}"
 
