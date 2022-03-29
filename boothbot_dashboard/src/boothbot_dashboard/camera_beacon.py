@@ -172,6 +172,11 @@ class TrackingCameras(Image):
         self.tracker.capture(True)
 
         rospy.Subscriber(
+            MODULES_PERCEPT_TRACK_STATUS.name,
+            MODULES_PERCEPT_TRACK_STATUS.type,
+            self._track_status_callback)
+
+        rospy.Subscriber(
             MODULES_PERCEPT_TRACK_LONG_IMAGE.name,
             MODULES_PERCEPT_TRACK_LONG_IMAGE.type,
             self._track_long_image_callback)
@@ -181,12 +186,16 @@ class TrackingCameras(Image):
             MODULES_PERCEPT_TRACK_SHORT_IMAGE.type,
             self._track_short_image_callback)
 
+    def _track_status_callback(self, msg):
+        if msg.state == "RUNNING":
+            self.state = DeviceStates.ON
+        else:
+            self.state = DeviceStates.ERROR
+
     def _track_long_image_callback(self, msg):
-        #self.long_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
         self.long_image = ros_numpy.numpify(msg)
 
     def _track_short_image_callback(self, msg):
-        #self.short_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
         self.short_image = ros_numpy.numpify(msg)
 
     def concat_images(self):
@@ -196,7 +205,8 @@ class TrackingCameras(Image):
         self.update(image)
 
     def track(self):
-        self.tracker.send_goal()
+        if self.state == DeviceStates.ON:
+            self.tracker.send_goal()
 
     def on_mount(self):
         self.set_interval(10, self.track)
