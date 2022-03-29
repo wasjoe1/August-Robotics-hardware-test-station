@@ -25,7 +25,8 @@ class SonarStatus(Device):
 
     def set_data(self, data, i):
         self.data[i] = data
-    
+
+
 class EStop(Device):
     @property
     def show_text(self):
@@ -36,6 +37,29 @@ class EStop(Device):
             self.state = DeviceStates.OFF if not msg.estop_off else DeviceStates.ON
         else:
             self.state = DeviceStates.UNKNOWN
+
+
+class Power(Device):
+    @property
+    def show_text(self):
+        return "ON" if self.state == DeviceStates.ON else "OFF"
+
+    def update(self, msg):
+        self.state = DeviceStates.ON if msg.dyn_power else DeviceStates.OFF
+
+    def toggle(self):
+        if self.state == DeviceStates.ON:
+            self.state = DeviceStates.OFF
+            DRIVERS_CHASSIS_SRV_CMD.service_call(
+                command='POWER',
+                parameter='OFF'
+            )
+        else:
+            self.state = DeviceStates.ON
+            DRIVERS_CHASSIS_SRV_CMD.service_call(
+                command='POWER',
+                parameter='ON'
+            )
 
 
 class Wheels(Device):
@@ -57,6 +81,7 @@ class Wheels(Device):
                 command='ENABLE',
                 parameter='ON'
             )
+
 
 class FreqChecker(Device):
     def __init__(self, topic, *args, **kwargs):
@@ -84,7 +109,7 @@ class Chassis(DeviceModule):
 
         # CHASSIS
         self.estop = EStop("E-Stop")
-        self.power = Device("<R> | Power")
+        self.power = Power("<R> | Power")
         self.wheels = Wheels("<0> | Wheels")
         self.left_sonar = SonarStatus(number=2, name="Left Sonars")
         self.right_sonar = SonarStatus(number=2, name="Right Sonars")
@@ -190,7 +215,7 @@ class Chassis(DeviceModule):
 
     def _chassis_status_cb(self, msg):
         self.estop.update(msg)
-        self.power.state = DeviceStates.ON if msg.dyn_power else DeviceStates.OFF
+        self.power.update(msg)
         self.wheels.update(msg)
         #self.left_sonar.state = DeviceStates.ON if msg.side_sonar else DeviceStates.OFF
         self.imu.state = DeviceStates.ON if msg.imu_online else DeviceStates.OFF
@@ -199,18 +224,7 @@ class Chassis(DeviceModule):
         self.wheels.toggle()
 
     def toggle_power(self):
-        if self.power.state == DeviceStates.ON:
-            self.power.state = DeviceStates.OFF
-            DRIVERS_CHASSIS_SRV_CMD.service_call(
-                command='POWER',
-                parameter='OFF'
-            )
-        else:
-            self.power.state = DeviceStates.ON
-            DRIVERS_CHASSIS_SRV_CMD.service_call(
-                command='POWER',
-                parameter='ON'
-            )
+        self.power.toggle()
 
     def toggle_rear_sonar(self):
         result = self.set_rear_sonar(not self.rear_sonar_enabled)
