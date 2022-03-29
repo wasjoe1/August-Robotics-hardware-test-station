@@ -37,6 +37,25 @@ class EStop(Device):
         else:
             self.state = DeviceStates.UNKNOWN
 
+class FreqChecker(Device):
+    def __init__(self, topic, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # window size to 5
+        self.checker = rostopic.ROSTopicHz(5)
+        self.topic = topic
+        rospy.Subscriber(
+            self.topic.name,
+            self.topic.type,
+            self.checker.callback_hz,
+            callback_args=self.topic.name)
+
+    def update(self):
+        freq = self.checker.get_hz(self.topic.name)
+        if freq is not None and freq[0] > 0:
+            self.state = DeviceStates.ON
+        else:
+            self.state = DeviceStates.OFFLINE
+
 class Chassis(DeviceModule):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -51,8 +70,8 @@ class Chassis(DeviceModule):
         self.rear_sonar = SonarStatus(number=3, name="Rear Sonars")
         self.battery = Device("Battery")
         self.imu = Device("IMU")
-        self.depth_camera = Device("Depth Camera")
-        self.lidar = Device("LIDAR")
+        self.depth_camera = FreqChecker(DRIVERS_DEPTH_CAMERA_DEPTH_REGISTERED_POINTS, name="Depth Camera")
+        self.lidar = FreqChecker(DRIVERS_LIDAR_SCAN_FILTERED, name="LIDAR")
 
         self.append(self.estop)
         self.append(self.power)
@@ -98,21 +117,9 @@ class Chassis(DeviceModule):
         self.rear_sonar_enabled = False
         self.set_rear_sonar(self.rear_sonar_enabled)
 
-    def hz_monitor(self):
-        depth_camera_hz = self.hz_checker.get_hz(DRIVERS_DEPTH_CAMERA_DEPTH_REGISTERED_POINTS.name)
-        lidar_hz = self.hz_checker.get_hz(DRIVERS_LIDAR_SCAN_FILTERED.name)
-        if depth_camera_hz is not None:
-            self.depth_camera.state = DeviceStates.ON if depth_camera_hz[0] > 0 else DeviceStates.OFFLINE
-        else:
-            self.depth_camera.state = DeviceStates.OFFLINE
-
-        if lidar_hz is not None:
-            self.lidar.state = DeviceStates.ON if lidar_hz[0] > 0 else DeviceStates.OFFLINE
-        else:
-            self.lidar.state = DeviceStates.OFFLINE
-
     def on_mount(self):
-        self.set_interval(5, self.hz_monitor)
+        self.set_interval(5, self.depth_camera.update)
+        self.set_interval(5, self.lidar.update)
         self.set_interval(1, self.refresh)
 
     def _sonars_status_cb(self, msg):
