@@ -82,4 +82,4 @@ class Comm(DeviceModule):
         self.refresh()
 
     def on_mount(self):
-        self.set_interval(1, self.update)
+        self.set_interval(5, self.update)

@@ -183,7 +183,7 @@ class Marking(DeviceModule):
         self.brush.pull()
 
     def on_mount(self):
-        self.set_interval(10, self.refresh)
+        self.set_interval(1, self.refresh)
 
     def _chassis_io_cb(self, msg):
         value = int(msg.io_state)
