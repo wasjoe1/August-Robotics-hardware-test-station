@@ -63,7 +63,7 @@ class Chassis(DeviceModule):
         # CHASSIS
         self.estop = EStop("E-Stop")
         self.power = Device("<R> | Power")
-        self.chassis = Device("<0> | Chassis")
+        self.wheels = Device("<0> | Wheels")
         self.left_sonar = SonarStatus(number=2, name="Left Sonars")
         self.right_sonar = SonarStatus(number=2, name="Right Sonars")
         self.front_sonar = SonarStatus(number=3, name="Front Sonars")
@@ -74,7 +74,7 @@ class Chassis(DeviceModule):
 
         self.append(self.estop)
         self.append(self.power)
-        self.append(self.chassis)
+        self.append(self.wheels)
         self.append(self.left_sonar)
         self.append(self.right_sonar)
         self.append(self.front_sonar)
@@ -184,12 +184,12 @@ class Chassis(DeviceModule):
     def _chassis_status_cb(self, msg):
         self.estop.update(msg)
         self.power.state = DeviceStates.ON if msg.dyn_power else DeviceStates.OFF
-        self.chassis.state = DeviceStates.ON if msg.enabled else DeviceStates.OFF
+        self.wheels.state = DeviceStates.ON if msg.enabled else DeviceStates.OFF
         #self.left_sonar.state = DeviceStates.ON if msg.side_sonar else DeviceStates.OFF
         self.imu.state = DeviceStates.ON if msg.imu_online else DeviceStates.OFF
 
     def toggle_enable(self):
-        if self.chassis.state == DeviceStates.ON:
+        if self.wheels.state == DeviceStates.ON:
             DRIVERS_CHASSIS_SRV_CMD.service_call(
                 command='ENABLE',
                 parameter='OFF'
