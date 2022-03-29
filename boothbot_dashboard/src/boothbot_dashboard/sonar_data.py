@@ -66,9 +66,9 @@ class SonarData(Placeholder):
     def _convert(self):
         str = ""
         if self.rear_sonar_enabled:
-            str += f"[grey]{self.f_01.data:.2f}{' ':4s}{self.f_02.data:.2f}{' ':4s}{self.f_03.data:.2f}[/yellow]\n\n\n\n"
+            str += f"[grey]{self.f_01.data:.2f}{' ':4s}{self.f_02.data:.2f}{' ':4s}{self.f_03.data:.2f}[/]\n\n\n\n"
         else:
-            str += f"[yellow]{self.f_01.data:.2f}{' ':4s}{self.f_02.data:.2f}{' ':4s}{self.f_03.data:.2f}[/yellow]\n\n\n\n"
+            str += f"[yellow]{self.f_01.data:.2f}{' ':4s}{self.f_02.data:.2f}{' ':4s}{self.f_03.data:.2f}[/]\n\n\n\n"
         str += f"[green]{self.left_01.data:.2f}     \u25b2      {self.right_01.data:.2f}\n\n\n\n\n\n[/]"
         str += f"[green]{self.left_02.data:.2f}            {self.right_02.data:.2f}\n\n\n\n[/]"
         if self.rear_sonar_enabled:
