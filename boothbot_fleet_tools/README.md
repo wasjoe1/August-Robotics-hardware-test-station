@@ -1,24 +1,15 @@
-# Instructions for Running the Simulator
-Last updated on: Dec. 22, 2021.
+This scripts are mainly for development use, as them are already
+integrated into our CI/CD repository.
 
-## 1. Setting Up
+How to Use?
+----
+0. Go to `docker` directory;
+1. Set environment in `.env`;
+2. Build docker image: `docker build -t boothbot_fleet .`;
+3. Build source file: `docker-compose -f docker-compose.build.ym up`
+4. Run fleet server: `docker-compose up`
 
-### Docker
-1. Go to `docker/boothbot-fleet-docker` directory.
-1. Build docker image using
-
-   `./build_fleet_manager.sh`
-
-### Change compose file settings
-1. Replacing `{{ var }}` inside `docker-compose-fleet.yml` to your own path.
-
-### Run
-1. Go to `docker` directory
-2. Run containers using
-
-    `docker-compose -f ./docker-compose-fleet.yml up`
-
-### Login
-1. Using following command to attach
-
-    `docker exec -it fleet_manager bash`
+First Time User Creation
+----
+For security, the user must be created by logging in the fleet_main container,
+and run django's createsuperuser subcommand.

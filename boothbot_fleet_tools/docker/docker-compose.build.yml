@@ -1,0 +1,18 @@
+version: "3"
+
+services:
+  db:
+    extends:
+      file: ./common-services.yml
+      service: db
+    restart: "no"
+
+  build:
+    extends:
+      file: ./common-services.yml
+      service: fleet
+    container_name: build
+    command: "/home/augbooth/docker/scripts/build.bash"
+    restart: "no"
+    depends_on:
+      - db  # For database migrations
