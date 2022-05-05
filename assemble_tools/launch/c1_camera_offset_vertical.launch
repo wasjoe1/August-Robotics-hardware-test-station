@@ -1,0 +1,6 @@
+<launch>
+  <!-- <node name="rviz" pkg="rviz" type="rviz" args="-d $(find assemble_tools)/config/c1.rviz"/> -->
+  <!-- cadbot_teleop_key already has its own built in velocity smoother -->
+  <node pkg="assemble_tools" type="c1_camera_offset_vertical.py" name="c1_camera_offset_vertical"  output="screen">
+  </node>
+</launch>
