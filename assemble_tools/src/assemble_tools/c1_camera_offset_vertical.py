@@ -80,7 +80,7 @@ class C1CameraVerticalOffset(object):
         logger.logwarn("Current beacon color is: {}".format(self.color))
 
     def run(self):
-        logger.logwarn(INSTRUCTION)
+        logger.logwarn(INSTRUCTION.format(self.current_offset, self.tracking_distance, self.color))
         l = rospy.Rate(NODE_RATE)
         while not rospy.is_shutdown():
             if self.state == "TRACKING":
