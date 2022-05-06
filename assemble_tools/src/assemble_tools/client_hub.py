@@ -9,12 +9,10 @@ import geometry_msgs.msg as gemsgs
 import std_msgs.msg as stmsgs
 import tf.transformations as tftrans
 
-# import guiding_beacon.msg as gbmsgs
-import guiding_beacon_system_msgs.msg as gbmsgs
-from boothbot_common.ros_logger_wrap import ROSLogging as Logging
-# from common import Logging
+import guiding_beacon.msg as gbmsgs
+from common import Logging
 from station_client import GuidingBeaconClient
-from boothbot_msgs.ros_topics import GS_FEEDBACK_fn, GS_GOAL_fn, CMDWORD_fn
+from common.ros_topics import GS_FEEDBACK_fn, GS_GOAL_fn, CMDWORD_fn
 
 
 class GuidingStationClientHub(Logging):

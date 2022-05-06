@@ -7,14 +7,10 @@ import math
 import numpy as np
 import tf.transformations as tftrans
 import geometry_msgs.msg as gemsgs
-# import guiding_beacon.msg as gbmsgs
-import guiding_beacon_system_msgs.msg as gbmsgs
-
+import guiding_beacon.msg as gbmsgs
 
 from boothbot_common.utils import inverse_matrix_hard
-# from common import Logging
-from boothbot_common.ros_logger_wrap import ROSLogging as Logging
-
+from common import Logging
 from common.states import GuidingStationControllerStates as GSCS
 from boothbot_nav.constants import LOCALIZATION_POSE_COVARIANCE, LOCALIZATION_UNLOCATED_COVARIANCE
 from boothbot_nav.settings import LED_BEACON_RADIUS
