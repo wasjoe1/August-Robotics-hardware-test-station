@@ -119,9 +119,6 @@ class E3IMUCheck(object):
             key = self.get_key.get_key()
             if key in ("i", "I"):
                 logger.logwarn("Trying to initialize...")
-                self.stepper_client.connect()
-
-            if key in ("d", "D"):
                 logger.loginfo("Detecting IMU...")
                 # TODO: Check if port existed
                 for baud in (115200, 9600):
