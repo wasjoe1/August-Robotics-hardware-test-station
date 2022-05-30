@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
+from cgitb import reset
+import numpy as np
 
 from enum import Enum
 from transitions import Machine
@@ -60,10 +62,11 @@ class Report(PyLogging):
 
     def on_enter_PRE_INIT(self):
         self.add_data = self._add_data_PRE_INIT
+        self.guiding_station_map["TEMP"] = GuidingStationSetup()
 
     def _add_data_PRE_INIT(self, code, data):
         is_data_consumed = False
-        if code == DataCode.INIT_POSE_START_TIME:
+        if True: #code == DataCode.INIT_POSE_START_TIME:
             # Proceed to INIT_SETUP state and try adding data again.
             self.to_INIT_SETUP()
             self.add_data(code, data)
@@ -88,7 +91,7 @@ class Report(PyLogging):
             self.localization_list.pop()
 
         gsTemp = self.guiding_station_map["TEMP"]
-        if gsTemp.id is not None and gsTemp.id not in self.guiding_station_map:
+        if gsTemp.name is not None and gsTemp.name not in self.guiding_station_map:
             self.guiding_station_map[gsTemp.id] = gsTemp
         self.guiding_station_map.pop("TEMP")
 
@@ -228,47 +231,199 @@ class Report(PyLogging):
         return False
 
     def print(self, printer):
-        return printer.print_report(self)
+        try:
+            return printer.print_report(self)
+        except Exception as e:
+            print(e)
+            return
 
     @property
     def total_nav_goal(self):
-        return len(self.navigation_list)
+        try:
+            return len(self.navigation_list)
+        except Exception as e:
+            print(e)
+            return
 
     @property
     def total_nav_duration(self):
-        return sum(map(lambda n: n.duration, self.navigation_list))
+        try:
+            return sum([x for x in map(lambda n: n.duration, self.navigation_list) if isinstance(x,float)])
+        except Exception as e:
+            print(e)
+            return
 
     @property
     def total_nav_success(self):
-        return sum(map(lambda n: n.success_flag == True, self.navigation_list))
+        try:
+            return sum([x for x in map(lambda n: n.success_flag == True, self.navigation_list) if isinstance(x,bool)])
+        except Exception as e:
+            print(e)
+            return
+
+    @property
+    def total_success_nav_duration(self):
+        try:
+            return sum([x for x in map(lambda n: n.successful_duration, self.navigation_list) if isinstance(x,float)])
+        except Exception as e:
+            print(e)
+            return
+
 
     @property
     def total_mrk_goal(self):
-        return len(self.marking_list)
+        try:
+            return len(self.marking_list)
+        except Exception as e:
+            print(e)
+            return
 
     @property
     def total_mrk_duration(self):
-        return sum(map(lambda n: n.duration, self.marking_list))
+        try:
+            return sum([x for x in map(lambda n: n.duration, self.marking_list) if isinstance(x,float)])
+        except Exception as e:
+            print(e)
+            return
 
     @property
     def total_mrk_success(self):
-        return sum(map(lambda n: n.success_flag == True, self.marking_list))
+        try:
+            return sum([x for x in map(lambda n: n.success_flag == True, self.marking_list) if isinstance(x,bool)])
+        except Exception as e:
+            print(e)
+            return
+
+    @property
+    def total_success_mrk_duration(self):
+        try:
+            return sum([x for x in map(lambda n: n.successful_duration, self.marking_list) if isinstance(x,float)])
+        except Exception as e:
+            print(e)
+            return
 
     @property
     def total_loc_goal(self):
-        return len(self.localization_list)
+        try:
+            return len(self.localization_list)
+        except Exception as e:
+            print(e)
+            return
 
     @property
     def total_loc_duration(self):
-        return sum(map(lambda n: n.duration, self.localization_list))
+        try:
+            return sum([x for x in map(lambda n: n.duration, self.localization_list) if isinstance(x,float) or isinstance(x,int)])
+        except Exception as e:
+            print(e)
+            return
 
     @property
     def total_loc_success(self):
-        return sum(map(lambda n: n.success_flag == True, self.localization_list))
+        try:
+            return sum([x for x in map(lambda n: n.success_flag == True, self.localization_list) if isinstance(x,bool)])
+        except Exception as e:
+            print(e)
+            return
+
+    @property
+    def total_success_loc_duration(self):
+        try:
+            return sum([x for x in map(lambda n: n.successful_duration, self.localization_list) if isinstance(x,float)])
+        except Exception as e:
+            print(e)
+            return
+
+    @property
+    def cb_total_failed_times(self):
+        try:
+            return sum([x for x in map(lambda n: n.cb_located != True, self.localization_list) if isinstance(x,bool)])
+        except Exception as e:
+            print(e)
+            return
+    @property
+    def gs_total_failed_times(self):
+        try:
+            return sum([x for x in map(lambda n: n.gs_located != True, self.localization_list) if isinstance(x,bool)])
+        except Exception as e:
+            print(e)
+            return
+
+    @property
+    def total_times_of_cb_located_first(self):
+        return sum([x for x in map(lambda n: n.cb_first_located == True, self.localization_list) if isinstance(x,bool)])
+    @property
+    def total_times_of_gs_located_first(self):
+        return sum([x for x in map(lambda n: n.cb_first_located != True, self.localization_list) if isinstance(x,bool)])
+
+    @property
+    def avg_gs_cb_located_time_diff(self):
+        return np.average([x.gs_cb_located_time_diff for x in self.localization_list if isinstance(x.gs_cb_located_time_diff,float)])
 
     @property
     def avg_mrk_rate(self):
-        return self.total_mrk_goal / self.gotomark.duration * 60 * 60
+        try:
+            return self.total_mrk_goal / self.gotomark.duration * 60 * 60
+        except Exception as e:
+            print(e)
+            return
+
+    @property
+    def avg_loc_times_per_nav_goal(self):
+        try:
+            total_nav_success =  sum([x for x in map(lambda n: n.success_flag == True, self.navigation_list) if isinstance(x,bool)])
+            total_loc_with_nav_success = sum([x.location_times for x in self.navigation_list if (x.success_flag == True)])
+            return total_loc_with_nav_success / float(total_nav_success)
+        except Exception as e:
+            print(e)
+            return
+
+    @property
+    def std_sucess_loc_duration(self):
+        try:
+            return np.std([x for x in map(lambda n: n.successful_duration, self.localization_list) if isinstance(x,float)])
+        except Exception as e:
+            print(e)
+            return
+    @property
+    def std_sucess_nav_duration(self):
+        try:
+            return np.std([x for x in map(lambda n: n.successful_duration, self.navigation_list) if isinstance(x,float)])
+        except Exception as e:
+            print(e)
+            return
+    @property
+    def std_sucess_mrk_duration(self):
+        try:
+            # return np.std([x for x in map(lambda n: n.successful_duration, self.marking_list) if isinstance(x,float)])
+            return np.std([x for x in map(lambda n: n.duration, self.marking_list) if isinstance(x,float)])
+        except Exception as e:
+            print(e)
+            return
+
+    @property
+    def median_sucess_loc_duration(self):
+        try:
+            return np.median([x for x in map(lambda n: n.successful_duration, self.localization_list) if isinstance(x,float)])
+        except Exception as e:
+            print(e)
+            return
+    @property
+    def median_sucess_nav_duration(self):
+        try:
+            return np.median([x for x in map(lambda n: n.successful_duration, self.navigation_list) if isinstance(x,float)])
+        except Exception as e:
+            print(e)
+            return
+    @property
+    def median_sucess_mrk_duration(self):
+        try:
+            # return np.std([x for x in map(lambda n: n.successful_duration, self.marking_list) if isinstance(x,float)])
+            return np.median([x for x in map(lambda n: n.duration, self.marking_list) if isinstance(x,float)])
+        except Exception as e:
+            print(e)
+            return
+
 
 ### The following classes are all helper classes for processing the
 ### corresponding types of data. In general, they all:
@@ -310,26 +465,51 @@ class MapSetup:
         return is_data_consumed
 
     def print(self, printer):
-        return printer.print_map_setup(self)
+        try:
+            return printer.print_map_setup(self)
+        except Exception as e:
+            print(e)
+            return
 
 class BoothbotSetup:
     def __init__(self):
         self.init_pose = None
+        self.machine_hostname = None
+        self.git_info = None
+        self.battery_level = None
+        self.machine_uptime = None
 
     def add_data(self, code, data):
         is_data_consumed = False
         if code == DataCode.INIT_GUESS_POSE:
             self.init_pose = data
             is_data_consumed = True
+        elif code == DataCode.MACHINE_HOSTNAME:
+            self.machine_hostname = data
+            is_data_consumed = True
+        elif code == DataCode.GIT_INFO:
+            self.git_info = data
+            is_data_consumed = True
+        elif code == DataCode.BATTERY_LEVEL:
+            self.battery_level = data
+            is_data_consumed = True
+        elif code == DataCode.MACHINE_UPTIME:
+            self.machine_uptime = data
+            is_data_consumed = True
         return is_data_consumed
 
     def print(self, printer):
-        return printer.print_boothbot_setup(self)
+        try:
+            return printer.print_boothbot_setup(self)
+        except Exception as e:
+            print(e)
+            return
 
 class GuidingStationSetup:
     def __init__(self):
         self.id = None
         self.pose = None
+        self.name = None
 
     def add_data(self, code, data):
         is_data_consumed = False
@@ -339,27 +519,43 @@ class GuidingStationSetup:
         elif code == DataCode.GS_POSE:
             self.pose = data
             is_data_consumed = True
+        elif code == DataCode.GS_NAME:
+            self.name = data
+            is_data_consumed = True
         return is_data_consumed
 
     def is_complete(self):
-        return self.id is not None and self.pose is not None
+        return self.id is not None and self.pose is not None and self.name is not None
 
     def print(self, printer):
-        return printer.print_guiding_station(self)
+        try:
+            return printer.print_guiding_station(self)
+        except Exception as e:
+            print(e)
+            return
 
 class LocalizationAttempt:
     def __init__(self):
         self.start_time = None
+        self.reset_params()
+
+    def reset_params(self):
         self.start_pose = None
         self.end_time = None
         self.end_pose = None
         self.success_flag = None
+        self.exp_dist = None
+        self.measured_dist = None
+        self.used_gss = None
+        self.gs_located_time = None
+        self.cb_located_time = None
 
     def add_data(self, code, data):
         is_data_consumed = False
         if code == DataCode.LOC_GOAL_START_TIME:
             self.start_time = data
             is_data_consumed = True
+            self.reset_params
         elif code == DataCode.LOC_GOAL_DETECTED_POSE:
             if self.start_pose is None:
                 self.start_pose = data
@@ -372,6 +568,23 @@ class LocalizationAttempt:
         elif code == DataCode.LOC_GOAL_END_TIME:
             self.end_time = data
             is_data_consumed = True
+        elif code == DataCode.LOC_GOAL_EXP_DIST:
+            self.exp_dist = data
+            is_data_consumed = True
+        elif code == DataCode.LOC_GOAL_DETECTED_DIST:
+            self.measured_dist = data
+            is_data_consumed = True
+        elif code == DataCode.LOC_USED_GSS:
+            self.used_gss = data
+            is_data_consumed = True
+        elif code == DataCode.LOC_CB_LOCATED_TIME:
+            if self.cb_located_time == None:
+                self.cb_located_time = data
+                is_data_consumed = True
+        elif code == DataCode.LOC_GS_LOCATED_TIME:
+            if self.gs_located_time == None:
+                self.gs_located_time = data
+                is_data_consumed = True
         return is_data_consumed
 
     def is_empty(self):
@@ -385,24 +598,100 @@ class LocalizationAttempt:
         return self.start_time is not None and self.end_time is not None
 
     def print(self, printer):
-        return printer.print_localization_attempt(self)
+        try:
+            return printer.print_localization_attempt(self)
+        except Exception as e:
+            print(e)
+            return
+
+    @property
+    def start_time(self):
+        return self.start_time
+
+    @property
+    def exp_pose(self):
+        return self.start_pose
+
+    @property
+    def exp_dist(self):
+        return self.exp_dist
+
+    @property
+    def measured_dist(self):
+        return self.measured_dist
+
+    @property
+    def located_pose(self):
+        return self.end_pose
 
     @property
     def pose_diff(self):
-        return [self.end_pose[i] - self.start_pose[i] for i in range(3)]
+        try:
+            return [self.end_pose[i] - self.start_pose[i] for i in range(3)]
+        except Exception as e:
+            print(e)
+            return
+
+    @property
+    def gs_located(self):
+        return not self.gs_located_time == None
+    @property
+    def cb_located(self):
+        return not self.cb_located_time == None
+
+    @property
+    def cb_first_located(self):
+        try:
+            return self.cb_located_time < self.gs_located_time
+        except:
+            return
+
+    @property
+    def gs_cb_located_time_diff(self):
+        try:
+            return self.gs_located_time - self.cb_located_time
+        except:
+            return
 
     @property
     def duration(self):
-        return self.end_time - self.start_time
+        # is_valid = False
+        # if isinstance(self.end_time,float) and isinstance(self.start_time,float):
+        #     is_valid = True
+        # if is_valid:
+        #     return self.end_time - self.start_time
+        # else:
+        #     return 0
+        try:
+            return self.end_time - self.start_time
+        except Exception as e:
+            print(e)
+            return
+
+    @property
+    def successful_duration(self):
+        try:
+            if self.success_flag:
+                return self.end_time - self.start_time
+            else:
+                return
+        except Exception as e:
+            print(e)
+            return
 
 class ErrorMessage:
     def __init__(self):
         self.msg = None
+        self.raw_error_code = None
 
     def add_data(self, code, data):
         is_data_consumed = False
         if code == DataCode.ERROR:
-            self.msg = data
+            if data != "[]":
+                self.msg = data
+            is_data_consumed = True
+        if code == DataCode.ERROR_CODE:
+            self.raw_error_code = data
             is_data_consumed = True
         return is_data_consumed
 
@@ -415,43 +704,76 @@ class ErrorMessage:
     def print(self, printer):
         return printer.print_error_message(self)
 
+    def print_code(self,printer):
+        return printer.print_error_code_list(self)
+
 class InitPose:
+    # TODO: Should add input pose, and located pose
     def __init__(self):
         self.start_time = None
+        self.reset_params()
+
+    def reset_params(self):
         self.end_time = None
 
     def add_data(self, code, data):
         is_data_consumed = False
         if code == DataCode.INIT_POSE_START_TIME:
-            self.start_time = data
-            is_data_consumed = True
+            try:
+                self.start_time = float(data)
+                is_data_consumed = True
+                self.reset_params()
+            except Exception as e:
+                self.logerr("Error with add_data [INIT_POSE_START_TIME]: {}".format(e))
         elif code == DataCode.INIT_POSE_END_TIME:
-            self.end_time = data
-            is_data_consumed = True
+            try:
+                self.end_time = float(data)
+                is_data_consumed = True
+            except Exception as e:
+                self.logerr("Error with add_data [INIT_POSE_END_TIME]: {}".format(e))
         return is_data_consumed
 
     def is_complete(self):
         return self.start_time is not None and self.end_time is not None
 
+    def has_begun(self):
+        return self.start_time is not None
+
     def print(self, printer):
-        return printer.print_init_pose(self)
+        try:
+            return printer.print_init_pose(self)
+        except Exception as e:
+            print(e)
+            return
+
+    @property
+    def start_time(self):
+        return self.start_time
 
     @property
     def duration(self):
-        if self.is_complete:
+        try:
             return self.end_time - self.start_time
+        except Exception as e:
+            print(e)
+            return
 
 class GotoMark:
     def __init__(self):
         self.start_time = None
+        self.reset_params()
+
+    def reset_params(self):
         self.end_time = None
         self.success_flag = None
 
     def add_data(self, code, data):
         is_data_consumed = False
         if code == DataCode.GOTOMARK_START_TIME:
-            self.start_time = data
+            if self.start_time is None:
+                self.start_time = data
             is_data_consumed = True
+            self.reset_params()
         elif code == DataCode.GOTOMARK_END_TIME:
             self.end_time = data
             is_data_consumed = True
@@ -463,27 +785,51 @@ class GotoMark:
     def is_complete(self):
         return self.start_time is not None and self.end_time is not None
 
+    def has_begun(self):
+        return self.start_time is not None
+
     def print(self, printer):
-        return printer.print_gotomark(self)
+        try:
+            return printer.print_gotomark(self)
+        except Exception as e:
+            print(e)
+            return
 
     @property
     def duration(self):
-        return self.end_time - self.start_time
+        try:
+            return self.end_time - self.start_time
+        except Exception as e:
+            print(e)
+            return
+
+    @property
+    def start_time(self):
+        return self.start_time
+
+    def end_time(self):
+        return self.end_time
 
 class NavigationGoal:
     def __init__(self):
         self.start_time = None
+        self.reset_params()
+
+    def reset_params(self):
         self.start_pose = None
         self.end_time = None
         self.end_pose = None
         self.target_pose = None
         self.success_flag = None
+        self.map_goal_id = None
+        self.times_of_locating_using_gs = None
 
     def add_data(self, code, data):
         is_data_consumed = False
         if code == DataCode.NAV_GOAL_START_TIME:
             self.start_time = data
             is_data_consumed = True
+            self.reset_params()
         elif code == DataCode.NAV_GOAL_START_POSE:
             self.start_pose = data
             is_data_consumed = True
@@ -499,6 +845,12 @@ class NavigationGoal:
         elif code == DataCode.NAV_GOAL_SUCCEEDED:
             self.success_flag = data
             is_data_consumed = True
+        elif code == DataCode.NAV_GOAL_BC_ID:
+            self.map_goal_id = data
+            is_data_consumed = True
+        elif code == DataCode.NAV_TIMES_OF_GS_LOC:
+            self.times_of_locating_using_gs = data
+            is_data_consumed = True
         return is_data_consumed
 
     def is_complete(self):
@@ -510,30 +862,74 @@ class NavigationGoal:
             self.end_time is None and
             self.end_pose is None and
             self.target_pose is None and
-            self.success_flag is None)
+            self.success_flag is None and
+            self.map_goal_id is None and
+            self.times_of_locating_using_gs is None)
 
     def print(self, printer):
-        return printer.print_navigation_goal(self)
+        try:
+            return printer.print_navigation_goal(self)
+        except Exception as e:
+            print(e)
+            return
 
     @property
     def duration(self):
-        return self.end_time - self.start_time
+        try:
+            return self.end_time - self.start_time
+        except Exception as e:
+            print(e)
+            return
+
+    @property
+    def successful_duration(self):
+        try:
+            if self.success_flag:
+                return self.end_time - self.start_time
+            else:
+                return
+        except Exception as e:
+            print(e)
+            return
 
     @property
     def accuracy(self):
-        return [self.end_pose[i] - self.target_pose[i] for i in range(3)]
+        try:
+            return [self.end_pose[i] - self.target_pose[i] for i in range(3)]
+        except Exception as e:
+            print(e)
+            return
 
     @property
     def avg_speed(self):
-        x_dist = self.end_pose[0] - self.start_pose[0]
-        y_dist = self.end_pose[1] - self.start_pose[1]
-        total_dist = (x_dist**2 + y_dist**2) ** 0.5
+        try:
+            x_dist = self.end_pose[0] - self.start_pose[0]
+            y_dist = self.end_pose[1] - self.start_pose[1]
+            total_dist = (x_dist**2 + y_dist**2) ** 0.5
 
-        return total_dist / self.duration
+            return total_dist / self.duration
+        except Exception as e:
+            print(e)
+            return
+
+    @property
+    def map_goal_id(self):
+        return self.map_goal_id
+
+    @property
+    def start_time(self):
+        return self.start_time
+
+    @property
+    def location_times(self):
+        return self.times_of_locating_using_gs
 
 class MarkingGoal:
     def __init__(self):
         self.start_time = None
+        self.reset_params()
+
+    def reset_params(self):
         self.end_time = None
         self.corner_id = None
         self.end_pose = None
@@ -541,12 +937,15 @@ class MarkingGoal:
         self.success_flag = None
         self.pic_name = None
         self.score = None
+        self.mark_content = None
+
 
     def add_data(self, code, data):
         is_data_consumed = False
         if code == DataCode.MRK_GOAL_START_TIME:
             self.start_time = data
             is_data_consumed = True
+            self.reset_params()
         elif code == DataCode.MRK_GOAL_END_TIME:
             self.end_time = data
             is_data_consumed = True
@@ -568,6 +967,8 @@ class MarkingGoal:
         elif code == DataCode.MRK_GOAL_SCORE:
             self.score = data
             is_data_consumed = True
+        elif code == DataCode.MRK_GOAL_MARK_CONTENT:
+            self.mark_content = data
         return is_data_consumed
 
     def is_complete(self):
@@ -584,12 +985,43 @@ class MarkingGoal:
             self.score is None)
 
     def print(self, printer):
-        return printer.print_marking_goal(self)
+        try:
+            return printer.print_marking_goal(self)
+        except Exception as e:
+            print(e)
+            return
+
+    @property
+    def mark_content(self):
+        return self.mark_content
+
+    @property
+    def start_time(self):
+        return self.start_time
 
     @property
     def duration(self):
-        return self.end_time - self.start_time
+        try:
+            return self.end_time - self.start_time
+        except Exception as e:
+            print(e)
+            return
+
+    @property
+    def successful_duration(self):
+        try:
+            if self.success_flag:
+                return self.end_time - self.start_time
+            else:
+                return
+        except Exception as e:
+            print(e)
+            return
 
     @property
     def accuracy(self):
-        return [self.end_pose[i] - self.target_pose[i] for i in range(3)]
+        try:
+            return [self.end_pose[i] - self.target_pose[i] for i in range(3)]
+        except Exception as e:
+            print(e)
+            return
