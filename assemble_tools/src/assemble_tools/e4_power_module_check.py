@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# encoding=utf-8
+#!/usr/bin/env python3
 
 import time
 import math
@@ -13,29 +12,34 @@ from serial import Serial
 from assemble_tools.get_key import GetKey
 
 INSTRUCTION = """
+Key functions:
+i: Initialize power module
+c: Get current readings
+s: Update settings to power module and save
+q: Exiting...
 """
 
 NODE_NAME = "e4_power_module_check"
 NODE_RATE = 5.0
 
-BATTERY_CMD_CUT_POWER = "AT+POLAR+0\r\n"
-BATTERY_CMD_CHECK_V = "AT+V\r\n"
-BATTERY_CMD_CHECK_C = "AT+C\r\n"
-BATTERY_CMD_CHECK_P = "AT+P\r\n"
+BATTERY_CMD_CUT_POWER = b"AT+POLAR+0\r\n"
+BATTERY_CMD_CHECK_V = b"AT+V\r\n"
+BATTERY_CMD_CHECK_C = b"AT+C\r\n"
+BATTERY_CMD_CHECK_P = b"AT+P\r\n"
 
-BATTERY_CMD_SET_RESISTANCE = "AT+R+2\r\n"
-BATTERY_CMD_SET_SCALE = "AT+MAXC+40\r\n"
+BATTERY_CMD_SET_RESISTANCE = b"AT+R+2\r\n"
+BATTERY_CMD_SET_SCALE = b"AT+MAXC+40\r\n"
 
-BATTERY_CMD_SET_OVERV = "AT+MODE+OVERV\r\n"
-BATTERY_CMD_SET_UNDERV = "AT+MODE+UNDERV\r\n"
-BATTERY_CMD_SET_UNDERV_LINE = "AT+UNDERVERR+21\r\n" # protect battery when too low
-BATTERY_CMD_SET_OVERC = "AT+MODE+OVERC\r\n"
-BATTERY_CMD_SET_UNDERC = "AT+MODE+UNDERC\r\n"
-BATTERY_CMD_SET_OVERP = "AT+MODE+OVERP\r\n"
-BATTERY_CMD_SET_UNDERP = "AT+MODE+UNDERP\r\n"
+BATTERY_CMD_SET_OVERV = b"AT+MODE+OVERV\r\n"
+BATTERY_CMD_SET_UNDERV = b"AT+MODE+UNDERV\r\n"
+BATTERY_CMD_SET_UNDERV_LINE = b"AT+UNDERVERR+21\r\n" # protect battery when too low
+BATTERY_CMD_SET_OVERC = b"AT+MODE+OVERC\r\n"
+BATTERY_CMD_SET_UNDERC = b"AT+MODE+UNDERC\r\n"
+BATTERY_CMD_SET_OVERP = b"AT+MODE+OVERP\r\n"
+BATTERY_CMD_SET_UNDERP = b"AT+MODE+UNDERP\r\n"
 
-BATTERY_CMD_SET_D_NC = "AT+POLAR+1\r\n" # disconnect NC and COM pin when trigger the alarm
-BATTERY_CMD_SET_D_NO = "AT+POLAR+0\r\n" # disconnect NO and COM pin when trigger the alarm
+BATTERY_CMD_SET_D_NC = b"AT+POLAR+1\r\n" # disconnect NC and COM pin when trigger the alarm
+BATTERY_CMD_SET_D_NO = b"AT+POLAR+0\r\n" # disconnect NO and COM pin when trigger the alarm
 
 class E4PowerModuleCheck(object):
     def __init__(self):
@@ -57,10 +61,10 @@ class E4PowerModuleCheck(object):
                 logger.loginfo("Detecting power module...")
                 # TODO: Check if port existed
                 with Serial(port=self.port, baudrate=self.baud, timeout=1.0) as p:
-                    p.write("AT\r\n")
+                    p.write(b"AT\r\n")
                     # p.write("BATTERY_CMD_CHECK_V")
                     time.sleep(0.5)
-                    if p.read_all() == "OK\r\n":
+                    if p.read_all() == b"OK\r\n":
                         logger.logwarn("Power module detected!")
 
             if key in ("s", "S"):

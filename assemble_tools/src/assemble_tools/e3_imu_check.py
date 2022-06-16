@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# encoding=utf-8
+#!/usr/bin/env python3
 
 import time
 import math
@@ -13,6 +12,11 @@ from serial import Serial
 from assemble_tools.get_key import GetKey
 
 INSTRUCTION = """
+Key functions:
+i: Initialize connection to IMU, will detect baudrate
+b: Set baudrate to 115200 to IMU
+s: Set all settings to IMU
+c: Check current readings
 """
 
 
@@ -20,83 +24,98 @@ NODE_NAME = "e3_imu_check"
 NODE_RATE = 5.0
 MOTOR_TOLERANCE = 0.0001
 
-WIT_IMU_CMD_CALI_ACC = "\xff\xaa\x01\x01\x00"
-WIT_IMU_CMD_SAVE_CFG = "\xff\xaa\x00\x00\x00"
-WIT_IMU_CMD_UNLOCK = "\xff\xaa\x69\x88\xb5"
-WIT_IMU_CMD_SET_BAUDRATE = "\xff\xaa\x04\x06\x00"   # 115200
-# WIT_IMU_CMD_SET_SCALE_ACC = "\xff\xaa\x21\x00\x00"  # 2g/s2
-# WIT_IMU_CMD_SET_SCALE_ACC = "\xff\xaa\x21\x01\x00"  #
-# WIT_IMU_CMD_SET_SCALE_ACC = "\xff\xaa\x21\x02\x00"  #
-WIT_IMU_CMD_SET_SCALE_ACC = "\xff\xaa\x21\x03\x00"  # 16g/s2
-# WIT_IMU_CMD_SET_SCALE_GYRO = "\xff\xaa\x20\x00\x00"  # 250deg/s
-# WIT_IMU_CMD_SET_SCALE_GYRO = "\xff\xaa\x20\x01\x00"  #
-# WIT_IMU_CMD_SET_SCALE_GYRO = "\xff\xaa\x20\x02\x00"  #
-WIT_IMU_CMD_SET_SCALE_GYRO = "\xff\xaa\x20\x03\x00"  # 2000deg/s
-WIT_IMU_CMD_SET_BANDWIDTH = "\xff\xaa\x1f\x00\x00"  # 250Hz
-# WIT_IMU_CMD_SET_BANDWIDTH = "\xff\xaa\x1f\x01\x00"  # 200Hz
-# WIT_IMU_CMD_SET_BANDWIDTH = "\xff\xaa\x1f\x02\x00"  # 98Hz
-# WIT_IMU_CMD_SET_BANDWIDTH = "\xff\xaa\x1f\x03\x00"  # 42Hz
-# WIT_IMU_CMD_SET_BANDWIDTH = "\xff\xaa\x1f\x04\x00"  # 20Hz
-# WIT_IMU_CMD_SET_BANDWIDTH = "\xff\xaa\x1f\x05\x00"  # 10Hz
-# WIT_IMU_CMD_SET_BANDWIDTH = "\xff\xaa\x1f\x06\x00"  # 5Hz
-# WIT_IMU_CMD_SET_SENDBACK_RATE = "\xff\xaa\x03\x01\x00"  # 0.1Hz
-# WIT_IMU_CMD_SET_SENDBACK_RATE = "\xff\xaa\x03\x02\x00"  # 0.5Hz
-# WIT_IMU_CMD_SET_SENDBACK_RATE = "\xff\xaa\x03\x03\x00"  # 1Hz
-# WIT_IMU_CMD_SET_SENDBACK_RATE = "\xff\xaa\x03\x04\x00"  # 2Hz
-# WIT_IMU_CMD_SET_SENDBACK_RATE = "\xff\xaa\x03\x05\x00"  # 5Hz
-# WIT_IMU_CMD_SET_SENDBACK_RATE = "\xff\xaa\x03\x06\x00"  # 10Hz
-# WIT_IMU_CMD_SET_SENDBACK_RATE = "\xff\xaa\x03\x07\x00"  # 20Hz
-# WIT_IMU_CMD_SET_SENDBACK_RATE = "\xff\xaa\x03\x08\x00"  # 50Hz
-# WIT_IMU_CMD_SET_SENDBACK_RATE = "\xff\xaa\x03\x09\x00"  # 100Hz
-# WIT_IMU_CMD_SET_SENDBACK_RATE = "\xff\xaa\x03\x0a\x00"  # 125Hz
-WIT_IMU_CMD_SET_SENDBACK_RATE = "\xff\xaa\x03\x0b\x00"  # 200Hz
-# WIT_IMU_CMD_SET_SENDBACK_RATE = "\xff\xaa\x03\x0c\x00"  # Once
-# WIT_IMU_CMD_SET_SENDBACK_RATE = "\xff\xaa\x03\x0d\x00"  # None
+WIT_IMU_CMD_CALI_ACC = b"\xff\xaa\x01\x01\x00"
+WIT_IMU_CMD_SAVE_CFG = b"\xff\xaa\x00\x00\x00"
+WIT_IMU_CMD_UNLOCK = b"\xff\xaa\x69\x88\xb5"
+WIT_IMU_CMD_SET_BAUDRATE = b"\xff\xaa\x04\x06\x00"  # 115200
+# WIT_IMU_CMD_SET_SCALE_ACC = b"\xff\xaa\x21\x00\x00"  # 2g/s2
+# WIT_IMU_CMD_SET_SCALE_ACC = b"\xff\xaa\x21\x01\x00"  #
+# WIT_IMU_CMD_SET_SCALE_ACC = b"\xff\xaa\x21\x02\x00"  #
+WIT_IMU_CMD_SET_SCALE_ACC = b"\xff\xaa\x21\x03\x00"  # 16g/s2
+# WIT_IMU_CMD_SET_SCALE_GYRO = b"\xff\xaa\x20\x00\x00"  # 250deg/s
+# WIT_IMU_CMD_SET_SCALE_GYRO = b"\xff\xaa\x20\x01\x00"  #
+# WIT_IMU_CMD_SET_SCALE_GYRO = b"\xff\xaa\x20\x02\x00"  #
+WIT_IMU_CMD_SET_SCALE_GYRO = b"\xff\xaa\x20\x03\x00"  # 2000deg/s
+WIT_IMU_CMD_SET_BANDWIDTH = b"\xff\xaa\x1f\x00\x00"  # 250Hz
+# WIT_IMU_CMD_SET_BANDWIDTH = b"\xff\xaa\x1f\x01\x00"  # 200Hz
+# WIT_IMU_CMD_SET_BANDWIDTH = b"\xff\xaa\x1f\x02\x00"  # 98Hz
+# WIT_IMU_CMD_SET_BANDWIDTH = b"\xff\xaa\x1f\x03\x00"  # 42Hz
+# WIT_IMU_CMD_SET_BANDWIDTH = b"\xff\xaa\x1f\x04\x00"  # 20Hz
+# WIT_IMU_CMD_SET_BANDWIDTH = b"\xff\xaa\x1f\x05\x00"  # 10Hz
+# WIT_IMU_CMD_SET_BANDWIDTH = b"\xff\xaa\x1f\x06\x00"  # 5Hz
+# WIT_IMU_CMD_SET_SENDBACK_RATE = b"\xff\xaa\x03\x01\x00"  # 0.1Hz
+# WIT_IMU_CMD_SET_SENDBACK_RATE = b"\xff\xaa\x03\x02\x00"  # 0.5Hz
+# WIT_IMU_CMD_SET_SENDBACK_RATE = b"\xff\xaa\x03\x03\x00"  # 1Hz
+# WIT_IMU_CMD_SET_SENDBACK_RATE = b"\xff\xaa\x03\x04\x00"  # 2Hz
+# WIT_IMU_CMD_SET_SENDBACK_RATE = b"\xff\xaa\x03\x05\x00"  # 5Hz
+# WIT_IMU_CMD_SET_SENDBACK_RATE = b"\xff\xaa\x03\x06\x00"  # 10Hz
+# WIT_IMU_CMD_SET_SENDBACK_RATE = b"\xff\xaa\x03\x07\x00"  # 20Hz
+# WIT_IMU_CMD_SET_SENDBACK_RATE = b"\xff\xaa\x03\x08\x00"  # 50Hz
+# WIT_IMU_CMD_SET_SENDBACK_RATE = b"\xff\xaa\x03\x09\x00"  # 100Hz
+# WIT_IMU_CMD_SET_SENDBACK_RATE = b"\xff\xaa\x03\x0a\x00"  # 125Hz
+WIT_IMU_CMD_SET_SENDBACK_RATE = b"\xff\xaa\x03\x0b\x00"  # 200Hz
+# WIT_IMU_CMD_SET_SENDBACK_RATE = b"\xff\xaa\x03\x0c\x00"  # Once
+# WIT_IMU_CMD_SET_SENDBACK_RATE = b"\xff\xaa\x03\x0d\x00"  # None
 
 # enable 0x51->acc 0x52->w 0x53->angle 0x59->quaternion
-WIT_IMU_CMD_SET_SENDBACK_CONTENT = "\xff\xaa\x02\x0e\x02"
-WIT_IMU_CMD_RESET_YAW = "\xff\xaa\x01\x04\x00"
+WIT_IMU_CMD_SET_SENDBACK_CONTENT = b"\xff\xaa\x02\x0e\x02"
+WIT_IMU_CMD_RESET_YAW = b"\xff\xaa\x01\x04\x00"
 
-#convert 8bit hex to signed int
+# convert 8bit hex to signed int
 def c8h2sint(value):
-    return -(value & 0x80) | (value & 0x7f)
+    return -(value & 0x80) | (value & 0x7F)
+
 
 def imu_feedback_parse(frame):
-    #convert linear acc
-    [_,_,_AxL,_AxH,_AyL,_AyH,_AzL,_AzH,_TL,_TH,_,
-    #convert angular velocity
-    _,_,_wxL,_wxH,_wyL,_wyH,_wzL,_wzH,_TL,_TH,_,
-    #convert Roll Pitch Yaw
-    _,_,_RollL,_RollH,_PitchL,_PitchH,_YawL,_YawH,_TL,_TH,_,
-    # _,_,_,_,_,_,_,_,_,_,__,
-    #convert quaternion
-    _,_,_Q0L,_Q0H,_Q1L,_Q1H,_Q2L,_Q2H,_Q3L,_Q3H,_] =  frame
+    [
+        # convert linear acc
+        _, _, _AxL, _AxH, _AyL, _AyH, _AzL, _AzH, _TL, _TH, _,
+        # convert angular velocity
+        _, _, _wxL, _wxH, _wyL, _wyH, _wzL, _wzH, _TL, _TH, _,
+        # convert Roll Pitch Yaw
+        _, _, _RollL, _RollH, _PitchL, _PitchH, _YawL, _YawH, _TL, _TH, _,
+        # _,_,_,_,_,_,_,_,_,_,__,
+        # convert quaternion
+        _, _, _Q0L, _Q0H, _Q1L, _Q1H, _Q2L, _Q2H, _Q3L, _Q3H, _,
+    ] = frame
 
     # m/s^2
-    Ax = float((c8h2sint(_AxH)<<8)|_AxL)/32768.0*16*9.8
-    Ay = float((c8h2sint(_AyH)<<8)|_AyL)/32768.0*16*9.8
-    Az = float((c8h2sint(_AzH)<<8)|_AzL)/32768.0*16*9.8
+    Ax = float((c8h2sint(_AxH) << 8) | _AxL) / 32768.0 * 16 * 9.8
+    Ay = float((c8h2sint(_AyH) << 8) | _AyL) / 32768.0 * 16 * 9.8
+    Az = float((c8h2sint(_AzH) << 8) | _AzL) / 32768.0 * 16 * 9.8
 
     # deg/s to rad/s
-    wx = float((c8h2sint(_wxH)<<8)|_wxL)/32768.0*2000*math.pi/180
-    wy = float((c8h2sint(_wyH)<<8)|_wyL)/32768.0*2000*math.pi/180
-    wz = float((c8h2sint(_wzH)<<8)|_wzL)/32768.0*2000*math.pi/180
+    wx = float((c8h2sint(_wxH) << 8) | _wxL) / 32768.0 * 2000 * math.pi / 180
+    wy = float((c8h2sint(_wyH) << 8) | _wyL) / 32768.0 * 2000 * math.pi / 180
+    wz = float((c8h2sint(_wzH) << 8) | _wzL) / 32768.0 * 2000 * math.pi / 180
 
     # deg/s to rad/s
-    roll = float((c8h2sint(_RollH)<<8)|_RollL)/32768.0*180*math.pi/180
-    pitch = float((c8h2sint(_PitchH)<<8)|_PitchL)/32768.0*180*math.pi/180
-    yaw = float((c8h2sint(_YawH)<<8)|_YawL)/32768.0*180*math.pi/180
+    roll = float((c8h2sint(_RollH) << 8) | _RollL) / 32768.0 * 180 * math.pi / 180
+    pitch = float((c8h2sint(_PitchH) << 8) | _PitchL) / 32768.0 * 180 * math.pi / 180
+    yaw = float((c8h2sint(_YawH) << 8) | _YawL) / 32768.0 * 180 * math.pi / 180
 
     # quaternion from IMU
-    q0 = float((c8h2sint(_Q0H)<<8)|_Q0L)/32768
-    q1 = float((c8h2sint(_Q1H)<<8)|_Q1L)/32768
-    q2 = float((c8h2sint(_Q2H)<<8)|_Q2L)/32768
-    q3 = float((c8h2sint(_Q3H)<<8)|_Q3L)/32768
+    q0 = float((c8h2sint(_Q0H) << 8) | _Q0L) / 32768
+    q1 = float((c8h2sint(_Q1H) << 8) | _Q1L) / 32768
+    q2 = float((c8h2sint(_Q2H) << 8) | _Q2L) / 32768
+    q3 = float((c8h2sint(_Q3H) << 8) | _Q3L) / 32768
 
     return {
-        "acceleration": [Ax, Ay, Az,],
-        "angle_speed": [wx, wy, wz,],
-        "radians": [roll, pitch, yaw,],
+        "acceleration": [
+            Ax,
+            Ay,
+            Az,
+        ],
+        "angle_speed": [
+            wx,
+            wy,
+            wz,
+        ],
+        "radians": [
+            roll,
+            pitch,
+            yaw,
+        ],
         "quaternion": [q0, q1, q2, q3],
     }
 
@@ -126,11 +145,13 @@ class E3IMUCheck(object):
                     logger.loginfo("Check baudrate {}".format(baud))
                     with Serial(port=self.port, baudrate=baud, timeout=1.0) as p:
                         time_start = time.time()
-                        _imu_raw_data = p.read_until("\x55\x51")
+                        _imu_raw_data = p.read_until(b"\x55\x51")
                         if time.time() - time_start < timeout:
                             self.baud = baud
                             logger.logwarn(
-                                "Baudrate detected that a device is on {}".format(self.baud)
+                                "Baudrate detected that a device is on {}".format(
+                                    self.baud
+                                )
                             )
                             break
 
@@ -176,7 +197,9 @@ class E3IMUCheck(object):
                     logger.logwarn("Setting feedback rate to: 200Hz!")
                     p.write(WIT_IMU_CMD_SET_SENDBACK_RATE)
                     time.sleep(0.2)
-                    logger.logwarn("Setting feedback content as:\n0x51->acc 0x52->w 0x53->angle 0x59->quaternion")
+                    logger.logwarn(
+                        "Setting feedback content as:\n0x51->acc 0x52->w 0x53->angle 0x59->quaternion"
+                    )
                     p.write(WIT_IMU_CMD_SET_SENDBACK_CONTENT)
                     time.sleep(0.2)
                     p.write(WIT_IMU_CMD_SAVE_CFG)
@@ -189,17 +212,19 @@ class E3IMUCheck(object):
                     continue
                 with Serial(port=self.port, baudrate=self.baud, timeout=1.0) as p:
                     for t in range(3):
-                        _imu_raw_data = p.read_until('\x55\x51')
+                        _imu_raw_data = p.read_until(b"\x55\x51")
                         if len(_imu_raw_data) != 44:
                             # logger.logwarn("Got {} data".format(len(_imu_raw_data)))
                             time.sleep(0.2)
                             continue
-                        frame_ = map(binascii.b2a_hex,_imu_raw_data)
-                        frame_int = [int(x,16) for x in frame_]
+                        # print(_imu_raw_data)
+                        # frame_ = map(binascii.b2a_hex, _imu_raw_data)
+                        # print([int(x) for x in _imu_raw_data])
+                        frame_int = [int(x) for x in _imu_raw_data]
                         frame_int = frame_int[-2:] + frame_int[:-2]
                         result = imu_feedback_parse(frame_int)
                         logger.loginfo("Got: \n {}".format(pp.pformat(result)))
-                        if result["quaternion"][0] != 0. and self.baud == 115200:
+                        if result["quaternion"][0] != 0.0 and self.baud == 115200:
                             logger.logwarn("This IMU is OK!")
                         else:
                             logger.logerr("This IMU is not OK!")
