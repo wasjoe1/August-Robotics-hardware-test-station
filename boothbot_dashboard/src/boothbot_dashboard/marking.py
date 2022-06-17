@@ -9,7 +9,7 @@ from device_module import DeviceModule, Image
 
 from boothbot_msgs.ros_interfaces import (
     DRIVERS_CHASSIS_IO,
-    MODULES_PERCEPT_CHECK_STATUS,
+    DRIVERS_CHECKER_STATUS,
 )
 
 from boothbot_marking.settings import (
@@ -160,7 +160,7 @@ class Marking(DeviceModule):
         self.in_pump    = CtrlIO(io, BIT_PUMP_IN_TRAY,   name="<7> | In Pump")
         self.out_pump   = CtrlIO(io, BIT_DRAIN_OUT_TRAY, name="<8> | Out Pump")
         self.brush      = Brush(io, name="<9> | Brush")
-        self.camera     = CameraState("/dev/camera_marking", MODULES_PERCEPT_CHECK_STATUS, "Marking Camera")
+        self.camera     = CameraState("/dev/camera_marking", DRIVERS_CHECKER_STATUS, "Marking Camera")
 
         self.append(self.k1)
         self.append(self.k2)
