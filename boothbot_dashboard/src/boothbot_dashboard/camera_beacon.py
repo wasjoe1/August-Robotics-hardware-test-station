@@ -11,9 +11,9 @@ from boothbot_perception.track_client import TargetTracker
 from boothbot_driver.servos_client import ServosClient
 from boothbot_common.error_code import ErrCode
 from boothbot_msgs.ros_interfaces import (
-    MODULES_PERCEPT_TRACK_LONG_IMAGE,
-    MODULES_PERCEPT_TRACK_SHORT_IMAGE,
-    MODULES_PERCEPT_TRACK_STATUS,
+    DRIVERS_TRACKER_LONG_IMAGE,
+    DRIVERS_TRACKER_SHORT_IMAGE,
+    DRIVERS_TRACKER_STATUS,
     DRIVERS_SERVOS_PDO,
     DRIVERS_SERVOS_STATUS,
     DRIVERS_CHASSIS_IO,
@@ -67,8 +67,8 @@ class CameraBeacon(DeviceModule):
         self.stepper.connect()
 
         rospy.Subscriber(
-            MODULES_PERCEPT_TRACK_STATUS.name,
-            MODULES_PERCEPT_TRACK_STATUS.type,
+            DRIVERS_TRACKER_STATUS.name,
+            DRIVERS_TRACKER_STATUS.type,
             self._track_status_callback)
 
         rospy.Subscriber(
@@ -192,18 +192,18 @@ class TrackingCameras(Image):
         self.tracker.capture(True)
 
         rospy.Subscriber(
-            MODULES_PERCEPT_TRACK_STATUS.name,
-            MODULES_PERCEPT_TRACK_STATUS.type,
+            DRIVERS_TRACKER_STATUS.name,
+            DRIVERS_TRACKER_STATUS.type,
             self._track_status_callback)
 
         rospy.Subscriber(
-            MODULES_PERCEPT_TRACK_LONG_IMAGE.name,
-            MODULES_PERCEPT_TRACK_LONG_IMAGE.type,
+            DRIVERS_TRACKER_LONG_IMAGE.name,
+            DRIVERS_TRACKER_LONG_IMAGE.type,
             self._track_long_image_callback)
 
         rospy.Subscriber(
-            MODULES_PERCEPT_TRACK_SHORT_IMAGE.name,
-            MODULES_PERCEPT_TRACK_SHORT_IMAGE.type,
+            DRIVERS_TRACKER_SHORT_IMAGE.name,
+            DRIVERS_TRACKER_SHORT_IMAGE.type,
             self._track_short_image_callback)
 
     def _track_status_callback(self, msg):
