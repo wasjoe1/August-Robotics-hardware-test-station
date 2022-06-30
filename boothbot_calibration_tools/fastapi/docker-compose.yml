@@ -1,0 +1,11 @@
+version: "3.9"
+services:
+  web:
+    build: .
+    network_mode: "host"
+    # ports: 
+    #   - "80:80"
+    #   - "50051:50051"
+    image: fastapi_web
+    volumes:
+      - ./app:/code/app

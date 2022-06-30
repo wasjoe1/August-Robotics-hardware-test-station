@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GS Lionel calibration</title>
+    <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://cdn.staticfile.org/jquery/2.1.1/jquery.min.js"></script>
+    <script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="../static/hr.css">
+    <script src="../static/calibration.js"></script>
+</head>
+
+<body onload="after_load()">
+    <div style="height:3%;width:100%;float:left;">
+        <h3> GS/Lionel 标定流程 </h3>
+        <button id="INITIALIZE_SERVO" type="button" class="btn btn-default" onclick="location.href='/step/initialize_servo'">1.初始化电机</button>
+        <button type="button" class="btn btn-default" onclick="location.href='/step/camera_sharpness'">2.相机锐度</button>
+        <button type="button" class="btn btn-default" onclick="location.href='/step/cameras_alignment'">3.大小相机对齐</button>
+        <button type="button" class="btn btn-default" onclick="location.href='/step/camera_laser_alignment'">4.大相机激光对齐(GS_only)</button>
+        <button type="button" class="btn btn-default" onclick="location.href='/step/cameras_angle'">5.大小相机夹角</button>
+        <button type="button" class="btn btn-default" onclick="location.href='/step/vertical_servo_zero'">6.垂直电机0点</button>
+        <button id="IMU_CALIBRATION" type="button" class="btn btn-default" onclick="location.href='/step/IMU_calibration'">7.IMU标定(Lionel_only)</button>
+        <hr />
+    </div>
+
+
+    <div>
+        <div style="height:20%;width:55%;float:left;">
+            <h4 id="long_camera_data">
+                long camera
+            </h4>
+            <img id="img1" alt="" style="width: 400px; height: 400px;" onmousewheel="return rollImg(this)">
+        </div>
+
+        <div style="height:20%;width:55%;float:left;">
+            <h4 id="short_camera_data">
+                short camera
+            </h4>
+            <img id="img2" alt="" style="width: 400px; height: 400px;" onmousewheel="return rollImg(this)">
+        </div>
+        <div style="height: 20%;width: 100%;">
+            <button type="button" class="btn btn-default" onmousedown="command('SERVOS_DISABLE')">取消使能电机</button>
+            <button type="button" class="btn btn-default" onmousedown="command('SERVOS_ENABLE')">使能电机</button>
+            <button type="button" class="btn btn-default" onmousedown="command('LASER_ON')">打开激光</button>
+            <button type="button" class="btn btn-danger" onmousedown="command('RESET')">重置</button>
+            <button type="button" class="btn btn-info" onmousedown="command('RUN')">运行</button>
+            <button type="button" class="btn btn-info" onmousedown="command('DONE')">完成</button>
+            <!-- <button type="button" class="btn btn-success" onmousedown="command('save_data')">save_data</button> -->
+            <button type="button" class="btn btn-success" onmousedown="download()">保存</button>
+        </div>
+
+        <div style="background-color:burlywood;height: 20%;width:45%; margin-left: 55%;">
+            <h3 id="hostname">主机名</h3>
+        </div>
+
+        <div style="background-color:darksalmon;height: 25%;width:45%;margin-left: 55%;">
+            <h3 id="step">当前任务</h3>
+        </div>
+
+
+        <div style="background-color: aqua;height: 30%;width:45%;margin-left: 55%;">
+            <h2> 用户操作指南
+            </h2>
+            <h4 id="user_manual">
+                {{just_do}}
+            </h4>
+        </div>
+    </div>
+
+
+    <div style="background-color:chocolate;height: 50%;width:45%; margin-left: 55%;">
+        <h2> 详细数据
+        </h2>
+        <h4>
+            <div id="job_data">
+
+            </div>
+        </h4>
+        <!-- <div id='divID'> -->
+    </div>
+
+    <div style="background-color:aquamarine;height: 50%;width:45%; margin-left: 55%;">
+        <h2> 需要保存的数据
+        </h2>
+        <h4>
+            <div id="need_save_data">
+
+            </div>
+        </h4>
+    </div>
+    </div>
+
+    <div style="background-color:gray;height: 50%;width:45%; margin-left: 55%;">
+        <h2> 上一次保存的数据
+        </h2>
+        <h4>
+            <div id="last_data">
+
+            </div>
+        </h4>
+    </div>
+    <div style="height: 90%;width: 100%;">
+    </div>
+    </div>
+
+</body>
+
+</html>
