@@ -113,6 +113,7 @@ class CalibrationController(ModuleBase):
         DRIVERS_TRACKER_SHORT_IMAGE.Subscriber(self.short_camera_cb)
 
         self._data = {}
+        self._data["data"] = {}
         self._job_data = {}
         self._save_data = {}
         self._job = None
@@ -137,22 +138,26 @@ class CalibrationController(ModuleBase):
 
     def update_data(self):
         if self._job is not None:
-            self._data["step"] = self._job.name
-        self._data["job_data"] = self._job_data
-        self._data["save_data"] = self._save_data
-        self._data["done"] = self._done_list
+            self._data["data"]["step"] = self._job.name
+        self._data["data"]["job_data"] = self._job_data
+        self._data["data"]["save_data"] = self._save_data
+        self._data["data"]["done"] = self._done_list
 
     def pub_data(self):
         short_img_data = self.handler_img_data(self.short_camera_data, "short")
         if short_img_data is not None:
-            self.loginfo_throttle(2, "pub short img")
+            self.loginfo("pub short img")
             self.puber_data.publish(short_img_data)
+        # else:
+        #     self.logwarn("short img is None")
 
         long_img_data = self.handler_img_data(self.long_camera_data, "long")
         if long_img_data is not None:
-            self.loginfo_throttle(2, "pub long img")
+            self.loginfo("pub long img")
             self.puber_data.publish(long_img_data)
-
+        # else:
+        #     self.logwarn("long img is None")
+        rospy.sleep(0.05)
         self.reset_image_flag()
 
         self.update_data()
@@ -318,11 +323,13 @@ class CalibrationController(ModuleBase):
 
     def handler_img_data(self, msg, type):
         if msg is not None:
+            self.loginfo("Got {} msg".format(type))
             data = {}
             img_data = self.img2text(msg)
             data[type] = {"time": time.time(), "data": img_data}
             return json.dumps(data)
         else:
+            self.logwarn("{} is None".format(type))
             return None
 
     # yaml handler
@@ -346,7 +353,6 @@ class CalibrationController(ModuleBase):
                 # last_data = json.loads
                 last_data = json.load(f)
                 self._data["last_data"] = last_data
-            
 
     def save_json(self):
         with open(self.json_file, 'w') as f:

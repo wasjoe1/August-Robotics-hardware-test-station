@@ -68,14 +68,17 @@ data_socket.onmessage = function(evt) {
 
 function get_data(ws_json, first_key) {
     data_content = ""
-    for (const key in ws_json[first_key]["servos"]) {
-        if (key != "time") {
-            data_content += key + ": " + ws_json[first_key]["servos"][key] + ", time :" + time_vis(ws_json[first_key]["servos"]["time"]) + "</br>"
+        // console.log(typeof(ws_json[first_key]))
+    if (ws_json[first_key] !== undefined) {
+        for (const key in ws_json[first_key]["servos"]) {
+            if (key != "time") {
+                data_content += key + ": " + ws_json[first_key]["servos"][key] + ", time :" + time_vis(ws_json[first_key]["servos"]["time"]) + "</br>"
+            }
         }
-    }
-    for (const key in ws_json[first_key]["angle"]) {
-        if (key != "time") {
-            data_content += key + ": " + ws_json[first_key]["angle"][key] + ", time :" + time_vis(ws_json[first_key]["angle"]["time"]) + "</br>"
+        for (const key in ws_json[first_key]["angle"]) {
+            if (key != "time") {
+                data_content += key + ": " + ws_json[first_key]["angle"][key] + ", time :" + time_vis(ws_json[first_key]["angle"]["time"]) + "</br>"
+            }
         }
     }
     return data_content

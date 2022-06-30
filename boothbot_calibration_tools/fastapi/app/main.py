@@ -67,20 +67,24 @@ class DataService(data_pb2_grpc.data_ServiceServicer):
         # logger.info("Received step: %s" % request.step)
         # logger.info("Got new msg")
         data_from = json.loads(request.request_data)
+        data_from = json.loads(data_from)
+        # logger.warn("type request {}".format(type(request.request_data)))
+        # logger.warn("data_from {}".format(type(data_from)))
         for k, v in data_from.items():
-            # logger.info("got new msg {}".format(k))
+            logger.info("got new msg {}".format(k))
             if k == "long":
-                # logger.info("Got long img")
+                logger.info("Got long img")
                 app.long_camera_time = v["time"]
                 app.long_img = json.dumps(v)
             elif k == "short":
-                # logger.info("Got short img")
+                logger.info("Got short img")
                 app.short_camera_time = v["time"]
                 app.short_img = json.dumps(v)
             elif k == "data":
                 logger.info(v)
                 # data = v
-                app.data = json.loads(v)
+                # app.data = json.loads(v)
+                app.data = v
         return data_pb2.dataResponse()
 
 
