@@ -117,7 +117,7 @@ class CalibrationController(ModuleBase):
         self._job_data = {}
         self._save_data = {}
         self._job = None
-        self._data["host_name"] = socket.gethostname()
+        self._data["data"]["host_name"] = socket.gethostname()
 
         self._done_list = {}
         # self._done_list["IMU_CALIBRATION"] = "true"
@@ -146,14 +146,14 @@ class CalibrationController(ModuleBase):
     def pub_data(self):
         short_img_data = self.handler_img_data(self.short_camera_data, "short")
         if short_img_data is not None:
-            self.loginfo("pub short img")
+            # self.loginfo("pub short img")
             self.puber_data.publish(short_img_data)
         # else:
         #     self.logwarn("short img is None")
 
         long_img_data = self.handler_img_data(self.long_camera_data, "long")
         if long_img_data is not None:
-            self.loginfo("pub long img")
+            # self.loginfo("pub long img")
             self.puber_data.publish(long_img_data)
         # else:
         #     self.logwarn("long img is None")
@@ -285,11 +285,11 @@ class CalibrationController(ModuleBase):
         self._job_data["servo_v"] = msg.encodings_origin[1]
 
     def long_camera_cb(self, msg):
-        self.loginfo_throttle(5, "Got long img")
+        # self.loginfo_throttle(5, "Got long img")
         self.long_camera_data = msg
 
     def short_camera_cb(self, msg):
-        self.loginfo_throttle(5, "Got short img")
+        # self.loginfo_throttle(5, "Got short img")
         self.short_camera_data = msg
 
     def turn_to_step(self, CS):

@@ -113,7 +113,7 @@ class GRPCtoROS(Logging):
             # data = {}
             # data["data"] = self.data_to_send
             # logger.loginfo(type(self.data_to_send))
-            logger.loginfo(self.data_to_send[0:20])
+            # logger.loginfo(self.data_to_send[0:20])
             grpc_data = json.dumps(self.data_to_send)
             self.send_to_fastapi(grpc_data)
             self.data_to_send = None
