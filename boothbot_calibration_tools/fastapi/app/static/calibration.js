@@ -29,8 +29,8 @@ function get_id(id) {
 
 data_socket.onmessage = function(evt) {
     // convert data to json
+    console.log(evt.data)
     ws_json = eval('(' + evt.data + ')')
-        // console.log(evt.data)
 
     // job_data
     job_data_content = ""

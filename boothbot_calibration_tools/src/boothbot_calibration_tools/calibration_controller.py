@@ -87,14 +87,14 @@ TRANSITIONS = TRANSITIONS_TOP + [
     },
 ]
 
-JOB_SETTING = {
-    CS.INITIALIZE_SERVO.name: {},
-    CS.CAMERA_SHARPNESS.name: {"camera": "long", "exp_dis": {"long": 14, "short": 5}},
-    CS.CAMERAS_ALIGNMENT.name: {},
-    CS.CAMERA_LASER_ALIGNMENT.name: {},
-    CS.CAMERAS_ANGLE.name: {},
-    CS.VERTICAL_SERVO_ZERO.name: {},
-    CS.IMU_CALIBRATION.name: {},
+JOB_DATA = {
+    CS.INITIALIZE_SERVO.name: ["servo_h", "servo_v"],
+    CS.CAMERA_SHARPNESS.name: ["sharpness_score", "sharpness_result", "color_data", "color_result"],
+    CS.CAMERAS_ALIGNMENT.name: [],
+    CS.CAMERA_LASER_ALIGNMENT.name: [],
+    CS.CAMERAS_ANGLE.name: [],
+    CS.VERTICAL_SERVO_ZERO.name: [],
+    CS.IMU_CALIBRATION.name: [],
 }
 
 LONG = "long"
@@ -166,12 +166,27 @@ class CalibrationController(ModuleBase):
         self.cameras = {LONG: None, SHORT: None}
         self.cameras_frame = {LONG: None, SHORT: None}
 
+        self.job_setting = {
+            CS.INITIALIZE_SERVO.name: {},
+            CS.CAMERA_SHARPNESS.name: {"camera": "long", "exp_dis": {"long": 40, "short": 5}},
+            CS.CAMERAS_ALIGNMENT.name: {},
+            CS.CAMERA_LASER_ALIGNMENT.name: {},
+            CS.CAMERAS_ANGLE.name: {},
+            CS.VERTICAL_SERVO_ZERO.name: {},
+            CS.IMU_CALIBRATION.name: {},
+        }
+
+
     def update_data(self):
         if self._job is not None:
             self._data["data"]["step"] = self._job.name
-        self._data["data"]["job_data"] = self._job_data
-        self._data["data"]["save_data"] = self._save_data
-        self._data["data"]["done"] = self._done_list
+        # self._data["data"]["job_data"] = self._job_data
+            self._data["data"]["job_data"] = {}
+            for k, v in self._job_data.items():
+                if k in JOB_DATA[self._job.name]:
+                    self._data["data"]["job_data"][k] = v
+            self._data["data"]["save_data"] = self._save_data
+            self._data["data"]["done"] = self._done_list
 
     def pub_data(self):
         # short_img_data = self.handler_img_data(
@@ -291,6 +306,14 @@ class CalibrationController(ModuleBase):
             pass
         elif CS.DONE == command:
             self.job_done()
+        elif CS.USE_LONG_CAMERA == command:
+            self.loginfo("use long camera")
+            self.job_setting[CS.CAMERA_SHARPNESS.name]["camera"] = LONG
+            pass
+        elif CS.USE_SHORT_CAMERA == command:
+            self.loginfo("use short camera")
+            self.job_setting[CS.CAMERA_SHARPNESS.name]["camera"] = SHORT
+            pass
         else:
             self.turn_to_step(command)
             # if self.goal is not None:
@@ -369,7 +392,7 @@ class CalibrationController(ModuleBase):
         return im_text
 
     def reset_image_flag(self):
-        for k , v in self.cameras_frame.items():
+        for k, v in self.cameras_frame.items():
             self.cameras_frame[k] = None
         # self.long_camera_img_data = None
         # self.short_camera_img_data = None
@@ -442,7 +465,7 @@ class CalibrationController(ModuleBase):
         pass
 
     def _do_sharpness(self):
-        camera_type = JOB_SETTING[CS.CAMERA_SHARPNESS.name]['camera']
+        camera_type = self.job_setting[CS.CAMERA_SHARPNESS.name]['camera']
         if self.sub_state == 0:
             self.cameras[LONG] = TrackingCamera(
                 "/dev/camera_long", laser_dist=40)
@@ -466,10 +489,16 @@ class CalibrationController(ModuleBase):
             self.cameras_frame[type] = self.img2textfromcv2(frame)
             self.loginfo("beacon_res {}".format(beacon_res))
             sharpness_result = self.cameras[type].get_sharpness(
-                frame, beacon_res, JOB_SETTING[CS.CAMERA_SHARPNESS.name]["exp_dis"]["long"])
+                frame, beacon_res, self.job_setting[CS.CAMERA_SHARPNESS.name]["exp_dis"][type])
             self.loginfo("sharpness good {}".format(sharpness_result))
-            color_result = self.cameras[type].get_color_value(
+            color_data, color_result = self.cameras[type].get_color_value(
                 frame, beacon_res, color="green")
+
+            self._job_data["sharpness_score"] = "0" if sharpness_result is None else sharpness_result[0]
+            self._job_data["sharpness_result"] = "BAD" if sharpness_result is None else str(
+                sharpness_result[1])
+            self._job_data["color_result"] = str(color_result)
+            self._job_data["color_data"] = str(color_data)[1:-1]
             self.loginfo("color good {}".format(color_result))
 
 
