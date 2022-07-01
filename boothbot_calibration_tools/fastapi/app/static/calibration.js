@@ -70,9 +70,14 @@ function get_data(ws_json, first_key) {
     data_content = ""
         // console.log(typeof(ws_json[first_key]))
     if (ws_json[first_key] !== undefined) {
-        for (const key in ws_json[first_key]["servos"]) {
+        for (const key in ws_json[first_key]["CAMERA_SHARPNESS"]) {
             if (key != "time") {
-                data_content += key + ": " + ws_json[first_key]["servos"][key] + ", time :" + time_vis(ws_json[first_key]["servos"]["time"]) + "</br>"
+                data_content += key + ": " + ws_json[first_key]["CAMERA_SHARPNESS"][key] + ", time :" + time_vis(ws_json[first_key]["CAMERA_SHARPNESS"]["time"]) + "</br>"
+            }
+        }
+        for (const key in ws_json[first_key]["INITIALIZE_SERVO"]) {
+            if (key != "time") {
+                data_content += key + ": " + ws_json[first_key]["INITIALIZE_SERVO"][key] + ", time :" + time_vis(ws_json[first_key]["INITIALIZE_SERVO"]["time"]) + "</br>"
             }
         }
         for (const key in ws_json[first_key]["angle"]) {

@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
-
 import rospy
 
 import rospy as logger
@@ -14,7 +12,6 @@ import oyaml
 import socket
 import glob
 
-import ros_numpy
 import base64
 from PIL import Image
 from io import BytesIO
@@ -89,7 +86,8 @@ TRANSITIONS = TRANSITIONS_TOP + [
 
 JOB_DATA = {
     CS.INITIALIZE_SERVO.name: ["servo_h", "servo_v"],
-    CS.CAMERA_SHARPNESS.name: ["sharpness_score", "sharpness_result", "color_data", "color_result"],
+    CS.CAMERA_SHARPNESS.name: ["long_sharpness_score", "long_sharpness_result", "long_color_data", "long_color_result",
+                               "short_sharpness_score", "short_sharpness_result", "short_color_data", "short_color_result"],
     CS.CAMERAS_ALIGNMENT.name: [],
     CS.CAMERA_LASER_ALIGNMENT.name: [],
     CS.CAMERAS_ANGLE.name: [],
@@ -128,8 +126,6 @@ class CalibrationController(ModuleBase):
         self.puber_data = APPS_CALIBRATION_DATA.Publisher()
 
         DRIVERS_SERVOS_PDO.Subscriber(self.servo_pdo_cb)
-        # DRIVERS_TRACKER_LONG_IMAGE.Subscriber(self.long_camera_cb)
-        # DRIVERS_TRACKER_SHORT_IMAGE.Subscriber(self.short_camera_cb)
 
         self._data = {}
         self._data["data"] = {}
@@ -139,16 +135,12 @@ class CalibrationController(ModuleBase):
         self._data["data"]["host_name"] = socket.gethostname()
 
         self._done_list = {}
-        # self._done_list["IMU_CALIBRATION"] = "true"
 
         # self.send_image = False
         self.long_camera_img_data = None
         self.short_camera_img_data = None
 
         # driver
-        # self.tracker = TargetTracker()
-        # self.camera_long = TrackingCamera("/dev/camera_long", laser_dist=4)
-        # self.camera_short = TrackingCamera("/dev/camera_short", laser_dist=50)
         self.camera_long = None
         self.camera_short = None
         self.servos = ServosClient()
@@ -176,7 +168,6 @@ class CalibrationController(ModuleBase):
             CS.IMU_CALIBRATION.name: {},
         }
 
-
     def update_data(self):
         if self._job is not None:
             self._data["data"]["step"] = self._job.name
@@ -189,22 +180,6 @@ class CalibrationController(ModuleBase):
             self._data["data"]["done"] = self._done_list
 
     def pub_data(self):
-        # short_img_data = self.handler_img_data(
-        #     self.short_camera_img_data, "short")
-        # if short_img_data is not None:
-        #     # self.loginfo("pub short img")
-        #     self.puber_data.publish(short_img_data)
-        # # else:
-        # #     self.logwarn("short img is None")
-
-        # long_img_data = self.handler_img_data(
-        #     self.long_camera_img_data, "long")
-        # if long_img_data is not None:
-        #     # self.loginfo("pub long img")
-        #     self.puber_data.publish(long_img_data)
-        # # else:
-        #     self.logwarn("long img is None")
-
         for k, v in self.cameras_frame.items():
             img_res = self.handler_img_data(k, v)
             if img_res is not None:
@@ -224,7 +199,7 @@ class CalibrationController(ModuleBase):
 
     def on_RESETING(self):
         self.loginfo("reset, to idle")
-        # self.tracker.reset()
+        self.reset_camera()
         self.servos.reset()
         self.laser.reset()
         self.to_IDLE()
@@ -281,7 +256,6 @@ class CalibrationController(ModuleBase):
     def handle_inputs(self, command):
         if command != CS.NONE:
             self.logwarn("Got command. {}".format(command))
-            # return
         if command == CS.NONE:
             pass
         elif CS.RESET == command:
@@ -289,21 +263,18 @@ class CalibrationController(ModuleBase):
         elif CS.SERVOS_DISABLE == command:
             self.logwarn("servo disable")
             self.servos.disable()
-            # if self.goal is not None:
-            #     self.goal.got_manual_cali_command = "RB1"
         elif CS.SERVOS_ENABLE == command:
             self.logwarn("servo enable")
             self.servos.enable()
-            pass
         elif CS.LASER_ON == command:
             self.laser.laser_on()
         elif CS.LASER_OFF == command:
             self.laser.laser_off()
         elif CS.RUN == command:
-            self.job_init_servo_replace_setting()
-
+            self.run_job()
         elif CS.SAVE == command:
-            pass
+            self.loginfo("save data..")
+            self.save_data()
         elif CS.DONE == command:
             self.job_done()
         elif CS.USE_LONG_CAMERA == command:
@@ -321,8 +292,28 @@ class CalibrationController(ModuleBase):
         return True
         # logger.loginfo("handler input ....")
 
-    # def reset(self):
-    #     self.loginfo("resetting.")
+    def reset_camera(self):
+        for k, v in self.cameras.items():
+            if self.cameras[k] is not None:
+                self.cameras[k].shutdown()
+                self.cameras[k] = None
+
+    def save_data(self):
+        self.loginfo("preparing data.")
+        if self._job == CS.INITIALIZE_SERVO:
+            pass
+        else:
+            self._save_data[self._job.name] = {}
+            self._save_data[self._job.name].update({"time": time.time()})
+            for k, v in self._job_data.items():
+                if k in JOB_DATA[self._job.name]:
+                    self._save_data[self._job.name].update({k: v})
+        self.save_json()
+
+    def run_job(self):
+        if self._job == CS.INITIALIZE_SERVO:
+            self.job_init_servo_replace_setting()
+        # elif self._job
 
     def job_done(self):
         if self._job is None:
@@ -331,28 +322,18 @@ class CalibrationController(ModuleBase):
             self.logwarn("killing node ")
             # rosnode.kill_nodes("servos_driver")
             os.system("rosnode kill /servos_driver")
+        elif self.job == CS.CAMERA_SHARPNESS:
+            self.loginfo("sharpness done.")
         self._done_list[self._job.name] = "true"
-        self.sub_state = 0
-        self.save_json()
-        # TODO
 
     def is_job(self):
         return self._job is not None
 
     # callback function
-
     def servo_pdo_cb(self, msg):
         # update servo data
         self._job_data["servo_h"] = msg.encodings_origin[0]
         self._job_data["servo_v"] = msg.encodings_origin[1]
-
-    # def long_camera_cb(self, msg):
-    #     # self.loginfo_throttle(5, "Got long img")
-    #     self.long_camera_img_data = msg
-
-    # def short_camera_cb(self, msg):
-    #     # self.loginfo_throttle(5, "Got short img")
-    #     self.short_camera_img_data = msg
 
     def turn_to_step(self, CS):
         if self._job is None:
@@ -368,20 +349,7 @@ class CalibrationController(ModuleBase):
             return
 
     # image handler for get image data from rostopic
-    # def img2textfromtopic(self, msg):
-    #     im = ros_numpy.numpify(msg)
-    #     # From BGR to RGB
-    #     im = im[:, :, ::-1]
-    #     im = Image.fromarray(im)
-    #     buf = BytesIO()
-    #     im.save(buf, format="JPEG")
-    #     im_binary = base64.b64encode(buf.getvalue())
-    #     im_text = im_binary.decode()
-    #     return im_text
-
-    # image handler for get image data from rostopic
     def img2textfromcv2(self, frame):
-        # im = ros_numpy.numpify(msg)
         # From BGR to RGB
         im = frame[:, :, ::-1]
         im = Image.fromarray(im)
@@ -394,14 +362,11 @@ class CalibrationController(ModuleBase):
     def reset_image_flag(self):
         for k, v in self.cameras_frame.items():
             self.cameras_frame[k] = None
-        # self.long_camera_img_data = None
-        # self.short_camera_img_data = None
 
     def handler_img_data(self, type, img_data):
         if img_data is not None:
             self.loginfo("Got {} msg".format(type))
             pre_data = {}
-            # img_data = self.img2text(msg)
             pre_data[type] = {"time": time.time(), "data": img_data}
             return json.dumps(pre_data)
         else:
@@ -431,6 +396,7 @@ class CalibrationController(ModuleBase):
                 self._data["data"]["last_data"] = last_data
 
     def save_json(self):
+        self.logwarn("save data to {}".format(self.json_file))
         with open(self.json_file, 'w') as f:
             json.dump(self._save_data, f)
 
@@ -447,7 +413,7 @@ class CalibrationController(ModuleBase):
         doc['servos_driver']['servo_parameter']['vertical']['zero_offset'] = self._job_data["servo_v"]
 
         servo_save_data = {
-            "servos": {
+            CS.INITIALIZE_SERVO.name: {
                 "time": time.time(),
                 "servo_h": self._job_data["servo_h"],
                 "servo_v": self._job_data["servo_v"],
@@ -471,7 +437,7 @@ class CalibrationController(ModuleBase):
                 "/dev/camera_long", laser_dist=40)
             self.cameras[SHORT] = TrackingCamera(
                 "/dev/camera_short", laser_dist=5)
-            time.sleep(10)
+            time.sleep(20)
             self._sub_state = 1
         if self.sub_state == 1:
             self.get_sharpness_result(camera_type)
@@ -494,11 +460,11 @@ class CalibrationController(ModuleBase):
             color_data, color_result = self.cameras[type].get_color_value(
                 frame, beacon_res, color="green")
 
-            self._job_data["sharpness_score"] = "0" if sharpness_result is None else sharpness_result[0]
-            self._job_data["sharpness_result"] = "BAD" if sharpness_result is None else str(
+            self._job_data[type+"_sharpness_score"] = "0" if sharpness_result is None else sharpness_result[0]
+            self._job_data[type+"_sharpness_result"] = "BAD" if sharpness_result is None else str(
                 sharpness_result[1])
-            self._job_data["color_result"] = str(color_result)
-            self._job_data["color_data"] = str(color_data)[1:-1]
+            self._job_data[type+"_color_result"] = str(color_result)
+            self._job_data[type+"_color_data"] = str(color_data)[1:-1]
             self.loginfo("color good {}".format(color_result))
 
 
