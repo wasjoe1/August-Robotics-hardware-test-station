@@ -98,6 +98,8 @@ JOB_DATA = {
 LONG = "long"
 SHORT = "short"
 
+TO = (1e-5, 1e-3)
+
 # class Camera(object):
 #     def __init__() :
 #         self.
@@ -154,6 +156,9 @@ class CalibrationController(ModuleBase):
         # state
         self.sub_state = 0
 
+        self.track_target = None
+        self.camera_filter_count = 0
+
         # cameras
         self.cameras = {LONG: None, SHORT: None}
         self.cameras_frame = {LONG: None, SHORT: None}
@@ -161,7 +166,7 @@ class CalibrationController(ModuleBase):
         self.job_setting = {
             CS.INITIALIZE_SERVO.name: {},
             CS.CAMERA_SHARPNESS.name: {"camera": "long", "exp_dis": {"long": 40, "short": 5}},
-            CS.CAMERAS_ALIGNMENT.name: {},
+            CS.CAMERAS_ALIGNMENT.name: {"default_h": 1.48},
             CS.CAMERA_LASER_ALIGNMENT.name: {},
             CS.CAMERAS_ANGLE.name: {},
             CS.VERTICAL_SERVO_ZERO.name: {},
@@ -215,12 +220,9 @@ class CalibrationController(ModuleBase):
         if self._job == CS.INITIALIZE_SERVO:
             self._do_initialize_servo()
         elif self._job == CS.CAMERA_SHARPNESS:
-            self.loginfo_throttle(5, "prepare image.")
             self._do_sharpness()
-            # self.tracker.trigger("BOG", cali=True)
-            pass
         elif self._job == CS.CAMERAS_ALIGNMENT:
-            pass
+            self._do_camera_alignment()
         elif self._job == CS.CAMERA_LASER_ALIGNMENT:
             pass
         elif self._job == CS.CAMERAS_ANGLE:
@@ -293,6 +295,7 @@ class CalibrationController(ModuleBase):
         # logger.loginfo("handler input ....")
 
     def reset_camera(self):
+        self.camera_filter_count = 0
         for k, v in self.cameras.items():
             if self.cameras[k] is not None:
                 self.cameras[k].shutdown()
@@ -370,7 +373,6 @@ class CalibrationController(ModuleBase):
             pre_data[type] = {"time": time.time(), "data": img_data}
             return json.dumps(pre_data)
         else:
-            self.logwarn("{} is None".format(type))
             return None
 
     # yaml handler
@@ -466,6 +468,62 @@ class CalibrationController(ModuleBase):
             self._job_data[type+"_color_result"] = str(color_result)
             self._job_data[type+"_color_data"] = str(color_data)[1:-1]
             self.loginfo("color good {}".format(color_result))
+
+    def _do_camera_alignment(self):
+        if self.sub_state == 0:
+            self.cameras[LONG] = TrackingCamera(
+                "/dev/camera_long", laser_dist=10)
+            self.cameras[SHORT] = TrackingCamera(
+                "/dev/camera_short", laser_dist=10)
+            time.sleep(20)
+            self._sub_state = 1
+        elif self.sub_state == 1:
+            self.laser.laser_on()
+            self.sub_state = 2
+        elif self.sub_state == 2:
+            if self.servos.done:
+                self.track_target = (
+                    self.job_setting[self._job.name]["default_h"], 0.0)
+                self.servos.move_to(self.track_target, (1e-5, 1e-4))
+                self.sub_state = 3
+        elif self.sub_state == 3:
+            if self.servos.done:
+                offset = self.track()
+                if abs(offset[0]) < 2e-5 and abs(offset[1]) < 1e-3:
+                    self.loginfo("!!!!!!!!!!!!!!!!!!!!! arrived {}".format(self.camera_filter_count))
+                    self.camera_filter_count += 1
+                else:
+                    self.camera_filter_count = 0
+                if self.camera_filter_count > 3:
+                    self.sub_state = 4
+                    return
+                self.loginfo(
+                    "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!the offset is {}".format(offset))
+                # for target in self.track_target:
+                #     target += offset
+                # self.track_target[0] + offset[0]
+                # self.track_target[1] + offset[1]
+                # self.servos.radians
+                self.track_target = (self.servos.radians[0] + offset[0], self.servos.radians[1] + offset[1])
+                self.loginfo("!!!!!!!!!!!!!!!!!!!!!!!!target is {} now".format(self.track_target))
+                self.servos.move_to(self.track_target, (1e-5, 1e-4))
+        #         self.sub_state = 4
+        elif self.sub_state == 4:
+            self.loginfo_throttle(2, "long camera track done. short camera track")
+
+    def get_camera_result(self, type):
+        frame = self.cameras[type].cap()
+        beacon_res = self.cameras[type].find_beacon(frame, 0.0, "BOG")
+        self.cameras[type].draw_beacon(frame, beacon_res)
+        angle = self.cameras[type].get_beacon_angle(beacon_res)
+        return angle
+
+    def track(self):
+        long_anle = self.get_camera_result(LONG)
+        if long_anle is None:
+            return self.get_camera_result(SHORT)
+        else:
+            return long_anle
 
 
 if __name__ == "__main__":
