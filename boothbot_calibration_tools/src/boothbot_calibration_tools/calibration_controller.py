@@ -88,8 +88,8 @@ JOB_DATA = {
     CS.INITIALIZE_SERVO.name: ["servo_h", "servo_v"],
     CS.CAMERA_SHARPNESS.name: ["long_sharpness_score", "long_sharpness_result", "long_color_data", "long_color_result",
                                "short_sharpness_score", "short_sharpness_result", "short_color_data", "short_color_result"],
-    CS.CAMERAS_ALIGNMENT.name: [],
-    CS.CAMERA_LASER_ALIGNMENT.name: [],
+    CS.CAMERAS_ALIGNMENT.name: ["cameras_angle_offset"],
+    CS.CAMERA_LASER_ALIGNMENT.name: ["camera_laser_alignment"],
     CS.CAMERAS_ANGLE.name: [],
     CS.VERTICAL_SERVO_ZERO.name: [],
     CS.IMU_CALIBRATION.name: [],
@@ -222,9 +222,9 @@ class CalibrationController(ModuleBase):
         elif self._job == CS.CAMERA_SHARPNESS:
             self._do_sharpness()
         elif self._job == CS.CAMERAS_ALIGNMENT:
-            self._do_camera_alignment()
+            self._do_cameras_alignment()
         elif self._job == CS.CAMERA_LASER_ALIGNMENT:
-            pass
+            self._do_camera_laser_alignment()
         elif self._job == CS.CAMERAS_ANGLE:
             pass
         elif self._job == CS.VERTICAL_SERVO_ZERO:
@@ -300,6 +300,7 @@ class CalibrationController(ModuleBase):
             if self.cameras[k] is not None:
                 self.cameras[k].shutdown()
                 self.cameras[k] = None
+                time.sleep(5)
 
     def save_data(self):
         self.loginfo("preparing data.")
@@ -477,7 +478,7 @@ class CalibrationController(ModuleBase):
         else:
             self.camera_filter_count = 0
 
-    def _do_camera_alignment(self):
+    def _do_cameras_alignment(self):
         if self.sub_state == 0:
             self.cameras[LONG] = TrackingCamera(
                 "/dev/camera_long", laser_dist=10)
@@ -517,6 +518,32 @@ class CalibrationController(ModuleBase):
         elif self.sub_state == 4:
             self.loginfo_throttle(
                 2, "long camera track done. short camera track")
+
+    def _do_camera_laser_alignment(self):
+        if self.sub_state == 0:
+            self.cameras[LONG] = TrackingCamera(
+                "/dev/camera_long", laser_dist=48)
+            time.sleep(20)
+            self._sub_state = 1
+        elif self.sub_state == 1:
+            self.laser.laser_on()        
+            frame = self.cameras[LONG].cap()
+            print("Got long frame")
+            # beacon_res = self.cameras[LONG].find_beacon(frame, 0.0, "BOG")
+            # print(f"beacon_res {beacon_res}")
+            # self.cameras[LONG].draw_beacon(frame, beacon_res)
+            # angle = self.cameras[LONG].get_beacon_angle(beacon_res)
+            # print(f"angle {angle}")
+            # sharpness_result = self.cameras[LONG].get_sharpness(frame, beacon_res, exp_dist)
+            # print(f"sharpness good {sharpness_result}")
+            # color_result = self.cameras[LONG].get_color_value(frame, beacon_res, color="green")
+            # print(f"color good {color_result}")
+            laser_dot = self.cameras[LONG].find_laser_dot(frame)
+            self.loginfo("laser_dot {}".format(laser_dot))
+            result = self.cameras[LONG].get_laser_result(frame, laser_dot)
+            self.loginfo("result  {}".format(result))
+            self._job_data["camera_laser_alignment"] = result
+            self.cameras_frame[LONG] = self.img2textfromcv2(frame)
 
     def get_camera_result(self, type):
         frame = self.cameras[type].cap()
