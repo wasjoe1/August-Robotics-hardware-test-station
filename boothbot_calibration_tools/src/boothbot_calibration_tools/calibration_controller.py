@@ -97,7 +97,7 @@ JOB_DATA = {
 
 LONG = "long"
 SHORT = "short"
-
+COLOR = "BOG"
 TO = (1e-5, 1e-3)
 
 # class Camera(object):
@@ -452,7 +452,7 @@ class CalibrationController(ModuleBase):
         # frame = camera.cap()
         if frame is not None:
             self.loginfo("Got {} frame".format(type))
-            beacon_res = self.cameras[type].find_beacon(frame, 0.0, "BOG")
+            beacon_res = self.cameras[type].find_beacon(frame, 0.0, COLOR)
             self.cameras[type].draw_beacon(frame, beacon_res)
             self.cameras_frame[type] = self.img2textfromcv2(frame)
             self.loginfo("beacon_res {}".format(beacon_res))
@@ -468,6 +468,14 @@ class CalibrationController(ModuleBase):
             self._job_data[type+"_color_result"] = str(color_result)
             self._job_data[type+"_color_data"] = str(color_data)[1:-1]
             self.loginfo("color good {}".format(color_result))
+
+    def check_camera_filter(self, offset):
+        if abs(offset[0]) < 2e-5 and abs(offset[1]) < 1e-3:
+            self.loginfo("!!!!!!!!!!!!!!!!!!!!! arrived {}".format(
+                self.camera_filter_count))
+            self.camera_filter_count += 1
+        else:
+            self.camera_filter_count = 0
 
     def _do_camera_alignment(self):
         if self.sub_state == 0:
@@ -489,11 +497,7 @@ class CalibrationController(ModuleBase):
         elif self.sub_state == 3:
             if self.servos.done:
                 offset = self.track()
-                if abs(offset[0]) < 2e-5 and abs(offset[1]) < 1e-3:
-                    self.loginfo("!!!!!!!!!!!!!!!!!!!!! arrived {}".format(self.camera_filter_count))
-                    self.camera_filter_count += 1
-                else:
-                    self.camera_filter_count = 0
+                self.check_camera_filter(offset)
                 if self.camera_filter_count > 3:
                     self.sub_state = 4
                     return
@@ -504,26 +508,33 @@ class CalibrationController(ModuleBase):
                 # self.track_target[0] + offset[0]
                 # self.track_target[1] + offset[1]
                 # self.servos.radians
-                self.track_target = (self.servos.radians[0] + offset[0], self.servos.radians[1] + offset[1])
-                self.loginfo("!!!!!!!!!!!!!!!!!!!!!!!!target is {} now".format(self.track_target))
+                self.track_target = (
+                    self.servos.radians[0] + offset[0], self.servos.radians[1] + offset[1])
+                self.loginfo(
+                    "!!!!!!!!!!!!!!!!!!!!!!!!target is {} now".format(self.track_target))
                 self.servos.move_to(self.track_target, (1e-5, 1e-4))
         #         self.sub_state = 4
         elif self.sub_state == 4:
-            self.loginfo_throttle(2, "long camera track done. short camera track")
+            self.loginfo_throttle(
+                2, "long camera track done. short camera track")
 
     def get_camera_result(self, type):
         frame = self.cameras[type].cap()
-        beacon_res = self.cameras[type].find_beacon(frame, 0.0, "BOG")
+        beacon_res = self.cameras[type].find_beacon(frame, 0.0, COLOR)
         self.cameras[type].draw_beacon(frame, beacon_res)
+        self.cameras_frame[type] = self.img2textfromcv2(frame)
         angle = self.cameras[type].get_beacon_angle(beacon_res)
         return angle
 
-    def track(self):
-        long_anle = self.get_camera_result(LONG)
-        if long_anle is None:
+    def track(self, type=LONG):
+        if type != LONG:
             return self.get_camera_result(SHORT)
         else:
-            return long_anle
+            long_anle = self.get_camera_result(LONG)
+            if long_anle is None:
+                return self.get_camera_result(SHORT)
+            else:
+                return long_anle
 
 
 if __name__ == "__main__":
