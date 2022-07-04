@@ -28,7 +28,7 @@ from boothbot_perception.tracking_camera import TrackingCamera
 import json
 import socket
 
-from boothbot_common.module_base import ModuleBase
+from boothbot_common.module_base_py3 import ModuleBase
 
 from guiding_beacon_system.drivers.laser_driver import LaserRangeFinderGenerator, LaserRangeFinder
 
@@ -522,7 +522,7 @@ class CalibrationController(ModuleBase):
     def _do_camera_laser_alignment(self):
         if self.sub_state == 0:
             self.cameras[LONG] = TrackingCamera(
-                "/dev/camera_long", laser_dist=48)
+                "/dev/camera_long", laser_dist=49)
             time.sleep(20)
             self._sub_state = 1
         elif self.sub_state == 1:
