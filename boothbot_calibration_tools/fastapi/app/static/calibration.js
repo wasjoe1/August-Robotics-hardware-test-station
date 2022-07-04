@@ -29,8 +29,8 @@ function get_id(id) {
 
 data_socket.onmessage = function(evt) {
     // convert data to json
+    console.log(evt.data)
     ws_json = eval('(' + evt.data + ')')
-        // console.log(evt.data)
 
     // job_data
     job_data_content = ""
@@ -68,14 +68,22 @@ data_socket.onmessage = function(evt) {
 
 function get_data(ws_json, first_key) {
     data_content = ""
-    for (const key in ws_json[first_key]["servos"]) {
-        if (key != "time") {
-            data_content += key + ": " + ws_json[first_key]["servos"][key] + ", time :" + time_vis(ws_json[first_key]["servos"]["time"]) + "</br>"
+        // console.log(typeof(ws_json[first_key]))
+    if (ws_json[first_key] !== undefined) {
+        for (const key in ws_json[first_key]["CAMERA_SHARPNESS"]) {
+            if (key != "time") {
+                data_content += key + ": " + ws_json[first_key]["CAMERA_SHARPNESS"][key] + ", time :" + time_vis(ws_json[first_key]["CAMERA_SHARPNESS"]["time"]) + "</br>"
+            }
         }
-    }
-    for (const key in ws_json[first_key]["angle"]) {
-        if (key != "time") {
-            data_content += key + ": " + ws_json[first_key]["angle"][key] + ", time :" + time_vis(ws_json[first_key]["angle"]["time"]) + "</br>"
+        for (const key in ws_json[first_key]["INITIALIZE_SERVO"]) {
+            if (key != "time") {
+                data_content += key + ": " + ws_json[first_key]["INITIALIZE_SERVO"][key] + ", time :" + time_vis(ws_json[first_key]["INITIALIZE_SERVO"]["time"]) + "</br>"
+            }
+        }
+        for (const key in ws_json[first_key]["angle"]) {
+            if (key != "time") {
+                data_content += key + ": " + ws_json[first_key]["angle"][key] + ", time :" + time_vis(ws_json[first_key]["angle"]["time"]) + "</br>"
+            }
         }
     }
     return data_content

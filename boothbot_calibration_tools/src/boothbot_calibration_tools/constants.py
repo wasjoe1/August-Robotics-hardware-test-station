@@ -22,6 +22,7 @@ class CalibrationCommand(Enum):
     SAVE = 7
     DONE = 8
 
+
     INITIALIZE_SERVO = 20
     CAMERA_SHARPNESS = 21
     CAMERAS_ALIGNMENT = 22
@@ -29,3 +30,6 @@ class CalibrationCommand(Enum):
     CAMERAS_ANGLE = 24
     VERTICAL_SERVO_ZERO = 25
     IMU_CALIBRATION = 26
+
+    USE_LONG_CAMERA = 50
+    USE_SHORT_CAMERA = 51
