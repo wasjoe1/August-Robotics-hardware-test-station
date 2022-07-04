@@ -1,7 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+from boothbot_msgs.ros_interfaces import (
+    APPS_CALIBRATION_SRV_CMD,
+    APPS_CALIBRATION_STATUS,
+    APPS_CALIBRATION_DATA,
+    DRIVERS_SERVOS_PDO,
+    DRIVERS_TRACKER_STATUS,
+    DRIVERS_SERVOS_SRV_CMD,
+    # DRIVERS_TRACKER_LONG_IMAGE,
+    # DRIVERS_TRACKER_SHORT_IMAGE,
+)
 import rospy
-
+import math
 import rospy as logger
 
 from boothbot_common.ros_logger_wrap import ROSLogging as Logging
@@ -25,26 +35,22 @@ from boothbot_config.device_settings import DEVICE_SETTINGS_FILE_PATH
 from boothbot_config.device_settings import CONFIG_PATH
 from boothbot_perception.tracking_camera import TrackingCamera
 
+from boothbot_common.settings import BOOTHBOT_GET_CONFIG
+
 import json
 import socket
 
 from boothbot_common.module_base_py3 import ModuleBase
 
-from guiding_beacon_system.drivers.laser_driver import LaserRangeFinderGenerator, LaserRangeFinder
+from guiding_beacon_system.drivers.laser_driver_v3 import LaserRangeFinderGenerator, LaserRangeFinder
 
 from boothbot_driver.servos_client import ServosClient
 # from boothbot_perception.track_client import TargetTracker
 
-from boothbot_msgs.ros_interfaces import (
-    APPS_CALIBRATION_SRV_CMD,
-    APPS_CALIBRATION_STATUS,
-    APPS_CALIBRATION_DATA,
-    DRIVERS_SERVOS_PDO,
-    DRIVERS_TRACKER_STATUS,
-    DRIVERS_SERVOS_SRV_CMD,
-    # DRIVERS_TRACKER_LONG_IMAGE,
-    # DRIVERS_TRACKER_SHORT_IMAGE,
-)
+
+TRACKER_CONFIG = BOOTHBOT_GET_CONFIG(name="tracker_driver")
+GS_CAMERA_VERTICAL_DIST = TRACKER_CONFIG["long_cam_laser_dist"] + \
+    TRACKER_CONFIG["short_cam_laser_dist"]
 
 
 TRANSITIONS_TOP = [
@@ -88,9 +94,9 @@ JOB_DATA = {
     CS.INITIALIZE_SERVO.name: ["servo_h", "servo_v"],
     CS.CAMERA_SHARPNESS.name: ["long_sharpness_score", "long_sharpness_result", "long_color_data", "long_color_result",
                                "short_sharpness_score", "short_sharpness_result", "short_color_data", "short_color_result"],
-    CS.CAMERAS_ALIGNMENT.name: ["cameras_offset","measurement_time"],
+    CS.CAMERAS_ALIGNMENT.name: ["cameras_offset", "measurement_time"],
     CS.CAMERA_LASER_ALIGNMENT.name: ["camera_laser_alignment"],
-    CS.CAMERAS_ANGLE.name: ["cameras_angle"],
+    CS.CAMERAS_ANGLE.name: ["cameras_angle", "measurement_time"],
     CS.VERTICAL_SERVO_ZERO.name: [],
     CS.IMU_CALIBRATION.name: [],
 }
@@ -172,7 +178,7 @@ class CalibrationController(ModuleBase):
             CS.CAMERA_SHARPNESS.name: {"camera": "long", "exp_dis": {"long": 40, "short": 5}},
             CS.CAMERAS_ALIGNMENT.name: {"default_h": 1.48},
             CS.CAMERA_LASER_ALIGNMENT.name: {},
-            CS.CAMERAS_ANGLE.name: {},
+            CS.CAMERAS_ANGLE.name: {"default_h": 1.48},
             CS.VERTICAL_SERVO_ZERO.name: {},
             CS.IMU_CALIBRATION.name: {},
         }
@@ -237,6 +243,7 @@ class CalibrationController(ModuleBase):
         elif self._job == CS.CAMERA_LASER_ALIGNMENT:
             self._do_camera_laser_alignment()
         elif self._job == CS.CAMERAS_ANGLE:
+            self._do_cameras_angle()
             pass
         elif self._job == CS.VERTICAL_SERVO_ZERO:
             pass
@@ -549,7 +556,7 @@ class CalibrationController(ModuleBase):
                 self.sub_state = 3
         elif self.sub_state == 3:
             if self.servos.done:
-                long_res, long_offset = self.track_beacon()
+                long_res, long_offset = self.track_beacon(LONG, 1)
                 if long_res:
                     self.sub_state = 4
                     return
@@ -557,14 +564,14 @@ class CalibrationController(ModuleBase):
         elif self.sub_state == 4:
             self.loginfo_throttle(
                 2, "long camera track done. track with short camera track")
-            long_res, long_offset = self.track_beacon(LONG)
+            long_res, long_offset = self.track_beacon(LONG, 1)
             if not long_res:
                 self.loginfo(
                     "long camera detected moved. return to substate 3")
                 self.sub_state = 3
                 return
             self.loginfo("check short camera now")
-            short_res, short_offset = self.track_beacon(SHORT)
+            short_res, short_offset = self.track_beacon(SHORT, 1)
             if(long_offset is not None) and (short_offset is not None):
                 cameras_offset = self.get_camreras_offset(
                     long_offset, short_offset)
@@ -577,7 +584,7 @@ class CalibrationController(ModuleBase):
     def get_camreras_offset(self, long_offset, short_offset):
         return (long_offset[0]-short_offset[0])
 
-    def track_beacon(self, type=LONG):
+    def track_beacon(self, type=LONG, camera_filter_time=3):
         offset = self.cameras_handle(type)
         if offset is None:
             return False, None
@@ -585,7 +592,7 @@ class CalibrationController(ModuleBase):
             self.check_camera_filter(offset)
         self.loginfo(
             "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!the offset is {}".format(offset))
-        if self.track_done(1):
+        if self.track_done(camera_filter_time):
             return True, offset
         self.track_target = self.update_target(offset)
         self.loginfo(
@@ -612,15 +619,6 @@ class CalibrationController(ModuleBase):
             self.laser.laser_on()
             frame = self.cameras[LONG].cap()
             print("Got long frame")
-            # beacon_res = self.cameras[LONG].find_beacon(frame, 0.0, "BOG")
-            # print(f"beacon_res {beacon_res}")
-            # self.cameras[LONG].draw_beacon(frame, beacon_res)
-            # angle = self.cameras[LONG].get_beacon_angle(beacon_res)
-            # print(f"angle {angle}")
-            # sharpness_result = self.cameras[LONG].get_sharpness(frame, beacon_res, exp_dist)
-            # print(f"sharpness good {sharpness_result}")
-            # color_result = self.cameras[LONG].get_color_value(frame, beacon_res, color="green")
-            # print(f"color good {color_result}")
             laser_dot = self.cameras[LONG].find_laser_dot(frame)
             self.loginfo("laser_dot {}".format(laser_dot))
             result = self.cameras[LONG].get_laser_result(frame, laser_dot)
@@ -645,6 +643,71 @@ class CalibrationController(ModuleBase):
                 return self.get_camera_result(SHORT)
             else:
                 return long_anle
+
+    def _do_cameras_angle(self):
+        # res, dis = self.laser.get_distance()
+        # self.loginfo("dis is {}".format(dis))
+        if self.sub_state == 0:
+            self.cameras[LONG] = TrackingCamera(
+                "/dev/camera_long", laser_dist=4)
+            self.cameras[SHORT] = TrackingCamera(
+                "/dev/camera_short", laser_dist=4)
+            self._sub_state = 1
+        elif self.sub_state == 1:
+            if not self.cameras_idle():
+                return
+            if not self.run_flag:
+                return
+            self.laser.laser_on()
+            self.sub_state = 2
+        elif self.sub_state == 2:
+            if self.servos.done:
+                self.track_target = (
+                    self.job_setting[self._job.name]["default_h"], 0.0)
+                self.servo_move(self.track_target, TOLERANCE)
+                self.sub_state = 3
+        elif self.sub_state == 3:
+            if self.servos.done:
+                long_res, long_offset = self.track_beacon(camera_filter_time=3)
+                if long_res:
+                    self.sub_state = 4
+                    return
+        #         self.sub_state = 4
+        elif self.sub_state == 4:
+            self.loginfo_throttle(
+                2, "long camera track done. track with short camera track")
+            long_res, long_offset = self.track_beacon(LONG, 3)
+            if not long_res:
+                self.loginfo(
+                    "long camera detected moved. return to substate 3")
+                self.sub_state = 3
+                return
+            self.loginfo("check short camera now")
+            short_res, short_offset = self.track_beacon(SHORT, 3)
+            res, dis = self.laser.get_distance()
+            self.loginfo("the laser dis is {}".format(dis))
+            if not res:
+                return
+
+            if(long_offset is not None) and (short_offset is not None):
+                d2 = math.atan2(GS_CAMERA_VERTICAL_DIST, dis)
+                d1 = short_offset[1]
+
+                # _x, _y = bt.angle(center)
+                # _offset_yaw, _offset_pitch = -_x, _y
+                # dist_angle = math.atan2(GS_CAMERA_VERTICAL_DIST, dist)
+                # # ideal _y should be under middle line
+                # angle_offset = -_offset_pitch - dist_angle
+
+                self.loginfo("d1: {}, d2: {}, d3: {}".format(d1, d2, (-d1-d2)))
+                # cameras_offset = self.get_camreras_offset(
+                #     long_offset, short_offset)
+                # self.loginfo("Got offset. {}".format(cameras_offset))
+                # self.init_dict_and_update_job_time()
+                # self._job_data["time"] = time.time()
+                self._job_data["cameras_angle"] = d1-d2
+                self._job_data["measurement_time"] = time.time()
+            self.laser.reset()
 
 
 if __name__ == "__main__":
