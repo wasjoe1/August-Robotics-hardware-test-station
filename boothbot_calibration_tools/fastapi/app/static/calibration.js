@@ -80,11 +80,17 @@ function get_data(ws_json, first_key) {
                 data_content += key + ": " + ws_json[first_key]["INITIALIZE_SERVO"][key] + ", time :" + time_vis(ws_json[first_key]["INITIALIZE_SERVO"]["time"]) + "</br>"
             }
         }
-        for (const key in ws_json[first_key]["angle"]) {
+        for (const key in ws_json[first_key]["CAMERAS_ANGLE"]) {
             if (key != "time") {
-                data_content += key + ": " + ws_json[first_key]["angle"][key] + ", time :" + time_vis(ws_json[first_key]["angle"]["time"]) + "</br>"
+                data_content += key + ": " + ws_json[first_key]["CAMERAS_ANGLE"][key] + ", time :" + time_vis(ws_json[first_key]["CAMERAS_ANGLE"]["time"]) + "</br>"
             }
         }
+        // for (const key in ws_json[first_key]["angle"]) {
+        //     if (key != "time") {
+        //         data_content += key + ": " + ws_json[first_key]["angle"][key] + ", time :" + time_vis(ws_json[first_key]["angle"]["time"]) + "</br>"
+        //     }
+        // }
+
     }
     return data_content
 }

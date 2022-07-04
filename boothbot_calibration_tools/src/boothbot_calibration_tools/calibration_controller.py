@@ -88,9 +88,9 @@ JOB_DATA = {
     CS.INITIALIZE_SERVO.name: ["servo_h", "servo_v"],
     CS.CAMERA_SHARPNESS.name: ["long_sharpness_score", "long_sharpness_result", "long_color_data", "long_color_result",
                                "short_sharpness_score", "short_sharpness_result", "short_color_data", "short_color_result"],
-    CS.CAMERAS_ALIGNMENT.name: ["cameras_angle_offset"],
+    CS.CAMERAS_ALIGNMENT.name: ["cameras_offset"],
     CS.CAMERA_LASER_ALIGNMENT.name: ["camera_laser_alignment"],
-    CS.CAMERAS_ANGLE.name: [],
+    CS.CAMERAS_ANGLE.name: ["cameras_angle"],
     CS.VERTICAL_SERVO_ZERO.name: [],
     CS.IMU_CALIBRATION.name: [],
 }
@@ -98,7 +98,8 @@ JOB_DATA = {
 LONG = "long"
 SHORT = "short"
 COLOR = "BOG"
-TO = (1e-5, 1e-3)
+TOLERANCE = (1e-5, 5e-5)
+CAMERA_FILTER_COUNT = 3
 
 # class Camera(object):
 #     def __init__() :
@@ -302,6 +303,10 @@ class CalibrationController(ModuleBase):
                 self.cameras[k] = None
                 time.sleep(5)
 
+    def init_dict_and_update_job_time(self):
+        self._save_data[self._job.name] = {}
+        self._save_data[self._job.name].update({"time": time.time()})
+
     def save_data(self):
         self.loginfo("preparing data.")
         if self._job == CS.INITIALIZE_SERVO:
@@ -478,6 +483,9 @@ class CalibrationController(ModuleBase):
         else:
             self.camera_filter_count = 0
 
+    def track_done(self, cameras_offset):
+        return self.camera_filter_count > cameras_offset
+
     def _do_cameras_alignment(self):
         if self.sub_state == 0:
             self.cameras[LONG] = TrackingCamera(
@@ -493,31 +501,57 @@ class CalibrationController(ModuleBase):
             if self.servos.done:
                 self.track_target = (
                     self.job_setting[self._job.name]["default_h"], 0.0)
-                self.servos.move_to(self.track_target, (1e-5, 1e-4))
+                self.servo_move(self.track_target, TOLERANCE)
                 self.sub_state = 3
         elif self.sub_state == 3:
             if self.servos.done:
-                offset = self.track()
-                self.check_camera_filter(offset)
-                if self.camera_filter_count > 3:
+                long_res, long_offset = self.track_beacon()
+                if long_res:
                     self.sub_state = 4
                     return
-                self.loginfo(
-                    "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!the offset is {}".format(offset))
-                # for target in self.track_target:
-                #     target += offset
-                # self.track_target[0] + offset[0]
-                # self.track_target[1] + offset[1]
-                # self.servos.radians
-                self.track_target = (
-                    self.servos.radians[0] + offset[0], self.servos.radians[1] + offset[1])
-                self.loginfo(
-                    "!!!!!!!!!!!!!!!!!!!!!!!!target is {} now".format(self.track_target))
-                self.servos.move_to(self.track_target, (1e-5, 1e-4))
         #         self.sub_state = 4
         elif self.sub_state == 4:
             self.loginfo_throttle(
-                2, "long camera track done. short camera track")
+                2, "long camera track done. track with short camera track")
+            long_res, long_offset = self.track_beacon(LONG)
+            if not long_res:
+                self.loginfo(
+                    "long camera detected moved. return to substate 3")
+                self.sub_state = 3
+                return
+            self.loginfo("check short camera now")
+            short_res, short_offset = self.track_beacon(SHORT)
+            if(long_offset is not None) and (short_offset is not None):
+                cameras_offset = self.get_camreras_offset(long_offset, short_offset)
+                self.loginfo("Got offset. {}".format(cameras_offset))
+                # self.init_dict_and_update_job_time()
+                # self._job_data["time"] = time.time()
+                self._job_data["cameras_offset"] = cameras_offset
+
+    def get_camreras_offset(self,long_offset, short_offset):
+        return (long_offset[0]-short_offset[0])
+
+    def track_beacon(self, type=LONG):
+        offset = self.cameras_handle(type)
+        if offset is None:
+            return False, None
+        if type == LONG:
+            self.check_camera_filter(offset)
+        self.loginfo(
+            "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!the offset is {}".format(offset))
+        if self.track_done(1):
+            return True, offset
+        self.track_target = self.update_target(offset)
+        self.loginfo(
+            "!!!!!!!!!!!!!!!!!!!!!!!!target is {} now".format(self.track_target))
+        self.servos.move_to(self.track_target, TOLERANCE)
+        return False, offset
+
+    def update_target(self, offset):
+        return (self.servos.radians[0] + offset[0], self.servos.radians[1] + offset[1])
+
+    def servo_move(self, target, tolerances=TOLERANCE):
+        self.servos.move_to(target, tolerances)
 
     def _do_camera_laser_alignment(self):
         if self.sub_state == 0:
@@ -553,7 +587,7 @@ class CalibrationController(ModuleBase):
         angle = self.cameras[type].get_beacon_angle(beacon_res)
         return angle
 
-    def track(self, type=LONG):
+    def cameras_handle(self, type=LONG):
         if type != LONG:
             return self.get_camera_result(SHORT)
         else:
