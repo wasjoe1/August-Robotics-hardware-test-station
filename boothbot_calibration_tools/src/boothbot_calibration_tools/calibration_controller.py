@@ -28,7 +28,7 @@ from boothbot_perception.tracking_camera import TrackingCamera
 import json
 import socket
 
-from boothbot_common.module_base_py3 import ModuleBase
+from boothbot_common.module_base import ModuleBase
 
 from guiding_beacon_system.drivers.laser_driver import LaserRangeFinderGenerator, LaserRangeFinder
 
@@ -526,7 +526,7 @@ class CalibrationController(ModuleBase):
             time.sleep(20)
             self._sub_state = 1
         elif self.sub_state == 1:
-            self.laser.laser_on()        
+            self.laser.laser_on()
             frame = self.cameras[LONG].cap()
             print("Got long frame")
             # beacon_res = self.cameras[LONG].find_beacon(frame, 0.0, "BOG")
