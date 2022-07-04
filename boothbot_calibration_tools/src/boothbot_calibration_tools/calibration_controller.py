@@ -28,7 +28,7 @@ from boothbot_perception.tracking_camera import TrackingCamera
 import json
 import socket
 
-from boothbot_common.module_base import ModuleBase
+from boothbot_common.module_base_py3 import ModuleBase
 
 from guiding_beacon_system.drivers.laser_driver import LaserRangeFinderGenerator, LaserRangeFinder
 
