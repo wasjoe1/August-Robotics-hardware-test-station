@@ -135,6 +135,8 @@ async def step(request: Request, mode: str):
     with grpc.insecure_channel('0.0.0.0:50052') as channel:
         stub = data_pb2_grpc.data_ServiceStub(channel)
         response = stub.GetMsg(data_pb2.dataRequest(request_data=grpc_data))
+    app.long_img = ""
+    app.short_img = ""
     logger.info("Client received: " + response.response_data)
     return templates.TemplateResponse("index.html", {"request": request, "just_do": just_do})
 

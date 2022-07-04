@@ -88,7 +88,7 @@ JOB_DATA = {
     CS.INITIALIZE_SERVO.name: ["servo_h", "servo_v"],
     CS.CAMERA_SHARPNESS.name: ["long_sharpness_score", "long_sharpness_result", "long_color_data", "long_color_result",
                                "short_sharpness_score", "short_sharpness_result", "short_color_data", "short_color_result"],
-    CS.CAMERAS_ALIGNMENT.name: ["cameras_offset"],
+    CS.CAMERAS_ALIGNMENT.name: ["cameras_offset","measurement_time"],
     CS.CAMERA_LASER_ALIGNMENT.name: ["camera_laser_alignment"],
     CS.CAMERAS_ANGLE.name: ["cameras_angle"],
     CS.VERTICAL_SERVO_ZERO.name: [],
@@ -154,6 +154,8 @@ class CalibrationController(ModuleBase):
         self.json_file = ""
         self.last_json_file = ""
 
+        self.run_flag = False
+
         # state
         self.sub_state = 0
 
@@ -163,6 +165,7 @@ class CalibrationController(ModuleBase):
         # cameras
         self.cameras = {LONG: None, SHORT: None}
         self.cameras_frame = {LONG: None, SHORT: None}
+        self.client_status = {"servos": None, "cameras": None}
 
         self.job_setting = {
             CS.INITIALIZE_SERVO.name: {},
@@ -182,6 +185,9 @@ class CalibrationController(ModuleBase):
             for k, v in self._job_data.items():
                 if k in JOB_DATA[self._job.name]:
                     self._data["data"]["job_data"][k] = v
+            self._data["data"]["client_status"] = {}
+            self._data["data"]["client_status"].update(
+                self.client_status)
             self._data["data"]["save_data"] = self._save_data
             self._data["data"]["done"] = self._done_list
 
@@ -208,15 +214,19 @@ class CalibrationController(ModuleBase):
         self.reset_camera()
         self.servos.reset()
         self.laser.reset()
+        self.run_flag = False
+        self.clear_data()
         self.to_IDLE()
         return True
 
     def on_IDLE(self):
+        self.update_client_status()
         self.pub_data()
         if self.is_job():
             self.to_RUNNING()
 
     def on_RUNNING(self):
+        self.update_client_status()
         self.pub_data()
         if self._job == CS.INITIALIZE_SERVO:
             self._do_initialize_servo()
@@ -301,7 +311,21 @@ class CalibrationController(ModuleBase):
             if self.cameras[k] is not None:
                 self.cameras[k].shutdown()
                 self.cameras[k] = None
-                time.sleep(5)
+                time.sleep(0.1)
+
+    def update_client_status(self):
+        if self.servos.is_ready():
+            self.client_status["servos"] = "OK"
+        else:
+            self.client_status["servos"] = "not ready"
+
+        if self.cameras_idle():
+            self.client_status["cameras"] = "OK"
+        else:
+            self.client_status["cameras"] = "not ready"
+
+    def clear_data(self):
+        self._job_data = {}
 
     def init_dict_and_update_job_time(self):
         self._save_data[self._job.name] = {}
@@ -322,6 +346,8 @@ class CalibrationController(ModuleBase):
     def run_job(self):
         if self._job == CS.INITIALIZE_SERVO:
             self.job_init_servo_replace_setting()
+        else:
+            self.run_flag = True
         # elif self._job
 
     def job_done(self):
@@ -438,6 +464,18 @@ class CalibrationController(ModuleBase):
     def _do_initialize_servo(self):
         pass
 
+    def cameras_idle(self):
+        if self._job == CS.CAMERA_LASER_ALIGNMENT:
+            if self.cameras[LONG] is None:
+                return False
+            else:
+                return self.cameras[LONG].is_camera_idle()
+        else:
+            if (self.cameras[LONG] is None) or (self.cameras[SHORT] is None):
+                return False
+            else:
+                return self.cameras[LONG].is_camera_idle() and self.cameras[SHORT].is_camera_idle()
+
     def _do_sharpness(self):
         camera_type = self.job_setting[CS.CAMERA_SHARPNESS.name]['camera']
         if self.sub_state == 0:
@@ -445,9 +483,12 @@ class CalibrationController(ModuleBase):
                 "/dev/camera_long", laser_dist=40)
             self.cameras[SHORT] = TrackingCamera(
                 "/dev/camera_short", laser_dist=5)
-            time.sleep(20)
             self._sub_state = 1
-        if self.sub_state == 1:
+        elif self.sub_state == 1:
+            if not self.cameras_idle():
+                return
+            if not self.run_flag:
+                return
             self.get_sharpness_result(camera_type)
 
         # RB 4m for short, RB 40 for long
@@ -492,9 +533,12 @@ class CalibrationController(ModuleBase):
                 "/dev/camera_long", laser_dist=10)
             self.cameras[SHORT] = TrackingCamera(
                 "/dev/camera_short", laser_dist=10)
-            time.sleep(20)
             self._sub_state = 1
         elif self.sub_state == 1:
+            if not self.cameras_idle():
+                return
+            if not self.run_flag:
+                return
             self.laser.laser_on()
             self.sub_state = 2
         elif self.sub_state == 2:
@@ -522,13 +566,15 @@ class CalibrationController(ModuleBase):
             self.loginfo("check short camera now")
             short_res, short_offset = self.track_beacon(SHORT)
             if(long_offset is not None) and (short_offset is not None):
-                cameras_offset = self.get_camreras_offset(long_offset, short_offset)
+                cameras_offset = self.get_camreras_offset(
+                    long_offset, short_offset)
                 self.loginfo("Got offset. {}".format(cameras_offset))
                 # self.init_dict_and_update_job_time()
                 # self._job_data["time"] = time.time()
                 self._job_data["cameras_offset"] = cameras_offset
+                self._job_data["measurement_time"] = time.time()
 
-    def get_camreras_offset(self,long_offset, short_offset):
+    def get_camreras_offset(self, long_offset, short_offset):
         return (long_offset[0]-short_offset[0])
 
     def track_beacon(self, type=LONG):
@@ -557,9 +603,12 @@ class CalibrationController(ModuleBase):
         if self.sub_state == 0:
             self.cameras[LONG] = TrackingCamera(
                 "/dev/camera_long", laser_dist=49)
-            time.sleep(20)
             self._sub_state = 1
         elif self.sub_state == 1:
+            if not self.cameras_idle():
+                return
+            if not self.run_flag:
+                return
             self.laser.laser_on()
             frame = self.cameras[LONG].cap()
             print("Got long frame")
