@@ -76,31 +76,48 @@ function get_data(ws_json, first_key) {
     data_content = ""
         // console.log(typeof(ws_json[first_key]))
     if ((ws_json[first_key] !== undefined)) {
-        for (const key in ws_json[first_key]["CAMERA_SHARPNESS"]) {
-            if (key != "time") {
-                data_content += key + ": " + ws_json[first_key]["CAMERA_SHARPNESS"][key] + ", time :" + time_vis(ws_json[first_key]["CAMERA_SHARPNESS"]["time"]) + "</br>"
-            }
-        }
-        for (const key in ws_json[first_key]["INITIALIZE_SERVO"]) {
-            if (key != "time") {
-                data_content += key + ": " + ws_json[first_key]["INITIALIZE_SERVO"][key] + ", time :" + time_vis(ws_json[first_key]["INITIALIZE_SERVO"]["time"]) + "</br>"
-            }
-        }
-        for (const key in ws_json[first_key]["CAMERAS_ALIGNMENT"]) {
-            if (key != "time") {
-                data_content += key + ": " + ws_json[first_key]["CAMERAS_ALIGNMENT"][key] + ", time :" + time_vis(ws_json[first_key]["CAMERAS_ALIGNMENT"]["measurement_time"]) + "</br>"
-            }
-        }
-        // for (const key in ws_json[first_key]["angle"]) {
-        //     if (key != "time") {
-        //         data_content += key + ": " + ws_json[first_key]["angle"][key] + ", time :" + time_vis(ws_json[first_key]["angle"]["time"]) + "</br>"
-        //     }
-        // }
-
+        data_content = get_function_data(first_key, "INITIALIZE_SERVO") +
+            get_function_data(first_key, "CAMERAS_ANGLE") +
+            get_function_data(first_key, "VERTICAL_SERVO_ZERO")
+            // console.log(data_content)
+            // for (const key in ws_json[first_key]["CAMERA_SHARPNESS"]) {
+            //     if (key != "time") {
+            //         data_content += key + ": " + ws_json[first_key]["CAMERA_SHARPNESS"][key] + ", time :" + time_vis(ws_json[first_key]["CAMERA_SHARPNESS"]["measurement_time"]) + "</br>"
+            //     }
+            // }
+            // for (const key in ws_json[first_key]["INITIALIZE_SERVO"]) {
+            //     if (key != "time") {
+            //         data_content += key + ": " + ws_json[first_key]["INITIALIZE_SERVO"][key] + ", time :" + time_vis(ws_json[first_key]["INITIALIZE_SERVO"]["measurement_time"]) + "</br>"
+            //     }
+            // }
+            // for (const key in ws_json[first_key]["CAMERAS_ALIGNMENT"]) {
+            //     if (key != "time") {
+            //         data_content += key + ": " + ws_json[first_key]["CAMERAS_ALIGNMENT"][key] + ", time :" + time_vis(ws_json[first_key]["CAMERAS_ALIGNMENT"]["measurement_time"]) + "</br>"
+            //     }
+            // }
+            // for (const key in ws_json[first_key]["angle"]) {
+            //     if (key != "time") {
+            //         data_content += key + ": " + ws_json[first_key]["angle"][key] + ", time :" + time_vis(ws_json[first_key]["angle"]["time"]) + "</br>"
+            //     }
+            // }
     }
     return data_content
 }
 
+function get_function_data(first_key, title) {
+    html_data = ""
+        // console.log(Object.keys(ws_json[first_key][title]).length)
+    if (ws_json[first_key][title] !== undefined) {
+        for (const key in ws_json[first_key][title]) {
+            if (key != "measurement_time") {
+                html_data += key + ": " + ws_json[first_key][title][key] + ", time :" + time_vis(ws_json[first_key][title]["measurement_time"]) + "</br>"
+            }
+        }
+        return html_data
+    } else {
+        return ""
+    }
+}
 
 const long_img_socket = new WebSocket("ws://" + ip_addr + "/long_img_ws")
 long_img_socket.addEventListener('open', function(event) {
