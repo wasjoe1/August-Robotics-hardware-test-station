@@ -705,7 +705,7 @@ class CalibrationController(ModuleBase):
                 # self.loginfo("Got offset. {}".format(cameras_offset))
                 # self.init_dict_and_update_job_time()
                 # self._job_data["time"] = time.time()
-                self._job_data["cameras_angle"] = d1-d2
+                self._job_data["cameras_angle"] = -d1-d2
                 self._job_data["measurement_time"] = time.time()
             self.laser.reset()
 
