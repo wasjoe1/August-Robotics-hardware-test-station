@@ -174,16 +174,16 @@ function command(cmd) {
 
 function download() {
     var pom = document.createElement('a');
-    pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(JSON.stringify(ws_json)));
+    pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(JSON.stringify(ws_json["save_data"])));
 
     console.log("download")
         // hostname = get_ws("localhost", "ws_hostname")
-    console.log(hostname)
-    console.log(JSON.stringify(ws_json))
+        // console.log(hostname)
+        // console.log(JSON.stringify(ws_json))
     var myDate = new Date()
     console.log(myDate.getDate())
 
-    filename = hostname['hostname'] + "_" + myDate.getFullYear() + "_" + myDate.getMonth() + "_" + myDate.getDate() + ".json"
+    filename = ip_addr + "_" + myDate.getFullYear() + "_" + myDate.getMonth() + "_" + myDate.getDate() + ".json"
 
     pom.setAttribute('download', filename);
 

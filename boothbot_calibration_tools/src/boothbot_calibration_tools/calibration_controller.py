@@ -98,6 +98,16 @@ JOB_DATA = {
     CS.IMU_CALIBRATION.name: [],
 }
 
+SAVE_DATA_TITLE = {
+    CS.INITIALIZE_SERVO.name: ["servo_h", "servo_v", "measurement_time"],
+    CS.CAMERA_SHARPNESS.name: [],
+    CS.CAMERAS_ALIGNMENT.name: [],
+    CS.CAMERA_LASER_ALIGNMENT.name: [],
+    CS.CAMERAS_ANGLE.name: ["cameras_angle", "measurement_time"],
+    CS.VERTICAL_SERVO_ZERO.name: ["vertical_offset", "measurement_time"],
+    CS.IMU_CALIBRATION.name: [],
+}
+
 LONG = "long"
 SHORT = "short"
 COLOR = "BOG"
@@ -342,7 +352,7 @@ class CalibrationController(ModuleBase):
         self._user_gui_save_data[self._job.name] = {}
         self._save_data[self._job.name] = {}
         for k, v in self._job_data.items():
-            if k in JOB_DATA[self._job.name]:
+            if k in SAVE_DATA_TITLE[self._job.name]:
                 self._save_data[self._job.name].update({k: v})
                 self._user_gui_save_data[self._job.name].update({k: v})
         self.save_json()
