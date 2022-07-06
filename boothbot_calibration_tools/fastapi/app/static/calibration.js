@@ -183,6 +183,7 @@ function download() {
     pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(JSON.stringify(ws_json["save_data"])));
 
     console.log("download")
+    console.log(ws_json["save_data"])
         // hostname = get_ws("localhost", "ws_hostname")
         // console.log(hostname)
         // console.log(JSON.stringify(ws_json))

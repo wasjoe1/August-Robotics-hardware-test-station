@@ -21,6 +21,7 @@ class CalibrationCommand(Enum):
     RUN = 6
     SAVE = 7
     DONE = 8
+    TEST_TRACK=9
 
 
     INITIALIZE_SERVO = 20
