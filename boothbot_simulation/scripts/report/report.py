@@ -135,6 +135,7 @@ class Report(PyLogging):
     ### arrival of the GOTOMARK_START_TIME data.
     def on_enter_PRE_GOTOMARK(self):
         self.add_data = self._add_data_PRE_GOTOMARK
+        self.guiding_station_map["TEMP"] = GuidingStationSetup()
 
     def _add_data_PRE_GOTOMARK(self, code, data):
         is_data_consumed = False
@@ -154,7 +155,7 @@ class Report(PyLogging):
     def on_enter_GOTOMARK_EXEC(self):
         self.add_data = self._add_data_GOTOMARK_EXEC
         self.localization_list.append(LocalizationAttempt())
-        self.guiding_station_map["TEMP"] = GuidingStationSetup()
+        # self.guiding_station_map["TEMP"] = GuidingStationSetup()
         self.error_list.append(ErrorMessage())
         self.navigation_list.append(NavigationGoal())
         self.marking_list.append(MarkingGoal())
@@ -206,9 +207,6 @@ class Report(PyLogging):
             self.logerr(self.UNEXPECTED_DATA_MSG.format(self.state.name, code, data))
         elif locAttempt.is_complete():
             self.localization_list.append(LocalizationAttempt())
-        elif gsTemp.is_complete():
-            self.guiding_station_map[gsTemp.id] = gsTemp
-            self.guiding_station_map["TEMP"] = GuidingStationSetup()
         elif errMsg.is_complete():
             self.error_list.append(ErrorMessage())
         elif navGoal.is_complete():
@@ -217,6 +215,9 @@ class Report(PyLogging):
             self.marking_list.append(MarkingGoal())
         elif self.gotomark.is_complete():
             self.to_POST_GOTOMARK()
+        elif gsTemp.is_complete():
+            self.guiding_station_map[gsTemp.id] = gsTemp
+            self.guiding_station_map["TEMP"] = GuidingStationSetup()
 
         return is_data_consumed
 
@@ -329,7 +330,8 @@ class Report(PyLogging):
     @property
     def total_success_loc_duration(self):
         try:
-            return sum([x for x in map(lambda n: n.successful_duration, self.localization_list) if isinstance(x,float)])
+            # return sum([x for x in map(lambda n: n.successful_duration, self.localization_list) if isinstance(x,float)])
+            return sum([x.successful_duration for x in self.localization_list if isinstance(x.successful_duration,float)])
         except Exception as e:
             print(e)
             return
@@ -555,7 +557,7 @@ class LocalizationAttempt:
         if code == DataCode.LOC_GOAL_START_TIME:
             self.start_time = data
             is_data_consumed = True
-            self.reset_params
+            self.reset_params()
         elif code == DataCode.LOC_GOAL_DETECTED_POSE:
             if self.start_pose is None:
                 self.start_pose = data
@@ -564,6 +566,8 @@ class LocalizationAttempt:
             is_data_consumed = True
         elif code == DataCode.LOC_GOAL_SUCCEEDED:
             self.success_flag = data
+            if data == False:
+                self.end_time = self.start_time
             is_data_consumed = True
         elif code == DataCode.LOC_GOAL_END_TIME:
             self.end_time = data
