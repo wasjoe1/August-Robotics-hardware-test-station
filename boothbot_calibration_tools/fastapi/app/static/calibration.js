@@ -2,6 +2,16 @@ var ws_json
 var hostname
 var ip_addr = document.location.hostname
 
+var INITIALIZE_SERVO = "INITIALIZE_SERVO"
+var CAMERA_SHARPNESS = "CAMERA_SHARPNESS"
+var CAMERA_LASER_ALIGNMENT = "CAMERA_LASER_ALIGNMENT"
+var CAMERAS_ALIGNMENT = "CAMERAS_ALIGNMENT"
+var CAMERAS_ANGLE = "CAMERAS_ANGLE"
+var VERTICAL_SERVO_ZERO = "VERTICAL_SERVO_ZERO"
+var IMU_CALIBRATION = "IMU_CALIBRATION"
+
+display_servos_laser_button = [INITIALIZE_SERVO, CAMERA_SHARPNESS, CAMERA_LASER_ALIGNMENT]
+
 function get_ws(ip, route, data) {
     const ws = new WebSocket("ws://" + ip_addr + "/" + route)
     ws.addEventListener('open', function(event) {
@@ -68,39 +78,68 @@ data_socket.onmessage = function(evt) {
     set_button()
 
     // modify button style
-    for (const key in ws_json["done"]) {
-        get_id(key).setAttribute("class", 'btn btn-info');
-    }
+
 
 }
 
 function set_button() {
     // console.log(step)
-    // let elements = document.getElementsByClassName('camera_select');
-    long = get_id("camera_select_long")
-    short = get_id("camera_select_short")
-    if (ws_json["step"] !== "CAMERA_SHARPNESS") {
-        long.classList.add("disabled")
-        short.classList.add("disabled")
-    } else {
-        long.classList.remove("disabled")
-        short.classList.remove("disabled")
-    }
-
-    if (step == "INITIALIZE_SERVO") {
-        if (ws_json["client_status"]["servos"]) {
-
+    [...document.getElementsByClassName("cameras")].forEach(
+        (element, index, array) => {
+            if (ws_json["step"] == "CAMERA_SHARPNESS") {
+                element.style.display = "block"
+            } else {
+                element.style.display = "none"
+            }
         }
+    );
+    [...document.getElementsByClassName("servos_laser_operate")].forEach(
+        (element, index, array) => {
+            if (display_servos_laser_button.includes(ws_json["step"])) {
+                element.classList.remove("disabled")
+            } else {
+                element.classList.add("disabled")
+            }
+        }
+    );
+
+
+    if (ws_json["step"] == INITIALIZE_SERVO) {
+        get_id("run_button").innerText = "保存文件到设备配置"
+        get_id("done_button").innerText = "完成并重启程序"
     }
+
+
+
+    for (const key in ws_json["done"]) {
+        get_id(key).setAttribute("class", 'btn btn-info');
+    }
+
+    // let elements = document.getElementsByClassName('cameras');
+    // long = get_id("camera_select_long")
+    // short = get_id("camera_select_short")
+    // if (ws_json["step"] !== "CAMERA_SHARPNESS") {
+    //     long.classList.add("disabled")
+    //     short.classList.add("disabled")
+    // } else {
+    //     long.classList.remove("disabled")
+    //     short.classList.remove("disabled")
+    // }
+
+    // if (step == "INITIALIZE_SERVO") {
+    //     if (ws_json["client_status"]["servos"]) {
+
+    //     }
+    // }
 }
 
 function get_data(ws_json, first_key) {
     data_content = ""
         // console.log(typeof(ws_json[first_key]))
     if ((ws_json[first_key] !== undefined)) {
-        data_content = get_function_data(first_key, "INITIALIZE_SERVO") +
-            get_function_data(first_key, "CAMERAS_ANGLE") +
-            get_function_data(first_key, "VERTICAL_SERVO_ZERO")
+        data_content = get_function_data(first_key, INITIALIZE_SERVO) +
+            get_function_data(first_key, CAMERAS_ANGLE) +
+            get_function_data(first_key, VERTICAL_SERVO_ZERO)
     }
     return data_content
 }

@@ -356,6 +356,8 @@ class CalibrationController(ModuleBase):
         self._save_data = {}
         self._user_gui_save_data[self._job.name] = {}
         self._save_data[self._job.name] = {}
+        if self._job.name == CS.INITIALIZE_SERVO.name:
+            self.set_job_current_time()
         for k, v in self._job_data.items():
             if k in SAVE_DATA_TITLE[self._job.name]:
                 self._save_data[self._job.name].update({k: v})
@@ -384,7 +386,7 @@ class CalibrationController(ModuleBase):
     # callback function
     def servo_pdo_cb(self, msg):
         # update servo data
-        self.set_job_current_time()
+        # self.set_job_current_time()
         self._job_data["servo_h"] = msg.encodings_origin[0]
         self._job_data["servo_v"] = msg.encodings_origin[1]
 
