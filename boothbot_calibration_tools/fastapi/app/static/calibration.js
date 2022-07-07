@@ -93,15 +93,15 @@ function set_button() {
             }
         }
     );
-    [...document.getElementsByClassName("servos_laser_operate")].forEach(
-        (element, index, array) => {
-            if (display_servos_laser_button.includes(ws_json["step"])) {
-                element.classList.remove("disabled")
-            } else {
-                element.classList.add("disabled")
-            }
-        }
-    );
+    // [...document.getElementsByClassName("servos_laser_operate")].forEach(
+    //     (element, index, array) => {
+    //         if (display_servos_laser_button.includes(ws_json["step"])) {
+    //             element.classList.remove("disabled")
+    //         } else {
+    //             element.classList.add("disabled")
+    //         }
+    //     }
+    // );
 
 
     if (ws_json["step"] == INITIALIZE_SERVO) {
