@@ -10,6 +10,7 @@ import rospy
 import math
 import rospy as logger
 import numpy as np
+import cv2
 
 from boothbot_common.ros_logger_wrap import ROSLogging as Logging
 
@@ -110,7 +111,7 @@ SAVE_DATA_TITLE = {
 
 LONG = "long"
 SHORT = "short"
-COLOR = "ROG"
+COLOR = "GREEN"
 TOLERANCE = (1e-5, 5e-5)
 CAMERA_FILTER_COUNT = 3
 
@@ -217,7 +218,7 @@ class CalibrationController(ModuleBase):
             if img_res is not None:
                 self.loginfo("pub {} img ".format(k))
                 self.puber_data.publish(img_res)
-            rospy.sleep(0.05)
+            rospy.sleep(0.02)
         self.reset_image_flag()
 
         self.update_data()
@@ -401,6 +402,7 @@ class CalibrationController(ModuleBase):
     # image handler for get image data from rostopic
     def img2textfromcv2(self, frame):
         # From BGR to RGB
+        frame = cv2.resize(frame,None,fx=0.25,fy=0.25,interpolation=cv2.INTER_LINEAR)
         im = frame[:, :, ::-1]
         im = Image.fromarray(im)
         buf = BytesIO()
@@ -788,5 +790,5 @@ class CalibrationController(ModuleBase):
 
 if __name__ == "__main__":
     rospy.init_node("calibration_controller")
-    c = CalibrationController("calibration_controller", 10)
+    c = CalibrationController("calibration_controller", 4)
     c.run()
