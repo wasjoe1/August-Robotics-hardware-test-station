@@ -116,7 +116,9 @@ CAMERA_FILTER_COUNT = 3
 
 
 class CalibrationController(ModuleBase):
-    def __init__(self, name, rate, states=None, transitions=None, commands=None, status_inf=None, srv_cmd_inf=None, need_robot_status=False, error_codes=None):
+    def __init__(self,
+                 name, rate, states=None, transitions=None, commands=None, status_inf=None, srv_cmd_inf=None, need_robot_status=False, error_codes=None,
+                 laser=None):
         super(CalibrationController, self).__init__(
             name=name,
             rate=rate,
@@ -149,15 +151,12 @@ class CalibrationController(ModuleBase):
 
         self._done_list = {}
 
-        # self.send_image = False
-        self.long_camera_img_data = None
-        self.short_camera_img_data = None
-
         # driver
         self.camera_long = None
         self.camera_short = None
         self.servos = ServosClient()
-        self.laser = LaserRangeFinderGenerator.detect_laser_range_finder()
+        # self.laser = LaserRangeFinderGenerator.detect_laser_range_finder()
+        self.laser = laser
 
         # config yaml
         self.config_dir = CONFIG_PATH + "/calibration_data"
@@ -585,14 +584,8 @@ class CalibrationController(ModuleBase):
                 cameras_offset = self.get_camreras_offset(
                     long_offset, short_offset)
                 self.loginfo("Got offset. {}".format(cameras_offset))
-                # self.init_dict_and_update_job_time()
-                # self._job_data["time"] = time.time()
                 self.set_job_current_time()
                 self._job_data["cameras_offset"] = cameras_offset
-        #         self.sub_state = 4
-        # elif self.sub_state == 4:
-        #     # self.loginfo("")
-        #     pass
 
     def get_camreras_offset(self, long_offset, short_offset):
         return (long_offset[0]-short_offset[0])
