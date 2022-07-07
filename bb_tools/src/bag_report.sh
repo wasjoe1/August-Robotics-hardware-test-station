@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 #############################################
 #
@@ -9,13 +9,18 @@
 #
 #############################################
 
-# set -o xtrace 
+# set -o xtrace
 
 BASE_NAME=$(basename $0)
 
+if [ -z ${HOME+x} ]; then
+    HOME="/home/$USER"
+fi
+
 usage() {
-    echo -e "Usage: ${BASE_NAME} [-h] [-r/k] [-t/d]"
+    echo -e "Usage: ${BASE_NAME} [-h] [-v] [-r/k] [-t/d]"
     echo -e "-h\t show this Help message"
+    echo -e "-v\t Verbose output, equiv. to 'set -x'"
     echo -e "-r\t start rosbag Recording immediately"
     echo -e "-k\t sKip rosbag recording"
     echo -e "-t\t Tar the logs to home folder only"
@@ -23,15 +28,15 @@ usage() {
     # echo -e "WARNING: use these shortcuts with care"
 }
 
-while getopts ":rktdh" opt; do
+while getopts ":rktdhv" opt; do
   case ${opt} in
-    r ) 
+    r )
         if [ ! -z ${START_RECORDING+x} ]; then
             echo -e "Options -r and -k is mutually exclusive" >&2
             usage && exit 1
         fi
         START_RECORDING=0;;
-    k ) 
+    k )
         if [ ! -z ${START_RECORDING+x} ]; then
             echo -e "Options -r and -k is mutually exclusive" >&2
             usage && exit 1
@@ -43,12 +48,13 @@ while getopts ":rktdh" opt; do
             usage && exit 1
         fi
         TAR_LOGS=0;TRASH_ROS_FOLDER=1;;
-    d ) 
+    d )
         if [ ! -z ${TAR_LOGS+x} ]; then
             echo -e "Options -t and -d is mutually exclusive" >&2
             usage && exit 1
         fi
         TAR_LOGS=0;TRASH_ROS_FOLDER=0;;
+    v    ) set -o xtrace;;
     [h?] ) usage && exit;;
   esac
 done
@@ -70,7 +76,7 @@ if ! hash whiptail; then
 fi
 
 # Find device name from yaml or use the default "LIONEL"
-DEVICE_NAME=$(cat ~/catkin_ws/src/boothbot/common/scripts/common/device_name.yaml 2>/dev/null | grep -oE "\b[A-Za-z0-9]{1,}-[A-Za-z0-9]{1,}-[A-Za-z0-9]{1,}-[0-9]{1,}\b") 
+DEVICE_NAME=$(cat ~/catkin_ws/src/boothbot/common/scripts/common/device_name.yaml 2>/dev/null | grep -oE "\b[A-Za-z0-9]{1,}-[A-Za-z0-9]{1,}-[A-Za-z0-9]{1,}-[0-9]{1,}\b")
 DEVICE_NAME=${DEVICE_NAME:-LIONEL}
 
 # Prompt if user wants to start recording
@@ -105,15 +111,31 @@ if [ $? -eq 0 ]; then
     exit 1
 fi
 
+# Also dump the django database for reference
+# TEMP_DB_DUMP=$(mktemp /tmp/dbdump.XXXXX)
+# pushd ~/catkin_ws/src/boothbot/backoffice
+# ./manage.py dumpdata --indent 2 > $TEMP_DB_DUMP
+# popd
+
 # Prompt if user wants to packup the logs
 if [ -z ${TAR_LOGS+x} ]; then
-    whiptail --yesno "Rosbag is now *stopped*.\nDo you want me to pack all the logs?" 10 78 --defaultno --title "${TUI_TITLE}"
+    whiptail --yesno "Rosbag is now *stopped*.\nDo you want me to pack all the logs?\nIf you want to delete ~/.ros, tar(pack) first" 11 78 --defaultno --title "${TUI_TITLE}"
     TAR_LOGS=$?
 fi
 
 if [ ${TAR_LOGS} -eq 0 ]; then
-    TAR_NAME="boothbot-log_${DEVICE_NAME}_$(date '+%Y%m%d.%H%M%S').tar.gz"
-    tar --ignore-failed-read -czf ~/${TAR_NAME} /var/log/syslog.* /var/log/boothbot-backoffice/ ~/.ros/ 2>${TEMP_LOG}
+    FREE_SPACE=$(df -Pk ~ | tail -1 | awk '{print $4}')
+    ROS_DIR_SIZE=$(du -sk $HOME/.ros | cut -f1)
+    if [ ${FREE_SPACE:-0} -lt ${ROS_DIR_SIZE:-0} ]; then
+        echo "Low on avalible disk space! Avail:${FREE_SPACE}K, ~/.ros:${ROS_DIR_SIZE}K"
+        echo "Cleanup ~/.ros and revisit this script"
+        exit 1;
+    fi
+    TAR_NAME="boothbot-log_${DEVICE_NAME}_$(date '+%Y%m%d.%H%M%S').tar"
+    tar --ignore-failed-read -cvf ~/${TAR_NAME} /var/log/syslog.* /var/log/boothbot-backoffice/ ~/.ros/ 2>${TEMP_LOG}
+    if [ $? -ne 0 ]; then
+        echo "Logs & bags packing failed, abort."; exit 1
+    fi
     echo "Output tar file is at ~/${TAR_NAME}"
 else
     if [ ${TRASH_ROS_FOLDER:-1} -eq 0 ]; then
@@ -124,16 +146,16 @@ fi
 
 # Prompt if user wants to cleanup
 if [ -z ${TRASH_ROS_FOLDER+x} ]; then
-    whiptail --yesno "Do you want me to trash EVERYTHING in ~/.ros?" 10 78 --defaultno --title "${TUI_TITLE}"
+    whiptail --yesno "Do you want me to delete EVERYTHING in ~/.ros?\nThis is NOT reversible!" 11 78 --defaultno --title "${TUI_TITLE}"
     TRASH_ROS_FOLDER=$?
 fi
 
 if [ ${TRASH_ROS_FOLDER} -eq 0 ]; then
-    cd ${HOME} && gio trash ~/.ros/*
-    [ $? -eq 0 ] && echo -e "Cleanup successful! If you want to recue the logs, you may find it from the trash."
+    LATEST_DIR="$(readlink -f $HOME/.ros/log/latest)"
+    find $HOME/.ros/log/ -mindepth 1 -type d -not -name "$(basename $LATEST_DIR)" -exec rm -rf {} +
+    find $HOME/.ros/log/ -mindepth 1 -maxdepth 1 -type f -delete
+    find $HOME/.ros/ -mindepth 1 -maxdepth 1 -not -name "log" -exec rm -rf {} +
+    echo -e "Cleanup finished! All except the latest logs are gone."
 fi
 
 echo "Script completed successfully."
-
-# Future use: dump the django database
-# ./manage.py dumpdata --indent 2 > db.json
