@@ -81,7 +81,7 @@ class DataService(data_pb2_grpc.data_ServiceServicer):
                 app.short_camera_time = v["time"]
                 app.short_img = json.dumps(v)
             elif k == "data":
-                logger.info(v)
+                # logger.info(v)
                 # data = v
                 # app.data = json.loads(v)
                 app.data = v

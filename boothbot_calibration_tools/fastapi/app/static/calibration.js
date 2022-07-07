@@ -65,6 +65,8 @@ data_socket.onmessage = function(evt) {
     var ele_client_status = get_id("client_status")
     ele_client_status.innerHTML = "电机: " + ws_json["client_status"]["servos"] + ", " + "相机：" + ws_json["client_status"]["cameras"] + "</br>"
 
+    set_button()
+
     // modify button style
     for (const key in ws_json["done"]) {
         get_id(key).setAttribute("class", 'btn btn-info');
@@ -72,35 +74,51 @@ data_socket.onmessage = function(evt) {
 
 }
 
+function set_button() {
+    // console.log(step)
+    // let elements = document.getElementsByClassName('camera_select');
+    long = get_id("camera_select_long")
+    short = get_id("camera_select_short")
+    if (ws_json["step"] !== "CAMERA_SHARPNESS") {
+        long.classList.add("disabled")
+        short.classList.add("disabled")
+    } else {
+        long.classList.remove("disabled")
+        short.classList.remove("disabled")
+    }
+
+    if (step == "INITIALIZE_SERVO") {
+        if (ws_json["client_status"]["servos"]) {
+
+        }
+    }
+}
+
 function get_data(ws_json, first_key) {
     data_content = ""
         // console.log(typeof(ws_json[first_key]))
     if ((ws_json[first_key] !== undefined)) {
-        for (const key in ws_json[first_key]["CAMERA_SHARPNESS"]) {
-            if (key != "time") {
-                data_content += key + ": " + ws_json[first_key]["CAMERA_SHARPNESS"][key] + ", time :" + time_vis(ws_json[first_key]["CAMERA_SHARPNESS"]["time"]) + "</br>"
-            }
-        }
-        for (const key in ws_json[first_key]["INITIALIZE_SERVO"]) {
-            if (key != "time") {
-                data_content += key + ": " + ws_json[first_key]["INITIALIZE_SERVO"][key] + ", time :" + time_vis(ws_json[first_key]["INITIALIZE_SERVO"]["time"]) + "</br>"
-            }
-        }
-        for (const key in ws_json[first_key]["CAMERAS_ALIGNMENT"]) {
-            if (key != "time") {
-                data_content += key + ": " + ws_json[first_key]["CAMERAS_ALIGNMENT"][key] + ", time :" + time_vis(ws_json[first_key]["CAMERAS_ALIGNMENT"]["measurement_time"]) + "</br>"
-            }
-        }
-        // for (const key in ws_json[first_key]["angle"]) {
-        //     if (key != "time") {
-        //         data_content += key + ": " + ws_json[first_key]["angle"][key] + ", time :" + time_vis(ws_json[first_key]["angle"]["time"]) + "</br>"
-        //     }
-        // }
-
+        data_content = get_function_data(first_key, "INITIALIZE_SERVO") +
+            get_function_data(first_key, "CAMERAS_ANGLE") +
+            get_function_data(first_key, "VERTICAL_SERVO_ZERO")
     }
     return data_content
 }
 
+function get_function_data(first_key, title) {
+    html_data = ""
+        // console.log(Object.keys(ws_json[first_key][title]).length)
+    if (ws_json[first_key][title] !== undefined) {
+        for (const key in ws_json[first_key][title]) {
+            if (key != "measurement_time") {
+                html_data += key + ": " + ws_json[first_key][title][key] + ", time :" + time_vis(ws_json[first_key][title]["measurement_time"]) + "</br>"
+            }
+        }
+        return html_data
+    } else {
+        return ""
+    }
+}
 
 const long_img_socket = new WebSocket("ws://" + ip_addr + "/long_img_ws")
 long_img_socket.addEventListener('open', function(event) {
@@ -109,9 +127,12 @@ long_img_socket.addEventListener('open', function(event) {
 
 long_img_socket.onmessage = function(evt) {
     // convert data to json
-    ws_json = eval('(' + evt.data + ')')
-    get_id("img1").src = "data:image/jpeg;base64," + ws_json["data"];
-    get_id("long_camera_data").innerHTML = "long camera, time: " + time_vis(ws_json["time"]);
+    // console.log(evt.data)
+    if (evt.data !== "") {
+        ws_json = eval('(' + evt.data + ')')
+        get_id("img1").src = "data:image/jpeg;base64," + ws_json["data"];
+        get_id("long_camera_data").innerHTML = "long camera, time: " + time_vis(ws_json["time"]);
+    }
 }
 
 
@@ -121,9 +142,11 @@ short_img_socket.addEventListener('open', function(event) {
 });
 
 short_img_socket.onmessage = function(evt) {
-    ws_json = eval('(' + evt.data + ')')
-    get_id("img2").src = "data:image/jpeg;base64," + ws_json["data"];
-    get_id("short_camera_data").innerHTML = "short camera, time: " + time_vis(ws_json["time"]);
+    if (evt.data !== "") {
+        ws_json = eval('(' + evt.data + ')')
+        get_id("img2").src = "data:image/jpeg;base64," + ws_json["data"];
+        get_id("short_camera_data").innerHTML = "short camera, time: " + time_vis(ws_json["time"]);
+    }
 }
 
 function time_vis(timestamp) {
@@ -157,16 +180,16 @@ function command(cmd) {
 
 function download() {
     var pom = document.createElement('a');
-    pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(JSON.stringify(ws_json)));
+    pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(JSON.stringify(ws_json["save_data"])));
 
     console.log("download")
         // hostname = get_ws("localhost", "ws_hostname")
-    console.log(hostname)
-    console.log(JSON.stringify(ws_json))
+        // console.log(hostname)
+        // console.log(JSON.stringify(ws_json))
     var myDate = new Date()
     console.log(myDate.getDate())
 
-    filename = hostname['hostname'] + "_" + myDate.getFullYear() + "_" + myDate.getMonth() + "_" + myDate.getDate() + ".json"
+    filename = ip_addr + "_" + myDate.getFullYear() + "_" + myDate.getMonth() + "_" + myDate.getDate() + ".json"
 
     pom.setAttribute('download', filename);
 
