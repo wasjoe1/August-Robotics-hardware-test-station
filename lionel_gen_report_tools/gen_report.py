@@ -24,12 +24,13 @@ from report.report import Report
 from report.json_formatter import JsonReportFormatter
 
 CURRENT_TIME = datetime.now().strftime("%Y%m%d%H%M%S")
-LOG_DIR = CURRENT_PATH + "/roslog_storage"+'/'+CURRENT_TIME
+_LOG_DIR = CURRENT_PATH + "/roslog_storage"
+LOG_DIR = _LOG_DIR+'/'+CURRENT_TIME
 
 # Create necessary folders
 def Initialize():
     try:
-        os.mkdir(LOG_DIR)
+        os.mkdir(_LOG_DIR)
     except Exception as e:
         print(e)
     try:
@@ -37,12 +38,11 @@ def Initialize():
     except Exception as e:
         print(e)
     try:
-        os.mkdir(LOG_DIR+'/'+CURRENT_TIME)
+        os.mkdir(LOG_DIR)
     except Exception as e:
         print(e)
 
 def main():
-    _current_time = datetime.now().strftime("%Y%m%d%H%M%S")
     _files_list = os.listdir(CURRENT_PATH)
 
     if not _files_list:
