@@ -35,7 +35,9 @@ data_socket.onmessage = function(evt) {
     // job_data
     job_data_content = ""
     for (const key in ws_json["job_data"]) {
-        job_data_content += key + ": " + ws_json["job_data"][key] + "</br>"
+        if (key == "measurement_time") { job_data_content += key + ": " + time_vis(ws_json["job_data"][key]) + "</br>" } else {
+            job_data_content += key + ": " + ws_json["job_data"][key] + "</br>"
+        }
     }
     var elej_ob = get_id('job_data')
     elej_ob.innerHTML = job_data_content
@@ -59,6 +61,10 @@ data_socket.onmessage = function(evt) {
     var ele_step = get_id("step")
     ele_step.innerHTML = "当前任务: " + ws_json["step"]
 
+    // client status
+    var ele_client_status = get_id("client_status")
+    ele_client_status.innerHTML = "电机: " + ws_json["client_status"]["servos"] + ", " + "相机：" + ws_json["client_status"]["cameras"] + "</br>"
+
     // modify button style
     for (const key in ws_json["done"]) {
         get_id(key).setAttribute("class", 'btn btn-info');
@@ -69,7 +75,7 @@ data_socket.onmessage = function(evt) {
 function get_data(ws_json, first_key) {
     data_content = ""
         // console.log(typeof(ws_json[first_key]))
-    if (ws_json[first_key] !== undefined) {
+    if ((ws_json[first_key] !== undefined)) {
         for (const key in ws_json[first_key]["CAMERA_SHARPNESS"]) {
             if (key != "time") {
                 data_content += key + ": " + ws_json[first_key]["CAMERA_SHARPNESS"][key] + ", time :" + time_vis(ws_json[first_key]["CAMERA_SHARPNESS"]["time"]) + "</br>"
@@ -80,11 +86,17 @@ function get_data(ws_json, first_key) {
                 data_content += key + ": " + ws_json[first_key]["INITIALIZE_SERVO"][key] + ", time :" + time_vis(ws_json[first_key]["INITIALIZE_SERVO"]["time"]) + "</br>"
             }
         }
-        for (const key in ws_json[first_key]["angle"]) {
+        for (const key in ws_json[first_key]["CAMERAS_ALIGNMENT"]) {
             if (key != "time") {
-                data_content += key + ": " + ws_json[first_key]["angle"][key] + ", time :" + time_vis(ws_json[first_key]["angle"]["time"]) + "</br>"
+                data_content += key + ": " + ws_json[first_key]["CAMERAS_ALIGNMENT"][key] + ", time :" + time_vis(ws_json[first_key]["CAMERAS_ALIGNMENT"]["measurement_time"]) + "</br>"
             }
         }
+        // for (const key in ws_json[first_key]["angle"]) {
+        //     if (key != "time") {
+        //         data_content += key + ": " + ws_json[first_key]["angle"][key] + ", time :" + time_vis(ws_json[first_key]["angle"]["time"]) + "</br>"
+        //     }
+        // }
+
     }
     return data_content
 }
