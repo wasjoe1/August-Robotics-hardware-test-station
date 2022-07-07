@@ -10,7 +10,7 @@ var CAMERAS_ANGLE = "CAMERAS_ANGLE"
 var VERTICAL_SERVO_ZERO = "VERTICAL_SERVO_ZERO"
 var IMU_CALIBRATION = "IMU_CALIBRATION"
 
-display_servos_laser_button = [INITIALIZE_SERVO, CAMERA_SHARPNESS, CAMERA_LASER_ALIGNMENT]
+display_servos_laser_button = [INITIALIZE_SERVO, CAMERA_SHARPNESS, CAMERA_LASER_ALIGNMENT, CAMERAS_ANGLE, CAMERAS_ALIGNMENT]
 
 function get_ws(ip, route, data) {
     const ws = new WebSocket("ws://" + ip_addr + "/" + route)

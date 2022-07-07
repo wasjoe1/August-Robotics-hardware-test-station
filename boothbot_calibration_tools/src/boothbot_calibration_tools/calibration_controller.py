@@ -558,26 +558,26 @@ class CalibrationController(ModuleBase):
                 return
             self.laser.laser_on()
             self.sub_state = 2
+        # elif self.sub_state == 2:
+        #     if self.servos.done:
+        #         self.track_target = (
+        #             self.job_setting[self._job.name]["default_h"], 0.0)
+        #         self.servo_move(self.track_target, TOLERANCE)
+        #         self.sub_state = 3
         elif self.sub_state == 2:
-            if self.servos.done:
-                self.track_target = (
-                    self.job_setting[self._job.name]["default_h"], 0.0)
-                self.servo_move(self.track_target, TOLERANCE)
-                self.sub_state = 3
-        elif self.sub_state == 3:
             if self.servos.done:
                 long_res, long_offset = self.track_beacon(LONG, 1)
                 if long_res:
-                    self.sub_state = 4
+                    self.sub_state = 3
                     return
-        elif self.sub_state == 4:
+        elif self.sub_state == 3:
             self.loginfo_throttle(
                 2, "long camera track done. track with short camera track")
             long_res, long_offset = self.track_beacon(LONG, 1)
             if not long_res:
                 self.loginfo(
                     "long camera detected moved. return to substate 3")
-                self.sub_state = 3
+                self.sub_state = 2
                 return
             self.loginfo("check short camera now")
             short_res, short_offset = self.track_beacon(SHORT, 1)
@@ -589,6 +589,10 @@ class CalibrationController(ModuleBase):
                 # self._job_data["time"] = time.time()
                 self.set_job_current_time()
                 self._job_data["cameras_offset"] = cameras_offset
+        #         self.sub_state = 4
+        # elif self.sub_state == 4:
+        #     # self.loginfo("")
+        #     pass
 
     def get_camreras_offset(self, long_offset, short_offset):
         return (long_offset[0]-short_offset[0])
@@ -669,27 +673,27 @@ class CalibrationController(ModuleBase):
                 return
             self.laser.laser_on()
             self.sub_state = 2
+        # elif self.sub_state == 2:
+        #     if self.servos.done:
+        #         self.track_target = (
+        #             self.job_setting[self._job.name]["default_h"], 0.0)
+        #         self.servo_move(self.track_target, TOLERANCE)
+        #         self.sub_state = 3
         elif self.sub_state == 2:
-            if self.servos.done:
-                self.track_target = (
-                    self.job_setting[self._job.name]["default_h"], 0.0)
-                self.servo_move(self.track_target, TOLERANCE)
-                self.sub_state = 3
-        elif self.sub_state == 3:
             if self.servos.done:
                 long_res, long_offset = self.track_beacon(camera_filter_time=3)
                 if long_res:
-                    self.sub_state = 4
+                    self.sub_state = 3
                     return
         #         self.sub_state = 4
-        elif self.sub_state == 4:
+        elif self.sub_state == 3:
             self.loginfo_throttle(
                 2, "long camera track done. track with short camera track")
             long_res, long_offset = self.track_beacon(LONG, 3)
             if not long_res:
                 self.loginfo(
                     "long camera detected moved. return to substate 3")
-                self.sub_state = 3
+                self.sub_state = 2
                 return
             self.loginfo("check short camera now")
             short_res, short_offset = self.track_beacon(SHORT, 3)
@@ -719,8 +723,8 @@ class CalibrationController(ModuleBase):
                 avg = np.average(arr)
                 self._job_data["cameras_angle"] = avg
                 self.set_job_current_time()
-                self.sub_state = 5
-        elif self.sub_state == 5:
+                self.sub_state = 4
+        elif self.sub_state == 4:
             self.loginfo_throttle(5, "{} job done".format(self._job.name))
             if self.test_track:
                 self.laser.laser_on()
