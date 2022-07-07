@@ -111,7 +111,7 @@ SAVE_DATA_TITLE = {
 
 LONG = "long"
 SHORT = "short"
-COLOR = "GREEN"
+COLOR = "CALI"
 TOLERANCE = (1e-5, 5e-5)
 CAMERA_FILTER_COUNT = 3
 
