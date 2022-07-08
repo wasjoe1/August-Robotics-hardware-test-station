@@ -73,9 +73,9 @@ def main():
             print("Report file path: " + target_report_path)
 
             os.rename(_f, LOG_DIR +'/' +f)
-        except:
-            pass
-
+        except Exception as e:
+            print("End with Exception: {}".format(e))
+            print("Please check if you boothbot repo. is v3.4.1 or newer")
 
 def gen_report(file_path=None):
 
