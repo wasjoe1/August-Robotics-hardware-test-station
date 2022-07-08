@@ -81,7 +81,7 @@ def get_input():
 
     while not (_end_date_valid):
         try:
-            print("Please enter end date [yyyymmdd]:")
+            print("Please enter end date [yyyymmdd]: (Could left empty)")
             _end_date = str(raw_input())
             if _end_date == '':
                 _end_date = -1
