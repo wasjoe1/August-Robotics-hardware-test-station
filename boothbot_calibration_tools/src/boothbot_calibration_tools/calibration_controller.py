@@ -101,7 +101,8 @@ JOB_DATA = {
 
 SAVE_DATA_TITLE = {
     CS.INITIALIZE_SERVO.name: ["servo_h", "servo_v", "measurement_time"],
-    CS.CAMERA_SHARPNESS.name: [],
+    CS.CAMERA_SHARPNESS.name: ["long_sharpness_score", "long_sharpness_result", "long_color_data", "long_color_result",
+                               "short_sharpness_score", "short_sharpness_result", "short_color_data", "short_color_result"],
     CS.CAMERAS_ALIGNMENT.name: [],
     CS.CAMERA_LASER_ALIGNMENT.name: [],
     CS.CAMERAS_ANGLE.name: ["cameras_angle", "measurement_time"],
@@ -156,8 +157,8 @@ class CalibrationController(ModuleBase):
         self.camera_long = None
         self.camera_short = None
         self.servos = ServosClient()
-        # self.laser = LaserRangeFinderGenerator.detect_laser_range_finder()
-        self.laser = laser
+        self.laser = LaserRangeFinderGenerator.detect_laser_range_finder()
+        # self.laser = laser
 
         # config yaml
         self.config_dir = CONFIG_PATH + "/calibration_data"
@@ -401,7 +402,8 @@ class CalibrationController(ModuleBase):
     # image handler for get image data from rostopic
     def img2textfromcv2(self, frame):
         # From BGR to RGB
-        frame = cv2.resize(frame,None,fx=0.25,fy=0.25,interpolation=cv2.INTER_LINEAR)
+        frame = cv2.resize(frame, None, fx=0.25, fy=0.25,
+                           interpolation=cv2.INTER_LINEAR)
         im = frame[:, :, ::-1]
         im = Image.fromarray(im)
         buf = BytesIO()
