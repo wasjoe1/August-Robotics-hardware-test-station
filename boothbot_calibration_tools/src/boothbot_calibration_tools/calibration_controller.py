@@ -92,7 +92,7 @@ JOB_DATA = {
     CS.INITIALIZE_SERVO.name: ["servo_h", "servo_v", "measurement_time"],
     CS.CAMERA_SHARPNESS.name: ["long_sharpness_score", "long_sharpness_result", "long_color_data", "long_color_result",
                                "short_sharpness_score", "short_sharpness_result", "short_color_data", "short_color_result"],
-    CS.CAMERAS_ALIGNMENT.name: ["cameras_offset", "measurement_time"],
+    CS.CAMERAS_ALIGNMENT.name: ["cameras_offset", "measurement_time", "cameras_offset_op_info"],
     CS.CAMERA_LASER_ALIGNMENT.name: ["camera_laser_alignment"],
     CS.CAMERAS_ANGLE.name: ["cameras_angle", "measurement_time"],
     CS.VERTICAL_SERVO_ZERO.name: ["vertical_offset", "measurement_time"],
@@ -102,8 +102,9 @@ JOB_DATA = {
 SAVE_DATA_TITLE = {
     CS.INITIALIZE_SERVO.name: ["servo_h", "servo_v", "measurement_time"],
     CS.CAMERA_SHARPNESS.name: ["long_sharpness_score", "long_sharpness_result", "long_color_data", "long_color_result",
-                               "short_sharpness_score", "short_sharpness_result", "short_color_data", "short_color_result"],
-    CS.CAMERAS_ALIGNMENT.name: [],
+                               "short_sharpness_score", "short_sharpness_result", "short_color_data", "short_color_result",
+                               "measurement_time"],
+    CS.CAMERAS_ALIGNMENT.name: ["cameras_offset", "measurement_time"],
     CS.CAMERA_LASER_ALIGNMENT.name: [],
     CS.CAMERAS_ANGLE.name: ["cameras_angle", "measurement_time"],
     CS.VERTICAL_SERVO_ZERO.name: ["vertical_offset", "measurement_time"],
@@ -194,7 +195,8 @@ class CalibrationController(ModuleBase):
         }
 
         self.save_data_title = [CS.INITIALIZE_SERVO.name,
-                                CS.CAMERAS_ANGLE.name, CS.VERTICAL_SERVO_ZERO.name]
+                                CS.CAMERAS_ANGLE.name, CS.VERTICAL_SERVO_ZERO.name,
+                                CS.CAMERA_SHARPNESS.name]
 
     def update_data(self):
         if self._job is not None:
@@ -357,7 +359,7 @@ class CalibrationController(ModuleBase):
         self._save_data = {}
         self._user_gui_save_data[self._job.name] = {}
         self._save_data[self._job.name] = {}
-        if self._job.name == CS.INITIALIZE_SERVO.name:
+        if self._job.name in (CS.INITIALIZE_SERVO.name, CS.CAMERA_SHARPNESS.name):
             self.set_job_current_time()
         for k, v in self._job_data.items():
             if k in SAVE_DATA_TITLE[self._job.name]:
@@ -590,6 +592,12 @@ class CalibrationController(ModuleBase):
                 self.loginfo("Got offset. {}".format(cameras_offset))
                 self.set_job_current_time()
                 self._job_data["cameras_offset"] = cameras_offset
+                op_info = {}
+                if cameras_offset >= 0:
+                    op_info = {"small": "right"}
+                else:
+                    op_info = {"small": "left"}
+                self._job_data["cameras_offset_op_info"] = op_info
 
     def get_camreras_offset(self, long_offset, short_offset):
         return (long_offset[0]-short_offset[0])

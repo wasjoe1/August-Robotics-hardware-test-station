@@ -1,6 +1,7 @@
 var ws_json
 var hostname
 var ip_addr = document.location.hostname
+var download_data
 
 var INITIALIZE_SERVO = "INITIALIZE_SERVO"
 var CAMERA_SHARPNESS = "CAMERA_SHARPNESS"
@@ -45,15 +46,24 @@ data_socket.onmessage = function(evt) {
     // job_data
     job_data_content = ""
     for (const key in ws_json["job_data"]) {
-        if (key == "measurement_time") { job_data_content += key + ": " + time_vis(ws_json["job_data"][key]) + "</br>" } else {
-            job_data_content += key + ": " + ws_json["job_data"][key] + "</br>"
+        if (key == "cameras_offset_op_info") {
+            if (ws_json["job_data"][key]["small"] == "right") {
+                job_data_content += "小相机调右边螺丝"
+            } else {
+                job_data_content += "小相机调左边螺丝"
+            }
+        } else {
+            if (key == "measurement_time") { job_data_content += key + ": " + time_vis(ws_json["job_data"][key]) + "</br>" } else {
+                job_data_content += key + ": " + ws_json["job_data"][key] + "</br>"
+            }
         }
     }
+
     var elej_ob = get_id('job_data')
     elej_ob.innerHTML = job_data_content
 
     // save_data
-    save_data_content = get_data(ws_json, "save_data")
+    save_data_content = get_save_data(ws_json, "save_data")
     var save_data_ele = get_id('need_save_data')
     save_data_ele.innerHTML = save_data_content
 
@@ -133,12 +143,26 @@ function set_button() {
     // }
 }
 
+function get_save_data(ws_json, first_key) {
+    data_content = ""
+        // console.log(typeof(ws_json[first_key]))
+    if ((ws_json[first_key] !== undefined)) {
+        download_data = ws_json[first_key]
+        data_content = get_function_data(first_key, INITIALIZE_SERVO) +
+            get_function_data(first_key, CAMERAS_ANGLE) +
+            get_function_data(first_key, VERTICAL_SERVO_ZERO) +
+            get_function_data(first_key, CAMERA_SHARPNESS)
+    }
+    return data_content
+}
+
 function get_data(ws_json, first_key) {
     data_content = ""
         // console.log(typeof(ws_json[first_key]))
     if ((ws_json[first_key] !== undefined)) {
         data_content = get_function_data(first_key, INITIALIZE_SERVO) +
             get_function_data(first_key, CAMERAS_ANGLE) +
+            get_function_data(first_key, CAMERA_SHARPNESS) +
             get_function_data(first_key, VERTICAL_SERVO_ZERO)
     }
     return data_content
@@ -219,10 +243,10 @@ function command(cmd) {
 
 function download() {
     var pom = document.createElement('a');
-    pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(JSON.stringify(ws_json["save_data"])));
+    pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(JSON.stringify(download_data)));
 
     console.log("download")
-    console.log(ws_json["save_data"])
+    console.log(download_data)
         // hostname = get_ws("localhost", "ws_hostname")
         // console.log(hostname)
         // console.log(JSON.stringify(ws_json))
