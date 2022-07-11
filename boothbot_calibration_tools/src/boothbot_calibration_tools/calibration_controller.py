@@ -377,9 +377,13 @@ class CalibrationController(ModuleBase):
             return
         if self._job == CS.INITIALIZE_SERVO:
             self.logwarn("killing node ")
+            self.kill_servos_node()
             # rosnode.kill_nodes("servos_driver")
-            os.system("rosnode kill /servos_driver")
+            # os.system("rosnode kill /servos_driver")
         self._done_list[self._job.name] = "true"
+
+    def kill_servos_node(self):
+        return True
 
     def is_job(self):
         return self._job is not None

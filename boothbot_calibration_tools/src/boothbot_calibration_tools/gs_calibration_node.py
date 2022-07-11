@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import rospy
+import os
 
-from guiding_beacon_system.drivers.laser_driver_v3 import LaserRangeFinderGenerator
+from guiding_beacon_system.drivers.laser_driver_py3 import LaserRangeFinderGenerator
 from boothbot_calibration_tools.calibration_controller import CalibrationController
 
 
@@ -11,6 +12,11 @@ class GSCalibration(CalibrationController):
         laser = LaserRangeFinderGenerator.detect_laser_range_finder()
         super().__init__(name, rate, states, transitions, commands, status_inf, srv_cmd_inf, need_robot_status, error_codes, laser)
 
+
+    def kill_servos_node(self):
+        self.logerr("kill lionel servos node.")
+        os.system("rosnode kill /servos_driver")
+        super(GSCalibration, self).kill_servos_node()
 
 if __name__ == "__main__":
     rospy.init_node("gs_calibration_controller")

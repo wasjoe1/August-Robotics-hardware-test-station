@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import rospy
+import os
 
-from guiding_beacon_system.drivers.laser_driver_v3 import LaserRangeFinder
+from guiding_beacon_system.drivers.laser_driver_py3 import LaserRangeFinder
 from boothbot_calibration_tools.calibration_controller import CalibrationController
 
 
@@ -17,6 +18,10 @@ class LionelCalibration(CalibrationController):
         self.laser.set_fake_data(4, 0)
         super(LionelCalibration, self)._do_cameras_angle()
 
+    def kill_servos_node(self):
+        self.logerr("kill lionel servos node.")
+        os.system("rosnode kill /servos_stepper_driver")
+        super(LionelCalibration, self).kill_servos_node()
 
 if __name__ == "__main__":
     rospy.init_node("lionel_calibration_controller")
