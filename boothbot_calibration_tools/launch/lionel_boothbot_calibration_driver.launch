@@ -1,4 +1,8 @@
 <launch>
-  <node name="servos_stepper_driver" pkg="boothbot_driver" type="servos_stepper_driver.py" respawn="true" output="log">
-  </node>
+	<node name="servos_stepper_driver" pkg="boothbot_driver" type="servos_stepper_driver.py" respawn="true" output="log">
+	</node>
+	<include file="$(find augustbot_base)/launch/base.launch">
+		<arg name="use_small_probe" value="false" />
+		<arg name="enable_side_sonar" value="false" />
+	</include>
 </launch>
