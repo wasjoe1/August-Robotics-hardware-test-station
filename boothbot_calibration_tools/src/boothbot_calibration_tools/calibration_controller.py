@@ -155,8 +155,8 @@ class CalibrationController(ModuleBase):
         self.camera_long = None
         self.camera_short = None
         self.servos = ServosClient()
-        self.laser = LaserRangeFinderGenerator.detect_laser_range_finder()
-        # self.laser = laser
+        # self.laser = LaserRangeFinderGenerator.detect_laser_range_finder()
+        self.laser = laser
 
         # config yaml
         self.config_dir = CONFIG_PATH + "/calibration_data"

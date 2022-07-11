@@ -1,0 +1,4 @@
+<launch>
+  <node name="servos_stepper_driver" pkg="boothbot_driver" type="servos_stepper_driver.py" respawn="true" output="log">
+  </node>
+</launch>

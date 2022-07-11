@@ -1,6 +1,6 @@
 <launch>
   <node pkg="boothbot_calibration_tools" type="grpc_node.py" name="grpc_node" output="screen" launch-prefix="" >
   </node>
-  <node pkg="boothbot_calibration_tools" type="calibration_controller.py" name="calibration_controller" output="screen" launch-prefix="" >
+  <node pkg="boothbot_calibration_tools" type="lionel_calibration_node.py" name="lionel_calibration_node" output="screen" launch-prefix="" >
   </node>
 </launch>
