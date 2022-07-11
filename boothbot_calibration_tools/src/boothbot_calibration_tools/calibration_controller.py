@@ -38,7 +38,8 @@ from boothbot_common.settings import BOOTHBOT_GET_CONFIG
 import json
 import socket
 
-from boothbot_common.module_base_py3 import ModuleBase
+from boothbot_common.module_base import ModuleBase
+# from boothbot_common.module_base_py3 import ModuleBase
 
 from guiding_beacon_system.drivers.laser_driver_v3 import LaserRangeFinderGenerator, LaserRangeFinder
 
@@ -190,13 +191,14 @@ class CalibrationController(ModuleBase):
             CS.CAMERAS_ALIGNMENT.name: {"default_h": 1.38},
             CS.CAMERA_LASER_ALIGNMENT.name: {},
             CS.CAMERAS_ANGLE.name: {"default_h": 1.38},
-            CS.VERTICAL_SERVO_ZERO.name: [0, 3.14],
+            CS.VERTICAL_SERVO_ZERO.name: [1.57, -1.57],
             CS.IMU_CALIBRATION.name: {},
         }
 
         self.save_data_title = [CS.INITIALIZE_SERVO.name,
                                 CS.CAMERAS_ANGLE.name, CS.VERTICAL_SERVO_ZERO.name,
-                                CS.CAMERA_SHARPNESS.name]
+                                CS.CAMERA_SHARPNESS.name,
+                                CS.CAMERAS_ALIGNMENT.name]
 
     def update_data(self):
         if self._job is not None:
