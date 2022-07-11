@@ -1,24 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from boothbot_msgs.ros_interfaces import (
-    APPS_CALIBRATION_SRV_CMD,
-    APPS_CALIBRATION_STATUS,
-    APPS_CALIBRATION_DATA,
-    DRIVERS_SERVOS_PDO,
-)
+
 import rospy
 import math
-import rospy as logger
 import numpy as np
 import cv2
-
-from boothbot_common.ros_logger_wrap import ROSLogging as Logging
-
 import os
 import time
 import oyaml
 import socket
 import glob
+import json
+import socket
+import shutil
 
 import base64
 from PIL import Image
@@ -35,9 +29,6 @@ from boothbot_perception.tracking_camera import TrackingCamera
 
 from boothbot_common.settings import BOOTHBOT_GET_CONFIG
 
-import json
-import socket
-
 from boothbot_common.module_base import ModuleBase
 # from boothbot_common.module_base_py3 import ModuleBase
 
@@ -45,7 +36,12 @@ from guiding_beacon_system.drivers.laser_driver_v3 import LaserRangeFinderGenera
 
 from boothbot_driver.servos_client import ServosClient
 # from boothbot_perception.track_client import TargetTracker
-import shutil
+from boothbot_msgs.ros_interfaces import (
+    APPS_CALIBRATION_SRV_CMD,
+    APPS_CALIBRATION_STATUS,
+    APPS_CALIBRATION_DATA,
+    DRIVERS_SERVOS_PDO,
+)
 
 TRACKER_CONFIG = BOOTHBOT_GET_CONFIG(name="tracker_driver")
 GS_CAMERA_VERTICAL_DIST = TRACKER_CONFIG["long_cam_laser_dist"] + \
@@ -279,7 +275,7 @@ class CalibrationController(ModuleBase):
 
     def initialize(self):
         # TODO
-        logger.loginfo("initializing ....")
+        self.loginfo("initializing ....")
         self.last_json_file = self.get_last_json()
         self.check_yaml_dir()
         self.get_last_data()
@@ -291,7 +287,7 @@ class CalibrationController(ModuleBase):
         for client in (self.servos, self.laser):
             self.loginfo("connecting to {}".format(client.name))
             if not client.connect(timeout=0.5):
-                logger.logwarn("Initializing {} failed!!".format(client.name))
+                self.logwarn("Initializing {} failed!!".format(client.name))
                 return False
             else:
                 self.loginfo("connected succeeded{}".format(client.name))
@@ -704,7 +700,11 @@ class CalibrationController(ModuleBase):
                 return
             self.loginfo("check short camera now")
             short_res, short_offset = self.track_beacon(SHORT, 3)
-            res, dis = self.laser.get_distance()
+            try:
+                res, dis = self.laser.get_distance()
+            except Exception as e:
+                self.logerr("laser measure error. {}".format(e))
+                return
             projection_dis = dis*math.cos(long_offset[1])
             self.loginfo("the laser dis is {}".format(dis))
             if not res:

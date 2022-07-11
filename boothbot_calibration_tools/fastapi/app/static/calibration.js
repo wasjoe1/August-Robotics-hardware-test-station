@@ -117,6 +117,9 @@ function set_button() {
     if (ws_json["step"] == INITIALIZE_SERVO) {
         get_id("run_button").innerText = "保存文件到设备配置"
         get_id("done_button").innerText = "完成并重启程序"
+    } else {
+        get_id("run_button").innerText = "运行"
+        get_id("done_button").innerText = "完成"
     }
 
 
