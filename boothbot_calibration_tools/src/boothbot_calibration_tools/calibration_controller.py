@@ -32,7 +32,7 @@ from boothbot_common.settings import BOOTHBOT_GET_CONFIG
 from boothbot_common.module_base import ModuleBase
 # from boothbot_common.module_base_py3 import ModuleBase
 
-from guiding_beacon_system.drivers.laser_driver_v3 import LaserRangeFinderGenerator, LaserRangeFinder
+from guiding_beacon_system.drivers.laser_driver_py3 import LaserRangeFinderGenerator, LaserRangeFinder
 
 from boothbot_driver.servos_client import ServosClient
 # from boothbot_perception.track_client import TargetTracker
