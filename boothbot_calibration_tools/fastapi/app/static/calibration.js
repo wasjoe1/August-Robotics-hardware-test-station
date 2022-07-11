@@ -256,7 +256,7 @@ function download() {
     var myDate = new Date()
     console.log(myDate.getDate())
 
-    filename = ip_addr + "_" + myDate.getFullYear() + "_" + myDate.getMonth() + "_" + myDate.getDate() + ".json"
+    filename = ws_json["host_name"] + "_" + myDate.getFullYear() + "_" + myDate.getMonth() + "_" + myDate.getDate() + ".json"
 
     pom.setAttribute('download', filename);
 
