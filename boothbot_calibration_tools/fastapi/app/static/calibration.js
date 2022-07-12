@@ -1,3 +1,6 @@
+// import { lang } from './lang.js'
+// import { refresh_page_once_list } from './refresh_once.js'
+
 var ws_json
 var hostname
 var ip_addr = document.location.hostname
@@ -11,7 +14,9 @@ var CAMERAS_ANGLE = "CAMERAS_ANGLE"
 var VERTICAL_SERVO_ZERO = "VERTICAL_SERVO_ZERO"
 var IMU_CALIBRATION = "IMU_CALIBRATION"
 
-display_servos_laser_button = [INITIALIZE_SERVO, CAMERA_SHARPNESS, CAMERA_LASER_ALIGNMENT, CAMERAS_ANGLE, CAMERAS_ALIGNMENT]
+var cur_lang = 1
+
+// var display_servos_laser_button = [INITIALIZE_SERVO, CAMERA_SHARPNESS, CAMERA_LASER_ALIGNMENT, CAMERAS_ANGLE, CAMERAS_ALIGNMENT]
 
 function get_ws(ip, route, data) {
     const ws = new WebSocket("ws://" + ip_addr + "/" + route)
@@ -44,7 +49,7 @@ data_socket.onmessage = function(evt) {
     ws_json = eval('(' + evt.data + ')')
 
     // job_data
-    job_data_content = ""
+    var job_data_content = ""
     for (const key in ws_json["job_data"]) {
         if (key == "cameras_offset_op_info") {
             if (ws_json["job_data"][key]["small"] == "right") {
@@ -63,33 +68,38 @@ data_socket.onmessage = function(evt) {
     elej_ob.innerHTML = job_data_content
 
     // save_data
-    save_data_content = get_save_data(ws_json, "save_data")
+    var save_data_content = get_save_data(ws_json, "save_data")
     var save_data_ele = get_id('need_save_data')
     save_data_ele.innerHTML = save_data_content
 
 
     // last_data
-    last_data_content = get_data(ws_json, "last_data")
+    var last_data_content = get_data(ws_json, "last_data")
     var save_data_ele = get_id('last_data')
     save_data_ele.innerHTML = last_data_content
 
     // modify host name
     var ele_hostanme = get_id("hostname")
-    ele_hostanme.innerHTML = "主机名: " + ws_json["host_name"]
+    ele_hostanme.innerHTML = get_lang("hostname") + " : " + ws_json["host_name"]
 
     // modify current job
-    var ele_step = get_id("step")
-    ele_step.innerHTML = "当前任务: " + ws_json["step"]
+    var ele_step = get_id("current_task")
+    ele_step.innerHTML = get_lang("current_task") + " : " + ws_json["step"]
 
     // client status
     var ele_client_status = get_id("client_status")
-    ele_client_status.innerHTML = "电机: " + ws_json["client_status"]["servos"] + ", " + "相机：" + ws_json["client_status"]["cameras"] + "</br>"
+    ele_client_status.innerHTML = get_lang("servos") + ":" + ws_json["client_status"]["servos"] + ", " +
+        get_lang("cameras") + ":" + ws_json["client_status"]["cameras"] + "</br>"
 
     set_button()
 
     // modify button style
 
 
+}
+
+function get_lang(key) {
+    return lang[key][cur_lang]
 }
 
 function set_button() {
@@ -115,18 +125,18 @@ function set_button() {
 
 
     if (ws_json["step"] == INITIALIZE_SERVO) {
-        get_id("run_button").innerText = "保存文件到设备配置"
-        get_id("done_button").innerText = "完成并重启程序"
+        get_id("run").innerText = get_lang("save_data_to_device")
+        get_id("done").innerText = get_lang("restart")
     } else {
-        get_id("run_button").innerText = "运行"
-        get_id("done_button").innerText = "完成"
+        get_id("run").innerText = get_lang("run")
+        get_id("done").innerText = get_lang("done")
     }
 
 
 
-    for (const key in ws_json["done"]) {
-        get_id(key).setAttribute("class", 'btn btn-info');
-    }
+    // for (const key in ws_json["done"]) {
+    //     get_id(key).setAttribute("class", 'btn btn-info');
+    // }
 
     // let elements = document.getElementsByClassName('cameras');
     // long = get_id("camera_select_long")
@@ -147,7 +157,7 @@ function set_button() {
 }
 
 function get_save_data(ws_json, first_key) {
-    data_content = ""
+    var data_content = ""
         // console.log(typeof(ws_json[first_key]))
     if ((ws_json[first_key] !== undefined)) {
         download_data = ws_json[first_key]
@@ -160,7 +170,7 @@ function get_save_data(ws_json, first_key) {
 }
 
 function get_data(ws_json, first_key) {
-    data_content = ""
+    var data_content = ""
         // console.log(typeof(ws_json[first_key]))
     if ((ws_json[first_key] !== undefined)) {
         data_content = get_function_data(first_key, INITIALIZE_SERVO) +
@@ -172,7 +182,7 @@ function get_data(ws_json, first_key) {
 }
 
 function get_function_data(first_key, title) {
-    html_data = ""
+    var html_data = ""
         // console.log(Object.keys(ws_json[first_key][title]).length)
     if (ws_json[first_key][title] !== undefined) {
         for (const key in ws_json[first_key][title]) {
@@ -218,23 +228,56 @@ short_img_socket.onmessage = function(evt) {
 function time_vis(timestamp) {
     timestamp = Math.trunc(timestamp * 1000)
     var time = new Date(timestamp)
-    Y = time.getFullYear() + '-'
-    M = (time.getMonth() + 1 < 10 ? '0' + (time.getMonth() + 1) : time.getMonth() + 1) + '-'
-    D = time.getDate() + ' '
-    h = time.getHours() + ':'
-    m = time.getMinutes() + ':'
-    s = time.getSeconds()
+    var Y = time.getFullYear() + '-'
+    var M = (time.getMonth() + 1 < 10 ? '0' + (time.getMonth() + 1) : time.getMonth() + 1) + '-'
+    var D = time.getDate() + ' '
+    var h = time.getHours() + ':'
+    var m = time.getMinutes() + ':'
+    var s = time.getSeconds()
     return Y + M + D + h + m + s
 }
 
-
-function mode_selection(mode) {
-    console.log("send mode :" + mode)
-    var url = "http://" + ip_addr + "/mode_select/" + mode
+function switch_lang() {
+    if (cur_lang == 0) {
+        cur_lang = 1
+    } else {
+        cur_lang = 0
+    }
+    console.log("send cur_lang :" + cur_lang)
+    var url = "http://" + ip_addr + "/switch_lang/" + cur_lang
     var request = new XMLHttpRequest()
+    request.onreadystatechange = function() {
+        if (request.readyState === 4) {
+            request_cb(request.response);
+        }
+    }
     request.open("GET", url)
     request.send()
+    refresh_page_once(cur_lang)
 }
+
+function request_cb(response) {
+    console.log(unescape(response))
+        // console.log("xml callback")
+    updata_user_manual(response)
+}
+
+function refresh_page_once(cur_lang) {
+    for (ele in refresh_page_once_list) {
+        console.log(lang, ele)
+        console.log(refresh_page_once_list[ele])
+        console.log(lang[refresh_page_once_list[ele]])
+        get_id(refresh_page_once_list[ele]).innerText = lang[refresh_page_once_list[ele]][cur_lang]
+    }
+}
+
+// function mode_selection(mode) {
+//     console.log("send mode :" + mode)
+//     var url = "http://" + ip_addr + "/mode_select/" + mode
+//     var request = new XMLHttpRequest()
+//     request.open("GET", url)
+//     request.send()
+// }
 
 function command(cmd) {
     console.log("send cmd :" + cmd)
@@ -256,7 +299,7 @@ function download() {
     var myDate = new Date()
     console.log(myDate.getDate())
 
-    filename = ws_json["host_name"] + "_" + myDate.getFullYear() + "_" + myDate.getMonth() + "_" + myDate.getDate() + ".json"
+    var filename = ws_json["host_name"] + "_" + myDate.getFullYear() + "_" + myDate.getMonth() + "_" + myDate.getDate() + ".json"
 
     pom.setAttribute('download', filename);
 
@@ -277,12 +320,12 @@ function rollImg(o) {
 }
 
 function after_load() {
-    user_manual = get_id("user_manual")
-    b = user_manual.innerHTML
+    var user_manual = get_id("user_manual")
+    var b = user_manual.innerHTML
 
     const regex = /\\n|\\r\\n|\\n\\r|\\r/g;
-    a = b.split(",")
-    s = ''
+    var a = b.split(",")
+    var s = ''
     for (let x = 0; x < a.length; x++) {
         console.log(a[x])
         ele = a[x].replace(regex, '<br>');
@@ -294,3 +337,28 @@ function after_load() {
     }
     user_manual.innerHTML = s
 }
+
+function updata_user_manual(data) {
+    var user_manual = get_id("user_manual")
+    var b = data
+
+    const regex = /\\n|\\r\\n|\\n\\r|\\r/g;
+    var a = b.split(",")
+    var s = ''
+    for (let x = 0; x < a.length; x++) {
+        console.log(unescape(a[x]))
+        ele = a[x].replace(regex, '<br>');
+        ele = ele.replace("[", '');
+        ele = ele.replace("]", '');
+        ele = ele.replace('"', '');
+        ele = ele.replace('"', '');
+        ele = ele.replace(/'/g, '');
+        // console.log(decode_utf8(ele))
+        s = s + ele
+    }
+    user_manual.innerHTML = s
+}
+
+// function decode_utf8(s) {
+//     return decodeURIComponent(escape(s));
+// }

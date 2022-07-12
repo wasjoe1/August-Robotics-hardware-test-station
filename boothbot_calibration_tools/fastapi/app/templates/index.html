@@ -10,12 +10,14 @@
     <script src="https://cdn.staticfile.org/jquery/2.1.1/jquery.min.js"></script>
     <script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <link rel="stylesheet" href="../static/hr.css">
+    <script src="../static/lang.js"></script>
+    <script src="../static/refresh_once.js"></script>
     <script src="../static/calibration.js"></script>
 </head>
 
 <body onload="after_load()">
     <div style="height:3%;width:100%;float:left;">
-        <h3> GS/Lionel 标定流程 </h3>
+        <h3 id="title"> GS/Lionel 标定流程 </h3>
         <button id="INITIALIZE_SERVO" type="button" class="btn btn-default" onclick="location.href='/step/initialize_servo'">1.初始化电机</button>
         <button id="CAMERA_SHARPNESS" type="button" class="btn btn-default" onclick="location.href='/step/camera_sharpness'">2.相机锐度</button>
         <button id="CAMERA_LASER_ALIGNMENT" class="btn btn-default" onclick="location.href='/step/camera_laser_alignment'">3.大相机激光对齐(GS_only)</button>
@@ -23,6 +25,7 @@
         <button id="CAMERAS_ANGLE" class="btn btn-default" onclick="location.href='/step/cameras_angle'">5.大小相机夹角</button>
         <button id="VERTICAL_SERVO_ZERO" class="btn btn-default" onclick="location.href='/step/vertical_servo_zero'">6.垂直电机0点</button>
         <button id="IMU_CALIBRATION" type="button" class="btn btn-default" onclick="location.href='/step/IMU_calibration'">7.IMU标定(Lionel_only)</button>
+        <button id="switch_lang" type="button" class="btn btn-default" onclick="switch_lang()">English</button>
         <hr />
     </div>
 
@@ -42,14 +45,14 @@
             <img id="img2" alt="" style="width: 640px; height: 480px;" onmousewheel="return rollImg(this)">
         </div>
         <div style="height: 20%;width: 100%;">
-            <button type="button" class="btn btn-default servos_laser_operate" onmousedown="command('SERVOS_DISABLE')">取消使能电机</button>
-            <button type="button" class="btn btn-default servos_laser_operate" onmousedown="command('SERVOS_ENABLE')">使能电机</button>
-            <button type="button" class="btn btn-default servos_laser_operate" onmousedown="command('LASER_ON')">打开激光</button>
-            <button type="button" class="btn btn-default servos_laser_operate" onmousedown="command('LASER_OFF')">关闭激光</button>
-            <button type="button" class="btn btn-danger" onmousedown="command('RESET')">重置</button>
-            <button id="run_button" type="button" class="btn btn-info" onmousedown="command('RUN')">运行</button>
-            <button type="button" class="btn btn-info" onmousedown="command('TEST_TRACK')">试跟踪</button>
-            <button id="done_button" type="button" class="btn btn-info" onmousedown="command('DONE')">完成</button>
+            <button id="disable_servos" type="button" class="btn btn-default servos_laser_operate" onmousedown="command('SERVOS_DISABLE')">取消使能电机</button>
+            <button id="enable_servos" type="button" class="btn btn-default servos_laser_operate" onmousedown="command('SERVOS_ENABLE')">使能电机</button>
+            <button id="laser_on" type="button" class="btn btn-default servos_laser_operate" onmousedown="command('LASER_ON')">打开激光</button>
+            <button id="laser_off" type="button" class="btn btn-default servos_laser_operate" onmousedown="command('LASER_OFF')">关闭激光</button>
+            <button id="reset" type="button" class="btn btn-danger" onmousedown="command('RESET')">重置</button>
+            <button id="run" type="button" class="btn btn-info" onmousedown="command('RUN')">运行</button>
+            <button id="try_track" type="button" class="btn btn-info" onmousedown="command('TEST_TRACK')">试跟踪</button>
+            <button id="done" type="button" class="btn btn-info" onmousedown="command('DONE')">完成</button>
             <!-- <button type="button" class="btn btn-success" onmousedown="command('save_data')">save_data</button> -->
         </div>
 
@@ -58,7 +61,7 @@
         </div>
 
         <div style="background-color:darksalmon;height: 25%;width:45%;margin-left: 55%;">
-            <h3 id="step">当前任务</h3>
+            <h3 id="current_task">当前任务</h3>
         </div>
 
         <div style="background-color:gold;height: 25%;width:45%;margin-left: 55%;">
@@ -66,7 +69,7 @@
         </div>
 
         <div style="background-color: aqua;height: 30%;width:45%;margin-left: 55%;">
-            <h2> 用户操作指南
+            <h2 id="user_manual_title"> 用户操作指南
             </h2>
             <h6 id="user_manual">
                 {{just_do}}
@@ -76,9 +79,9 @@
 
 
     <div style="background-color:chocolate;height: 50%;width:45%; margin-left: 55%;">
-        <h2> 详细数据
+        <h2 id="task_data_title"> 详细数据
         </h2>
-        <button type="button" class="btn btn-success" onmousedown="command('SAVE')">保存数据</button>
+        <button id="save_data" type="button" class="btn btn-success" onmousedown="command('SAVE')">保存数据</button>
         <h3 id="job_data">
 
         </h3>
@@ -87,13 +90,12 @@
 
     <div style="background-color:aquamarine;height: 50%;width:45%; margin-left: 55%;">
         <div class="div_container">
-            <h2 class="childrenBox"> 需要保存的数据
+            <h2 id="data_need_save" class="childrenBox"> 需要保存的数据
             </h2>
-            <button type="button" class="btn btn-success childrenBox" onmousedown="download()">保存数据到本地</button>
+            <button id="download_data" type="button" class="btn btn-success childrenBox" onmousedown="download()">保存数据到本地</button>
         </div>
         <h4>
             <div id="need_save_data">
-
             </div>
         </h4>
     </div>
