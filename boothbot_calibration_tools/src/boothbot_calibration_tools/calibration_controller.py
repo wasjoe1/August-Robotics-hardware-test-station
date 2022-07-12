@@ -111,14 +111,13 @@ SAVE_DATA_TITLE = {
 LONG = "long"
 SHORT = "short"
 COLOR = "CALI"
-TOLERANCE = (1e-5, 5e-5)
 CAMERA_FILTER_COUNT = 3
 
 
 class CalibrationController(ModuleBase):
     def __init__(self,
                  name, rate, states=None, transitions=None, commands=None, status_inf=None, srv_cmd_inf=None, need_robot_status=False, error_codes=None,
-                 laser=None):
+                 laser=None, tolerance=None):
         super(CalibrationController, self).__init__(
             name=name,
             rate=rate,
@@ -176,6 +175,8 @@ class CalibrationController(ModuleBase):
         self.cameras_frame = {LONG: None, SHORT: None}
         self.client_status = {"servos": None, "cameras": None}
         self.servos_save_encoder = []
+        self.current_rad = (0.0, 0.0)
+        self._tolerance = tolerance
 
         self.cameras_angle = []
         self.vertical_encoder = []
@@ -306,7 +307,7 @@ class CalibrationController(ModuleBase):
             self.servos.disable()
         elif CS.SERVOS_ENABLE == command:
             self.logwarn("servo enable")
-            self.servos.enable()
+            self.servos_enable()
         elif CS.LASER_ON == command:
             self.laser.laser_on()
         elif CS.LASER_OFF == command:
@@ -328,6 +329,10 @@ class CalibrationController(ModuleBase):
             # self.loginfo()
         else:
             self.turn_to_step(command)
+        return True
+
+    def servos_enable(self):
+        self.servos.enable()
         return True
 
     def reset_camera(self):
@@ -394,6 +399,7 @@ class CalibrationController(ModuleBase):
         # self.set_job_current_time()
         self._job_data["servo_h"] = msg.encodings_origin[0]
         self._job_data["servo_v"] = msg.encodings_origin[1]
+        self.current_rad = (msg.radians[0], msg.radians[1])
 
     def turn_to_step(self, CS):
         if (self._job) != CS or (self._job is None):
@@ -546,7 +552,7 @@ class CalibrationController(ModuleBase):
             self.loginfo("color good {}".format(color_result))
 
     def check_camera_filter(self, offset):
-        if abs(offset[0]) < 2e-5 and abs(offset[1]) < 1e-3:
+        if abs(offset[0]) < self._tolerance[0] and abs(offset[1]) < self._tolerance[1]:
             self.loginfo("!!!!!!!!!!!!!!!!!!!!! arrived {}".format(
                 self.camera_filter_count))
             self.camera_filter_count += 1
@@ -617,14 +623,14 @@ class CalibrationController(ModuleBase):
         self.track_target = self.update_target(offset)
         self.loginfo(
             "!!!!!!!!!!!!!!!!!!!!!!!!target is {} now".format(self.track_target))
-        self.servos.move_to(self.track_target, TOLERANCE)
+        self.servos.move_to(self.track_target, self._tolerance)
         return False, offset
 
     def update_target(self, offset):
         return (self.servos.radians[0] + offset[0], self.servos.radians[1] + offset[1])
 
-    def servo_move(self, target, tolerances=TOLERANCE):
-        self.servos.move_to(target, tolerances)
+    def servo_move(self, target):
+        self.servos.move_to(target, self._tolerance)
 
     def _do_camera_laser_alignment(self):
         if self.sub_state == 0:
@@ -761,7 +767,7 @@ class CalibrationController(ModuleBase):
             if self.servos.done:
                 self.track_target = (
                     self.job_setting[self._job.name][self._job_vertical_iter], 0.0)
-                self.servo_move(self.track_target, TOLERANCE)
+                self.servo_move(self.track_target)
                 self.sub_state = 3
         elif self.sub_state == 3:
             if self.servos.done:

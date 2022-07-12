@@ -5,12 +5,15 @@ import os
 
 from guiding_beacon_system.drivers.laser_driver_py3 import LaserRangeFinderGenerator
 from boothbot_calibration_tools.calibration_controller import CalibrationController
+TOLERANCE = (1e-5, 5e-5)
 
 
 class GSCalibration(CalibrationController):
-    def __init__(self, name, rate, states=None, transitions=None, commands=None, status_inf=None, srv_cmd_inf=None, need_robot_status=False, error_codes=None, laser=None):
+    def __init__(self, name, rate, states=None, transitions=None, commands=None, status_inf=None, srv_cmd_inf=None, need_robot_status=False, error_codes=None, laser=None,
+                tolerance=None):
         laser = LaserRangeFinderGenerator.detect_laser_range_finder()
-        super().__init__(name, rate, states, transitions, commands, status_inf, srv_cmd_inf, need_robot_status, error_codes, laser)
+        tolerance = TOLERANCE
+        super().__init__(name, rate, states, transitions, commands, status_inf, srv_cmd_inf, need_robot_status, error_codes, laser, tolerance)
 
 
     def kill_servos_node(self):
