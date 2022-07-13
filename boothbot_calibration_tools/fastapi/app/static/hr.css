@@ -9,3 +9,16 @@ hr {
     border-width: 1px 0;
     margin: 18px 0;
 }
+
+.div_container {
+    white-space: nowrap;
+}
+
+.lable {
+    display: inline-block;
+}
+
+.childrenBox {
+    display: flex;
+    flex-wrap: nowrap;
+}

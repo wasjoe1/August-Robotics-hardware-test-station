@@ -183,7 +183,7 @@ async def long_img_ws(websocket: WebSocket):
             # encode_string = base64.b64encode(long_img).decode("utf-8")
             # logger.info("send long img")
             await websocket.send_bytes(encode_string)
-            await asyncio.sleep(0.2)
+            await asyncio.sleep(0.02)
             # img_id += 1
             # if img_id == 3:
             #     img_id = 0
@@ -204,7 +204,7 @@ async def short_img_ws(websocket: WebSocket):
             encode_string = app.short_img
             # logger.info("send short img")
             await websocket.send_bytes(encode_string)
-            await asyncio.sleep(0.2)
+            await asyncio.sleep(0.02)
 
     except Exception as e:
         logger.info(e)

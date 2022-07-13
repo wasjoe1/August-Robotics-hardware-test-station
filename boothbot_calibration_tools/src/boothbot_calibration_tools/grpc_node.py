@@ -100,7 +100,7 @@ class GRPCtoROS(Logging):
         except Exception as e:
             logger.info("Error: cannot init thread. {}".format(e))
 
-        rate = rospy.Rate(10)
+        rate = rospy.Rate(100)
         while not rospy.is_shutdown():
             self.send_data()
             rate.sleep()

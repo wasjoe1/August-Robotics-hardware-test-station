@@ -1,23 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from boothbot_msgs.ros_interfaces import (
-    APPS_CALIBRATION_SRV_CMD,
-    APPS_CALIBRATION_STATUS,
-    APPS_CALIBRATION_DATA,
-    DRIVERS_SERVOS_PDO,
-)
+
 import rospy
 import math
-import rospy as logger
 import numpy as np
-
-from boothbot_common.ros_logger_wrap import ROSLogging as Logging
-
+import cv2
 import os
 import time
 import oyaml
 import socket
 import glob
+import json
+import socket
+import shutil
 
 import base64
 from PIL import Image
@@ -34,16 +29,19 @@ from boothbot_perception.tracking_camera import TrackingCamera
 
 from boothbot_common.settings import BOOTHBOT_GET_CONFIG
 
-import json
-import socket
+from boothbot_common.module_base import ModuleBase
+# from boothbot_common.module_base_py3 import ModuleBase
 
-from boothbot_common.module_base_py3 import ModuleBase
-
-from guiding_beacon_system.drivers.laser_driver_v3 import LaserRangeFinderGenerator, LaserRangeFinder
+from guiding_beacon_system.drivers.laser_driver_py3 import LaserRangeFinderGenerator, LaserRangeFinder
 
 from boothbot_driver.servos_client import ServosClient
 # from boothbot_perception.track_client import TargetTracker
-import shutil
+from boothbot_msgs.ros_interfaces import (
+    APPS_CALIBRATION_SRV_CMD,
+    APPS_CALIBRATION_STATUS,
+    APPS_CALIBRATION_DATA,
+    DRIVERS_SERVOS_PDO,
+)
 
 TRACKER_CONFIG = BOOTHBOT_GET_CONFIG(name="tracker_driver")
 GS_CAMERA_VERTICAL_DIST = TRACKER_CONFIG["long_cam_laser_dist"] + \
@@ -91,7 +89,7 @@ JOB_DATA = {
     CS.INITIALIZE_SERVO.name: ["servo_h", "servo_v", "measurement_time"],
     CS.CAMERA_SHARPNESS.name: ["long_sharpness_score", "long_sharpness_result", "long_color_data", "long_color_result",
                                "short_sharpness_score", "short_sharpness_result", "short_color_data", "short_color_result"],
-    CS.CAMERAS_ALIGNMENT.name: ["cameras_offset", "measurement_time"],
+    CS.CAMERAS_ALIGNMENT.name: ["cameras_offset", "measurement_time", "cameras_offset_op_info"],
     CS.CAMERA_LASER_ALIGNMENT.name: ["camera_laser_alignment"],
     CS.CAMERAS_ANGLE.name: ["cameras_angle", "measurement_time"],
     CS.VERTICAL_SERVO_ZERO.name: ["vertical_offset", "measurement_time"],
@@ -100,8 +98,10 @@ JOB_DATA = {
 
 SAVE_DATA_TITLE = {
     CS.INITIALIZE_SERVO.name: ["servo_h", "servo_v", "measurement_time"],
-    CS.CAMERA_SHARPNESS.name: [],
-    CS.CAMERAS_ALIGNMENT.name: [],
+    CS.CAMERA_SHARPNESS.name: ["long_sharpness_score", "long_sharpness_result", "long_color_data", "long_color_result",
+                               "short_sharpness_score", "short_sharpness_result", "short_color_data", "short_color_result",
+                               "measurement_time"],
+    CS.CAMERAS_ALIGNMENT.name: ["cameras_offset", "measurement_time"],
     CS.CAMERA_LASER_ALIGNMENT.name: [],
     CS.CAMERAS_ANGLE.name: ["cameras_angle", "measurement_time"],
     CS.VERTICAL_SERVO_ZERO.name: ["vertical_offset", "measurement_time"],
@@ -110,13 +110,15 @@ SAVE_DATA_TITLE = {
 
 LONG = "long"
 SHORT = "short"
-COLOR = "BOG"
+COLOR = "CALI"
 TOLERANCE = (1e-5, 5e-5)
 CAMERA_FILTER_COUNT = 3
 
 
 class CalibrationController(ModuleBase):
-    def __init__(self, name, rate, states=None, transitions=None, commands=None, status_inf=None, srv_cmd_inf=None, need_robot_status=False, error_codes=None):
+    def __init__(self,
+                 name, rate, states=None, transitions=None, commands=None, status_inf=None, srv_cmd_inf=None, need_robot_status=False, error_codes=None,
+                 laser=None):
         super(CalibrationController, self).__init__(
             name=name,
             rate=rate,
@@ -149,15 +151,12 @@ class CalibrationController(ModuleBase):
 
         self._done_list = {}
 
-        # self.send_image = False
-        self.long_camera_img_data = None
-        self.short_camera_img_data = None
-
         # driver
         self.camera_long = None
         self.camera_short = None
         self.servos = ServosClient()
         self.laser = LaserRangeFinderGenerator.detect_laser_range_finder()
+        # self.laser = laser
 
         # config yaml
         self.config_dir = CONFIG_PATH + "/calibration_data"
@@ -165,7 +164,7 @@ class CalibrationController(ModuleBase):
         self.last_json_file = ""
 
         self.run_flag = False
-
+        self.test_track = False
         # state
         self.sub_state = 0
 
@@ -185,24 +184,27 @@ class CalibrationController(ModuleBase):
         self.job_setting = {
             CS.INITIALIZE_SERVO.name: {},
             CS.CAMERA_SHARPNESS.name: {"camera": "long", "exp_dis": {"long": 40, "short": 5}},
-            CS.CAMERAS_ALIGNMENT.name: {"default_h": 1.48},
+            CS.CAMERAS_ALIGNMENT.name: {"default_h": 1.38},
             CS.CAMERA_LASER_ALIGNMENT.name: {},
-            CS.CAMERAS_ANGLE.name: {"default_h": 1.48},
-            CS.VERTICAL_SERVO_ZERO.name: [0, 3.14],
+            CS.CAMERAS_ANGLE.name: {"default_h": 1.38},
+            CS.VERTICAL_SERVO_ZERO.name: [1.57, -1.57],
             CS.IMU_CALIBRATION.name: {},
         }
 
         self.save_data_title = [CS.INITIALIZE_SERVO.name,
-                                CS.CAMERAS_ANGLE.name, CS.VERTICAL_SERVO_ZERO.name]
+                                CS.CAMERAS_ANGLE.name, CS.VERTICAL_SERVO_ZERO.name,
+                                CS.CAMERA_SHARPNESS.name,
+                                CS.CAMERAS_ALIGNMENT.name]
 
     def update_data(self):
         if self._job is not None:
             self._data["data"]["step"] = self._job.name
         # self._data["data"]["job_data"] = self._job_data
             self._data["data"]["job_data"] = {}
-            for k, v in self._job_data.items():
-                if k in JOB_DATA[self._job.name]:
-                    self._data["data"]["job_data"][k] = v
+            if len(self._job_data) > 1:
+                for k, v in self._job_data.items():
+                    if k in JOB_DATA[self._job.name]:
+                        self._data["data"]["job_data"][k] = v
             self._data["data"]["client_status"] = {}
             self._data["data"]["client_status"].update(
                 self.client_status)
@@ -216,7 +218,7 @@ class CalibrationController(ModuleBase):
             if img_res is not None:
                 self.loginfo("pub {} img ".format(k))
                 self.puber_data.publish(img_res)
-            rospy.sleep(0.05)
+            rospy.sleep(0.02)
         self.reset_image_flag()
 
         self.update_data()
@@ -245,6 +247,7 @@ class CalibrationController(ModuleBase):
         self.vertical_encoder = []
         self._job_vertical_iter = 0
         self.camera_filter_count = 0
+        self.test_track = False
 
     def on_IDLE(self):
         self.update_client_status()
@@ -272,10 +275,10 @@ class CalibrationController(ModuleBase):
 
     def initialize(self):
         # TODO
-        logger.loginfo("initializing ....")
+        self.loginfo("initializing ....")
         self.last_json_file = self.get_last_json()
-        self.get_last_data()
         self.check_yaml_dir()
+        self.get_last_data()
         now = datetime.now()
         date_time = now.strftime("%m-%d-%Y-%H-%M-%S")
         self.json_file = self.config_dir + '/' + socket.gethostname() + "-" + \
@@ -284,7 +287,7 @@ class CalibrationController(ModuleBase):
         for client in (self.servos, self.laser):
             self.loginfo("connecting to {}".format(client.name))
             if not client.connect(timeout=0.5):
-                logger.logwarn("Initializing {} failed!!".format(client.name))
+                self.logwarn("Initializing {} failed!!".format(client.name))
                 return False
             else:
                 self.loginfo("connected succeeded{}".format(client.name))
@@ -320,6 +323,9 @@ class CalibrationController(ModuleBase):
         elif CS.USE_SHORT_CAMERA == command:
             self.loginfo("use short camera")
             self.job_setting[CS.CAMERA_SHARPNESS.name]["camera"] = SHORT
+        elif CS.TEST_TRACK == command:
+            self.test_track = True
+            # self.loginfo()
         else:
             self.turn_to_step(command)
         return True
@@ -351,6 +357,8 @@ class CalibrationController(ModuleBase):
         self._save_data = {}
         self._user_gui_save_data[self._job.name] = {}
         self._save_data[self._job.name] = {}
+        if self._job.name in (CS.INITIALIZE_SERVO.name, CS.CAMERA_SHARPNESS.name):
+            self.set_job_current_time()
         for k, v in self._job_data.items():
             if k in SAVE_DATA_TITLE[self._job.name]:
                 self._save_data[self._job.name].update({k: v})
@@ -379,7 +387,7 @@ class CalibrationController(ModuleBase):
     # callback function
     def servo_pdo_cb(self, msg):
         # update servo data
-        self.set_job_current_time()
+        # self.set_job_current_time()
         self._job_data["servo_h"] = msg.encodings_origin[0]
         self._job_data["servo_v"] = msg.encodings_origin[1]
 
@@ -394,6 +402,8 @@ class CalibrationController(ModuleBase):
     # image handler for get image data from rostopic
     def img2textfromcv2(self, frame):
         # From BGR to RGB
+        frame = cv2.resize(frame, None, fx=0.25, fy=0.25,
+                           interpolation=cv2.INTER_LINEAR)
         im = frame[:, :, ::-1]
         im = Image.fromarray(im)
         buf = BytesIO()
@@ -462,6 +472,9 @@ class CalibrationController(ModuleBase):
             json.dump(self._save_data, f)
 
     def check_yaml_dir(self):
+        if not os.path.exists(self.config_dir):
+            self.loginfo("Directory is created.")
+            os.mkdir(self.config_dir)
         if not os.path.exists(self.config_dir+"/old_data"):
             self.loginfo("Directory is created.")
             os.mkdir(self.config_dir+"/old_data")
@@ -548,26 +561,26 @@ class CalibrationController(ModuleBase):
                 return
             self.laser.laser_on()
             self.sub_state = 2
+        # elif self.sub_state == 2:
+        #     if self.servos.done:
+        #         self.track_target = (
+        #             self.job_setting[self._job.name]["default_h"], 0.0)
+        #         self.servo_move(self.track_target, TOLERANCE)
+        #         self.sub_state = 3
         elif self.sub_state == 2:
-            if self.servos.done:
-                self.track_target = (
-                    self.job_setting[self._job.name]["default_h"], 0.0)
-                self.servo_move(self.track_target, TOLERANCE)
-                self.sub_state = 3
-        elif self.sub_state == 3:
             if self.servos.done:
                 long_res, long_offset = self.track_beacon(LONG, 1)
                 if long_res:
-                    self.sub_state = 4
+                    self.sub_state = 3
                     return
-        elif self.sub_state == 4:
+        elif self.sub_state == 3:
             self.loginfo_throttle(
                 2, "long camera track done. track with short camera track")
             long_res, long_offset = self.track_beacon(LONG, 1)
             if not long_res:
                 self.loginfo(
                     "long camera detected moved. return to substate 3")
-                self.sub_state = 3
+                self.sub_state = 2
                 return
             self.loginfo("check short camera now")
             short_res, short_offset = self.track_beacon(SHORT, 1)
@@ -575,10 +588,14 @@ class CalibrationController(ModuleBase):
                 cameras_offset = self.get_camreras_offset(
                     long_offset, short_offset)
                 self.loginfo("Got offset. {}".format(cameras_offset))
-                # self.init_dict_and_update_job_time()
-                # self._job_data["time"] = time.time()
                 self.set_job_current_time()
                 self._job_data["cameras_offset"] = cameras_offset
+                op_info = {}
+                if cameras_offset >= 0:
+                    op_info = {"small": "right"}
+                else:
+                    op_info = {"small": "left"}
+                self._job_data["cameras_offset_op_info"] = op_info
 
     def get_camreras_offset(self, long_offset, short_offset):
         return (long_offset[0]-short_offset[0])
@@ -621,6 +638,10 @@ class CalibrationController(ModuleBase):
             self.loginfo("result  {}".format(result))
             self._job_data["camera_laser_alignment"] = result
             self.cameras_frame[LONG] = self.img2textfromcv2(frame)
+            if self.test_track:
+                pass
+                if self.servos.done:
+                    self.track_beacon(LONG, 3)
 
     def init_cameras(self, long_dist, short_dist):
         self.cameras[LONG] = TrackingCamera(
@@ -655,37 +676,42 @@ class CalibrationController(ModuleBase):
                 return
             self.laser.laser_on()
             self.sub_state = 2
+        # elif self.sub_state == 2:
+        #     if self.servos.done:
+        #         self.track_target = (
+        #             self.job_setting[self._job.name]["default_h"], 0.0)
+        #         self.servo_move(self.track_target, TOLERANCE)
+        #         self.sub_state = 3
         elif self.sub_state == 2:
-            if self.servos.done:
-                self.track_target = (
-                    self.job_setting[self._job.name]["default_h"], 0.0)
-                self.servo_move(self.track_target, TOLERANCE)
-                self.sub_state = 3
-        elif self.sub_state == 3:
             if self.servos.done:
                 long_res, long_offset = self.track_beacon(camera_filter_time=3)
                 if long_res:
-                    self.sub_state = 4
+                    self.sub_state = 3
                     return
         #         self.sub_state = 4
-        elif self.sub_state == 4:
+        elif self.sub_state == 3:
             self.loginfo_throttle(
                 2, "long camera track done. track with short camera track")
             long_res, long_offset = self.track_beacon(LONG, 3)
             if not long_res:
                 self.loginfo(
                     "long camera detected moved. return to substate 3")
-                self.sub_state = 3
+                self.sub_state = 2
                 return
             self.loginfo("check short camera now")
             short_res, short_offset = self.track_beacon(SHORT, 3)
-            res, dis = self.laser.get_distance()
+            try:
+                res, dis = self.laser.get_distance()
+            except Exception as e:
+                self.logerr("laser measure error. {}".format(e))
+                return
+            projection_dis = dis*math.cos(long_offset[1])
             self.loginfo("the laser dis is {}".format(dis))
             if not res:
                 return
 
             if(long_offset is not None) and (short_offset is not None):
-                d2 = math.atan2(GS_CAMERA_VERTICAL_DIST, dis)
+                d2 = math.atan2(GS_CAMERA_VERTICAL_DIST, projection_dis)
                 d1 = short_offset[1]
                 cameras_angle = -d1-d2
                 # _x, _y = bt.angle(center)
@@ -704,9 +730,16 @@ class CalibrationController(ModuleBase):
                 avg = np.average(arr)
                 self._job_data["cameras_angle"] = avg
                 self.set_job_current_time()
-                self.sub_state = 5
-        elif self.sub_state == 5:
+                self.sub_state = 4
+        elif self.sub_state == 4:
             self.loginfo_throttle(5, "{} job done".format(self._job.name))
+            if self.test_track:
+                self.laser.laser_on()
+                self.reset_camera_filter()
+                self.track_beacon(SHORT, 3)
+
+    def reset_camera_filter(self):
+        self.camera_filter_count = 0
 
     def _do_vertical_offset(self):
         if self.sub_state == 0:
@@ -762,5 +795,5 @@ class CalibrationController(ModuleBase):
 
 if __name__ == "__main__":
     rospy.init_node("calibration_controller")
-    c = CalibrationController("calibration_controller", 10)
+    c = CalibrationController("calibration_controller", 4)
     c.run()
