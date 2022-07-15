@@ -1,11 +1,10 @@
-1. 将距离 GS 50米的地方贴上专用纸
-2. 点击 取消使能电机 按钮
-3. 点击 打开激光 按钮
-4. 移动电机，直至激光打在50米外的专用纸上
-5. 点击 使能电机 按钮
-6. 调整激光的位置，直至网页图片上的激光稳定在黄色光圈内
-7. 锁紧螺丝
-8. 在专用纸的下面放上一个 ROG 的 RB
-9. 点击 试跟踪 按钮
-10. GS 开始跟踪 RB，测试人员应该观察激光是否打在 RB 的正确位置
-11. 完成后点击 完成 按钮
+1. Paste A4 paper on the wall 50 meters away from GS
+2. Click DISABLE_SERVOS button
+3. Click LASER_ON button
+4. Move the servos until the laser hits A4 paper
+5. Click LASER_OFF button
+6. Adjust the position of the laser until the laser on the web page image is stable within the yellow aperture
+7. Put a ROG RB beside A4 paper
+8. Click TRY_TRACK button
+9. The GS starts tracking the RB, the tester should observe whether the laser hits the correct position of the RB
+10. Click DONE button when finished
