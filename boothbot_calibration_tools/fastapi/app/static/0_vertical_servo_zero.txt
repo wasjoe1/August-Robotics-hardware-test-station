@@ -1,4 +1,9 @@
-1. 将 ROG 的 RB 放在 GS x 轴 7 米的位置，并调整 RB 的高度，直至水平仪打到 RB 灯上的指定位置
-2. 点击 运行
-4. 点击 保存数据 按钮
-5. 完成后点击 完成 按钮
+1. Along the y-axis of GS, one RB is placed at a distance of 7 meters from the GS, and the other RB is placed at a distance of -7 meters from the GS
+2. Level the GS
+3. Turn on the  laser level, adjust the  laser level, and aim the laser at the center of the long camera
+4. Adjust the height of the RB until the laser of the laser level is aimed at the center point on the green light of the RB
+5. Open RB
+6. Click the RUN button
+7. Wait for the job to finish
+8. Click the SAVE_DATA button
+9. Click the DONE button when finished

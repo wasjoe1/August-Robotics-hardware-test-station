@@ -1,7 +1,7 @@
-1. 将 ROG 的 RB 放置在距离 GS 4米的位置
-2. 点击 取消使能电机 按钮
-3. 将电机移动到对准 RB 的位置
-4. 点击 使能电机 按钮
-5. 点击 运行 按钮
-6. 调整大相机或者小相机的位置，直至详细数据中的 cameras_offset 为在 `正负万分之一` 内(3m,0.0003m)
-7. 完成后点击 完成 按钮
+1. Place the RB 4 meters away from the GS
+2. Click the DISABLE_SERVOS button and click the LASER_ON button
+3. Aim the laser at the RB
+4. Click the ENABLE_SERVOS button
+5. Click the RUN button
+6. Adjust the position of the large camera or the small camera until the cameras_offset in the detailed data is within ±0.0001
+7. Click the DONE button when finished
