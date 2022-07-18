@@ -24,6 +24,8 @@ var refresh_page_once_list = [
     "task_data_title",
     "save_data",
     "download_data",
+    "data_need_save",
+    "last_data"
     // "switch_lang",
     // "switch_lang",
     // "switch_lang",
