@@ -607,8 +607,8 @@ class CalibrationController(ModuleBase):
     def get_camreras_offset(self, long_offset, short_offset):
         return (long_offset[0]-short_offset[0])
 
-    def track_beacon(self, type=LONG, camera_filter_time=3):
-        offset = self.cameras_handle(type)
+    def track_beacon(self, type=LONG, camera_filter_time=3, dis=0.0, compensation=False):
+        offset = self.cameras_handle(type, dis, compensation)
         if offset is None:
             return False, None
         if type == LONG:
@@ -656,21 +656,22 @@ class CalibrationController(ModuleBase):
         self.cameras[SHORT] = TrackingCamera(
             "/dev/camera_short", laser_dist=short_dist)
 
-    def get_camera_result(self, type):
+    def get_camera_result(self, type, dis=0.0, compensation=False):
         frame = self.cameras[type].cap()
-        beacon_res = self.cameras[type].find_beacon(frame, 0.0, COLOR)
+        beacon_res = self.cameras[type].find_beacon(frame, dis, COLOR)
         self.cameras[type].draw_beacon(frame, beacon_res)
         self.cameras_frame[type] = self.img2textfromcv2(frame)
-        angle = self.cameras[type].get_beacon_angle(beacon_res)
+        angle = self.cameras[type].get_beacon_angle(
+            beacon_res, dis, compensation)
         return angle
 
-    def cameras_handle(self, type=LONG):
+    def cameras_handle(self, type=LONG, dis=0.0, compensation=False):
         if type != LONG:
-            return self.get_camera_result(SHORT)
+            return self.get_camera_result(SHORT, dis, compensation)
         else:
-            long_anle = self.get_camera_result(LONG)
+            long_anle = self.get_camera_result(LONG, dis, compensation)
             if long_anle is None:
-                return self.get_camera_result(SHORT)
+                return self.get_camera_result(SHORT, dis, compensation)
             else:
                 return long_anle
 
@@ -757,7 +758,7 @@ class CalibrationController(ModuleBase):
         elif self.sub_state == 7:
             self.laser.laser_on()
             self.reset_camera_filter()
-            self.track_beacon(SHORT, 3)
+            self.track_beacon(SHORT, 3, 4, True)
 
     def reset_camera_filter(self):
         self.camera_filter_count = 0
