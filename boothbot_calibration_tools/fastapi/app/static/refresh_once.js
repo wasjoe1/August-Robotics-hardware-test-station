@@ -25,7 +25,7 @@ var refresh_page_once_list = [
     "save_data",
     "download_data",
     "data_need_save",
-    "last_data"
+    "last_data_title"
     // "switch_lang",
     // "switch_lang",
     // "switch_lang",

@@ -24,7 +24,7 @@ var lang = {
     "task_data_title": ["TASK_DATA", "详细数据"],
     "save_data": ["SAVE_DATA", "保存数据"],
     "data_need_save": ["DATA_NEED_SAVE", "需要保存的数据"],
-    "last_data": ["LAST_DATA", "上一次保存的数据"],
+    "last_data_title": ["LAST_DATA", "上一次保存的数据"],
     "download_data": ["DOWNLOAD_DATA", "下载标定数据"],
     "save_data_to_device": ["SAVE_DATA_TO_DEVICE", "保存数据到设备"],
     "restart": ["RESTART", "完成并重启程序"],
