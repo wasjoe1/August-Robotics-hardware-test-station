@@ -657,22 +657,23 @@ class CalibrationController(ModuleBase):
         self.cameras[SHORT] = TrackingCamera(
             "/dev/camera_short", laser_dist=short_dist)
 
-    def get_camera_result(self, type, dis=0.0, compensation=False, angle=None):
+    def get_camera_result(self, type, dis=0.0, compensation=False, long_shrot_angle=None):
         frame = self.cameras[type].cap()
         beacon_res = self.cameras[type].find_beacon(frame, dis, COLOR)
         self.cameras[type].draw_beacon(frame, beacon_res)
         self.cameras_frame[type] = self.img2textfromcv2(frame)
+        self.loginfo("long short angle {}".format(long_shrot_angle))
         angle = self.cameras[type].get_beacon_angle(
-            beacon_res, dis, compensation, angle)
+            beacon_res, dis, compensation, long_shrot_angle)
         return angle
 
     def cameras_handle(self, type=LONG, dis=0.0, compensation=False, angle=None):
         if type != LONG:
-            return self.get_camera_result(SHORT, dis, compensation, angle=None)
+            return self.get_camera_result(SHORT, dis, compensation, angle)
         else:
-            long_anle = self.get_camera_result(LONG, dis, compensation, angle=None)
+            long_anle = self.get_camera_result(LONG, dis, compensation, angle)
             if long_anle is None:
-                return self.get_camera_result(SHORT, dis, compensation, angle=None)
+                return self.get_camera_result(SHORT, dis, compensation, angle)
             else:
                 return long_anle
 
@@ -749,7 +750,7 @@ class CalibrationController(ModuleBase):
                 # self.cameras[SHORT].shutdown()
                 self.sub_state = 5
         elif self.sub_state == 5:
-            self.init_cameras(4, 4)
+            # self.init_cameras(4, 4)
             self._sub_state = 6
         elif self.sub_state == 6:
             if not self.cameras_idle():
