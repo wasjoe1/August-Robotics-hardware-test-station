@@ -33,15 +33,31 @@ def replace_setting(device_settings_path, json_path):
     with open(json_path, "r") as jf:
         json_data = json.load(jf)
 
-    servo_h = json_data["servos"]["servo_h"]
-    servo_v = json_data["servos"]["servo_v"]
+    servo_h = None
+    servo_v = None
+    cameras_angle = None
+    vertical_offset = None
+    if 'INITIALIZE_SERVO' in json_data.keys():
+        servo_h = json_data["INITIALIZE_SERVO"]["servo_h"]
+    if 'INITIALIZE_SERVO' in json_data.keys():
+        servo_v = json_data["INITIALIZE_SERVO"]["servo_v"]
+    if 'CAMERAS_ANGLE' in json_data.keys():
+        cameras_angle = json_data["CAMERAS_ANGLE"]["cameras_angle"]
+    if 'VERTICAL_SERVO_ZERO' in json_data.keys():
+        vertical_offset = json_data["VERTICAL_SERVO_ZERO"]["vertical_offset"]
 
     with open(device_settings_path, "r") as f:
         print(device_settings_path)
         doc = oyaml.safe_load(f)
         print(doc)
-        doc['servos_driver']['servo_parameter']['horizontal']['zero_offset'] = servo_h
-        doc['servos_driver']['servo_parameter']['vertical']['zero_offset'] = servo_v
+        if servo_h is not None:
+            doc['servos_driver']['servo_parameter']['horizontal']['zero_offset'] = int(servo_h)
+        if servo_v is not None:
+            doc['servos_driver']['servo_parameter']['vertical']['zero_offset'] = int(servo_v)
+        if cameras_angle is not None:
+            doc['tracker_driver']['long_short_cam_angle_offset'] = cameras_angle
+        if vertical_offset is not None:
+            doc['servos_driver']['servo_parameter']['vertical']['zero_offset'] = int(vertical_offset)
 
     with open(device_settings_path, "w") as f:
         oyaml.dump(doc, f)
