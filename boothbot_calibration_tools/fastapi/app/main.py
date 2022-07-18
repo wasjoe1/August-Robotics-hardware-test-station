@@ -100,7 +100,7 @@ def serve():
     _ONE_DAY_IN_SECONDS = 60 * 60 * 24
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     data_pb2_grpc.add_data_ServiceServicer_to_server(DataService(), server)
-    server.add_insecure_port('host.docker.internal:50051')
+    server.add_insecure_port('0.0.0.0:50051')
     server.start()
     try:
         while True:
