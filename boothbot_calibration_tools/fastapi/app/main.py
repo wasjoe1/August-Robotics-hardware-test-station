@@ -100,7 +100,7 @@ def serve():
     _ONE_DAY_IN_SECONDS = 60 * 60 * 24
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     data_pb2_grpc.add_data_ServiceServicer_to_server(DataService(), server)
-    server.add_insecure_port('0.0.0.0:50051')
+    server.add_insecure_port('host.docker.internal:50051')
     server.start()
     try:
         while True:
@@ -122,7 +122,7 @@ async def startup_event():
 async def get_html(request: Request):
     # html_file = open("app/www/index.html", 'r').read()
     # return html_file
-
+    app.mode = None
     return templates.TemplateResponse("index.html", {"request": request})
 
 
@@ -147,7 +147,7 @@ async def step(request: Request, mode: str):
     # grpc_data = json_to_serial("step", app.mode)
     # logger.info("grpc_data : {}".format(grpc_data))
 
-    # with grpc.insecure_channel('0.0.0.0:50052') as channel:
+    # with grpc.insecure_channel('host.docker.internal:50052') as channel:
     #     stub = data_pb2_grpc.data_ServiceStub(channel)
     #     response = stub.GetMsg(data_pb2.dataRequest(request_data=grpc_data))
     # app.long_img = ""
@@ -172,7 +172,7 @@ def distribute_data(request):
 
         grpc_data = json_to_serial("step", app.mode)
 
-        with grpc.insecure_channel('0.0.0.0:50052') as channel:
+        with grpc.insecure_channel('host.docker.internal:50052') as channel:
             stub = data_pb2_grpc.data_ServiceStub(channel)
             response = stub.GetMsg(data_pb2.dataRequest(request_data=grpc_data))
         app.long_img = ""
@@ -187,7 +187,7 @@ def distribute_data(request):
 async def step(request: Request, cmd: str):
     logger.info("get command {}".format(cmd))
     grpc_data = json_to_serial("command", cmd)
-    with grpc.insecure_channel('0.0.0.0:50052') as channel:
+    with grpc.insecure_channel('host.docker.internal:50052') as channel:
         stub = data_pb2_grpc.data_ServiceStub(channel)
         response = stub.GetMsg(data_pb2.dataRequest(request_data=grpc_data))
     logger.info("Client received: " + response.response_data)
@@ -209,7 +209,7 @@ async def step(request: Request, lang: str):
     # if ret is not None:
     #     return ret
     # grpc_data = json_to_serial("command", cmd)
-    # with grpc.insecure_channel('0.0.0.0:50052') as channel:
+    # with grpc.insecure_channel('host.docker.internal:50052') as channel:
     #     stub = data_pb2_grpc.data_ServiceStub(channel)
     #     response = stub.GetMsg(data_pb2.dataRequest(request_data=grpc_data))
     # logger.info("Client received: " + response.response_data)
