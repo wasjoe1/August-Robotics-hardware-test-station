@@ -81,6 +81,7 @@ data_socket.onmessage = function(evt) {
     // modify host name
     var ele_hostanme = get_id("hostname")
     ele_hostanme.innerHTML = get_lang("hostname") + " : " + ws_json["host_name"]
+    hostname = ws_json["host_name"]
 
     // modify current job
     var ele_step = get_id("current_task")
@@ -299,7 +300,7 @@ function download() {
     var myDate = new Date()
     console.log(myDate.getDate())
 
-    var filename = ws_json["host_name"] + "_" + myDate.getFullYear() + "_" + myDate.getMonth() + "_" + myDate.getDate() + ".json"
+    var filename = hostname + "_" + myDate.getFullYear() + "_" + myDate.getMonth() + "_" + myDate.getDate() + ".json"
 
     pom.setAttribute('download', filename);
 

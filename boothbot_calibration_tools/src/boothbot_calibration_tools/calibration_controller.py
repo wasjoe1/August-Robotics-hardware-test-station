@@ -504,7 +504,8 @@ class CalibrationController(ModuleBase):
     def save_angle(self, data):
         with open(DEVICE_SETTINGS_FILE_PATH) as f:
             doc = oyaml.load(f)
-        doc['tracker_driver']['long_short_cam_angle_offset'] = data
+        self.loginfo("save data to device settting {}".format(data))
+        doc['tracker_driver']['long_short_cam_angle_offset'] = float(data)
         with open(DEVICE_SETTINGS_FILE_PATH, 'w') as f:
             oyaml.dump(doc, f)
 
