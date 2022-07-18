@@ -1,7 +1,8 @@
 1. Place the RB 4 meters away from the GS
 2. Click the DISABLE_SERVOS button and click the LASER_ON button
 3. Aim the laser at the RB
-4. Click the RUN button
-5. Wait for the detailed data to appear
-6. Click the SAVE_DATA button
-7. Click the DONE button when finished
+4. Click the ENABLE_SERVOS button
+5. Click the RUN button
+6. Wait for the detailed data to appear
+7. Click the SAVE_DATA button
+8. Click the DONE button when finished
