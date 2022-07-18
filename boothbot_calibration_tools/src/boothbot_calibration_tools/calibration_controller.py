@@ -501,6 +501,13 @@ class CalibrationController(ModuleBase):
 
     # JOB
 
+    def save_angle(self, data):
+        with open(DEVICE_SETTINGS_FILE_PATH) as f:
+            doc = oyaml.load(f)
+        doc['tracker_driver']['long_short_cam_angle_offset'] = data
+        with open(DEVICE_SETTINGS_FILE_PATH, 'w') as f:
+            oyaml.dump(doc, f)
+
     def _do_initialize_servo(self):
         pass
 
@@ -734,9 +741,23 @@ class CalibrationController(ModuleBase):
         elif self.sub_state == 4:
             self.loginfo_throttle(5, "{} job done".format(self._job.name))
             if self.test_track:
-                self.laser.laser_on()
-                self.reset_camera_filter()
-                self.track_beacon(SHORT, 3)
+                self.save_angle(self._job_data["cameras_angle"])
+                self.reset_camera()
+                # self.cameras[LONG].shutdown()
+                # self.cameras[SHORT].shutdown()
+                self.sub_state = 5
+        elif self.sub_state == 5:
+            self.init_cameras(4, 4)
+            self._sub_state = 6
+        elif self.sub_state == 6:
+            if not self.cameras_idle():
+                return
+            else:
+                self.sub_state = 7
+        elif self.sub_state == 7:
+            self.laser.laser_on()
+            self.reset_camera_filter()
+            self.track_beacon(SHORT, 3)
 
     def reset_camera_filter(self):
         self.camera_filter_count = 0
