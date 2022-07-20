@@ -183,7 +183,8 @@ def distribute_data(request):
 
         grpc_data = json_to_serial("step", app.mode)
 
-        with grpc.insecure_channel('host.docker.internal:50052') as channel:
+        # with grpc.insecure_channel('host.docker.internal:50052') as channel:
+        with grpc.insecure_channel('0.0.0.0:50052') as channel:
             stub = data_pb2_grpc.data_ServiceStub(channel)
             response = stub.GetMsg(data_pb2.dataRequest(request_data=grpc_data))
         app.long_img = ""
@@ -198,7 +199,8 @@ def distribute_data(request):
 async def step(request: Request, cmd: str):
     logger.info("get command {}".format(cmd))
     grpc_data = json_to_serial("command", cmd)
-    with grpc.insecure_channel('host.docker.internal:50052') as channel:
+    with grpc.insecure_channel('0.0.0.0:50052') as channel:
+    # with grpc.insecure_channel('host.docker.internal:50052') as channel:
         stub = data_pb2_grpc.data_ServiceStub(channel)
         response = stub.GetMsg(data_pb2.dataRequest(request_data=grpc_data))
     logger.info("Client received: " + response.response_data)
