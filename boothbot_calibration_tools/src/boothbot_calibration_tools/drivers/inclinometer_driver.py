@@ -1,0 +1,128 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import time
+import struct
+
+from boothbot_common.ros_logger_wrap import ROSLogging as Logging
+from pymodbus.exceptions import ModbusIOException
+
+from boothbot_calibration_tools.settings \
+    import LEVEL_INCLINOMETER_UNIT
+
+from boothbot_calibration_tools.drivers.base import ModbusDriver
+
+
+class InclinometerDriver(Logging):
+    def __init__(self,
+                 modbus_client=None,
+                 name="inclinometer_driver"):
+        self.name = name
+        super(InclinometerDriver, self).__init__(self.name)
+        # self.__mb = modbus_client
+        self.__mb = modbus_client
+        self.mb_client = self.__mb
+
+        # md = ModbusDriver()
+        # self.mb_client = md.client
+
+        self.x_data = 99.99
+        self.y_data = 99.99
+        self.mb_id = LEVEL_INCLINOMETER_UNIT
+
+    def get_inclinometer_data(self):
+        xy_raw_list = self.mb_client.read_holding_registers(
+            0x01, 4, unit=self.mb_id)
+
+        time.sleep(0.01)
+
+        if not (isinstance(xy_raw_list, ModbusIOException)):
+            # time.sleep(0.01)
+            # print(xy_raw_list.registers[0: 4])
+            # self.loginfo("get inclinometer data {} ".format(
+            #     xy_raw_list.registers[0: 4]))
+            x_raw = (xy_raw_list.registers[0] << 16) | xy_raw_list.registers[1]
+            y_raw = (xy_raw_list.registers[2] << 16) | xy_raw_list.registers[3]
+
+            # self.loginfo("x data {}".format(x_raw))
+            self.x_data = self.bin_to_float("{0:b}".format(x_raw))
+            # self.loginfo("y data {}".format(y_raw))
+            self.y_data = self.bin_to_float("{0:b}".format(y_raw))
+            return True
+
+            # print("---------------------")
+            # print(self.bin_to_float(b_x))
+            # print(self.bin_to_float(b_y))
+            # print("---------------------")
+
+            # return float(self.bin_to_float(b_x)), float(self.bin_to_float(b_y))
+
+        else:
+            self.loginfo("read inclinometer error")
+            return False
+
+    def get_linclinometer_x(self):
+        x_raw_list = self.mb_client.read_holding_registers(
+            0x01, 2, unit=self.mb_id)
+        time.sleep(0.01)
+
+        if not (isinstance(x_raw_list, ModbusIOException)):
+            x_raw = (x_raw_list.registers[0] << 16) | x_raw_list.registers[1]
+
+        self.x_data = self.bin_to_float("{0:b}".format(x_raw))
+
+    def set_zero_point(self):
+        data = 0x01
+        print("start relative zero point.")
+        rwr = self.mb_client.write_register(0x0B, data, unit=self.mb_id)
+        time.sleep(0.2)
+        # return not (isinstance(rwr, ModbusIOException) or rwr.function_code > 0x80)    time.sleep(0.2)
+        print(rwr)
+
+    def save_settings(self):
+        data = 0x00
+        print("save all settings.")
+        rwr = self.mb_client.write_register(0x0F, data, unit=self.mb_id)
+        time.sleep(0.2)
+        # return not (isinstance(rwr, ModbusIOException) or rwr.function_code > 0x80)    time.sleep(0.2)
+        print(rwr)
+
+    # def bin_to_float(self, b):
+    #     """ Convert binary string to a float. """
+    #     # bf = int_to_bytes(int(b, 2), 8)  # 8 bytes needed for IEEE 754 binary64.
+    #     print(struct.unpack('>d', b)[0])
+    #     return struct.unpack('>d', b)[0]
+
+    def bin_to_float(self, binary):
+        return struct.unpack('!f', struct.pack('!I', int(binary, 2)))[0]
+
+    # def ieee745(self, N):  # ieee-745 bits (max 32 bit)
+    #     a = int(N[0])        # sign,     1 bit
+    #     b = int(N[1:9], 2)    # exponent, 8 bits
+    #     c = int("1"+N[9:], 2)  # fraction, len(N)-9 bits
+
+    #     print(float(-1)**a * c / (1 << (len(N)-9 - (b-127))))
+
+    #     return float((-1)**a * c / (1 << (len(N)-9 - (b-127))))
+
+    # N = "110000011010010011"  # str of ieee-745 bits
+    # print( ieee745(N)  )  # -->  -20.59375
+
+    @property
+    def x(self):
+        return self.x_data
+
+    @property
+    def y(self):
+        return self.y_data
+
+
+if __name__ == "__main__":
+    mb = ModbusDriver()
+
+    inc = InclinometerDriver(mb.client)
+    while True:
+        inc.get_inclinometer_data()
+        print("x", inc.x)
+        print("y", inc.y)
+        time.sleep(0.05)
