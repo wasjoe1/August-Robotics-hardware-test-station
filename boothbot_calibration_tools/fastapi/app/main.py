@@ -156,10 +156,21 @@ async def step(request: Request, mode: str):
     # logger.info("grpc_data : {}".format(grpc_data))
     # return templates.TemplateResponse("index.html", {"request": request, "just_do": just_do})
 
-def distribute_data(request):
-    if app.mode is not None:
+
+def get_lang_data():
+    try:
         with open("static/lang.txt", "r") as f:
             langdata = f.read()
+    except Exception as e:
+        logger.info(e)
+        return 0
+    return langdata
+
+
+def distribute_data(request):
+    if app.mode is not None:
+        # with open("static/lang.txt", "r") as f:
+        langdata = get_lang_data()
 
         logger.info("lang.app : {}".format(langdata))
         app.lang = int(langdata)
@@ -209,8 +220,8 @@ async def step(request: Request, lang: str):
 @app.get("/get_lang/", response_class=HTMLResponse)
 async def step(request: Request, lang: str):
     logger.info("get lang")
-    with open("static/lang.txt", "r") as f:
-        langdata = f.read()
+    # with open("static/lang.txt", "r") as f:
+    langdata = get_lang_data()
     logger.info("lang.app : {}".format(langdata))
     return langdata
 
