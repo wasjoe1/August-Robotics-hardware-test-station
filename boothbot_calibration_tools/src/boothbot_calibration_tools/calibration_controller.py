@@ -32,7 +32,7 @@ from boothbot_common.settings import BOOTHBOT_GET_CONFIG
 from boothbot_common.module_base import ModuleBase
 # from boothbot_common.module_base_py3 import ModuleBase
 
-from guiding_beacon_system.drivers.laser_driver_py3 import LaserRangeFinderGenerator, LaserRangeFinder
+# from guiding_beacon_system.drivers.laser_driver_py3 import LaserRangeFinderGenerator, LaserRangeFinder
 
 from boothbot_driver.servos_client import ServosClient
 # from boothbot_perception.track_client import TargetTracker
@@ -41,72 +41,31 @@ from boothbot_msgs.ros_interfaces import (
     APPS_CALIBRATION_STATUS,
     APPS_CALIBRATION_DATA,
     DRIVERS_SERVOS_PDO,
+    DRIVERS_CHASSIS_SRV_CMD,
+    DRIVERS_CHASSIS_IMU.
+)
+
+from boothbot_calibration_tools.drivers.base import ModbusDriver
+from boothbot_calibration_tools.drivers.inclinometer_driver import InclinometerDriver
+
+from augustbot_msgs.srv import (
+    Command,
+    CommandRequest,
+    CommandResponse
+)
+
+from boothbot_calibration_tools.settings import (
+    JOB_DATA,
+    SAVE_DATA_TITLE,
+    TRANSITIONS,
+    CALI_ARG,
+    SAVE_ARG
 )
 
 TRACKER_CONFIG = BOOTHBOT_GET_CONFIG(name="tracker_driver")
 GS_CAMERA_VERTICAL_DIST = TRACKER_CONFIG["long_cam_laser_dist"] + \
     TRACKER_CONFIG["short_cam_laser_dist"]
 
-
-TRANSITIONS_TOP = [
-    {
-        # Error state manual entrance
-        "trigger": "to_ERROR",
-        "source": "*",
-        "dest": MS.ERROR,
-        "unless": ["is_ERROR"],
-    },
-    {
-        # now we reset the machinesrv_cmd_inf
-        "trigger": "reset",
-        "source": "*",
-        "dest": MS.RESETING,
-        "unless": ["is_RESETING"],
-    },
-    {
-        # to idle state after reseting
-        "trigger": "to_IDLE",
-        "source": [MS.RESETING],
-        "dest": MS.IDLE,
-    },
-    {
-        # Will back to INIT if initialize failed
-        "trigger": "to_INIT",
-        "source": [MS.RESETING],
-        "dest": MS.INIT,
-    },
-]
-
-TRANSITIONS = TRANSITIONS_TOP + [
-    {
-        "trigger": "to_RUNNING",
-        "source": MS.IDLE,
-        "dest": MS.RUNNING,
-    },
-]
-
-JOB_DATA = {
-    CS.INITIALIZE_SERVO.name: ["servo_h", "servo_v", "measurement_time"],
-    CS.CAMERA_SHARPNESS.name: ["long_sharpness_score", "long_sharpness_result", "long_color_data", "long_color_result",
-                               "short_sharpness_score", "short_sharpness_result", "short_color_data", "short_color_result"],
-    CS.CAMERAS_ALIGNMENT.name: ["cameras_offset", "measurement_time", "cameras_offset_op_info"],
-    CS.CAMERA_LASER_ALIGNMENT.name: ["camera_laser_alignment"],
-    CS.CAMERAS_ANGLE.name: ["cameras_angle", "measurement_time"],
-    CS.VERTICAL_SERVO_ZERO.name: ["vertical_offset", "measurement_time"],
-    CS.IMU_CALIBRATION.name: [],
-}
-
-SAVE_DATA_TITLE = {
-    CS.INITIALIZE_SERVO.name: ["servo_h", "servo_v", "measurement_time"],
-    CS.CAMERA_SHARPNESS.name: ["long_sharpness_score", "long_sharpness_result", "long_color_data", "long_color_result",
-                               "short_sharpness_score", "short_sharpness_result", "short_color_data", "short_color_result",
-                               "measurement_time"],
-    CS.CAMERAS_ALIGNMENT.name: ["cameras_offset", "measurement_time"],
-    CS.CAMERA_LASER_ALIGNMENT.name: [],
-    CS.CAMERAS_ANGLE.name: ["cameras_angle", "measurement_time"],
-    CS.VERTICAL_SERVO_ZERO.name: ["vertical_offset", "measurement_time"],
-    CS.IMU_CALIBRATION.name: [],
-}
 
 LONG = "long"
 SHORT = "short"
@@ -139,6 +98,7 @@ class CalibrationController(ModuleBase):
         self.puber_data = APPS_CALIBRATION_DATA.Publisher()
 
         DRIVERS_SERVOS_PDO.Subscriber(self.servo_pdo_cb)
+        DRIVERS_CHASSIS_IMU.Subscriber(self.imu_cb)
 
         self._data = {}
         self._data["data"] = {}
@@ -166,6 +126,7 @@ class CalibrationController(ModuleBase):
         self.test_track = False
         # state
         self.sub_state = 0
+        self.incli = None
 
         self.track_target = None
         self.camera_filter_count = 0
@@ -180,6 +141,7 @@ class CalibrationController(ModuleBase):
 
         self.cameras_angle = []
         self.vertical_encoder = []
+        self.horizontal_offset = []
         self._job_vertical_iter = 0
 
         self.job_setting = {
@@ -246,6 +208,7 @@ class CalibrationController(ModuleBase):
         self.cameras_angle = []
         self.cameras_angle = []
         self.vertical_encoder = []
+        self.horizontal_offset = []
         self._job_vertical_iter = 0
         self.camera_filter_count = 0
         self.test_track = False
@@ -272,7 +235,9 @@ class CalibrationController(ModuleBase):
         elif self._job == CS.VERTICAL_SERVO_ZERO:
             self._do_vertical_offset()
         elif self._job == CS.IMU_CALIBRATION:
-            pass
+            self._do_imu_calibration()
+        elif self._job == CS.HORIZONTAL_OFFSET:
+            self._do_horrizontal_offset()
 
     def initialize(self):
         # TODO
@@ -373,6 +338,8 @@ class CalibrationController(ModuleBase):
     def run_job(self):
         if self._job == CS.INITIALIZE_SERVO:
             self.job_init_servo_replace_setting()
+        elif self._job == CS.IMU_CALIBRATION:
+            self.cali_imu(CALI_ARG)
         else:
             self.run_flag = True
         # elif self._job
@@ -383,6 +350,9 @@ class CalibrationController(ModuleBase):
         if self._job == CS.INITIALIZE_SERVO:
             self.logwarn("killing node ")
             self.kill_servos_node()
+        elif self._job == CS.IMU_CALIBRATION:
+            self.logwarn("save imu calibration")
+            self.cali_imu(SAVE_ARG)
             # rosnode.kill_nodes("servos_driver")
             # os.system("rosnode kill /servos_driver")
         self._done_list[self._job.name] = "true"
@@ -400,6 +370,9 @@ class CalibrationController(ModuleBase):
         self._job_data["servo_h"] = msg.encodings_origin[0]
         self._job_data["servo_v"] = msg.encodings_origin[1]
         self.current_rad = (msg.radians[0], msg.radians[1])
+
+    def imu_cb(self, msg):
+        self.loginfo(msg)
 
     def turn_to_step(self, CS):
         if (self._job) != CS or (self._job is None):
@@ -531,8 +504,8 @@ class CalibrationController(ModuleBase):
     def _do_sharpness(self):
         camera_type = self.job_setting[CS.CAMERA_SHARPNESS.name]['camera']
         if self.sub_state == 0:
-            self.init_cameras(40, 5)
-            self._sub_state = 1
+            if self.init_cameras(40, 5):
+                self._sub_state = 1
         elif self.sub_state == 1:
             if (not self.cameras_idle()) or (not self.run_flag):
                 return
@@ -579,12 +552,6 @@ class CalibrationController(ModuleBase):
                 return
             self.laser.laser_on()
             self.sub_state = 2
-        # elif self.sub_state == 2:
-        #     if self.servos.done:
-        #         self.track_target = (
-        #             self.job_setting[self._job.name]["default_h"], 0.0)
-        #         self.servo_move(self.track_target, TOLERANCE)
-        #         self.sub_state = 3
         elif self.sub_state == 2:
             if self.servos.done:
                 long_res, long_offset = self.track_beacon(LONG, 1)
@@ -642,8 +609,8 @@ class CalibrationController(ModuleBase):
 
     def _do_camera_laser_alignment(self):
         if self.sub_state == 0:
-            self.init_cameras(49, 5)
-            self._sub_state = 1
+            if self.init_cameras(49, 5):
+                self._sub_state = 1
         elif self.sub_state == 1:
             if (not self.cameras_idle()) or (not self.run_flag):
                 return
@@ -661,11 +628,24 @@ class CalibrationController(ModuleBase):
                 if self.servos.done:
                     self.track_beacon(LONG, 3)
 
+    def init_camera(self, type, dis):
+        try:
+            if self.cameras[type] is None:
+                self.cameras[type] = TrackingCamera(
+                    "/dev/camera_"+type.lower(), laser_dist=dis)
+        except Exception as e:
+            self.logerr("{} camera init error".format(type))
+            self.cameras[type] = None
+            return False
+        return True
+
     def init_cameras(self, long_dist, short_dist):
-        self.cameras[LONG] = TrackingCamera(
-            "/dev/camera_long", laser_dist=long_dist)
-        self.cameras[SHORT] = TrackingCamera(
-            "/dev/camera_short", laser_dist=short_dist)
+        long_init_res = self.init_camera(LONG, long_dist)
+        short_init_res = self.init_camera(SHORT, short_dist)
+        if long_init_res and short_init_res:
+            return True
+        else:
+            return False
 
     def get_camera_result(self, type, dis=0.0, compensation=False, long_shrot_angle=None):
         frame = self.cameras[type].cap()
@@ -689,26 +669,19 @@ class CalibrationController(ModuleBase):
 
     def _do_cameras_angle(self):
         if self.sub_state == 0:
-            self.init_cameras(4, 4)
-            self._sub_state = 1
+            if self.init_cameras(4, 4):
+                self._sub_state = 1
         elif self.sub_state == 1:
             if (not self.cameras_idle()) or (not self.run_flag):
                 return
             self.laser.laser_on()
             self.sub_state = 2
-        # elif self.sub_state == 2:
-        #     if self.servos.done:
-        #         self.track_target = (
-        #             self.job_setting[self._job.name]["default_h"], 0.0)
-        #         self.servo_move(self.track_target, TOLERANCE)
-        #         self.sub_state = 3
         elif self.sub_state == 2:
             if self.servos.done:
                 long_res, long_offset = self.track_beacon(camera_filter_time=3)
                 if long_res:
                     self.sub_state = 3
                     return
-        #         self.sub_state = 4
         elif self.sub_state == 3:
             self.loginfo_throttle(
                 2, "long camera track done. track with short camera track")
@@ -755,12 +728,8 @@ class CalibrationController(ModuleBase):
             self.loginfo_throttle(5, "{} job done".format(self._job.name))
             if self.test_track:
                 self.save_angle(self._job_data["cameras_angle"])
-                # self.reset_camera()
-                # self.cameras[LONG].shutdown()
-                # self.cameras[SHORT].shutdown()
                 self.sub_state = 5
         elif self.sub_state == 5:
-            # self.init_cameras(4, 4)
             self._sub_state = 6
         elif self.sub_state == 6:
             if not self.cameras_idle():
@@ -770,15 +739,16 @@ class CalibrationController(ModuleBase):
         elif self.sub_state == 7:
             self.laser.laser_on()
             self.reset_camera_filter()
-            self.track_beacon(SHORT, 3, 4, True, float(self._job_data["cameras_angle"]))
+            self.track_beacon(SHORT, 3, 4, True, float(
+                self._job_data["cameras_angle"]))
 
     def reset_camera_filter(self):
         self.camera_filter_count = 0
 
     def _do_vertical_offset(self):
         if self.sub_state == 0:
-            self.init_cameras(7, 7)
-            self._sub_state = 1
+            if self.init_cameras(7, 7):
+                self._sub_state = 1
         elif self.sub_state == 1:
             if (not self.cameras_idle()) or (not self.run_flag):
                 return
@@ -825,6 +795,63 @@ class CalibrationController(ModuleBase):
                 self.sub_state = 5
         elif self.sub_state == 5:
             self.loginfo_throttle(2, "{} job done.".format(self._job.name))
+
+    def _do_imu_calibration(self):
+        if self.sub_state == 0:
+            if self.incli is None:
+                try:
+                    mb = ModbusDriver()
+                    self.incli = InclinometerDriver(mb.client)
+                    self.sub_state = 1
+                except Exception as e:
+                    self.logerr(e)
+        elif self.sub_state == 1:
+            if self.incli.get_inclinometer_data():
+                self._job_data["inclinometer_x"] = self.incli.x
+                self._job_data["inclinometer_y"] = self.incli.y
+
+    def cali_imu(self, prarm):
+        # rospy.wait_for_service(IMU_SERVICE)
+        # chassis_cmd = rospy.ServiceProxy()
+        cmd = CommandRequest()
+        cmd.command = "IMU"
+        cmd.parameter = prarm
+        res = DRIVERS_CHASSIS_SRV_CMD.service_call(cmd)
+        # if res.
+
+    def _do_horrizontal_offset(self):
+        if self.sub_state == 0:
+            if self.init_cameras(4, 4):
+                self._sub_state = 1
+        elif self.sub_state == 1:
+            if (not self.cameras_idle()) or (not self.run_flag):
+                return
+            # if not self.run_flag:
+            #     return
+            self.laser.laser_on()
+            self.sub_state = 2
+        elif self.sub_state == 2:
+            if self.servos.done:
+                long_res, long_offset = self.track_beacon(camera_filter_time=3)
+                if long_res:
+                    self.sub_state = 3
+                    return
+        elif self.sub_state == 3:
+            self.loginfo_throttle(
+                2, "long camera track done.")
+            long_res, long_offset = self.track_beacon(camera_filter_time=3)
+            if long_res:
+                self.horizontal_offset.append(self._job_data["servo_h"])
+            else:
+                self.sub_state = 2
+            if len(self.horizontal_offset) > 5:
+                arr = np.array(self.horizontal_offset)
+                avg = np.average(arr)
+                self.loginfo("verticalencoder is {}".format(avg))
+                self._job_data["horizontail_offset"] = avg
+                self.sub_state = 4
+        elif self.sub_state == 4:
+            self.loginfo_throttle(2, "horizontal job done.")
 
 
 if __name__ == "__main__":

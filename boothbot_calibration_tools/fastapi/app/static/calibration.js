@@ -238,6 +238,24 @@ function time_vis(timestamp) {
     return Y + M + D + h + m + s
 }
 
+function get_lang_requeset() {
+    console.log("send get_lang")
+    var url = "http://" + ip_addr + "/get_lang/"
+    var request = new XMLHttpRequest()
+    request.onreadystatechange = function() {
+        if (request.readyState === 4) {
+            get_lang_request_cb(request.response);
+        }
+    }
+    request.open("GET", url)
+    request.send()
+}
+
+function get_lang_request_cb(response) {
+    console.log(response)
+    cur_lang = int(response)
+}
+
 function switch_lang() {
     if (cur_lang == 0) {
         cur_lang = 1
@@ -337,6 +355,7 @@ function after_load() {
         s = s + ele
     }
     user_manual.innerHTML = s
+    get_lang_requeset()
 }
 
 function updata_user_manual(data) {

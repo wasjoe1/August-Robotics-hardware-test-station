@@ -7,6 +7,7 @@ var refresh_page_once_list = [
     "CAMERAS_ANGLE",
     "VERTICAL_SERVO_ZERO",
     "IMU_CALIBRATION",
+    "HORIZONTAL_OFFSET",
     "switch_lang",
     "camera_select_long",
     "camera_select_short",
@@ -25,9 +26,5 @@ var refresh_page_once_list = [
     "save_data",
     "download_data",
     "data_need_save",
-    "last_data_title"
-    // "switch_lang",
-    // "switch_lang",
-    // "switch_lang",
-    // "switch_lang",
+    "last_data_title",
 ]

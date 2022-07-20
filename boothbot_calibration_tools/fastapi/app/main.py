@@ -205,14 +205,15 @@ async def step(request: Request, lang: str):
         # just_do = f.readlines()
     return json.dumps(just_do, ensure_ascii=False)
 
-    # ret = distribute_data(request)
-    # if ret is not None:
-    #     return ret
-    # grpc_data = json_to_serial("command", cmd)
-    # with grpc.insecure_channel('host.docker.internal:50052') as channel:
-    #     stub = data_pb2_grpc.data_ServiceStub(channel)
-    #     response = stub.GetMsg(data_pb2.dataRequest(request_data=grpc_data))
-    # logger.info("Client received: " + response.response_data)
+
+@app.get("/get_lang/", response_class=HTMLResponse)
+async def step(request: Request, lang: str):
+    logger.info("get lang")
+    with open("static/lang.txt", "r") as f:
+        langdata = f.read()
+    logger.info("lang.app : {}".format(langdata))
+    return langdata
+
 
 @app.websocket("/data")
 async def data(websocket: WebSocket):

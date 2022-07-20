@@ -7,6 +7,7 @@ var lang = {
     "CAMERAS_ANGLE": ["5.CAMERAS_VERTICAL_ANGLE", "5.大小相机夹角"],
     "VERTICAL_SERVO_ZERO": ["6.VERTICAL_SERVO_ZERO", "6.垂直电机零点"],
     "IMU_CALIBRATION": ["7.IMU_CALIBRATION", "7.IMU标定"],
+    "HORIZONTAL_OFFSET": ["8.HORIZONTAL_OFFSET", "8.水平零点补偿"],
     "camera_select_long": ["USE_LONG_CAMERA", "使用长相机"],
     "camera_select_short": ["USE_SHORT_CAMERA", "使用短相机"],
     "enable_servos": ["ENABLE_SERVOS", "使能电机"],
@@ -34,6 +35,5 @@ var lang = {
     "long_tun_left_tight": ["tun the left screw tight in long camera", "长相机拧紧左边螺丝"],
     "switch_lang": ["中文", "English"],
     "servos": ["servos", "电机"],
-    "cameras": ["cameras", "相机"]
-
+    "cameras": ["cameras", "相机"],
 }

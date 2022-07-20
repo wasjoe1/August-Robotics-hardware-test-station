@@ -5,4 +5,5 @@
 		<arg name="use_small_probe" value="false" />
 		<arg name="enable_side_sonar" value="false" />
 	</include>
+	<include file="$(find boothbot_calibration_tools)/launch/lionel_base.launch"></include>
 </launch>
