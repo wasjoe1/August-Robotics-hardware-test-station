@@ -219,13 +219,13 @@ async def step(request: Request, lang: str):
     return json.dumps(just_do, ensure_ascii=False)
 
 
-@app.get("/get_lang/", response_class=HTMLResponse)
-async def step(request: Request, lang: str):
+@app.get("/get_lang", response_class=HTMLResponse)
+async def step(request: Request):
     logger.info("get lang")
     # with open("static/lang.txt", "r") as f:
     langdata = get_lang_data()
     logger.info("lang.app : {}".format(langdata))
-    return langdata
+    return json.dumps(langdata, ensure_ascii=False)
 
 
 @app.websocket("/data")

@@ -38,7 +38,7 @@ from boothbot_msgs.ros_interfaces import (
     APPS_CALIBRATION_DATA,
     DRIVERS_SERVOS_PDO,
     DRIVERS_CHASSIS_SRV_CMD,
-    DRIVERS_CHASSIS_IMU.
+    DRIVERS_CHASSIS_IMU,
 )
 
 from boothbot_calibration_tools.drivers.base import ModbusDriver
@@ -368,7 +368,8 @@ class CalibrationController(ModuleBase):
         self.current_rad = (msg.radians[0], msg.radians[1])
 
     def imu_cb(self, msg):
-        self.loginfo(msg)
+        pass
+        # self.loginfo(msg)
 
     def turn_to_step(self, CS):
         if (self._job) != CS or (self._job is None):
