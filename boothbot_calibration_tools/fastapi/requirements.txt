@@ -1,11 +1,11 @@
-fastapi>=0.68.0,<0.69.0
-pydantic>=1.8.0,<2.0.0
-uvicorn>=0.15.0,<0.16.0
-websockets
-wsproto
-jinja2>=3.0, <3.1.0
-aiofiles
-grpcio
-grpcio-tools
-googleapis-common-protos
-numpy
+fastapi==0.68.2
+pydantic==1.9.1
+uvicorn==0.15.0
+websockets==10.3
+wsproto==1.1.0
+jinja2==3.0.3
+aiofiles==0.8.0
+grpcio==1.47.0
+grpcio-tools==1.47.0
+googleapis-common-protos==1.56.3
+numpy==1.23.0

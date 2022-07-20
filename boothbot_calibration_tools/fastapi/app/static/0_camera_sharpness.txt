@@ -1,0 +1,9 @@
+1. Prepare two RBs, one is placed 5 meters away from the GS, the other is placed 50 meters away from the GS, turn on the RBs
+2. Adjust the ratio (aperture diameter: maximum aperture diameter) of the long camera to 18:100 and the short camera to 1:3
+3. Click the RUN button
+4. The value of long_camera_data and short_camera_data should be in (55-60, 225-255, 180-255)
+5. Tighten the camera aperture screw
+6. Resize the camera's focal plane until the sharpness_score value is at its highest
+7. Tighten the focal plane screws
+8. Use silicone and other items to fix the size camera
+9. Click the DONE button when finished

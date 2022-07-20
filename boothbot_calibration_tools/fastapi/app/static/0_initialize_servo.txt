@@ -1,0 +1,6 @@
+1. Click the DISABLE_SERVOS button
+2. Move the motors to the zero point
+3. Click the ENABLE_SERVOS button
+4. Click the SAVE_DATA_TO_DEVICE button
+5. Click the SAVE_DATA button to save the current data
+5. Click the RESTART button (Important: be sure to click this button after finishing the work)

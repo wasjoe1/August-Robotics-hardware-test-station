@@ -51,6 +51,8 @@ app.long_camera_time = None
 app.short_img = None
 app.short_camera_time = None
 app.data = None
+app.lang = 0
+app.mode = None
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
@@ -120,36 +122,97 @@ async def startup_event():
 async def get_html(request: Request):
     # html_file = open("app/www/index.html", 'r').read()
     # return html_file
-
+    app.mode = None
     return templates.TemplateResponse("index.html", {"request": request})
 
 
 @app.get("/step/{mode}", response_class=HTMLResponse)
 async def step(request: Request, mode: str):
     logger.info("get step {}".format(mode))
-    with open("static/"+mode+".txt") as f:
-        just_do = f.readlines()
 
-    grpc_data = json_to_serial("step", mode)
+    app.mode = mode
 
-    with grpc.insecure_channel('0.0.0.0:50052') as channel:
-        stub = data_pb2_grpc.data_ServiceStub(channel)
-        response = stub.GetMsg(data_pb2.dataRequest(request_data=grpc_data))
-    app.long_img = ""
-    app.short_img = ""
-    logger.info("Client received: " + response.response_data)
-    return templates.TemplateResponse("index.html", {"request": request, "just_do": just_do})
+    ret = distribute_data(request)
+    if ret is not None:
+        return ret
+    # with open("static/lang.txt", "r") as f:
+    #     langdata = f.read()
+
+    # logger.info("lang.app : {}".format(langdata))
+    # app.lang = int(langdata)
+    # logger.info("lang.app : {}".format(app.lang))
+    # with open("static/"+str(app.lang)+"_"+app.mode+".txt") as f:
+    #     just_do = f.readlines()
+
+    # grpc_data = json_to_serial("step", app.mode)
+    # logger.info("grpc_data : {}".format(grpc_data))
+
+    # with grpc.insecure_channel('host.docker.internal:50052') as channel:
+    #     stub = data_pb2_grpc.data_ServiceStub(channel)
+    #     response = stub.GetMsg(data_pb2.dataRequest(request_data=grpc_data))
+    # app.long_img = ""
+    # app.short_img = ""
+    # logger.info("Client received: " + response.response_data)
+    # logger.info("grpc_data : {}".format(grpc_data))
+    # return templates.TemplateResponse("index.html", {"request": request, "just_do": just_do})
+
+def distribute_data(request):
+    if app.mode is not None:
+        with open("static/lang.txt", "r") as f:
+            langdata = f.read()
+
+        logger.info("lang.app : {}".format(langdata))
+        app.lang = int(langdata)
+        logger.info("lang.app : {}".format(app.lang))
+        logger.info("static/"+str(app.lang)+"_"+app.mode+".txt")
+        with open("static/"+str(app.lang)+"_"+app.mode+".txt") as f:
+            just_do = f.readlines()
+
+        logger.info(just_do)
+
+        grpc_data = json_to_serial("step", app.mode)
+
+        with grpc.insecure_channel('host.docker.internal:50052') as channel:
+            stub = data_pb2_grpc.data_ServiceStub(channel)
+            response = stub.GetMsg(data_pb2.dataRequest(request_data=grpc_data))
+        app.long_img = ""
+        app.short_img = ""
+        logger.info("Client received: " + response.response_data)
+        return templates.TemplateResponse("index.html", {"request": request, "just_do": just_do})
+    else:
+        return None
 
 
 @app.get("/command/{cmd}", response_class=HTMLResponse)
 async def step(request: Request, cmd: str):
     logger.info("get command {}".format(cmd))
     grpc_data = json_to_serial("command", cmd)
-    with grpc.insecure_channel('0.0.0.0:50052') as channel:
+    with grpc.insecure_channel('host.docker.internal:50052') as channel:
         stub = data_pb2_grpc.data_ServiceStub(channel)
         response = stub.GetMsg(data_pb2.dataRequest(request_data=grpc_data))
     logger.info("Client received: " + response.response_data)
 
+
+@app.get("/switch_lang/{lang}", response_class=HTMLResponse)
+async def step(request: Request, lang: str):
+    logger.info("get switch lang {}".format(lang))
+    app.lang = int(lang)
+    with open("static/lang.txt", "w+") as f:
+        f.write(lang)
+
+    with open("static/"+str(app.lang)+"_"+app.mode+".txt") as f:
+        just_do = f.readlines()
+        # just_do = f.readlines()
+    return json.dumps(just_do, ensure_ascii=False)
+
+    # ret = distribute_data(request)
+    # if ret is not None:
+    #     return ret
+    # grpc_data = json_to_serial("command", cmd)
+    # with grpc.insecure_channel('host.docker.internal:50052') as channel:
+    #     stub = data_pb2_grpc.data_ServiceStub(channel)
+    #     response = stub.GetMsg(data_pb2.dataRequest(request_data=grpc_data))
+    # logger.info("Client received: " + response.response_data)
 
 @app.websocket("/data")
 async def data(websocket: WebSocket):

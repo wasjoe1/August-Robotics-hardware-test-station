@@ -511,6 +511,14 @@ class CalibrationController(ModuleBase):
 
     # JOB
 
+    def save_angle(self, data):
+        with open(DEVICE_SETTINGS_FILE_PATH) as f:
+            doc = oyaml.load(f)
+        self.loginfo("save data to device settting {}".format(data))
+        doc['tracker_driver']['long_short_cam_angle_offset'] = float(data)
+        with open(DEVICE_SETTINGS_FILE_PATH, 'w') as f:
+            oyaml.dump(doc, f)
+
     def _do_initialize_servo(self):
         pass
 
@@ -610,8 +618,8 @@ class CalibrationController(ModuleBase):
     def get_camreras_offset(self, long_offset, short_offset):
         return (long_offset[0]-short_offset[0])
 
-    def track_beacon(self, type=LONG, camera_filter_time=3):
-        offset = self.cameras_handle(type)
+    def track_beacon(self, type=LONG, camera_filter_time=3, dis=0.0, compensation=False, angle=None):
+        offset = self.cameras_handle(type, dis, compensation, angle)
         if offset is None:
             return False, None
         if type == LONG:
@@ -659,21 +667,23 @@ class CalibrationController(ModuleBase):
         self.cameras[SHORT] = TrackingCamera(
             "/dev/camera_short", laser_dist=short_dist)
 
-    def get_camera_result(self, type):
+    def get_camera_result(self, type, dis=0.0, compensation=False, long_shrot_angle=None):
         frame = self.cameras[type].cap()
-        beacon_res = self.cameras[type].find_beacon(frame, 0.0, COLOR)
+        beacon_res = self.cameras[type].find_beacon(frame, dis, COLOR)
         self.cameras[type].draw_beacon(frame, beacon_res)
         self.cameras_frame[type] = self.img2textfromcv2(frame)
-        angle = self.cameras[type].get_beacon_angle(beacon_res)
+        self.loginfo("long short angle {}".format(long_shrot_angle))
+        angle = self.cameras[type].get_beacon_angle(
+            beacon_res, dis, compensation, long_shrot_angle)
         return angle
 
-    def cameras_handle(self, type=LONG):
+    def cameras_handle(self, type=LONG, dis=0.0, compensation=False, angle=None):
         if type != LONG:
-            return self.get_camera_result(SHORT)
+            return self.get_camera_result(SHORT, dis, compensation, angle)
         else:
-            long_anle = self.get_camera_result(LONG)
+            long_anle = self.get_camera_result(LONG, dis, compensation, angle)
             if long_anle is None:
-                return self.get_camera_result(SHORT)
+                return self.get_camera_result(SHORT, dis, compensation, angle)
             else:
                 return long_anle
 
@@ -744,9 +754,23 @@ class CalibrationController(ModuleBase):
         elif self.sub_state == 4:
             self.loginfo_throttle(5, "{} job done".format(self._job.name))
             if self.test_track:
-                self.laser.laser_on()
-                self.reset_camera_filter()
-                self.track_beacon(SHORT, 3)
+                self.save_angle(self._job_data["cameras_angle"])
+                # self.reset_camera()
+                # self.cameras[LONG].shutdown()
+                # self.cameras[SHORT].shutdown()
+                self.sub_state = 5
+        elif self.sub_state == 5:
+            # self.init_cameras(4, 4)
+            self._sub_state = 6
+        elif self.sub_state == 6:
+            if not self.cameras_idle():
+                return
+            else:
+                self.sub_state = 7
+        elif self.sub_state == 7:
+            self.laser.laser_on()
+            self.reset_camera_filter()
+            self.track_beacon(SHORT, 3, 4, True, float(self._job_data["cameras_angle"]))
 
     def reset_camera_filter(self):
         self.camera_filter_count = 0

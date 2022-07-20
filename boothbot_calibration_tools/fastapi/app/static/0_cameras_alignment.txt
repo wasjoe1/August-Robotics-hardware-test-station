@@ -1,0 +1,7 @@
+1. Place the RB 4 meters away from the GS
+2. Click the DISABLE_SERVOS button and click the LASER_ON button
+3. Aim the laser at the RB
+4. Click the ENABLE_SERVOS button
+5. Click the RUN button
+6. Adjust the position of the large camera or the small camera until the cameras_offset in the detailed data is within ±0.0001
+7. Click the DONE button when finished
