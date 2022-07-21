@@ -13,6 +13,7 @@ var CAMERAS_ALIGNMENT = "CAMERAS_ALIGNMENT"
 var CAMERAS_ANGLE = "CAMERAS_ANGLE"
 var VERTICAL_SERVO_ZERO = "VERTICAL_SERVO_ZERO"
 var IMU_CALIBRATION = "IMU_CALIBRATION"
+var HORIZONTAL_OFFSET = "HORIZONTAL_OFFSET"
 
 // var default_lang = 1
 var server_lang
@@ -167,7 +168,9 @@ function get_save_data(ws_json, first_key) {
         data_content = get_function_data(first_key, INITIALIZE_SERVO) +
             get_function_data(first_key, CAMERAS_ANGLE) +
             get_function_data(first_key, VERTICAL_SERVO_ZERO) +
-            get_function_data(first_key, CAMERA_SHARPNESS)
+            get_function_data(first_key, CAMERA_SHARPNESS) +
+            get_function_data(first_key, HORIZONTAL_OFFSET) +
+            get_function_data(first_key, IMU_CALIBRATION)
     }
     return data_content
 }

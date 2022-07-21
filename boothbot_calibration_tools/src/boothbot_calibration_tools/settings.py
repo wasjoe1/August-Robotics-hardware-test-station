@@ -16,7 +16,7 @@ JOB_DATA = {
     CS.CAMERAS_ANGLE.name: ["cameras_angle", "measurement_time"],
     CS.VERTICAL_SERVO_ZERO.name: ["vertical_offset", "measurement_time"],
     CS.IMU_CALIBRATION.name: ["measurement_time", "inclinometer_x", "imu_x", "imu_y", "imu_z", "imu_w", "inclinometer_y"],
-    CS.HORIZONTAL_OFFSET.name: ["measurement_time", "horizontail_offset"]
+    CS.HORIZONTAL_OFFSET.name: ["measurement_time", "horizontal_offset"]
 }
 
 SAVE_DATA_TITLE = {
@@ -29,7 +29,7 @@ SAVE_DATA_TITLE = {
     CS.CAMERAS_ANGLE.name: ["cameras_angle", "measurement_time"],
     CS.VERTICAL_SERVO_ZERO.name: ["vertical_offset", "measurement_time"],
     CS.IMU_CALIBRATION.name: ["measurement_time", "inclinometer_x", "inclinometer_y", "imu_x", "imu_y", "imu_z", "imu_w"],
-    CS.HORIZONTAL_OFFSET.name: ["measurement_time", "horizontail_offset"]
+    CS.HORIZONTAL_OFFSET.name: ["measurement_time", "horizontal_offset"]
 }
 
 

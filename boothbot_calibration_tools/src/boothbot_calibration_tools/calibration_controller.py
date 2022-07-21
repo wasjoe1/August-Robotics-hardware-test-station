@@ -856,7 +856,8 @@ class CalibrationController(ModuleBase):
                 arr = np.array(self.horizontal_offset)
                 avg = np.average(arr)
                 self.loginfo("verticalencoder is {}".format(avg))
-                self._job_data["horizontail_offset"] = avg
+                self.set_job_current_time()
+                self._job_data["horizontal_offset"] = avg
                 self.sub_state = 4
         elif self.sub_state == 4:
             self.loginfo_throttle(2, "horizontal job done.")
