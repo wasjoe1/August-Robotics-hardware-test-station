@@ -16,7 +16,7 @@ var IMU_CALIBRATION = "IMU_CALIBRATION"
 
 // var default_lang = 1
 var server_lang
-var cur_lang = "1"
+var cur_lang = 1
 
 // var display_servos_laser_button = [INITIALIZE_SERVO, CAMERA_SHARPNESS, CAMERA_LASER_ALIGNMENT, CAMERAS_ANGLE, CAMERAS_ALIGNMENT]
 
@@ -256,10 +256,11 @@ function get_lang_requeset() {
 function get_lang_request_cb(response) {
     console.log(response)
         // server_lang = Integer.parseInt([response])
-    server_lang = response
-    console.log(typeof response)
-    console.log(Number(response))
+    server_lang = Number(response.substr(1, 1))
+    console.log(typeof server_lang)
+        // console.log(Number(response))
     console.log(server_lang)
+    update_lang()
         // refresh_page_once(cur_lang)
 }
 
@@ -274,10 +275,10 @@ function update_lang() {
 }
 
 function switch_lang() {
-    if (cur_lang == "0") {
-        cur_lang = "1"
+    if (cur_lang == 0) {
+        cur_lang = 1
     } else {
-        cur_lang = "0"
+        cur_lang = 0
     }
     console.log("send cur_lang :" + cur_lang)
     var url = "http://" + ip_addr + "/switch_lang/" + cur_lang
@@ -299,21 +300,12 @@ function request_cb(response) {
     updata_user_manual(response)
 }
 
-function refresh_page_once(cur_lang) {
-    var index
-    if (cur_lang == "0") {
-        index = 0
-    } else {
-        index = 1
-    }
-    console.log("lang index is", index)
+function refresh_page_once(l) {
     for (ele in refresh_page_once_list) {
         console.log(lang, ele)
         console.log(refresh_page_once_list[ele])
         console.log(lang[refresh_page_once_list[ele]])
-            // console.log("prepare to replace data", get_id(refresh_page_once_list[ele]))
-        get_id(refresh_page_once_list[ele]).innerText = lang[refresh_page_once_list[ele]][index]
-            // console.log("prepare to replace data", get_id(refresh_page_once_list[ele]))
+        get_id(refresh_page_once_list[ele]).innerText = lang[refresh_page_once_list[ele]][l]
     }
 }
 
@@ -383,7 +375,7 @@ function after_load() {
     }
     user_manual.innerHTML = s
     get_lang_requeset()
-    update_lang()
+        // update_lang()
 }
 
 function updata_user_manual(data) {
