@@ -14,7 +14,9 @@ var CAMERAS_ANGLE = "CAMERAS_ANGLE"
 var VERTICAL_SERVO_ZERO = "VERTICAL_SERVO_ZERO"
 var IMU_CALIBRATION = "IMU_CALIBRATION"
 
-var cur_lang = 1
+// var default_lang = 1
+var server_lang
+var cur_lang = "1"
 
 // var display_servos_laser_button = [INITIALIZE_SERVO, CAMERA_SHARPNESS, CAMERA_LASER_ALIGNMENT, CAMERAS_ANGLE, CAMERAS_ALIGNMENT]
 
@@ -253,15 +255,29 @@ function get_lang_requeset() {
 
 function get_lang_request_cb(response) {
     console.log(response)
-    cur_lang = parseInt(response)
-    refresh_page_once(cur_lang)
+        // server_lang = Integer.parseInt([response])
+    server_lang = response
+    console.log(typeof response)
+    console.log(Number(response))
+    console.log(server_lang)
+        // refresh_page_once(cur_lang)
+}
+
+function update_lang() {
+    console.log("updating lang")
+    console.log(server_lang)
+    console.log(cur_lang)
+    if (server_lang != cur_lang) {
+        refresh_page_once(server_lang)
+        cur_lang = server_lang
+    }
 }
 
 function switch_lang() {
-    if (cur_lang == 0) {
-        cur_lang = 1
+    if (cur_lang == "0") {
+        cur_lang = "1"
     } else {
-        cur_lang = 0
+        cur_lang = "0"
     }
     console.log("send cur_lang :" + cur_lang)
     var url = "http://" + ip_addr + "/switch_lang/" + cur_lang
@@ -278,16 +294,26 @@ function switch_lang() {
 
 function request_cb(response) {
     console.log(unescape(response))
+    server_lang = cur_lang
         // console.log("xml callback")
     updata_user_manual(response)
 }
 
 function refresh_page_once(cur_lang) {
+    var index
+    if (cur_lang == "0") {
+        index = 0
+    } else {
+        index = 1
+    }
+    console.log("lang index is", index)
     for (ele in refresh_page_once_list) {
         console.log(lang, ele)
         console.log(refresh_page_once_list[ele])
         console.log(lang[refresh_page_once_list[ele]])
-        get_id(refresh_page_once_list[ele]).innerText = lang[refresh_page_once_list[ele]][cur_lang]
+            // console.log("prepare to replace data", get_id(refresh_page_once_list[ele]))
+        get_id(refresh_page_once_list[ele]).innerText = lang[refresh_page_once_list[ele]][index]
+            // console.log("prepare to replace data", get_id(refresh_page_once_list[ele]))
     }
 }
 
@@ -357,6 +383,7 @@ function after_load() {
     }
     user_manual.innerHTML = s
     get_lang_requeset()
+    update_lang()
 }
 
 function updata_user_manual(data) {

@@ -139,6 +139,12 @@ class CalibrationController(ModuleBase):
         self.vertical_encoder = []
         self.horizontal_offset = []
         self._job_vertical_iter = 0
+        self.imu_data = {
+            "imu_x": None,
+            "imu_y": None,
+            "imu_z": None,
+            "imu_w": None
+        }
 
         self.job_setting = {
             CS.INITIALIZE_SERVO.name: {},
@@ -368,7 +374,11 @@ class CalibrationController(ModuleBase):
         self.current_rad = (msg.radians[0], msg.radians[1])
 
     def imu_cb(self, msg):
-        pass
+        self.imu_data["imu_x"] = msg.orientation.x
+        self.imu_data["imu_y"] = msg.orientation.y
+        self.imu_data["imu_z"] = msg.orientation.z
+        self.imu_data["imu_w"] = msg.orientation.w
+        # pass
         # self.loginfo(msg)
 
     def turn_to_step(self, CS):
@@ -806,6 +816,7 @@ class CalibrationController(ModuleBase):
             if self.incli.get_inclinometer_data():
                 self._job_data["inclinometer_x"] = self.incli.x
                 self._job_data["inclinometer_y"] = self.incli.y
+                self._job_data.update(self.imu_data)
 
     def cali_imu(self, prarm):
         # rospy.wait_for_service(IMU_SERVICE)

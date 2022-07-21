@@ -4,7 +4,7 @@
 from boothbot_calibration_tools.constants import CalibrationStates as MS
 from boothbot_calibration_tools.constants import CalibrationCommand as CS
 
-LEVEL_PORT = "/dev/ttyUSB0"
+LEVEL_PORT = "/dev/incli"
 LEVEL_INCLINOMETER_UNIT = 1
 
 JOB_DATA = {
@@ -15,7 +15,7 @@ JOB_DATA = {
     CS.CAMERA_LASER_ALIGNMENT.name: ["camera_laser_alignment"],
     CS.CAMERAS_ANGLE.name: ["cameras_angle", "measurement_time"],
     CS.VERTICAL_SERVO_ZERO.name: ["vertical_offset", "measurement_time"],
-    CS.IMU_CALIBRATION.name: ["measurement_time", "inclinometer_x", "inclinometer_y"],
+    CS.IMU_CALIBRATION.name: ["measurement_time", "inclinometer_x", "imu_x", "imu_y", "imu_z", "imu_w", "inclinometer_y"],
     CS.HORIZONTAL_OFFSET.name: ["measurement_time", "horizontail_offset"]
 }
 
@@ -28,15 +28,14 @@ SAVE_DATA_TITLE = {
     CS.CAMERA_LASER_ALIGNMENT.name: [],
     CS.CAMERAS_ANGLE.name: ["cameras_angle", "measurement_time"],
     CS.VERTICAL_SERVO_ZERO.name: ["vertical_offset", "measurement_time"],
-    CS.IMU_CALIBRATION.name: ["measurement_time", "inclinometer_x", "inclinometer_y"],
+    CS.IMU_CALIBRATION.name: ["measurement_time", "inclinometer_x", "inclinometer_y", "imu_x", "imu_y", "imu_z", "imu_w"],
     CS.HORIZONTAL_OFFSET.name: ["measurement_time", "horizontail_offset"]
 }
 
 
-
 # SETUP="SETUP"
-CALI_ARG="CALIBRATE"
-SAVE_ARG="SAVE"
+CALI_ARG = "CALIBRATE"
+SAVE_ARG = "SAVE"
 
 IMU_SERVICE = "/drivers/chassis/srv_cmd"
 
