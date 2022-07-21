@@ -1,0 +1,6 @@
+1. Turn on the laser level
+2. Draw a vertical line on the white paper of the RB, place the RB 4 meters away from the Lionel
+3. Adjust the placement of Lionel and CB. The vertical laser of the laser level needs to pass through the center of Lionel's base, the center of CB, and the center line of RB.
+4. Click the RUN button
+5. Wait for the result
+6. Click the SAVE button
