@@ -6,6 +6,10 @@ import time
 import struct
 import numpy as np
 
+import math
+import rospy
+import std_msgs.msg as stmsgs
+
 from boothbot_common.ros_logger_wrap import ROSLogging as Logging
 from pymodbus.exceptions import ModbusIOException
 
@@ -45,9 +49,12 @@ class InclinometerDriver(Logging):
         self.inverse = True
         self._with_rotation = True
         # self.tf_xyz =
-        self.offset_x = None
-        self.offset_y = None
+        self.offset_x_data = None
+        self.offset_x_data = None
 
+        self.offset_pub = rospy.Publisher(
+            '/inclinometer', stmsgs.Float64MultiArray, queue_size=1)
+        self.offset = stmsgs.Float64MultiArray()
         self.vearth = np.array([[0., 0., 0., 1.]]).T
         # self.vtarget = np.array([[0., 0., 0., 1.]]).T
         self.cba = 0.0
@@ -80,9 +87,11 @@ class InclinometerDriver(Logging):
             y_raw = (xy_raw_list.registers[2] << 16) | xy_raw_list.registers[3]
 
             # self.loginfo("x data {}".format(x_raw))
-            self.x_data = self.bin_to_float("{0:b}".format(x_raw))
+            self.x_data = math.radians(
+                self.bin_to_float("{0:b}".format(x_raw)))
             # self.loginfo("y data {}".format(y_raw))
-            self.y_data = self.bin_to_float("{0:b}".format(y_raw))
+            self.y_data = math.radians(
+                self.bin_to_float("{0:b}".format(y_raw)))
             self.get_tf()
             return True
 
@@ -102,7 +111,13 @@ class InclinometerDriver(Logging):
         # if self.inverse:
         #     euler = -self.y_data, -self.x_data, 0.0
 
-        # gemsgs.Quaternion(*tftrans.quaternion_from_euler(*euler))
+        # a = gemsgs.Quaternion(*tftrans.quaternion_from_euler(*euler))
+        # row, pitch, _ = tftrans.euler_from_quaternion(
+        #     (a.x,
+        #      a.y,
+        #      a.z,
+        #      a.w)
+        # )
         self.timu = tftrans.compose_matrix(translate=(
             0., 0., 0.), angles=(-self.y_data, -self.x_data, 0.0))
         # print("imu: ", self.timu)
@@ -118,9 +133,15 @@ class InclinometerDriver(Logging):
                     self.timu, self.tbase_rcenter, self.tbeacon_rcenter, self.tbeacon),
                 self.vearth
             )
-            self.offset_x = target2[0]
-            self.offset_y = target2[1]
-            # print(target2)
+            self.offset_x_data = target2[0]
+            self.offset_y_data = target2[1]
+            # print("x", self.offset_x_data)
+            # print("y", self.offset_y_data)
+
+        # data = stmsgs.Float64MultiArray()
+        self.offset.data = [self.offset_x_data, self.offset_y_data]
+        self.offset_pub.publish(self.offset)
+        # print("z", target2[2])
 
     def get_linclinometer_x(self):
         x_raw_list = self.mb_client.read_holding_registers(
@@ -179,19 +200,19 @@ class InclinometerDriver(Logging):
 
     @property
     def offset_x(self):
-        return self.offset_x
+        return self.offset_x_data
 
     @property
     def offset_y(self):
-        return self.offset_y
+        return self.offset_y_data
 
 
 if __name__ == "__main__":
     mb = ModbusDriver()
-
+    rospy.init_node("inclinometer_node")
     inc = InclinometerDriver(mb.client)
     while True:
         inc.get_inclinometer_data()
         # print("x", inc.x)
         # print("y", inc.y)
-        time.sleep(0.05)
+        time.sleep(0.1)

@@ -4,7 +4,7 @@
 from boothbot_calibration_tools.constants import CalibrationStates as MS
 from boothbot_calibration_tools.constants import CalibrationCommand as CS
 
-LEVEL_PORT = "/dev/ttyUSB0"
+LEVEL_PORT = "/dev/incli"
 LEVEL_INCLINOMETER_UNIT = 1
 
 JOB_DATA = {

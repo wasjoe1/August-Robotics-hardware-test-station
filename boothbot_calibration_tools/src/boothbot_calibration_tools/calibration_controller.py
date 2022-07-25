@@ -41,14 +41,13 @@ from boothbot_msgs.ros_interfaces import (
     DRIVERS_CHASSIS_IMU,
 )
 
-from boothbot_calibration_tools.drivers.base import ModbusDriver
-from boothbot_calibration_tools.drivers.inclinometer_driver import InclinometerDriver
-
 from augustbot_msgs.srv import (
     Command,
     CommandRequest,
     CommandResponse
 )
+
+import std_msgs.msg as stmsgs
 
 from boothbot_calibration_tools.settings import (
     JOB_DATA,
@@ -95,6 +94,8 @@ class CalibrationController(ModuleBase):
 
         DRIVERS_SERVOS_PDO.Subscriber(self.servo_pdo_cb)
         DRIVERS_CHASSIS_IMU.Subscriber(self.imu_cb)
+        rospy.Subscriber('/inclinometer', stmsgs.Float64MultiArray, self._iucli_cb)
+        self.incli_data = None
 
         self._data = {}
         self._data["data"] = {}
@@ -122,7 +123,6 @@ class CalibrationController(ModuleBase):
         self.test_track = False
         # state
         self.sub_state = 0
-        self.incli = None
 
         self.track_target = None
         self.camera_filter_count = 0
@@ -807,20 +807,11 @@ class CalibrationController(ModuleBase):
 
     def _do_imu_calibration(self):
         if self.sub_state == 0:
-            if self.incli is None:
-                try:
-                    mb = ModbusDriver()
-                    self.incli = InclinometerDriver(mb.client)
-                    self.sub_state = 1
-                except Exception as e:
-                    self.logerr(e)
+            self.sub_state = 1
         elif self.sub_state == 1:
-            if self.incli.get_inclinometer_data():
-                self._job_data["inclinometer_x"] = self.incli.x
-                self._job_data["inclinometer_y"] = self.incli.y
-                self._job_data["offset_x"] = self.incli.offset_x
-                self._job_data["offset_y"] = self.incli.offset_y
-                self._job_data.update(self.imu_data)
+            self._job_data["offset_x"] = self.incli_data.data[0]
+            self._job_data["offset_y"] = self.incli_data.data[1]
+            self._job_data.update(self.imu_data)
 
     def cali_imu(self, prarm):
         # rospy.wait_for_service(IMU_SERVICE)
@@ -865,6 +856,9 @@ class CalibrationController(ModuleBase):
                 self.sub_state = 4
         elif self.sub_state == 4:
             self.loginfo_throttle(2, "horizontal job done.")
+
+    def _iucli_cb(self, msg):
+        self.incli_data = msg
 
 
 if __name__ == "__main__":
