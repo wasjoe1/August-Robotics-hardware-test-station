@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from re import X
 import time
 import struct
+import numpy as np
 
 from boothbot_common.ros_logger_wrap import ROSLogging as Logging
 from pymodbus.exceptions import ModbusIOException
@@ -11,6 +13,16 @@ from boothbot_calibration_tools.settings \
     import LEVEL_INCLINOMETER_UNIT
 
 from boothbot_calibration_tools.drivers.base import ModbusDriver
+
+import tf.transformations as tftrans
+
+from boothbot_calibration_tools.settings import(
+    TRANS_BEACON,
+    TRANS_BEACON_RCENTER,
+    LASER_HEIGHT
+)
+
+import geometry_msgs.msg as gemsgs
 
 
 class InclinometerDriver(Logging):
@@ -30,6 +42,29 @@ class InclinometerDriver(Logging):
         self.y_data = 99.99
         self.mb_id = LEVEL_INCLINOMETER_UNIT
 
+        self.inverse = True
+        self._with_rotation = True
+        # self.tf_xyz =
+        self.offset_x = None
+        self.offset_y = None
+
+        self.vearth = np.array([[0., 0., 0., 1.]]).T
+        # self.vtarget = np.array([[0., 0., 0., 1.]]).T
+        self.cba = 0.0
+
+        self.timu = tftrans.compose_matrix(
+            translate=(0., 0., 0.), angles=(0.0, 0.0, 0.0))
+        self.tbase_rcenter = tftrans.compose_matrix(
+            translate=(0., 0., LASER_HEIGHT), angles=(0., 0., 0.))
+        if self._with_rotation:  # True
+            self.tbeacon = tftrans.compose_matrix(
+                translate=TRANS_BEACON, angles=(0., 0., 0.))
+        else:
+            self.tbeacon_rcenter = tftrans.compose_matrix(
+                translate=(0.0, 0.0, 0.0), angles=(0., 0., 0.))
+            self.tbeacon = tftrans.compose_matrix(
+                translate=(0.0, 0.0, 0.0), angles=(0., 0., 0.))
+
     def get_inclinometer_data(self):
         xy_raw_list = self.mb_client.read_holding_registers(
             0x01, 4, unit=self.mb_id)
@@ -48,6 +83,7 @@ class InclinometerDriver(Logging):
             self.x_data = self.bin_to_float("{0:b}".format(x_raw))
             # self.loginfo("y data {}".format(y_raw))
             self.y_data = self.bin_to_float("{0:b}".format(y_raw))
+            self.get_tf()
             return True
 
             # print("---------------------")
@@ -60,6 +96,31 @@ class InclinometerDriver(Logging):
         else:
             self.loginfo("read inclinometer error")
             return False
+
+    def get_tf(self):
+
+        # if self.inverse:
+        #     euler = -self.y_data, -self.x_data, 0.0
+
+        # gemsgs.Quaternion(*tftrans.quaternion_from_euler(*euler))
+        self.timu = tftrans.compose_matrix(translate=(
+            0., 0., 0.), angles=(-self.y_data, -self.x_data, 0.0))
+        # print("imu: ", self.timu)
+
+        if self._with_rotation:  # True
+            # self._cba_count += 8
+            # self._cba_count %= self._cba_resolution
+            # self.cba = self._cba_count / self._cba_resolution * 2 * math.pi
+            self.tbeacon_rcenter = tftrans.compose_matrix(
+                translate=TRANS_BEACON_RCENTER, angles=(0., 0., self.cba))
+            target2 = np.dot(
+                tftrans.concatenate_matrices(
+                    self.timu, self.tbase_rcenter, self.tbeacon_rcenter, self.tbeacon),
+                self.vearth
+            )
+            self.offset_x = target2[0]
+            self.offset_y = target2[1]
+            # print(target2)
 
     def get_linclinometer_x(self):
         x_raw_list = self.mb_client.read_holding_registers(
@@ -116,6 +177,14 @@ class InclinometerDriver(Logging):
     def y(self):
         return self.y_data
 
+    @property
+    def offset_x(self):
+        return self.offset_x
+
+    @property
+    def offset_y(self):
+        return self.offset_y
+
 
 if __name__ == "__main__":
     mb = ModbusDriver()
@@ -123,6 +192,6 @@ if __name__ == "__main__":
     inc = InclinometerDriver(mb.client)
     while True:
         inc.get_inclinometer_data()
-        print("x", inc.x)
-        print("y", inc.y)
+        # print("x", inc.x)
+        # print("y", inc.y)
         time.sleep(0.05)

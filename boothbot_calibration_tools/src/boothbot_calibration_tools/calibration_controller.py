@@ -239,7 +239,7 @@ class CalibrationController(ModuleBase):
         elif self._job == CS.IMU_CALIBRATION:
             self._do_imu_calibration()
         elif self._job == CS.HORIZONTAL_OFFSET:
-            self._do_horrizontal_offset()
+            self._do_horizontal_offset()
 
     def initialize(self):
         # TODO
@@ -341,7 +341,9 @@ class CalibrationController(ModuleBase):
         if self._job == CS.INITIALIZE_SERVO:
             self.job_init_servo_replace_setting()
         elif self._job == CS.IMU_CALIBRATION:
+            self.loginfo("imu calibration now.")
             self.cali_imu(CALI_ARG)
+            self.loginfo("imu calibration now.")
         else:
             self.run_flag = True
         # elif self._job
@@ -353,8 +355,8 @@ class CalibrationController(ModuleBase):
             self.logwarn("killing node ")
             self.kill_servos_node()
         elif self._job == CS.IMU_CALIBRATION:
-            self.logwarn("save imu calibration")
             self.cali_imu(SAVE_ARG)
+            self.logwarn("save imu calibration")
             # rosnode.kill_nodes("servos_driver")
             # os.system("rosnode kill /servos_driver")
         self._done_list[self._job.name] = "true"
@@ -816,6 +818,8 @@ class CalibrationController(ModuleBase):
             if self.incli.get_inclinometer_data():
                 self._job_data["inclinometer_x"] = self.incli.x
                 self._job_data["inclinometer_y"] = self.incli.y
+                self._job_data["offset_x"] = self.incli.offset_x
+                self._job_data["offset_y"] = self.incli.offset_y
                 self._job_data.update(self.imu_data)
 
     def cali_imu(self, prarm):
@@ -827,7 +831,7 @@ class CalibrationController(ModuleBase):
         res = DRIVERS_CHASSIS_SRV_CMD.service_call(cmd)
         # if res.
 
-    def _do_horrizontal_offset(self):
+    def _do_horizontal_offset(self):
         if self.sub_state == 0:
             if self.init_cameras(4, 4):
                 self._sub_state = 1
