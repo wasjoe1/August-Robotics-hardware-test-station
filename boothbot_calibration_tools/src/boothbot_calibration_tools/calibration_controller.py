@@ -510,13 +510,21 @@ class CalibrationController(ModuleBase):
         else:
             return self.cameras[LONG].is_camera_idle() and self.cameras[SHORT].is_camera_idle()
 
+    def get_cameras_frames(self):
+        for type in (LONG, SHORT):
+            frame = self.cameras[type].cap()
+            self.cameras_frame[type] = self.img2textfromcv2(frame)
+
     def _do_sharpness(self):
         camera_type = self.job_setting[CS.CAMERA_SHARPNESS.name]['camera']
         if self.sub_state == 0:
             if self.init_cameras(40, 5):
                 self._sub_state = 1
         elif self.sub_state == 1:
-            if (not self.cameras_idle()) or (not self.run_flag):
+            if not self.cameras_idle():
+                return
+            if not self.run_flag:
+                self.get_cameras_frames()
                 return
             self.get_sharpness_result(camera_type)
 
@@ -557,7 +565,10 @@ class CalibrationController(ModuleBase):
             self.init_cameras(5, 5)
             self._sub_state = 1
         elif self.sub_state == 1:
-            if (not self.cameras_idle()) or (not self.run_flag):
+            if not self.cameras_idle():
+                return
+            if not self.run_flag:
+                self.get_cameras_frames()
                 return
             self.laser.laser_on()
             self.sub_state = 2
@@ -621,7 +632,10 @@ class CalibrationController(ModuleBase):
             if self.init_cameras(49, 5):
                 self._sub_state = 1
         elif self.sub_state == 1:
-            if (not self.cameras_idle()) or (not self.run_flag):
+            if not self.cameras_idle():
+                return
+            if not self.run_flag:
+                self.get_cameras_frames()
                 return
             self.laser.laser_on()
             frame = self.cameras[LONG].cap()
@@ -681,7 +695,10 @@ class CalibrationController(ModuleBase):
             if self.init_cameras(4, 4):
                 self._sub_state = 1
         elif self.sub_state == 1:
-            if (not self.cameras_idle()) or (not self.run_flag):
+            if not self.cameras_idle():
+                return
+            if not self.run_flag:
+                self.get_cameras_frames()
                 return
             self.laser.laser_on()
             self.sub_state = 2
@@ -759,7 +776,10 @@ class CalibrationController(ModuleBase):
             if self.init_cameras(7, 7):
                 self._sub_state = 1
         elif self.sub_state == 1:
-            if (not self.cameras_idle()) or (not self.run_flag):
+            if not self.cameras_idle():
+                return
+            if not self.run_flag:
+                self.get_cameras_frames()
                 return
             # if not self.run_flag:
             #     return
@@ -827,10 +847,11 @@ class CalibrationController(ModuleBase):
             if self.init_cameras(4, 4):
                 self._sub_state = 1
         elif self.sub_state == 1:
-            if (not self.cameras_idle()) or (not self.run_flag):
+            if not self.cameras_idle():
                 return
-            # if not self.run_flag:
-            #     return
+            if not self.run_flag:
+                self.get_cameras_frames()
+                return
             self.laser.laser_on()
             self.sub_state = 2
         elif self.sub_state == 2:
