@@ -10,7 +10,6 @@ project(boothbot_dashboard)
 find_package(catkin REQUIRED COMPONENTS
   boothbot_common
   boothbot_driver
-  boothbot_marking
   boothbot_msgs
   boothbot_perception
   rospy
