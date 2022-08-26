@@ -40,8 +40,8 @@ def gs_replace_setting(device_settings_path, json_path):
     vertical_offset = None
     if 'INITIALIZE_SERVO' in json_data.keys():
         servo_h = json_data["INITIALIZE_SERVO"]["servo_h"]
-    if 'INITIALIZE_SERVO' in json_data.keys():
-        servo_v = json_data["INITIALIZE_SERVO"]["servo_v"]
+    # if 'INITIALIZE_SERVO' in json_data.keys():
+    #     servo_v = json_data["INITIALIZE_SERVO"]["servo_v"]
     if 'CAMERAS_ANGLE' in json_data.keys():
         cameras_angle = json_data["CAMERAS_ANGLE"]["cameras_angle"]
     if 'VERTICAL_SERVO_ZERO' in json_data.keys():
@@ -54,9 +54,9 @@ def gs_replace_setting(device_settings_path, json_path):
         if servo_h is not None:
             doc['servos_driver']['servo_parameter']['horizontal']['zero_offset'] = int(
                 servo_h)
-        if servo_v is not None:
-            doc['servos_driver']['servo_parameter']['vertical']['zero_offset'] = int(
-                servo_v)
+        # if servo_v is not None:
+        #     doc['servos_driver']['servo_parameter']['vertical']['zero_offset'] = int(
+        #         servo_v)
         if cameras_angle is not None:
             doc['tracker_driver']['long_short_cam_angle_offset'] = cameras_angle
         if vertical_offset is not None:
