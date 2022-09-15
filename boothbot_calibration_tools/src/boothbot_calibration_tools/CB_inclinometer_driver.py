@@ -40,7 +40,7 @@ class InclinometerDriver(Logging):
         # self.__mb = modbus_client
         self.__mb = modbus_client
         self.mb_client = self.__mb
-        self.action_goal = ServosMoveActionGoal()
+        
 
         # md = ModbusDriver()
         # self.mb_client = md.client
@@ -76,10 +76,11 @@ class InclinometerDriver(Logging):
                 translate=(0.0, 0.0, 0.0), angles=(0., 0., 0.))
 
     def set_cb_radians(self):
+        cb_radians = rospy.Publisher('/drivers/servos/act_move/goal',ServosMoveActionGoal , queue_size=1)
+        self.action_goal = ServosMoveActionGoal()
         self.action_goal.goal.target_radians = [1,0]
         self.action_goal.goal.tolerances = [0.0005,0.0005]
-        cb_radians = rospy.Publisher('/drivers/servos/act_move/goal', self.action_goal, queue_size=1)
-        cb_radians.publish()
+        cb_radians.publish(self.action_goal)
         rospy.loginfo("current radians:{}".format(self.action_goal.goal.target_radians))
 
     def get_inclinometer_data(self):
