@@ -123,12 +123,14 @@ class InclinometerDriver(Logging):
         return None
     def add_measurement(self, CB_radians, inclinations):
         rospy.loginfo("Got inclination: {} at servos_radians: {}".format(inclinations, CB_radians))
-        # self.measured_inclinations.append(
-        #     {
-        #         "CB_radians": CB_radians,
-        #         "inclinations": inclinations,
-        #     }
-        # )
+        self.measured_inclinations.append(
+            {
+                "CB_radians": CB_radians,
+                "inclinations": inclinations,
+            }
+        )
+
+
 
     def get_inclination_params(self):
         gs_yaw_radians = []
@@ -143,6 +145,18 @@ class InclinometerDriver(Logging):
             get_estimated_inclination(gs_yaw_radians, inclinations_x),
             get_estimated_inclination(gs_yaw_radians, inclinations_y),
         ]
+    
+    def gen_action_result(self):
+        param_x, param_y = self.get_inclination_params()
+        inc_x = (
+            sincurve(0.0, param_x[0], param_x[1], 0.0)
+            + sincurve(-np.pi / 2, param_y[0], param_y[1], 0.0)
+        ) / 2
+        inc_y = (
+            sincurve(np.pi / 2, param_x[0], param_x[1], 0.0)
+            + sincurve(0.0, param_y[0], param_y[1], 0.0)
+        ) / 2
+        rospy.loginfo("Row: {}, Pitch: {}".format(inc_x, inc_y))
 
 
     def set_cb_radians(self):
@@ -156,6 +170,7 @@ class InclinometerDriver(Logging):
             else:
                 #finish getting radians to roll and pitch
                 rospy.loginfo("All pose inclination got, now finishing...")  
+                self.gen_action_result()
 
 
         elif self.sub_state == 1:
