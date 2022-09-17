@@ -23,6 +23,12 @@ from boothbot_calibration_tools.settings \
 from boothbot_calibration_tools.drivers.base import ModbusDriver
 
 import tf.transformations as tftrans
+from guiding_beacon_system_measurement.utils import (
+    sincurve,
+    get_estimated_inclination,
+    generate_yaw_array,
+)
+
 
 from boothbot_calibration_tools.settings import(
     TRANS_BEACON,
@@ -30,17 +36,11 @@ from boothbot_calibration_tools.settings import(
     LASER_HEIGHT
 )
 
-import geometry_msgs.msg as gemsgs
 
 
 
 #######################################
 from boothbot_driver.servos_client import ServosClient
-from guiding_beacon_system_measurement.utils import (
-    sincurve,
-    get_estimated_inclination,
-    generate_yaw_array,
-)
 
 DEFAULT_TIMES_PER_2PI = 17
 DEFAULT_STABLIZE_TIMEOUT = 5.0
@@ -63,6 +63,10 @@ class InclinometerDriver(Logging):
         self.stablize_timeout = stablize_timeout
         self.gs_yaw_array = generate_yaw_array(self.N)   
 
+        self.measured_inclinations = [
+
+        ]
+
         #set inclinometer drivers     
         self.__mb = modbus_client
         self.mb_client = self.__mb
@@ -70,7 +74,12 @@ class InclinometerDriver(Logging):
 
         # md = ModbusDriver()
         # self.mb_client = md.client
-
+        self.msg_inclinometer_filtered_rad = (
+        DRIVERS_INCLINOMETER_INCLINATION_FILTERED_RAD.type()
+        )
+        DRIVERS_INCLINOMETER_INCLINATION_FILTERED_RAD.Subscriber(
+            callback=self._inclination_cb
+        )
         self.x_data = 99.99
         self.y_data = 99.99
         self.mb_id = LEVEL_INCLINOMETER_UNIT
@@ -105,6 +114,29 @@ class InclinometerDriver(Logging):
         if self.gs_yaw_array:
             return (self.gs_yaw_array[0], 0.0)
         return None
+    def add_measurement(self, CB_radians, inclinations):
+        rospy.loginfo("Got inclination: {} at servos_radians: {}".format(inclinations, CB_radians))
+        self.measured_inclinations.append(
+            {
+                "CB_radians": CB_radians,
+                "inclinations": inclinations,
+            }
+        )
+
+    def get_inclination_params(self):
+        gs_yaw_radians = []
+        inclinations_x = []
+        inclinations_y = []
+        for r in self.measured_inclinations:
+            gs_yaw_radians.append(r["CB_radians"][0])
+            inc_x, inc_y = r["inclinations"]
+            inclinations_x.append(inc_x)
+            inclinations_y.append(inc_y)
+        return [
+            get_estimated_inclination(gs_yaw_radians, inclinations_x),
+            get_estimated_inclination(gs_yaw_radians, inclinations_y),
+        ]
+
 
     def set_cb_radians(self):
         
@@ -115,7 +147,9 @@ class InclinometerDriver(Logging):
                     self.servos_cli.move_to(target_radians)
                     self.sub_state = 1
             else:
+                #finish getting radians to roll and pitch
                 rospy.loginfo("All pose inclination got, now finishing...")  
+
 
         elif self.sub_state == 1:
             if self.servos_cli.is_succeeded(): 
@@ -132,10 +166,12 @@ class InclinometerDriver(Logging):
         elif self.sub_state == 2:
             rospy.loginfo_throttle(1.0, "Waiting for inclinometer to stablize...")
             if rospy.Time.now() > self.stablize_timer:
-                rospy.loginfo("current radians:{}".format(self.servos_cli.get_arrived_radians()))
                 self.gs_yaw_array.pop(0)
                 self.sub_state = 0
+            rospy.loginfo("Got inclination: {} at servos_radians: {}".format(self.servos_cli.get_arrived_radians(), self.get_inclinometer_data))
 
+
+                    
 
 
 
@@ -212,31 +248,8 @@ class InclinometerDriver(Logging):
         self.offset_pub.publish(self.offset)
         # print("z", target2[2])
 
-    def get_linclinometer_x(self):
-        x_raw_list = self.mb_client.read_holding_registers(
-            0x01, 2, unit=self.mb_id)
-        time.sleep(0.01)
 
-        if not (isinstance(x_raw_list, ModbusIOException)):
-            x_raw = (x_raw_list.registers[0] << 16) | x_raw_list.registers[1]
 
-        self.x_data = self.bin_to_float("{0:b}".format(x_raw))
-
-    def set_zero_point(self):
-        data = 0x01
-        print("start relative zero point.")
-        rwr = self.mb_client.write_register(0x0B, data, unit=self.mb_id)
-        time.sleep(0.2)
-        # return not (isinstance(rwr, ModbusIOException) or rwr.function_code > 0x80)    time.sleep(0.2)
-        print(rwr)
-
-    def save_settings(self):
-        data = 0x00
-        print("save all settings.")
-        rwr = self.mb_client.write_register(0x0F, data, unit=self.mb_id)
-        time.sleep(0.2)
-        # return not (isinstance(rwr, ModbusIOException) or rwr.function_code > 0x80)    time.sleep(0.2)
-        print(rwr)
 
     # def bin_to_float(self, b):
     #     """ Convert binary string to a float. """
