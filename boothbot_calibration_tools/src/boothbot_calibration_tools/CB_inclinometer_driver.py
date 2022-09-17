@@ -75,13 +75,19 @@ class InclinometerDriver(Logging):
             self.tbeacon = tftrans.compose_matrix(
                 translate=(0.0, 0.0, 0.0), angles=(0., 0., 0.))
 
-    def set_cb_radians(self):
+    def set_cb_radians(self, sum, resolution):
+        range_radians = 2 * np.pi 
         cb_radians = rospy.Publisher('/drivers/servos/act_move/goal',ServosMoveActionGoal , queue_size=1)
         self.action_goal = ServosMoveActionGoal()
-        self.action_goal.goal.target_radians = [1,0]
-        self.action_goal.goal.tolerances = [0.0005,0.0005]
-        cb_radians.publish(self.action_goal)
+        for times in range(5):
+            step = range_radians / resolution * sum
+            self.action_goal.goal.target_radians = [step,0]
+            self.action_goal.goal.tolerances = [0.0005,0.0005]
+            cb_radians.publish(self.action_goal)
+            rospy.sleep(0.2)
         rospy.loginfo("current radians:{}".format(self.action_goal.goal.target_radians))
+
+
 
     def get_inclinometer_data(self):
         xy_raw_list = self.mb_client.read_holding_registers(
@@ -205,6 +211,8 @@ if __name__ == "__main__":
     mb = ModbusDriver()
     rospy.init_node("cb_inclinometer_node")
     inc = InclinometerDriver(mb.client)
-    inc.set_cb_radians()
+    N = 36
+    for i in range(N):
+        inc.set_cb_radians(sum = i , resolution=N)
     
 
