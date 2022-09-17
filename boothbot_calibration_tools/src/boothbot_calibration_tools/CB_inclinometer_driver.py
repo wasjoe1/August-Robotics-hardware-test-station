@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from __future__ import print_function, division
 
 from re import X
 import time
@@ -106,6 +107,7 @@ class InclinometerDriver(Logging):
         return None
 
     def set_cb_radians(self):
+        
         if self.sub_state == 0:
             if self.servos_cli.is_done():
                 target_radians = self.get_next_servos_radians()
@@ -131,7 +133,8 @@ class InclinometerDriver(Logging):
             rospy.loginfo_throttle(1.0, "Waiting for inclinometer to stablize...")
             if rospy.Time.now() > self.stablize_timer:
                 rospy.loginfo("current radians:{}".format(self.servos_cli.get_arrived_radians()))
-
+                self.gs_yaw_array.pop(0)
+                self.sub_state = 0
 
 
 
@@ -260,6 +263,8 @@ if __name__ == "__main__":
     mb = ModbusDriver()
     rospy.init_node("cb_inclinometer_node")
     inc = InclinometerDriver(mb.client)
+    inc.servos_cli.connect()
+    inc.sub_state = 0
     while True:
         inc.set_cb_radians()
     
