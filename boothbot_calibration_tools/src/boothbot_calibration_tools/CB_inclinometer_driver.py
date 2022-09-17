@@ -30,6 +30,11 @@ from guiding_beacon_system_measurement.utils import (
 )
 
 
+from guiding_beacon_system_msgs.ros_interfaces import (
+
+    DRIVERS_INCLINOMETER_INCLINATION_FILTERED_RAD,
+)
+
 from boothbot_calibration_tools.settings import(
     TRANS_BEACON,
     TRANS_BEACON_RCENTER,
@@ -74,12 +79,7 @@ class InclinometerDriver(Logging):
 
         # md = ModbusDriver()
         # self.mb_client = md.client
-        self.msg_inclinometer_filtered_rad = (
-        DRIVERS_INCLINOMETER_INCLINATION_FILTERED_RAD.type()
-        )
-        DRIVERS_INCLINOMETER_INCLINATION_FILTERED_RAD.Subscriber(
-            callback=self._inclination_cb
-        )
+
         self.x_data = 99.99
         self.y_data = 99.99
         self.mb_id = LEVEL_INCLINOMETER_UNIT
@@ -96,6 +96,13 @@ class InclinometerDriver(Logging):
         self.vearth = np.array([[0., 0., 0., 1.]]).T
         # self.vtarget = np.array([[0., 0., 0., 1.]]).T
         self.cba = 0.0
+        self.msg_inclinometer_filtered_rad = (
+            DRIVERS_INCLINOMETER_INCLINATION_FILTERED_RAD.type()
+        )
+
+        DRIVERS_INCLINOMETER_INCLINATION_FILTERED_RAD.Subscriber(
+            callback=self._inclination_cb
+        )
 
         self.timu = tftrans.compose_matrix(
             translate=(0., 0., 0.), angles=(0.0, 0.0, 0.0))
@@ -116,12 +123,12 @@ class InclinometerDriver(Logging):
         return None
     def add_measurement(self, CB_radians, inclinations):
         rospy.loginfo("Got inclination: {} at servos_radians: {}".format(inclinations, CB_radians))
-        self.measured_inclinations.append(
-            {
-                "CB_radians": CB_radians,
-                "inclinations": inclinations,
-            }
-        )
+        # self.measured_inclinations.append(
+        #     {
+        #         "CB_radians": CB_radians,
+        #         "inclinations": inclinations,
+        #     }
+        # )
 
     def get_inclination_params(self):
         gs_yaw_radians = []
@@ -168,8 +175,14 @@ class InclinometerDriver(Logging):
             if rospy.Time.now() > self.stablize_timer:
                 self.gs_yaw_array.pop(0)
                 self.sub_state = 0
-            rospy.loginfo("Got inclination: {} at servos_radians: {}".format(self.servos_cli.get_arrived_radians(), self.get_inclinometer_data))
+                self.add_measurement(
+                    self.servos_cli.get_arrived_radians(),
+                    self.msg_inclinometer_filtered_rad.data,
+                )
 
+
+    def _inclination_cb(self, msg):
+        self.msg_inclinometer_filtered_rad = msg
 
                     
 
@@ -184,28 +197,17 @@ class InclinometerDriver(Logging):
         time.sleep(0.01)
 
         if not (isinstance(xy_raw_list, ModbusIOException)):
-            # time.sleep(0.01)
-            # print(xy_raw_list.registers[0: 4])
-            # self.loginfo("get inclinometer data {} ".format(
-            #     xy_raw_list.registers[0: 4]))
+
             x_raw = (xy_raw_list.registers[0] << 16) | xy_raw_list.registers[1]
             y_raw = (xy_raw_list.registers[2] << 16) | xy_raw_list.registers[3]
 
-            # self.loginfo("x data {}".format(x_raw))
             self.x_data = math.radians(
                 self.bin_to_float("{0:b}".format(x_raw)))
-            # self.loginfo("y data {}".format(y_raw))
             self.y_data = math.radians(
                 self.bin_to_float("{0:b}".format(y_raw)))
             self.get_tf()
             return True
 
-            # print("---------------------")
-            # print(self.bin_to_float(b_x))
-            # print(self.bin_to_float(b_y))
-            # print("---------------------")
-
-            # return float(self.bin_to_float(b_x)), float(self.bin_to_float(b_y))
 
         else:
             self.loginfo("read inclinometer error")
@@ -213,24 +215,13 @@ class InclinometerDriver(Logging):
 
     def get_tf(self):
 
-        # if self.inverse:
-        #     euler = -self.y_data, -self.x_data, 0.0
 
-        # a = gemsgs.Quaternion(*tftrans.quaternion_from_euler(*euler))
-        # row, pitch, _ = tftrans.euler_from_quaternion(
-        #     (a.x,
-        #      a.y,
-        #      a.z,
-        #      a.w)
-        # )
         self.timu = tftrans.compose_matrix(translate=(
             0., 0., 0.), angles=(-self.y_data, -self.x_data, 0.0))
-        # print("imu: ", self.timu)
 
-        if self._with_rotation:  # True
-            # self._cba_count += 8
-            # self._cba_count %= self._cba_resolution
-            # self.cba = self._cba_count / self._cba_resolution * 2 * math.pi
+
+        if self._with_rotation:  
+
             self.tbeacon_rcenter = tftrans.compose_matrix(
                 translate=TRANS_BEACON_RCENTER, angles=(0., 0., self.cba))
             target2 = np.dot(
@@ -240,38 +231,19 @@ class InclinometerDriver(Logging):
             )
             self.offset_x_data = target2[0]
             self.offset_y_data = target2[1]
-            # print("x", self.offset_x_data)
-            # print("y", self.offset_y_data)
 
-        # data = stmsgs.Float64MultiArray()
+
+
         self.offset.data = [self.offset_x_data, self.offset_y_data]
         self.offset_pub.publish(self.offset)
-        # print("z", target2[2])
 
 
 
 
-    # def bin_to_float(self, b):
-    #     """ Convert binary string to a float. """
-    #     # bf = int_to_bytes(int(b, 2), 8)  # 8 bytes needed for IEEE 754 binary64.
-    #     print(struct.unpack('>d', b)[0])
-    #     return struct.unpack('>d', b)[0]
 
     def bin_to_float(self, binary):
         return struct.unpack('!f', struct.pack('!I', int(binary, 2)))[0]
 
-    # def ieee745(self, N):  # ieee-745 bits (max 32 bit)
-    #     a = int(N[0])        # sign,     1 bit
-    #     b = int(N[1:9], 2)    # exponent, 8 bits
-    #     c = int("1"+N[9:], 2)  # fraction, len(N)-9 bits
-
-    #     print(float(-1)**a * c / (1 << (len(N)-9 - (b-127))))
-
-    #     return float((-1)**a * c / (1 << (len(N)-9 - (b-127))))
-
-    # N = "110000011010010011"  # str of ieee-745 bits
-    # print( ieee745(N)  )  # -->  -20.59375
-    
 if __name__ == "__main__":
     mb = ModbusDriver()
     rospy.init_node("cb_inclinometer_node")
