@@ -12,6 +12,7 @@ import rospy
 import std_msgs.msg as stmsgs
 from  guiding_beacon_system_msgs.msg import ServosMoveActionGoal
 
+
 from boothbot_common.ros_logger_wrap import ROSLogging as Logging
 from pymodbus.exceptions import ModbusIOException
 
@@ -31,13 +32,37 @@ from boothbot_calibration_tools.settings import(
 import geometry_msgs.msg as gemsgs
 
 
+
+#######################################
+from boothbot_driver.servos_client import ServosClient
+from guiding_beacon_system_measurement.utils import (
+    sincurve,
+    get_estimated_inclination,
+    generate_yaw_array,
+)
+
+DEFAULT_TIMES_PER_2PI = 17
+DEFAULT_STABLIZE_TIMEOUT = 5.0
+
+######################################
+
 class InclinometerDriver(Logging):
     def __init__(self,
                  modbus_client=None,
+                n_times_per_2pi=DEFAULT_TIMES_PER_2PI,
+                stablize_timeout=DEFAULT_STABLIZE_TIMEOUT,
                  name="c"):
         self.name = name
         super(InclinometerDriver, self).__init__(self.name)
-        # self.__mb = modbus_client
+
+        self.servos_cli = ServosClient()
+
+        #set radians valus
+        self.N = n_times_per_2pi
+        self.stablize_timeout = stablize_timeout
+        self.gs_yaw_array = generate_yaw_array(self.N)   
+
+        #set inclinometer drivers     
         self.__mb = modbus_client
         self.mb_client = self.__mb
         
@@ -75,17 +100,41 @@ class InclinometerDriver(Logging):
             self.tbeacon = tftrans.compose_matrix(
                 translate=(0.0, 0.0, 0.0), angles=(0., 0., 0.))
 
-    def set_cb_radians(self, sum, resolution):
-        range_radians = 2 * np.pi 
-        cb_radians = rospy.Publisher('/drivers/servos/act_move/goal',ServosMoveActionGoal , queue_size=1)
-        self.action_goal = ServosMoveActionGoal()
-        for times in range(5):
-            step = range_radians / resolution * sum
-            self.action_goal.goal.target_radians = [step,0]
-            self.action_goal.goal.tolerances = [0.0005,0.0005]
-            cb_radians.publish(self.action_goal)
-            rospy.sleep(0.2)
-        rospy.loginfo("current radians:{}".format(self.action_goal.goal.target_radians))
+    def get_next_servos_radians(self):
+        if self.gs_yaw_array:
+            return (self.gs_yaw_array[0], 0.0)
+        return None
+
+    def set_cb_radians(self):
+        if self.sub_state == 0:
+            if self.servos_cli.is_done():
+                target_radians = self.get_next_servos_radians()
+                if target_radians is not None:
+                    self.servos_cli.move_to(target_radians)
+                    self.sub_state = 1
+            else:
+                rospy.loginfo("All pose inclination got, now finishing...")  
+
+        elif self.sub_state == 1:
+            if self.servos_cli.is_succeeded(): 
+                self.stablize_timer = rospy.Time.now() + rospy.Duration(
+                self.stablize_timeout
+                )
+                self.sub_state = 2
+            elif self.servos_cli.is_failed():
+                rospy.logwarn(
+                    "This shouldn't happen, the servos must into errors here!"
+                ) 
+            elif self.servos_cli.is_active():
+                rospy.loginfo_throttle(1.0, "Waiting for servos to arrived...")
+        elif self.sub_state == 2:
+            rospy.loginfo_throttle(1.0, "Waiting for inclinometer to stablize...")
+            if rospy.Time.now() > self.stablize_timer:
+                rospy.loginfo("current radians:{}".format(self.servos_cli.get_arrived_radians()))
+
+
+
+
 
 
 
@@ -211,8 +260,7 @@ if __name__ == "__main__":
     mb = ModbusDriver()
     rospy.init_node("cb_inclinometer_node")
     inc = InclinometerDriver(mb.client)
-    N = 36
-    for i in range(N):
-        inc.set_cb_radians(sum = i , resolution=N)
+    while True:
+        inc.set_cb_radians()
     
 
