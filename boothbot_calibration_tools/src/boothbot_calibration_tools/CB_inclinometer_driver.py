@@ -167,10 +167,10 @@ class InclinometerDriver(Logging):
                 if target_radians is not None:
                     self.servos_cli.move_to(target_radians)
                     self.sub_state = 1
-            else:
+                else:
                 #finish getting radians to roll and pitch
-                rospy.loginfo("All pose inclination got, now finishing...")  
-                self.gen_action_result()
+                    rospy.loginfo("All pose inclination got, now finishing...")  
+                    self.gen_action_result()
 
 
         elif self.sub_state == 1:
