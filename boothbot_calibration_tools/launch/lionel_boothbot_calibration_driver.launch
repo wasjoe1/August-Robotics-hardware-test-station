@@ -1,0 +1,11 @@
+<launch>
+	<node name="servos_stepper_driver" pkg="boothbot_driver" type="servos_stepper_driver.py" respawn="true" output="log">
+	</node>
+	<!-- <include file="$(find augustbot_base)/launch/base.launch">
+		<arg name="use_small_probe" value="false" />
+		<arg name="enable_side_sonar" value="false" />
+	</include> -->
+	<include file="$(find boothbot_calibration_tools)/launch/lionel_base.launch"></include>
+	<node name="inclinometer_driver" pkg="boothbot_calibration_tools" type="inclinometer_driver.py" output="log" respawn="true" respawn_delay="5"> 
+	</node>
+</launch>

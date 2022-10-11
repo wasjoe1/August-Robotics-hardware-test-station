@@ -1,7 +1,6 @@
-
-
 <launch>
   <!-- <include file="$(find boothbot_perception)/launch/track_server.launch"/> -->
   <node name="servos_driver" pkg="boothbot_driver" type="servos_minas_driver.py" output="log" respawn="true" respawn_delay="5"> 
   </node>
+  
 </launch>

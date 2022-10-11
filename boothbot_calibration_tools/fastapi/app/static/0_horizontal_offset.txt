@@ -1,0 +1,8 @@
+1. Turn on the leveling instrument
+2. Using the method in IMU_calibration, fully level the Lionel
+3. Adjust the position of the leveling instrument, the vertical line of the leveling instrument needs to pass through Lionel's base center, CB center,
+4. Use RB and place it 4 meters away from Lionel,
+5. Adjust the position of the RB so that the vertical laser of the final level completely coincides with the centerline of the RB
+5. Click the Run button
+6. Wait for the result
+7. Click the Save button
