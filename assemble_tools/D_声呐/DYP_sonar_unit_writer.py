@@ -62,8 +62,10 @@ UNIT_DICT = {
         }
 
 def check_unit():
-    response=mbd.read_holding_registers(0x200, 1, unit=0xFF)    
+    response=mbd.read_holding_registers(0x200, 1, unit=0xFF)  
+
     unit = response.registers[0] 
+
     return unit
 
 def set_unit(unit):     
@@ -73,7 +75,10 @@ def set_unit(unit):
 
 def distance_pub(unit):
     response=mbd.read_holding_registers(0x0101, 1, unit=unit)    
-    distance = response.registers[0]
+    try:
+        distance = response.registers[0]
+    except:
+        distance = None
     return distance
 
 def run():
@@ -105,7 +110,6 @@ def run():
                                 while not logger.is_shutdown():
                                     distance = distance_pub(UNIT_DICT[key])
                                     os.system('clear')
-                                    logger.logwarn("sonar address is :{}".format(hex(check_unit())))
                                     logger.logwarn("distance is :{}. Press q return to set address ".format(distance))
                                     logger.logwarn("Press q to quit")
                                     key1 = get_key.get_key()
