@@ -71,7 +71,7 @@ class DYP_SONAR_UNIT_WRITTER(object):
 
 
     def check_unit(self):
-        response=self.modbus_driver.read_holding_registers(0x200, 1, unit=0xFF)  
+        response=mbd.read_holding_registers(0x200, 1, unit=0xFF)  
 
         try:
             unit = response.registers[0] 
@@ -79,28 +79,19 @@ class DYP_SONAR_UNIT_WRITTER(object):
             unit = None
         return unit
 
-    def check_baudrate(self):
-        response=self.modbus_driver.read_holding_registers(0x201, 1, unit=0xFF)  
-
-        try:
-            baudrate = response.registers[0] 
-        except:
-            baudrate = None
-        return baudrate
-
     def set_unit(self,unit):     
         UNIT=UNIT_DICT[unit]
-        self.modbus_driver.write_register(0x200, UNIT, unit=0xFF)
+        mbd.write_register(0x200, UNIT, unit=0xFF)
         
     def set_baudrate(self):     
         try:
-            self.modbus_driver.write_register(0x201, BAUDRATE, unit=0xFF)
-        except RemoteProcessFailed as e:
-            logger.logwarn(e)
+            mbd.write_register(0x201, BAUDRATE, unit=0xFF)
+        except:
+            modbus_config["baudrate"] = 115200
  
 
     def distance_pub(self,unit):
-        response=self.modbus_driver.read_holding_registers(0x0101, 1, unit=unit)    
+        response=mbd.read_holding_registers(0x0101, 1, unit=unit)    
         try:
             distance = response.registers[0]
         except:
@@ -110,29 +101,20 @@ class DYP_SONAR_UNIT_WRITTER(object):
 def run():
     logger.logwarn(INSTRUCTION)
     get_key = GetKey()
-    _in = 1
+    mbd = ModbusDriver(**modbus_config).client
+    DYP = DYP_SONAR_UNIT_WRITTER(mbd)
     while not logger.is_shutdown():
         key = get_key.get_key()
         if key in ("s", "S"):
             os.system('clear')
             while not logger.is_shutdown():  
-                # DYP.set_baudrate()
-                # mbd = ModbusDriver(**modbus_config).client
-                # DYP = DYP_SONAR_UNIT_WRITTER(mbd) 
+                DYP.set_baudrate()
+                mbd = ModbusDriver(**modbus_config).client
+                DYP = DYP_SONAR_UNIT_WRITTER(mbd) 
                 logger.logwarn(SONAR_ID)
                 key = get_key.get_key()
-                
                 for i in range(0,10):                   
                     if key in (str(i), str(i)):
-                        if _in  == 1:
-                            modbus_config["baudrate"] = 115200
-                            mbd = ModbusDriver(**modbus_config).client
-                            DYP = DYP_SONAR_UNIT_WRITTER(mbd)
-                            DYP.set_baudrate()
-                            modbus_config["baudrate"] = 9600
-                            mbd = ModbusDriver(**modbus_config).client
-                            DYP = DYP_SONAR_UNIT_WRITTER(mbd) 
-                            #_in  = 0
                         os.system('clear')
                         DYP.set_unit(key)
                         if DYP.check_unit() == UNIT_DICT[key]:
@@ -149,7 +131,6 @@ def run():
                             if key1 in ("a", "A"):
                                 while not logger.is_shutdown():
                                     distance = DYP.distance_pub(UNIT_DICT[key])
-                                    baudrate = DYP.check_baudrate()
                               
                                     unit = DYP.check_unit()
                                     if unit is not None:
@@ -158,19 +139,16 @@ def run():
                                     os.system('clear')
                                     logger.logwarn("distance is :{}. Press q return to set address ".format(distance))
                                     logger.logwarn("unit is :{} ".format(unit))
-                                    logger.logwarn("baudrate is :{} ".format(baudrate))
                                     logger.logwarn("Press q to quit")
                                     key1 = get_key.get_key()
                                     if key1 in ("q", "Q"):
                                         os.system('clear')
                                         logger.logwarn("Press q")
                                         get_key.end_get_key()
-                                        _in  = 1
                                         break
-                            if key1 in ("q", "Q"):
+                            if key1 == ("q" or "Q"):
                                 os.system('clear')
                                 get_key.end_get_key()
-                                
                                 break
                 if key in ("q", "Q"):
                     os.system('clear')
@@ -182,7 +160,7 @@ def run():
         elif key in ("q", "Q"):
             logger.logwarn("Exiting...")
             get_key.end_get_key()
-            # modbus_config["baudrate"] = 9600
+            modbus_config["baudrate"] = 9600
             break
 
 
@@ -193,6 +171,8 @@ if __name__ == '__main__':
     "parity": "N",
     "timeout": 0.5,
 }   
+    mbd = ModbusDriver(**modbus_config).client
+    DYP = DYP_SONAR_UNIT_WRITTER(mbd)   
     run()
 
 
