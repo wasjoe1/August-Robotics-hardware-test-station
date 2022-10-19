@@ -64,8 +64,10 @@ UNIT_DICT = {
 def check_unit():
     response=mbd.read_holding_registers(0x200, 1, unit=0xFF)  
 
-    unit = response.registers[0] 
-
+    try:
+        unit = response.registers[0] 
+    except:
+        unit = None
     return unit
 
 def set_unit(unit):     
@@ -105,12 +107,19 @@ def run():
                         else:
                             logger.logwarn("Setting failed, please retry again")
                         while not logger.is_shutdown():
-                            key1 = get_key.get_key()
+                            for i in range(5):
+                                key1 = get_key.get_key()
                             if key1 in ("a", "A"):
                                 while not logger.is_shutdown():
                                     distance = distance_pub(UNIT_DICT[key])
+                              
+                                    unit = check_unit()
+                                    if unit is not None:
+                                        unit = hex(unit)
+
                                     os.system('clear')
                                     logger.logwarn("distance is :{}. Press q return to set address ".format(distance))
+                                    logger.logwarn("unit is :{} ".format(unit))
                                     logger.logwarn("Press q to quit")
                                     key1 = get_key.get_key()
                                     if key1 in ("q", "Q"):
