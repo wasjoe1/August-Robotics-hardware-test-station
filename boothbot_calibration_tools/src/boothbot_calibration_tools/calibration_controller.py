@@ -396,6 +396,10 @@ class CalibrationController(ModuleBase):
         # From BGR to RGB
         frame = cv2.resize(frame, None, fx=0.25, fy=0.25,
                            interpolation=cv2.INTER_LINEAR)
+        width = frame.shape[0]
+        height = frame.shape[1]
+        cv2.line(frame,(0,int(width/2)),(int(height),int(width/2)),(0x00,0xA5,0xFF),2)
+        cv2.line(frame,(int(height/2),0),(int(height/2),int(width)),(0x00,0xA5,0xFF),2)
         im = frame[:, :, ::-1]
         im = Image.fromarray(im)
         buf = BytesIO()
