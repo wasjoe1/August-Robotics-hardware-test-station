@@ -25,11 +25,12 @@ class LionelCalibration(CalibrationController):
         os.system("rosnode kill /servos_stepper_driver")
         super(LionelCalibration, self).kill_servos_node()
 
-    # def servos_enable(self):
-    #     self.loginfo("stepper enable")
-    #     self.servo_move(self.track_target)
-    #     time.sleep(0.1)
-    #     super(LionelCalibration, self).servos_enable()
+    def servos_enable(self):
+        self.loginfo("stepper enable")
+        target = super(LionelCalibration, self).servos_enable()
+        self.servo_move(target)
+        time.sleep(0.1)
+        super(LionelCalibration, self).servos_enable()
 
 
 if __name__ == "__main__":
