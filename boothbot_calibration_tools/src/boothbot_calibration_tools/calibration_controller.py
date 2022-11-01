@@ -136,6 +136,7 @@ class CalibrationController(ModuleBase):
         self.servos_save_encoder = []
         self.current_rad = (0.0, 0.0)
         self._tolerance = get_tolerance()
+        self.logwarn("tolerance auto seleted {}.".format(self._tolerance))
 
         self.cameras_angle = []
         self.vertical_encoder = []
