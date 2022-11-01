@@ -57,6 +57,8 @@ from boothbot_calibration_tools.settings import (
     SAVE_ARG
 )
 
+from boothbot_calibration_tools.utils import get_tolerance
+
 TRACKER_CONFIG = BOOTHBOT_GET_CONFIG(name="tracker_driver")
 GS_CAMERA_VERTICAL_DIST = TRACKER_CONFIG["long_cam_laser_dist"] + \
     TRACKER_CONFIG["short_cam_laser_dist"]
@@ -71,7 +73,7 @@ CAMERA_FILTER_COUNT = 3
 class CalibrationController(ModuleBase):
     def __init__(self,
                  name, rate, states=None, transitions=None, commands=None, status_inf=None, srv_cmd_inf=None, need_robot_status=False, error_codes=None,
-                 laser=None, tolerance=None):
+                 laser=None):
         super(CalibrationController, self).__init__(
             name=name,
             rate=rate,
@@ -133,7 +135,7 @@ class CalibrationController(ModuleBase):
         self.client_status = {"servos": None, "cameras": None}
         self.servos_save_encoder = []
         self.current_rad = (0.0, 0.0)
-        self._tolerance = tolerance
+        self._tolerance = get_tolerance()
 
         self.cameras_angle = []
         self.vertical_encoder = []
@@ -396,10 +398,11 @@ class CalibrationController(ModuleBase):
         # From BGR to RGB
         frame = cv2.resize(frame, None, fx=0.25, fy=0.25,
                            interpolation=cv2.INTER_LINEAR)
-        width = frame.shape[0]
-        height = frame.shape[1]
-        cv2.line(frame,(0,int(width/2)),(int(height),int(width/2)),(0x00,0xA5,0xFF),2)
-        cv2.line(frame,(int(height/2),0),(int(height/2),int(width)),(0x00,0xA5,0xFF),2)
+        if self._job != CS.CAMERA_LASER_ALIGNMENT:
+            width = frame.shape[0]
+            height = frame.shape[1]
+            cv2.line(frame,(0,int(width/2)),(int(height),int(width/2)),(0x00,0xA5,0xFF),2)
+            cv2.line(frame,(int(height/2),0),(int(height/2),int(width)),(0x00,0xA5,0xFF),2)
         im = frame[:, :, ::-1]
         im = Image.fromarray(im)
         buf = BytesIO()
