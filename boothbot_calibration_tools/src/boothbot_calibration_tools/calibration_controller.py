@@ -636,7 +636,7 @@ class CalibrationController(ModuleBase):
         self.servos.move_to(target, self._tolerance)
     
     def get_servo_radians(self):
-        return (self.servos.radians[0], self.servos.radians[1])
+        self.track_target = (self.servos.radians[0], self.servos.radians[1])
 
     def _do_camera_laser_alignment(self):
         if self.sub_state == 0:
