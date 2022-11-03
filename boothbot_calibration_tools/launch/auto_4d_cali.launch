@@ -1,0 +1,10 @@
+<launch>
+  <group ns="/debug">
+    <!-- Navigation controller client -->
+    <node pkg="boothbot_calibration_tools" type="nav_controller_client_ros.py" name="nav_client" output="log">
+    </node>
+    <!-- Navigation navigation_4d_cali_auto -->
+    <node pkg="boothbot_calibration_tools" type="navigation_4d_cali_auto.py" name="nav_auto_4d_node" output="log">
+    </node>
+  </group>
+</launch>
