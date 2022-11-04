@@ -26,7 +26,7 @@ class LionelCalibration(CalibrationController):
         super(LionelCalibration, self).kill_servos_node()
 
     def servos_enable(self):
-        self.loginfo("stepper enable")
+        self.loginfo("lionel stepper enable")
         super(LionelCalibration, self).get_servo_radians()
         self.servo_move(self.track_target)
         time.sleep(0.1)
