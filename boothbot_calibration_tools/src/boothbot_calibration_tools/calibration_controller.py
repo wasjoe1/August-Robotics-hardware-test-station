@@ -497,7 +497,7 @@ class CalibrationController(ModuleBase):
         # self._save_data.update(servo_save_data)
 
         with open(DEVICE_SETTINGS_FILE_PATH, 'w') as f:
-            oyaml.dump(doc, f)
+            oyaml.dump(doc, f, default_flow_style=False)
 
     # JOB
 
@@ -507,7 +507,7 @@ class CalibrationController(ModuleBase):
         self.loginfo("save data to device settting {}".format(data))
         doc['tracker_driver']['long_short_cam_angle_offset'] = float(data)
         with open(DEVICE_SETTINGS_FILE_PATH, 'w') as f:
-            oyaml.dump(doc, f)
+            oyaml.dump(doc, f, default_flow_style=False)
 
     def _do_initialize_servo(self):
         pass
