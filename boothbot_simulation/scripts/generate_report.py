@@ -13,10 +13,12 @@ from report.json_formatter import JsonReportFormatter
 import os
 from datetime import datetime
 
+### This should be move to task manage and log by DATA logger ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Env. variable from os
 HOME_PATH = os.environ.get('HOME')
 GIT_HEAD = os.environ.get('GIT_HEAD')
 YMD = os.environ.get('TODAY')
+FILENAME = ""
 
 if GIT_HEAD is not None and YMD is not None:
     REPORT_PATH = HOME_PATH + "/Simulation_Reports/" + YMD + "-" + GIT_HEAD
@@ -30,6 +32,7 @@ try:
     os.mkdir(REPORT_PATH)
 except OSError:
     pass
+### ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 def main():
     file = None
@@ -44,8 +47,9 @@ def main():
         except KeyboardInterrupt:
             print("Exiting...")
             sys.exit()
-        except:
+        except Exception as e:
             print("File not valid!")
+            print(e)
 
     report = Report()
     datacode_regex = "\[(([A-Z]+_?)+)\]"
@@ -64,16 +68,26 @@ def main():
 
     file.close()
 
+    _machine_name = str(report.boothbot_setup.machine_hostname)
+    _task_start_time = "None"
+    try:
+        _task_start_time = str(datetime.fromtimestamp(report.gotomark.start_time).strftime('%d-%h-%y_%H:%M:%S'))
+    except:
+        pass
+    FILENAME = _machine_name + "-" + _task_start_time
+
     json_encoder = JsonReportFormatter()
-    return json_encoder.encode(report)
+
+    return json_encoder.encode(report), FILENAME
 
 if __name__ == "__main__":
-    report = main()
+    report, FILENAME = main()
 
     # Store report to file.
     # TODO: Use environment variables to store the correct path.
     target_dir = REPORT_PATH #"../reports"
-    target_report_suffix = datetime.now().strftime("%Y%m%d%H%M%S")
+    target_report_suffix = datetime.now().strftime("%Y%m%d%H%M%S") # Should use gotomark start time instead
+    target_report_suffix = FILENAME
     target_report_path = target_dir + "/report-" + target_report_suffix + ".json"
 
     report_file = open(target_report_path, "w")
