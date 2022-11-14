@@ -14,7 +14,11 @@ import os
 import math
 import rospy
 import std_msgs.msg as stmsgs
+from  guiding_beacon_system_msgs.msg import ServosMoveActionGoal
+
+
 from boothbot_common.ros_logger_wrap import ROSLogging as Logging
+from pymodbus.exceptions import ModbusIOException
 
 from boothbot_calibration_tools.settings \
     import LEVEL_INCLINOMETER_UNIT
@@ -47,7 +51,7 @@ from boothbot_calibration_tools.settings import(
 #######################################
 from boothbot_driver.servos_client import ServosClient
 
-DEFAULT_TIMES_PER_2PI = 2
+DEFAULT_TIMES_PER_2PI = 17
 DEFAULT_STABLIZE_TIMEOUT = 5.0
 
 ######################################
@@ -160,15 +164,16 @@ class InclinometerDriver(Logging):
             sincurve(np.pi / 2, param_x[0], param_x[1], 0.0)
             + sincurve(0.0, param_y[0], param_y[1], 0.0)
         ) / 2
-        return inc_x, inc_y
+        return [inc_x, inc_y]
 
     def save_log(self):
-        row_pitch = self.gen_action_result()
+        self.row_pitch = self.gen_action_result()
         result_file_name = "{}/{}-result.yaml".format(TEST_DATA_PATH, time.strftime("%Y%m%d-%H_%M"))
         with open(result_file_name, "w") as f:
             data = {
                 "stamp": time.time(),
-                "[Row,Pitch]": list(row_pitch),
+                "Row": float(self.row_pitch[0]),
+                "Pitch": float(self.row_pitch[1]),
                 "inclinations": list(self.measured_inclinations),
             }
             yaml.dump(data, f, Dumper=yaml.CDumper)
