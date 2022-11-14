@@ -51,14 +51,30 @@ data_socket.onmessage = function(evt) {
     console.log(evt.data)
     ws_json = eval('(' + evt.data + ')')
 
+    // modify host name
+    var ele_hostanme = get_id("hostname")
+    ele_hostanme.innerHTML = get_lang("hostname") + " : " + ws_json["host_name"]
+    hostname = ws_json["host_name"]
+    var is_gs = hostname.includes("GS")
+
     // job_data
     var job_data_content = ""
     for (const key in ws_json["job_data"]) {
         if (key == "cameras_offset_op_info") {
             if (ws_json["job_data"][key]["small"] == "right") {
-                job_data_content += "小相机调右边螺丝"
+                // job_data_content += "小相机调右边螺丝" 
+                if (is_gs == true){
+                    job_data_content += get_lang("short_tun_right_tight")
+                } else {
+                    job_data_content += get_lang("long_tun_left_tight")
+                }
             } else {
-                job_data_content += "小相机调左边螺丝"
+                // job_data_content += "小相机调左边螺丝"
+                if (is_gs == true){
+                    job_data_content += get_lang("short_tun_left_tight")
+                } else {
+                    job_data_content += get_lang("long_tun_right_tight")
+                }
             }
         } else {
             if (key == "measurement_time") { job_data_content += key + ": " + time_vis(ws_json["job_data"][key]) + "</br>" } else {
@@ -80,11 +96,6 @@ data_socket.onmessage = function(evt) {
     var last_data_content = get_data(ws_json, "last_data")
     var save_data_ele = get_id('last_data')
     save_data_ele.innerHTML = last_data_content
-
-    // modify host name
-    var ele_hostanme = get_id("hostname")
-    ele_hostanme.innerHTML = get_lang("hostname") + " : " + ws_json["host_name"]
-    hostname = ws_json["host_name"]
 
     // modify current job
     var ele_step = get_id("current_task")
@@ -131,11 +142,13 @@ function set_button() {
     if (ws_json["step"] == INITIALIZE_SERVO) {
         get_id("run").innerText = get_lang("save_data_to_device")
         get_id("done").innerText = get_lang("restart")
+    } else if (ws_json["step"] == IMU_CALIBRATION) {
+        get_id("run").innerText = get_lang("imu_cali")
+        get_id("done").innerText = get_lang("imu_save")
     } else {
         get_id("run").innerText = get_lang("run")
         get_id("done").innerText = get_lang("done")
     }
-
 
 
     // for (const key in ws_json["done"]) {
@@ -405,3 +418,26 @@ function updata_user_manual(data) {
 // function decode_utf8(s) {
 //     return decodeURIComponent(escape(s));
 // }
+document.onkeydown=function(event){
+    var e = event || window.event || arguments.callee.caller.arguments[0];
+    if(e && e.keyCode==76){ 
+        console.log("LASER_ON")
+        command('LASER_ON')
+      }
+    if(e && e.keyCode==78){ 
+        console.log("DISABLE")
+        command('SERVOS_DISABLE')
+       }            
+     if(e && e.keyCode==82){ 
+        console.log("ENABLE")
+        command('SERVOS_ENABLE')
+    }
+    if(e && e.keyCode==66){ 
+        console.log("ENABLE")
+        command('USE_SHORT_CAMERA')
+    }
+    if(e && e.keyCode==83){ 
+        console.log("ENABLE")
+        command('USE_LONG_CAMERA')
+    }
+}; 

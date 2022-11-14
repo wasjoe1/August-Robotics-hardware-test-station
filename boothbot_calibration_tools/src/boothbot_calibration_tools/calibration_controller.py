@@ -26,6 +26,8 @@ from boothbot_calibration_tools.constants import CalibrationCommand as CS
 from boothbot_config.device_settings import DEVICE_SETTINGS_FILE_PATH
 from boothbot_config.device_settings import CONFIG_PATH
 from boothbot_perception.tracking_camera import TrackingCamera
+from boothbot_perception import settings
+import boothbot_perception.settings as gbsets
 
 from boothbot_common.settings import BOOTHBOT_GET_CONFIG
 
@@ -106,6 +108,7 @@ class CalibrationController(ModuleBase):
         self._user_gui_save_data = {}
         self._job = None
         self._data["data"]["host_name"] = socket.gethostname()
+        self.is_gs = socket.gethostname().lower().startswith("gs")
 
         self._done_list = {}
 
@@ -115,6 +118,8 @@ class CalibrationController(ModuleBase):
         self.servos = ServosClient()
         # self.laser = LaserRangeFinderGenerator.detect_laser_range_finder()
         self.laser = laser
+
+        self.color_range = [(getattr(settings, "CALI_LOWER"),getattr(settings, "CALI_UPPER"))]
 
         # config yaml
         self.config_dir = CONFIG_PATH + "/calibration_data"
@@ -240,9 +245,11 @@ class CalibrationController(ModuleBase):
         elif self._job == CS.VERTICAL_SERVO_ZERO:
             self._do_vertical_offset()
         elif self._job == CS.IMU_CALIBRATION:
-            self._do_imu_calibration()
+            if not self.is_gs:
+                self._do_imu_calibration()
         elif self._job == CS.HORIZONTAL_OFFSET:
-            self._do_horizontal_offset()
+            if not self.is_gs:
+                self._do_horizontal_offset()
 
     def initialize(self):
         # TODO
@@ -540,7 +547,7 @@ class CalibrationController(ModuleBase):
         frame = self.cameras[type].cap()
         if frame is not None:
             self.loginfo("Got {} frame".format(type))
-            beacon_res = self.cameras[type].find_beacon(frame, 0.0, COLOR)
+            beacon_res = self.cameras[type].find_beacon(frame, 0.0, COLOR, self.color_range)
             self.cameras[type].draw_beacon(frame, beacon_res)
             self.cameras_frame[type] = self.img2textfromcv2(frame)
             self.loginfo("beacon_res {}".format(beacon_res))
@@ -683,7 +690,7 @@ class CalibrationController(ModuleBase):
 
     def get_camera_result(self, type, dis=0.0, compensation=False, long_shrot_angle=None):
         frame = self.cameras[type].cap()
-        beacon_res = self.cameras[type].find_beacon(frame, dis, COLOR)
+        beacon_res = self.cameras[type].find_beacon(frame, dis, COLOR, self.color_range)
         self.cameras[type].draw_beacon(frame, beacon_res)
         self.cameras_frame[type] = self.img2textfromcv2(frame)
         self.loginfo("long short angle {}".format(long_shrot_angle))

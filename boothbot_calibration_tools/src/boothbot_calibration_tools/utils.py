@@ -24,4 +24,6 @@ def get_tolerance():
         return (1e-5, 0.001)
     elif gs_type == ['stepper', 'stepper']:
         return (0.0005, 0.001)
+    else:
+        return (1e-5, 5e-5)
 
