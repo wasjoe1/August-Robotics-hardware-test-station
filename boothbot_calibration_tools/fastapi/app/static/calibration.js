@@ -180,6 +180,7 @@ function get_save_data(ws_json, first_key) {
         download_data = ws_json[first_key]
         data_content = get_function_data(first_key, INITIALIZE_SERVO) +
             get_function_data(first_key, CAMERAS_ANGLE) +
+            get_function_data(first_key, CAMERAS_ALIGNMENT) +
             get_function_data(first_key, VERTICAL_SERVO_ZERO) +
             get_function_data(first_key, CAMERA_SHARPNESS) +
             get_function_data(first_key, HORIZONTAL_OFFSET) +
