@@ -9,15 +9,12 @@ import boothbot_common.ros_logger as logger
 
 import numpy as np
 import yaml
+import os
 
 import math
 import rospy
 import std_msgs.msg as stmsgs
-from  guiding_beacon_system_msgs.msg import ServosMoveActionGoal
-
-
 from boothbot_common.ros_logger_wrap import ROSLogging as Logging
-from pymodbus.exceptions import ModbusIOException
 
 from boothbot_calibration_tools.settings \
     import LEVEL_INCLINOMETER_UNIT
@@ -50,7 +47,7 @@ from boothbot_calibration_tools.settings import(
 #######################################
 from boothbot_driver.servos_client import ServosClient
 
-DEFAULT_TIMES_PER_2PI = 17
+DEFAULT_TIMES_PER_2PI = 2
 DEFAULT_STABLIZE_TIMEOUT = 5.0
 
 ######################################
@@ -166,18 +163,16 @@ class InclinometerDriver(Logging):
         return inc_x, inc_y
 
     def save_log(self):
-        row,pitch=self.gen_action_result()
+        row_pitch = self.gen_action_result()
         result_file_name = "{}/{}-result.yaml".format(TEST_DATA_PATH, time.strftime("%Y%m%d-%H_%M"))
         with open(result_file_name, "w") as f:
             data = {
                 "stamp": time.time(),
-                "Row": row,
-                "Pitch": pitch,
-                "inclinations": self.measured_inclinations,
+                "[Row,Pitch]": list(row_pitch),
+                "inclinations": list(self.measured_inclinations),
             }
             yaml.dump(data, f, Dumper=yaml.CDumper)
             logger.loginfo("Result saved at: {}".format(result_file_name))
-        return True
 
 
     def set_cb_radians(self):
@@ -191,6 +186,7 @@ class InclinometerDriver(Logging):
                 else:
                 #finish getting radians to roll and pitch
                     self.save_log()
+                    return True
 
 
         elif self.sub_state == 1:
@@ -266,6 +262,6 @@ if __name__ == "__main__":
         if ret is False:
             logger.logfatal("Running failed, will exit...")
             break
-        else:
+        elif ret is True:
             logger.loginfo("All pose inclination got, now finishing...")
             break
