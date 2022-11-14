@@ -5,8 +5,10 @@ from __future__ import print_function, division
 from re import X
 import time
 import struct
-from xml.dom.minidom import ReadOnlySequentialNamedNodeMap
+import boothbot_common.ros_logger as logger
+
 import numpy as np
+import yaml
 
 import math
 import rospy
@@ -21,6 +23,7 @@ from boothbot_calibration_tools.settings \
     import LEVEL_INCLINOMETER_UNIT
 
 from boothbot_calibration_tools.drivers.base import ModbusDriver
+from boothbot_common.settings import  LOCAL_TMP_CONFIG_FOLDER_PATH_LIONEL
 
 import tf.transformations as tftrans
 from guiding_beacon_system_measurement.utils import (
@@ -52,6 +55,10 @@ DEFAULT_STABLIZE_TIMEOUT = 5.0
 
 ######################################
 
+TEST_DATA_PATH = os.path.join(LOCAL_TMP_CONFIG_FOLDER_PATH_LIONEL, "inclination")
+if not os.path.exists(TEST_DATA_PATH):
+    os.makedirs(TEST_DATA_PATH)
+
 class InclinometerDriver(Logging):
     def __init__(self,
                  modbus_client=None,
@@ -66,16 +73,16 @@ class InclinometerDriver(Logging):
         #set radians valus
         self.N = n_times_per_2pi
         self.stablize_timeout = stablize_timeout
-        self.gs_yaw_array = generate_yaw_array(self.N)   
+        self.gs_yaw_array = generate_yaw_array(self.N)
 
         self.measured_inclinations = [
 
         ]
 
-        #set inclinometer drivers     
+        #set inclinometer drivers
         self.__mb = modbus_client
         self.mb_client = self.__mb
-        
+
 
         # md = ModbusDriver()
         # self.mb_client = md.client
@@ -122,7 +129,7 @@ class InclinometerDriver(Logging):
             return (self.gs_yaw_array[0], 0.0)
         return None
     def add_measurement(self, CB_radians, inclinations):
-        rospy.loginfo("Got inclination: {} at servos_radians: {}".format(inclinations, CB_radians))
+        logger.loginfo("Got inclination: {} at servos_radians: {}".format(inclinations, CB_radians))
         self.measured_inclinations.append(
             {
                 "CB_radians": CB_radians,
@@ -145,7 +152,7 @@ class InclinometerDriver(Logging):
             get_estimated_inclination(gs_yaw_radians, inclinations_x),
             get_estimated_inclination(gs_yaw_radians, inclinations_y),
         ]
-    
+
     def gen_action_result(self):
         param_x, param_y = self.get_inclination_params()
         inc_x = (
@@ -156,11 +163,25 @@ class InclinometerDriver(Logging):
             sincurve(np.pi / 2, param_x[0], param_x[1], 0.0)
             + sincurve(0.0, param_y[0], param_y[1], 0.0)
         ) / 2
-        rospy.loginfo("Row: {}, Pitch: {}".format(inc_x, inc_y))
+        return inc_x, inc_y
+
+    def save_log(self):
+        row,pitch=self.gen_action_result()
+        result_file_name = "{}/{}-result.yaml".format(TEST_DATA_PATH, time.strftime("%Y%m%d-%H_%M"))
+        with open(result_file_name, "w") as f:
+            data = {
+                "stamp": time.time(),
+                "Row": row,
+                "Pitch": pitch,
+                "inclinations": self.measured_inclinations,
+            }
+            yaml.dump(data, f, Dumper=yaml.CDumper)
+            logger.loginfo("Result saved at: {}".format(result_file_name))
+        return True
 
 
     def set_cb_radians(self):
-        
+
         if self.sub_state == 0:
             if self.servos_cli.is_done():
                 target_radians = self.get_next_servos_radians()
@@ -169,24 +190,24 @@ class InclinometerDriver(Logging):
                     self.sub_state = 1
                 else:
                 #finish getting radians to roll and pitch
-                    rospy.loginfo("All pose inclination got, now finishing...")  
-                    self.gen_action_result()
+                    self.save_log()
 
 
         elif self.sub_state == 1:
-            if self.servos_cli.is_succeeded(): 
+            if self.servos_cli.is_succeeded():
                 self.stablize_timer = rospy.Time.now() + rospy.Duration(
                 self.stablize_timeout
                 )
                 self.sub_state = 2
             elif self.servos_cli.is_failed():
-                rospy.logwarn(
+                logger.logwarn(
                     "This shouldn't happen, the servos must into errors here!"
-                ) 
+                )
+                return False
             elif self.servos_cli.is_active():
-                rospy.loginfo_throttle(1.0, "Waiting for servos to arrived...")
+                logger.loginfo_throttle(1.0, "Waiting for servos to arrived...")
         elif self.sub_state == 2:
-            rospy.loginfo_throttle(1.0, "Waiting for inclinometer to stablize...")
+            logger.loginfo_throttle(1.0, "Waiting for inclinometer to stablize...")
             if rospy.Time.now() > self.stablize_timer:
                 self.gs_yaw_array.pop(0)
                 self.sub_state = 0
@@ -199,34 +220,6 @@ class InclinometerDriver(Logging):
     def _inclination_cb(self, msg):
         self.msg_inclinometer_filtered_rad = msg
 
-                    
-
-
-
-
-
-    def get_inclinometer_data(self):
-        xy_raw_list = self.mb_client.read_holding_registers(
-            0x01, 4, unit=self.mb_id)
-
-        time.sleep(0.01)
-
-        if not (isinstance(xy_raw_list, ModbusIOException)):
-
-            x_raw = (xy_raw_list.registers[0] << 16) | xy_raw_list.registers[1]
-            y_raw = (xy_raw_list.registers[2] << 16) | xy_raw_list.registers[3]
-
-            self.x_data = math.radians(
-                self.bin_to_float("{0:b}".format(x_raw)))
-            self.y_data = math.radians(
-                self.bin_to_float("{0:b}".format(y_raw)))
-            self.get_tf()
-            return True
-
-
-        else:
-            self.loginfo("read inclinometer error")
-            return False
 
     def get_tf(self):
 
@@ -235,7 +228,7 @@ class InclinometerDriver(Logging):
             0., 0., 0.), angles=(-self.y_data, -self.x_data, 0.0))
 
 
-        if self._with_rotation:  
+        if self._with_rotation:
 
             self.tbeacon_rcenter = tftrans.compose_matrix(
                 translate=TRANS_BEACON_RCENTER, angles=(0., 0., self.cba))
@@ -266,6 +259,13 @@ if __name__ == "__main__":
     inc.servos_cli.connect()
     inc.sub_state = 0
     while True:
-        inc.set_cb_radians()
-    
-
+        ret = inc.set_cb_radians()
+        if rospy.is_shutdown():
+            logger.logfatal("Is shutting down....")
+            break
+        if ret is False:
+            logger.logfatal("Running failed, will exit...")
+            break
+        else:
+            logger.loginfo("All pose inclination got, now finishing...")
+            break
