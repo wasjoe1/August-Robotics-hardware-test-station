@@ -2,9 +2,10 @@
 2. Click DISABLE_SERVOS button
 3. Click LASER_ON button
 4. Move the servos until the laser hits A4 paper
-5. Click LASER_OFF button
-6. Adjust the position of the laser until the laser on the web page image is stable within the yellow aperture
-7. Put a RB beside A4 paper
-8. Click TRY_TRACK button
-9. The GS starts tracking the RB, the tester should observe whether the laser hits the correct position of the RB
-10. Click DONE button when finished
+5. Click ENABLE_SERVOS button
+6. Click RUN button
+7. Adjust the position of the laser until the laser on the web page image is stable within the yellow aperture
+8. Put a RB beside A4 paper
+9. Click TRY_TRACK button
+10. The GS starts tracking the RB, the tester should observe whether the laser hits the correct position of the RB
+11. Click DONE button when finished
