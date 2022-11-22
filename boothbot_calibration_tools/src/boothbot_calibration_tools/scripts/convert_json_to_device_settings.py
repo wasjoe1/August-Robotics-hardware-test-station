@@ -4,7 +4,7 @@ import oyaml
 import json
 import shutil
 
-from boothbot_config.device_settings import DEVICE_SETTINGS_FILE_PATH
+# from boothbot_config.device_settings import DEVICE_SETTINGS_FILE_PATH
 
 import os
 
