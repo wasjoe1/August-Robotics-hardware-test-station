@@ -11,19 +11,7 @@ BAUDRATE = 3
 
 
 
-UNIT_DICT = {
-            "0": 0xe6,
-            "1": 0xe8,
-            "2": 0xd0,
-            "3": 0xfa,
-            "4": 0xfe,
-            "5": 0xea,
-            "6": 0xe4,
-            "7": 0xe2,
-            "8": 0xd2,
-            "9": 0xec,
-        }
-
+UNIT_DICT = [0xe6 ,0xe8 ,0xd0,0xfa,0xfe,0xea,0xe4,0xe2,0xd2,0xec ]
 
 
 
@@ -103,20 +91,21 @@ class DYP_SONAR_UNIT_WRITTER(object):
         return distance
 
     def loop_distance(self):
-        for i in range(9):
-            if self.distance_pub(UNIT_DICT[str(i)]) is not None:
-                self.dis[i] = format(self.distance_pub(UNIT_DICT[str(i)])/1000.,'.2f')
+        for i, unit in enumerate(UNIT_DICT):
+            distance = self.distance_pub(unit) 
+            if distance is not None:
+                self.dis[i] = format(distance/1000.,'.2f')
             else:
-                self.dis[i] = self.distance_pub(UNIT_DICT[str(i)])
+                self.dis[i] = None
             os.system('clear')
             print(self.print_distance())
 
 if __name__ == '__main__':
     modbus_config = {
-    "port": "/dev/ttyUSB0",
+    "port": "/dev/ttyUSB1",
     "baudrate": 115200,
     "parity": "N",
-    "timeout": 0.5,
+    "timeout": 0.2,
 }
     mbd = ModbusDriver(**modbus_config).client
     DYP = DYP_SONAR_UNIT_WRITTER(mbd)
