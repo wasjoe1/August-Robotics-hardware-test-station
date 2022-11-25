@@ -26,6 +26,8 @@ from boothbot_calibration_tools.constants import CalibrationCommand as CS
 from boothbot_config.device_settings import DEVICE_SETTINGS_FILE_PATH
 from boothbot_config.device_settings import CONFIG_PATH
 from boothbot_perception.tracking_camera import TrackingCamera
+from boothbot_perception import settings
+import boothbot_perception.settings as gbsets
 
 from boothbot_common.settings import BOOTHBOT_GET_CONFIG
 
@@ -57,6 +59,8 @@ from boothbot_calibration_tools.settings import (
     SAVE_ARG
 )
 
+from boothbot_calibration_tools.utils import get_tolerance
+
 TRACKER_CONFIG = BOOTHBOT_GET_CONFIG(name="tracker_driver")
 GS_CAMERA_VERTICAL_DIST = TRACKER_CONFIG["long_cam_laser_dist"] + \
     TRACKER_CONFIG["short_cam_laser_dist"]
@@ -71,7 +75,7 @@ CAMERA_FILTER_COUNT = 3
 class CalibrationController(ModuleBase):
     def __init__(self,
                  name, rate, states=None, transitions=None, commands=None, status_inf=None, srv_cmd_inf=None, need_robot_status=False, error_codes=None,
-                 laser=None, tolerance=None):
+                 laser=None):
         super(CalibrationController, self).__init__(
             name=name,
             rate=rate,
@@ -104,6 +108,7 @@ class CalibrationController(ModuleBase):
         self._user_gui_save_data = {}
         self._job = None
         self._data["data"]["host_name"] = socket.gethostname()
+        self.is_gs = socket.gethostname().lower().startswith("gs")
 
         self._done_list = {}
 
@@ -113,6 +118,8 @@ class CalibrationController(ModuleBase):
         self.servos = ServosClient()
         # self.laser = LaserRangeFinderGenerator.detect_laser_range_finder()
         self.laser = laser
+
+        self.color_range = [(getattr(settings, "CALI_LOWER"),getattr(settings, "CALI_UPPER"))]
 
         # config yaml
         self.config_dir = CONFIG_PATH + "/calibration_data"
@@ -133,7 +140,8 @@ class CalibrationController(ModuleBase):
         self.client_status = {"servos": None, "cameras": None}
         self.servos_save_encoder = []
         self.current_rad = (0.0, 0.0)
-        self._tolerance = tolerance
+        self._tolerance = get_tolerance()
+        self.logwarn("tolerance auto seleted {}.".format(self._tolerance))
 
         self.cameras_angle = []
         self.vertical_encoder = []
@@ -237,9 +245,11 @@ class CalibrationController(ModuleBase):
         elif self._job == CS.VERTICAL_SERVO_ZERO:
             self._do_vertical_offset()
         elif self._job == CS.IMU_CALIBRATION:
-            self._do_imu_calibration()
+            if not self.is_gs:
+                self._do_imu_calibration()
         elif self._job == CS.HORIZONTAL_OFFSET:
-            self._do_horizontal_offset()
+            if not self.is_gs:
+                self._do_horizontal_offset()
 
     def initialize(self):
         # TODO
@@ -396,6 +406,11 @@ class CalibrationController(ModuleBase):
         # From BGR to RGB
         frame = cv2.resize(frame, None, fx=0.25, fy=0.25,
                            interpolation=cv2.INTER_LINEAR)
+        if self._job != CS.CAMERA_LASER_ALIGNMENT:
+            width = frame.shape[0]
+            height = frame.shape[1]
+            cv2.line(frame,(0,int(width/2)),(int(height),int(width/2)),(0x00,0xA5,0xFF),2)
+            cv2.line(frame,(int(height/2),0),(int(height/2),int(width)),(0x00,0xA5,0xFF),2)
         im = frame[:, :, ::-1]
         im = Image.fromarray(im)
         buf = BytesIO()
@@ -489,7 +504,7 @@ class CalibrationController(ModuleBase):
         # self._save_data.update(servo_save_data)
 
         with open(DEVICE_SETTINGS_FILE_PATH, 'w') as f:
-            oyaml.dump(doc, f)
+            oyaml.dump(doc, f, default_flow_style=False)
 
     # JOB
 
@@ -499,7 +514,7 @@ class CalibrationController(ModuleBase):
         self.loginfo("save data to device settting {}".format(data))
         doc['tracker_driver']['long_short_cam_angle_offset'] = float(data)
         with open(DEVICE_SETTINGS_FILE_PATH, 'w') as f:
-            oyaml.dump(doc, f)
+            oyaml.dump(doc, f, default_flow_style=False)
 
     def _do_initialize_servo(self):
         pass
@@ -532,7 +547,7 @@ class CalibrationController(ModuleBase):
         frame = self.cameras[type].cap()
         if frame is not None:
             self.loginfo("Got {} frame".format(type))
-            beacon_res = self.cameras[type].find_beacon(frame, 0.0, COLOR)
+            beacon_res = self.cameras[type].find_beacon(frame, 0.0, COLOR, self.color_range)
             self.cameras[type].draw_beacon(frame, beacon_res)
             self.cameras_frame[type] = self.img2textfromcv2(frame)
             self.loginfo("beacon_res {}".format(beacon_res))
@@ -626,6 +641,9 @@ class CalibrationController(ModuleBase):
 
     def servo_move(self, target):
         self.servos.move_to(target, self._tolerance)
+    
+    def get_servo_radians(self):
+        self.track_target = (self.servos.radians[0], self.servos.radians[1])
 
     def _do_camera_laser_alignment(self):
         if self.sub_state == 0:
@@ -672,7 +690,7 @@ class CalibrationController(ModuleBase):
 
     def get_camera_result(self, type, dis=0.0, compensation=False, long_shrot_angle=None):
         frame = self.cameras[type].cap()
-        beacon_res = self.cameras[type].find_beacon(frame, dis, COLOR)
+        beacon_res = self.cameras[type].find_beacon(frame, dis, COLOR, self.color_range)
         self.cameras[type].draw_beacon(frame, beacon_res)
         self.cameras_frame[type] = self.img2textfromcv2(frame)
         self.loginfo("long short angle {}".format(long_shrot_angle))

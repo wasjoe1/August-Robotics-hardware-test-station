@@ -1,5 +1,5 @@
 1. Connect the inclinometer to the USB of Lionel and supply power
 2. Adjust Lionel to full level
-3. Click the RUN button
-4. Observe that the absolute value of the xy of IMU is less than 0.001
-5. Click the WRITE button
+3. Click the IMU_CALI button
+4. Observe that the absolute value of the xyz of IMU is less than 0.001
+5. Click the SAVE button
