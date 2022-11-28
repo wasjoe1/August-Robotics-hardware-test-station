@@ -48,3 +48,14 @@ def generate_yaw_array(N):
     negative = np.linspace(-np.pi, 0, int(N/2) + 1).tolist()
 
     return positive + to_minus_pi + negative
+    
+def get_gs_type():
+    gs_type = SERVO_PARAMETER["platform"].get('servo_types', ['stepper', 'stepper'])
+    if gs_type == ['minas', 'minas']:
+        return "minas"
+        # PLATFORM_DEFAULT_TOLERANCE = SERVO_PARAMETER["platform"].get('tolerance', (1e-5, 5e-5))
+    elif gs_type == ['minas', 'stepper']:
+        return "stepper"
+    else:
+        return "default"
+
