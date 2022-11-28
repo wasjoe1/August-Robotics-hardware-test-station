@@ -27,3 +27,13 @@ def get_tolerance():
     else:
         return (1e-5, 5e-5)
 
+def get_gs_type():
+    gs_type = SERVO_PARAMETER["platform"].get('servo_types', ['stepper', 'stepper'])
+    if gs_type == ['minas', 'minas']:
+        return "minas"
+        # PLATFORM_DEFAULT_TOLERANCE = SERVO_PARAMETER["platform"].get('tolerance', (1e-5, 5e-5))
+    elif gs_type == ['minas', 'stepper']:
+        return "stepper"
+    else:
+        return "default"
+
