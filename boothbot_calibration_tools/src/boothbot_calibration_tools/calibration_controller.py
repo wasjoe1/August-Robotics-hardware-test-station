@@ -811,8 +811,16 @@ class CalibrationController(ModuleBase):
             self.loginfo("job vertical iter: {}, len(vertical_encoder): {}, {}".format(
                 self._job_vertical_iter, len(self.vertical_encoder), self.vertical_encoder))
             if self._job_vertical_iter >= 2:
+                arr1 = np.array(self.vertical_encoder[0:4])
+                avg1 = np.average(arr1)
+                arr2 = np.array(self.vertical_encoder[5:9])
+                avg2 = np.average(arr2)
                 arr = np.array(self.vertical_encoder)
                 avg = np.average(arr)
+                if math.fabs(avg1-avg2) > 8000.0:
+                    avg = avg + 8192
+                if avg >= 16384:
+                    avg = avg - 16384
                 self.loginfo("verticalencoder is {}".format(avg))
                 self._job_data["vertical_offset"] = avg
                 self.set_job_current_time()
