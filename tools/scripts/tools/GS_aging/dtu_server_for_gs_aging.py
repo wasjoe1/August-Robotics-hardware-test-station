@@ -53,10 +53,11 @@ class cali_cont(Logging):
         if self.task_done:
             # gss = self.gshc.get_valid_gs(["gs_1"], self.i)
             gss = self.gshc.get_valid_gs(["gs_1"], self.gid)
-            if gss is None and self.adding is False:
+            if gss is None and self.adding is False and self.deling is False:
                 self.loginfo(".................adding gs....")
                 MODULES_GS_HUB_SRV_CMD.service_call("ags")
                 self.adding = True
+                return
 
             if self.adding is True:
                 if gss is not None:
@@ -66,6 +67,9 @@ class cali_cont(Logging):
                     self.gs_current_pose = self.gshc.get_current_gs_pose()
                     self.loginfo("got gs pose {}".format(self.gs_current_pose))
                     self.loginfo("last pose is {}, set last pose {}".format(self.gs_last_pose, self.gs_current_pose))
+                    if self.gs_current_pose ==  (0.0, 0.0, 0.0):
+                        self.loginfo_throttle(3, "Got error pose {}".format(self.gs_current_pose))
+                        return
                     if self.gs_last_pose != self.gs_current_pose:
                         self.gs_last_pose = self.gs_current_pose
                         self.logwarn("add gs done, set new task")
@@ -75,11 +79,12 @@ class cali_cont(Logging):
                     else:
                         self.loginfo("pose not changed.")
 
-            if gss is not None and self.deling is False:
+            if gss is not None and self.deling is False and self.adding is False:
                 self.loginfo(gss)
                 self.loginfo(".................delete gs....")
                 MODULES_GS_HUB_SRV_CMD.service_call("dgs")
                 self.deling = True
+                return
 
             if self.deling is True:
                 if gss is None:
@@ -107,13 +112,13 @@ class cali_cont(Logging):
                     self.loginfo("measure succeeded {}".format(self.gshc.get_measurement()))
                     self.i += 1
                     self.gid += 1
-                    self.gshc.reset()
+                    # self.gshc.reset()
                     self.state = 0
                 elif self.gshc.is_failed():
                     self.loginfo("fail {}".format(self.gshc.is_failed()))
                     self.i += 1
                     self.gid += 1
-                    self.gshc.reset()
+                    # self.gshc.reset()
                     self.state = 0
                 else:
                     self.loginfo("dont know..")
