@@ -14,7 +14,7 @@ from boothbot_common.ros_logger_wrap import ROSLogging as Logging
 
 
 class cali_cont(Logging):
-    def __init__(self,name):
+    def __init__(self, name):
         super(cali_cont, self).__init__("cali_cont")        
         self.gshc = GuidingStationHubClient()
 
@@ -26,7 +26,7 @@ class cali_cont(Logging):
         self.state = 0
         self.detail_state = "INIT"
         self.dis = [14.9,50,9]
-        self.hor = [-1.51396,0.03396,1.1]
+        self.hor = [-1.495,0.03,1.1]
         self.gid = 2
         self.gshc.cancel_goal()
         self.gshc.reset()
@@ -38,6 +38,7 @@ class cali_cont(Logging):
         self.deling = False
         self.gid = 1
         self.num_total_gs = 0
+        self.adding_fail_count = 0
 
         MODULES_GS_HUB_PDO.Subscriber(self._cb_gs)
 
@@ -50,16 +51,23 @@ class cali_cont(Logging):
         if not self.gshc.is_done():
             return
         
+        ### 
+        # When last measurement task done or start a new aging test, DTU aging server will go into add/delete loop.
+        # After calibration done, GS would update pose via DUT.
+        # If the server found the GS pose changed, the server will start a new task.
+
         if self.task_done:
             # gss = self.gshc.get_valid_gs(["gs_1"], self.i)
             gss = self.gshc.get_valid_gs(["gs_1"], self.gid)
             if gss is None and self.adding is False and self.deling is False:
-                self.loginfo(".................adding gs....")
+                self.logwarn(".................adding gs....")
                 MODULES_GS_HUB_SRV_CMD.service_call("ags")
+                self.adding_fail_count = 0
                 self.adding = True
                 return
 
             if self.adding is True:
+                self.adding_fail_count += 1
                 if gss is not None:
                     self.loginfo("set adding to {}".format(True))
                     self.adding = False
@@ -73,11 +81,17 @@ class cali_cont(Logging):
                     if self.gs_last_pose != self.gs_current_pose:
                         self.gs_last_pose = self.gs_current_pose
                         self.logwarn("add gs done, set new task")
+                        self.adding_fail_count = 0
                         self.task_done = False
                         self.i = 0
                         return
                     else:
-                        self.loginfo("pose not changed.")
+                        self.logwarn("pose not changed.")
+                if self.adding_fail_count >= 200:
+                    self.logerr("Add gs  timeout. should retry...")
+                    self.adding = False
+                    self.adding_fail_count = 0
+
 
             if gss is not None and self.deling is False and self.adding is False:
                 self.loginfo(gss)
@@ -92,6 +106,9 @@ class cali_cont(Logging):
                     self.deling = False
 
         else:
+            ###
+            # The server start the measurement task, it would measure 3 RBs
+
             if self.state == 0:
                 self.loginfo("Targeting")
                 gss = self.gshc.get_valid_gs(["gs_1"], self.gid)
@@ -140,46 +157,6 @@ cc = cali_cont("cali_cont")
 while not rospy.is_shutdown():
 
     cc.run()
-    # if task_done:
-    #     print("task done.")
-    #     gs_current_pose = gshc.get_current_gs_pose()
-    #     if gs_last_pose != gs_current_pose:
-    #         print("gs_last_pose: {}, gs_current_pose: {}".format(gs_last_pose, gs_current_pose))
-    #         i = 0
-    #         task_done = False
-    #         gs_last_pose = gs_current_pose
-    # else:
-    #     if state == 0:
-    #         print("Targeting")
-    #         gs_valid = gshc.get_valid_gs(["gs_1"], gid)
-    #         if gs_valid is None:
-    #             gid += 1 
-    #             if gid >= 255:
-    #                 gid = 1
-    #         else:
-    #             print("current rb id {}".format(i))
-    #             gshc.targeting(1,"ROG",dis[i],hor[i],0,True,False)
-    #             state = 1
-    #     elif state == 1:
-    #         if not gshc.is_done():
-    #             print("not done")
-    #         elif not gshc.is_failed() and not gshc.is_succeeded():
-    #             print("not any task, set task")
-    #             detail_state = "TASKING"
-    #         elif gshc.is_succeeded():
-    #             print("measure succeeded {}".format(gshc.get_measurement()))
-    #             i += 1
-    #             # gshc.reset()
-    #             state = 0
-    #         elif gshc.is_failed():
-    #             print("fail {}".format(gshc.is_failed()))
-    #             i += 1
-    #             # gshc.reset()
-    #             state = 0
-    #         else:
-    #             print("dont know..")
-    #     if i >= 3:
-    #         task_done = True
 
     rate.sleep()
 
