@@ -32,6 +32,7 @@ class CalibrationCommand(Enum):
     VERTICAL_SERVO_ZERO = 25
     IMU_CALIBRATION = 26
     HORIZONTAL_OFFSET = 27
+    MARKING_ROI = 28
 
     USE_LONG_CAMERA = 50
     USE_SHORT_CAMERA = 51

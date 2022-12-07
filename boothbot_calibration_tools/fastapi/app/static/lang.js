@@ -38,4 +38,5 @@ var lang = {
     "cameras": ["cameras", "相机"],
     "imu_cali": ["IMU_CALI", "IMU写入0点"],
     "imu_save": ["SAVE", "IMU保存0点"],
+    "MARKING_ROI": ["9.MARKING_ROI", "9.M相机ROI(Lionel_only)"],
 }
