@@ -49,14 +49,20 @@
 ## GS 开始老化
 
 1. 打开 `GS` 的控制主页: http://gsp4-00xx.local
-2. 手动标定 `GS`
-3. 标定成功后，从主页上复制 `GS` 的位置，替换到 `gs_dtu_aging.py` 的 `GS` 的位置，保存退出
+2. 将 GS 设备设置成 DTU 工作模式，然后进入 docker_mode
+
+    ```bash
+    docker_mode
+    ```
+
+3. 手动标定 `GS`
+4. 标定成功后，从主页上复制 `GS` 的位置，替换到 `gs_dtu_aging.py` 的 `GS` 的位置，保存退出
 
     ```python
     GUESS_POSE = (-0.0091,-0.2978,-1.550929)
     ```
 
-4. 在该文件夹下执行该脚本
+5. 在该文件夹下执行该脚本
 
     ```bash
     cd ~/catkin_ws/src/augustbot-tools/tools/scripts/tools/GS_aging
