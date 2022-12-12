@@ -4,6 +4,7 @@ import time
 import math
 from pprint import PrettyPrinter
 import rospy
+import re
 
 logger = rospy
 
@@ -16,6 +17,7 @@ Key functions:
 i: Initialize power module
 c: Get current readings
 s: Update settings to power module and save
+g: Get current setting
 q: Exiting...
 """
 
@@ -34,9 +36,15 @@ BATTERY_CMD_SET_OVERV = b"AT+MODE+OVERV\r\n"
 BATTERY_CMD_SET_UNDERV = b"AT+MODE+UNDERV\r\n"
 BATTERY_CMD_SET_UNDERV_LINE = b"AT+UNDERVERR+21\r\n" # protect battery when too low
 BATTERY_CMD_SET_OVERC = b"AT+MODE+OVERC\r\n"
+BATTERY_CMD_SET_OVERC_LINE_LNP = b"AT+OVERCERR+26\r\n"   # protect when current too high for lionel
+BATTERY_CMD_SET_OVERC_LINE_GS = b"AT+OVERCERR+11\r\n"   # protect when current too high for GS
 BATTERY_CMD_SET_UNDERC = b"AT+MODE+UNDERC\r\n"
 BATTERY_CMD_SET_OVERP = b"AT+MODE+OVERP\r\n"
 BATTERY_CMD_SET_UNDERP = b"AT+MODE+UNDERP\r\n"
+
+BATTERY_CMD_GET_MODE = b"AT+MODE\r\n"
+BATTERY_CMD_GET_D = b"AT+POLAR\r\n" 
+
 
 BATTERY_CMD_SET_D_NC = b"AT+POLAR+1\r\n" # disconnect NC and COM pin when trigger the alarm
 BATTERY_CMD_SET_D_NO = b"AT+POLAR+0\r\n" # disconnect NO and COM pin when trigger the alarm
@@ -76,10 +84,15 @@ class E4PowerModuleCheck(object):
                     logger.logwarn("Setting scale to: 40A!")
                     p.write(BATTERY_CMD_SET_SCALE)
                     time.sleep(0.2)
-                    logger.logwarn("Setting alarm under: 21V!")
-                    p.write(BATTERY_CMD_SET_UNDERV)
+                    # logger.logwarn("Setting alarm under: 21V!")
+                    # p.write(BATTERY_CMD_SET_UNDERV)
+                    # time.sleep(0.2)
+                    # p.write(BATTERY_CMD_SET_UNDERV_LINE)
+                    # time.sleep(0.2)
+                    logger.logwarn("Setting alarm over: LNP-26A ; GS-11A !")
+                    p.write(BATTERY_CMD_SET_OVERC)
                     time.sleep(0.2)
-                    p.write(BATTERY_CMD_SET_UNDERV_LINE)
+                    p.write(BATTERY_CMD_SET_OVERC_LINE_LNP)
                     time.sleep(0.2)
                     logger.logwarn("Setting NO mode!")
                     p.write(BATTERY_CMD_SET_D_NO)
@@ -98,6 +111,36 @@ class E4PowerModuleCheck(object):
                     time.sleep(0.2)
                     pow = p.read_all()
                     logger.logwarn("Current data: {}".format([vol, cur, pow]))
+
+            if key in ("g", "G"):
+                with Serial(port=self.port, baudrate=self.baud, timeout=1.0) as p:
+                    time.sleep(0.2)
+                    logger.logwarn("getting current mode and limit!")
+                    p.write(BATTERY_CMD_GET_MODE)
+                    time.sleep(0.2)
+                    mode = p.read_all()
+                    mode = re.compile(r"=\D+\r\nOK").findall(mode.decode())
+                    mode = mode[0][1:-4]
+                    logger.logwarn("Current mode: {}".format(mode))
+                    time.sleep(0.2)
+                    get_limit = "AT+"+mode+"ERR\r\n"
+                    BATTERY_CMD_GET_LIMIT = get_limit.encode()
+                    p.write(BATTERY_CMD_GET_LIMIT)
+                    time.sleep(0.2)
+                    limit = p.read_all()
+                    limit = re.compile(r"=\S+\r\nOK").findall(limit.decode())
+                    limit = limit[0][1:-4]
+                    logger.logwarn("Current limit: {}".format(limit))
+                    time.sleep(0.2)
+                    p.write(BATTERY_CMD_GET_D)
+                    time.sleep(0.2)
+                    NOmode = p.read_all()
+                    NOmode = re.compile(r"=\S+\r\nOK").findall(NOmode.decode())
+                    NOmode = NOmode[0][1:-4]
+                    logger.logwarn("Current NO mode: {}".format(NOmode))
+
+
+
 
             elif key in ("q", "Q"):
                 logger.logwarn("Exiting...")
