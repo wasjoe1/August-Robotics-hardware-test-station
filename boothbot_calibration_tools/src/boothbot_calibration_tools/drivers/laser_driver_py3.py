@@ -8,7 +8,7 @@ import usb.util
 from serial import Serial, SerialException
 from boothbot_common.constants import FF32half
 from boothbot_common.ros_logger_wrap import ROSLogging as Logging
-from boothbot_usb.usb import USB
+from boothbot_perception.usb import USB
 import struct
 
 class LaserRangeFinder(Logging):
