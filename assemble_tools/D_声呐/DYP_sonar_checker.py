@@ -28,7 +28,6 @@ class DYP_SONAR_UNIT_WRITTER(object):
         self.distance_image = """
 
 
-
             ___________________________________________
             |     |  0  |     |  1  |     |  2  |     |
             |     |{} |     |{} |     |{} |     |
