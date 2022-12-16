@@ -1,19 +1,22 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import time
 from boothbot_driver.modbus_driver import ModbusDriver
-import rospy as logger
-from assemble_tools.get_key import GetKey
+from pymodbus.client.sync import ModbusSerialClient as ModbusClient
 import os
-BAUDRATE = 3
+import time
+BAUDRATES = [9600, 115200]
 
-
-
-
-
+PORT = ["/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2"]
 UNIT_DICT = [0xe6 ,0xe8 ,0xd0,0xfa,0xfe,0xea,0xe4,0xe2,0xd2,0xec ]
 
-
+def detect_baudrate_and_unit_id(port):
+    for baud in BAUDRATES:
+        with ModbusClient(method='rtu', port=port, baudrate=baud, parity='N', timeout=0.1) as client:
+            response=client.read_holding_registers(0x200, 1, unit=0xFF)
+            if not response.isError():
+                print(baud,port)
+                return baud, port
+        time.sleep(0.5)
 
 class DYP_SONAR_UNIT_WRITTER(object):
     def __init__(self, modbus_driver):
@@ -21,16 +24,11 @@ class DYP_SONAR_UNIT_WRITTER(object):
         self.modbus_driver = modbus_driver
         self.dis = [None]*10
 
-
-
-
-
-
     def print_distance(self):
         self.distance_image = """
 
 
-            Input number and you can set the address
+
             ___________________________________________
             |     |  0  |     |  1  |     |  2  |     |
             |     |{} |     |{} |     |{} |     |
@@ -70,18 +68,6 @@ class DYP_SONAR_UNIT_WRITTER(object):
     )
         return self.distance_image
 
-    def check_unit(self):
-        response=self.modbus_driver.read_holding_registers(0x200, 1, unit=0xFF)
-
-        try:
-            unit = response.registers[0]
-        except:
-            unit = None
-        return unit
-
-
-
-
     def distance_pub(self,unit):
         response=self.modbus_driver.read_holding_registers(0x0101, 1, unit=unit)
         try:
@@ -92,7 +78,7 @@ class DYP_SONAR_UNIT_WRITTER(object):
 
     def loop_distance(self):
         for i, unit in enumerate(UNIT_DICT):
-            distance = self.distance_pub(unit) 
+            distance = self.distance_pub(unit)
             if distance is not None:
                 self.dis[i] = format(distance/1000.,'.2f')
             else:
@@ -101,9 +87,15 @@ class DYP_SONAR_UNIT_WRITTER(object):
             print(self.print_distance())
 
 if __name__ == '__main__':
+    for port in PORT:
+        try:
+            baud, _port = detect_baudrate_and_unit_id(port)
+        except:
+            print()
+    print(baud,_port)
     modbus_config = {
-    "port": "/dev/ttyUSB1",
-    "baudrate": 115200,
+    "port": _port,
+    "baudrate": baud,
     "parity": "N",
     "timeout": 0.2,
 }
