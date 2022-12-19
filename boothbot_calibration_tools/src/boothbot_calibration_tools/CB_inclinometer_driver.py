@@ -27,7 +27,7 @@ from boothbot_calibration_tools.drivers.base import ModbusDriver
 from boothbot_common.settings import  LOCAL_TMP_CONFIG_FOLDER_PATH_LIONEL
 
 import tf.transformations as tftrans
-from boothbot_calibration_tools.utils import (
+from boothbot_calibration_tools.utils_cb_cali import (
     sincurve,
     get_estimated_inclination,
     generate_yaw_array,
@@ -177,6 +177,7 @@ class InclinometerDriver(Logging):
                 "inclinations": list(self.measured_inclinations),
             }
             yaml.dump(data, f, Dumper=yaml.CDumper)
+            logger.loginfo("Get the result! Row: {}, Pitch:{}".format(self.row_pitch[0],self.row_pitch[1]))
             logger.loginfo("Result saved at: {}".format(result_file_name))
 
 
