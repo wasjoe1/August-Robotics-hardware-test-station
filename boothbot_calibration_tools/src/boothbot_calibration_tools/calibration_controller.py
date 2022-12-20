@@ -455,10 +455,16 @@ class CalibrationController(ModuleBase):
             for t in self.save_data_title:
                 if t in f:
                     self.loginfo("open file {}".format(f))
-                    with open(self.config_dir+"/" + f, "r") as data_file:
-                        # last_data = json.loads
-                        last_data = json.load(data_file)
-                        self._data["data"]["last_data"].update(last_data)
+                    file_path = self.config_dir+"/" + f
+                    try:
+                        with open(file_path, "r") as data_file:
+                            # last_data = json.loads
+                            last_data = json.load(data_file)
+                            self._data["data"]["last_data"].update(last_data)
+                    except FileNotFoundError as not_found_e:
+                        self.loginfo("{} not found...".format(file_path))
+                    except json.decoder.JSONDecodeError as file_e:
+                        self.loginfo("load file {} error...".format(file_path))
 
     def save_json(self):
         save_path = self.json_file+"_"+self._job.name+".json"
