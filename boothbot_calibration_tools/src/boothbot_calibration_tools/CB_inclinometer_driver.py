@@ -27,7 +27,7 @@ from boothbot_calibration_tools.drivers.base import ModbusDriver
 from boothbot_common.settings import  LOCAL_TMP_CONFIG_FOLDER_PATH_LIONEL
 
 import tf.transformations as tftrans
-from boothbot_calibration_tools.utils_cb_cali import (
+from boothbot_calibration_tools.utils import (
     sincurve,
     get_estimated_inclination,
     generate_yaw_array,
