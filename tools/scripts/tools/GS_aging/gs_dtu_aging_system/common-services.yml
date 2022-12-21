@@ -1,0 +1,24 @@
+version: "3"
+services:
+
+  lionel:
+    container_name: lionel
+    image: "lionel-melodic:3.5"
+    user: "augbooth"
+    privileged: true
+    network_mode: "host"
+    command: tail -f /dev/null
+    volumes:
+      - /dev:/dev:rw
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/dbus:/var/run/dbus:rw
+      - /var/run/avahi-daemon/socket:/var/run/avahi-daemon/socket:rw
+      - "/home/augbooth/catkin_ws:/home/augbooth/catkin_ws:rw"
+      - "/home/augbooth/.ros:/home/augbooth/.ros:rw"
+      - "/home/augbooth/.config:/home/augbooth/.config:rw"
+      - "/home/augbooth/.bashrc:/home/augbooth/.bashrc:rw"
+      - "/home/augbooth/swmaster.sh:/home/augbooth/swmaster.sh:rw"
+    environment:
+      - CONTAINER_NAME=lionel
+      - TERM=xterm-256color
