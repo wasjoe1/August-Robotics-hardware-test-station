@@ -9,9 +9,11 @@ from boothbot_msgs.ros_interfaces import (
     MODULES_GS_HUB_SRV_CMD,
     MODULES_GS_HUB_PDO
 )
+from boothbot_msgs.msg import std_msgs
 
 from boothbot_common.ros_logger_wrap import ROSLogging as Logging
 
+COLOR = "BOG"
 
 class cali_cont(Logging):
     def __init__(self, name):
@@ -41,11 +43,17 @@ class cali_cont(Logging):
         self.adding_fail_count = 0
 
         MODULES_GS_HUB_PDO.Subscriber(self._cb_gs)
+        rospy.Subscriber("set_rb", std_msgs.msg.String, self._cb_set_rb)
 
     def _cb_gs(self, msg):
         # print(msg)
         self.num_total_gs = len(msg.gs_info)
 
+    def _cb_set_rb(self, msg):
+        self.loginfo("Got msg {}..".format(msg))
+        data = msg.split("_")
+        rb_id = int(data[0])
+        self.hor[rb_id] = float(data[1])
 
     def run(self):
         if not self.gshc.is_done():
@@ -119,7 +127,7 @@ class cali_cont(Logging):
                         self.task_done = True
                     self.gid += 1
                     return
-                self.gshc.targeting(self.gid,"BOG",self.dis[self.i],self.hor[self.i],0,True,False)
+                self.gshc.targeting(self.gid,COLOR,self.dis[self.i],self.hor[self.i],0,True,False)
                 self.state = 1
             elif self.state == 1:
                 if not self.gshc.is_failed() and not self.gshc.is_succeeded():

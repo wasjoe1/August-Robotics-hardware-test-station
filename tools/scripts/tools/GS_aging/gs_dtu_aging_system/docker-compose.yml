@@ -1,0 +1,29 @@
+version: "3"
+volumes:
+  code_app:
+
+services:
+
+  boothbot_roscore:
+    extends:
+      file: "common-services.yml"
+      service: lionel
+    restart: always
+    container_name: boothbot_roscore
+    command: "/home/augbooth/catkin_ws/local/calibration/boothbot_roscore.bash"
+    environment:
+      - CONTAINER_NAME=boothbot_roscore
+
+  aging:
+    extends:
+      file: "common-services.yml"
+      service: lionel
+    restart: always
+    container_name: cali_platform_drivers
+    command: "/home/augbooth/catkin_ws/local/calibration/aging.bash"
+    environment:
+      - CONTAINER_NAME=aging
+    depends_on:
+      - boothbot_roscore
+
+
