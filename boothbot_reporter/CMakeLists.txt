@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(boothbot_simulation)
+project(boothbot_reporter)
 
 
 find_package(catkin REQUIRED rospy)

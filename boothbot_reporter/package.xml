@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>boothbot_simulation</name>
+  <name>boothbot_reporter</name>
   <version>1.0.0</version>
   <description>A package for processing aging and efficiency data from Lionel</description>
 
@@ -12,11 +12,6 @@
   <!--   BSD, MIT, Boost Software License, GPLv2, GPLv3, LGPLv2.1, LGPLv3 -->
   <license>TODO</license>
 
-
-  <!-- Url tags are optional, but multiple are allowed, one per tag -->
-  <!-- Optional attribute type can be: website, bugtracker, or repository -->
-  <!-- Example: -->
-  <!-- <url type="website">http://wiki.ros.org/boothbot_simulation</url> -->
 
 
   <!-- Author tags are optional, multiple are allowed, one per tag -->

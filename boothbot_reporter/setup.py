@@ -3,7 +3,7 @@
 from distutils.core import setup
 from catkin_pkg.python_setup import generate_distutils_setup
 
-PKG = 'boothbot_simulation'
+PKG = 'boothbot_reporter'
 
 # fetch values from package.xml
 setup_args = generate_distutils_setup(

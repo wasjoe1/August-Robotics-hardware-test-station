@@ -9,7 +9,7 @@ import sys
 import os
 import getopt
 
-
+from fileIO import load_logs
 
 def help():
     print("#############################################################################################################\n")
@@ -23,7 +23,8 @@ def help():
     print("\t-q  --quit:         exit immediately\n")
     print("#############################################################################################################")
 
-
+HOME_PATH = os.environ.get('HOME')
+DEFAULT_LOGS_PATH = os.path.join(HOME_PATH, 'roslogs/')
 
 if __name__ == "__main__":
     try:
@@ -31,16 +32,15 @@ if __name__ == "__main__":
                                    'p:o:r:k:n:hq',
                                    ['localpath=', 'copyremotely=', 'remotename=', 'remotePW=','remotepath=',  'help', 'quit'])
         
-        localpath = os.path.abspath('/home/augbooth/catkin_ws/local/report/')
+        localpath = os.path.join(HOME_PATH + 'catkin_ws/local/report/')
         copyremotely = False
         remotename = ""
         remotePW = ""
         remotepath = "~/"
-         
+        
         for opt_name, opt_value in opts:
             if opt_name in ('-p', '--localpath'):
-                localpath = os.path.abspath(opt_value)
-                print(localpath)
+                localpath = opt_value
                 
             elif opt_name in ('-o', '--copyremotely'):
                 if opt_value == "y":
@@ -83,3 +83,6 @@ if __name__ == "__main__":
         print(error, "\n")
         help()
         sys.exit(1)
+        
+    for chunk in load_logs.chunks(DEFAULT_LOGS_PATH):
+        print("done")
