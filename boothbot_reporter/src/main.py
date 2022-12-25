@@ -9,7 +9,9 @@ import sys
 import os
 import getopt
 
-from fileIO import load_logs
+from fileIO import load_logs, write_csv
+from data_process import analyse_data, generate_result
+
 
 def help():
     print("#############################################################################################################\n")
@@ -32,7 +34,7 @@ if __name__ == "__main__":
                                    'p:o:r:k:n:hq',
                                    ['localpath=', 'copyremotely=', 'remotename=', 'remotePW=','remotepath=',  'help', 'quit'])
         
-        localpath = os.path.join(HOME_PATH + 'catkin_ws/local/report/')
+        localpath = os.path.join(HOME_PATH, 'catkin_ws/local/report/')
         copyremotely = False
         remotename = ""
         remotePW = ""
@@ -83,6 +85,12 @@ if __name__ == "__main__":
         print(error, "\n")
         help()
         sys.exit(1)
-        
+
+    print(localpath)
+    data_lines = []
     for chunk in load_logs.chunks(DEFAULT_LOGS_PATH):
-        print("done")
+        data_lines = analyse_data.filter_DATA(chunk)
+
+    entities = analyse_data.analyse_data(data_lines)
+    results = generate_result.generate_result(entities)
+    write_csv.write_to_csv(results, HOME_PATH)
