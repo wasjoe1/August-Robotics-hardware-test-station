@@ -26,7 +26,7 @@ def help():
     print("#############################################################################################################")
 
 HOME_PATH = os.environ.get('HOME')
-DEFAULT_LOGS_PATH = os.path.join(HOME_PATH, 'roslogs/')
+DEFAULT_LOGS_PATH = os.path.join(HOME_PATH, 'catkin_ws/local/roslogs/')
 
 if __name__ == "__main__":
     try:

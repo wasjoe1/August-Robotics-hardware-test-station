@@ -10,14 +10,28 @@ import os
 
 
 def chunks(logs_path, size=50000):
+    """
+    due to the roslogs files can be large, we read the files chunk by chunk in order to avoid OOM error.
 
+    Args:
+        logs_path (_type_): a default path: catkin_ws/local/roslogs/
+        size (int, optional): can be changed according to memory size. Defaults to 50000.
+
+    Yields:
+        _type_: chunk of lines
+    """
     count_line = 0
     count_file = 0
 
     try:
         for root, dirs, files in os.walk(logs_path, topdown=True):
+            # read in date of modified order, i.e. the latest modified file is the last to read
+            # because if there are more than one rosout.log file, e.g. rosout.log.1, 
+            # some infomation only shows in the oldest log file, like machine name.
+            # so make sure the reading order is same as the log written order
             files = [os.path.join(root, x) for x in files]
             files.sort(key=os.path.getmtime)
+            
             for filename in files:
                 if "rosout.log" in filename:
                     with open(filename, 'r', encoding='utf8') as file:
@@ -35,5 +49,5 @@ def chunks(logs_path, size=50000):
         print(e)
         sys.exit(1)
     finally:
-        print("how many files were read: ", count_file)
-        print("how many lines were read: ", count_line)
+        print("How many files were read: ", count_file)
+        print("How many lines were read: ", count_line)

@@ -1,7 +1,8 @@
 #!/usr/bin/evn python3
 # -*- coding: utf-8 -*-
 
-""" defined entity class. """
+""" defined entity class. each entity represent a data row in the final csv file. 
+    the entity holds the raw data we need """
 
 __author__ = "Jiancheng Zhang"
 

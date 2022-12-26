@@ -1,17 +1,31 @@
 #!/usr/bin/evn python3
 # -*- coding: utf-8 -*-
 
-""" read all rosout.log files in the folder. """
+""" iterate over all entities, and do some math """
 
 __author__ = "Jiancheng Zhang"
 
 
 def generate_result(entities):
+    """
+    this method will generate result based on entities.
+    if you want to add more type of results by using current data that an entity hold,
+    you can only edit this method.
+
+    Args:
+        entities (Entity): a list of entities
+
+    Returns:
+        _type_: data rows
+    """
+    # the header
     results = [['Name_of_Lionel', 'Name_of_GS', 'Date_of_aging', 'Starting_time', 'Ending_time',
                'Avg_localisation_duration', 'Avg_mark_duration', 'Avg_navigation_duration', 'Avg_localisation_times',
                'marks_per_hour', 'total_hours', 'total_localisation', 'total_mark', 'total_navigation']]
+    
     for entity in entities:
         result = []
+        
         result.append(entity.lionel_name)
         result.append(entity.gs_name)
         result.append(entity.date)
@@ -29,6 +43,7 @@ def generate_result(entities):
 
         results.append(result)
 
+    # the results contains all data rows
     return results
 
 

@@ -1,7 +1,7 @@
 #!/usr/bin/evn python3
 # -*- coding: utf-8 -*-
 
-""" read all rosout.log files in the folder. """
+""" write to a csv file. """
 
 __author__ = "Jiancheng Zhang"
 

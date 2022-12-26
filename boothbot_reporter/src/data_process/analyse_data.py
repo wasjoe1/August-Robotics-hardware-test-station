@@ -1,7 +1,7 @@
 #!/usr/bin/evn python3
 # -*- coding: utf-8 -*-
 
-""" read all rosout.log files in the folder. """
+""" filter raw data from roslogs files and use datacode to classify them. """
 
 __author__ = "Jiancheng Zhang"
 
@@ -39,7 +39,10 @@ def filter_ERROR(DATA_lines):
 def analyse_data(DATA_lines):
     all_error_lines, no_error_lines = filter_ERROR(DATA_lines)
 
+    # we will return a set of entities
     entities = []
+    
+    # class varaibles
     lionel_name = None
     gs_name = None
     date = None
@@ -49,7 +52,6 @@ def analyse_data(DATA_lines):
     navigation_entities = []
     navigation_entity = {"start_time": None, "end_time": None, "nav_goal_succeeded": None,
                          "nav_times_of_gs_loc": None}
-
 
     mark_entites = []
     mark_entity = {"start_time": None, "end_time": None, "mark_goal_succeeded": None}
@@ -61,6 +63,7 @@ def analyse_data(DATA_lines):
     data_pattern = re.compile("^(.*\[DATA\] " + datacode_regex + " (.*))$")
 
     for line in no_error_lines:
+        # match datacode
         match = data_pattern.match(line)
         code = DataCode.code2enum(match.group(2))
         data = code.parse(match.group(4))
@@ -72,6 +75,7 @@ def analyse_data(DATA_lines):
         elif code == DataCode.GOTOMARK_START_TIME:
             start_time = data
             date = datetime.datetime.utcfromtimestamp(data).strftime('%Y-%m-%d')
+            # reset three data sets
             navigation_entities = []
             mark_entites = []
             localisation_entities = []
@@ -79,6 +83,7 @@ def analyse_data(DATA_lines):
             end_time = datetime.datetime.utcfromtimestamp(data).strftime('%H:%M:%S')
             total_time = data-start_time
             start_time = datetime.datetime.utcfromtimestamp(start_time).strftime('%H:%M:%S')
+            # construct the object of Entity class
             entity = Entity(lionel_name, gs_name, date, start_time, end_time, total_time)
             entity.nav_data = navigation_entities
             entity.mark_data = mark_entites
