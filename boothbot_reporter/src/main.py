@@ -86,7 +86,7 @@ if __name__ == "__main__":
         help()
         sys.exit(1)
 
-    print(localpath)
+
     data_lines = []
     for chunk in load_logs.chunks(DEFAULT_LOGS_PATH):
         data_lines = analyse_data.filter_DATA(chunk)
