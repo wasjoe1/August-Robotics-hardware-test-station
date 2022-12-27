@@ -34,7 +34,7 @@ def chunks(logs_path, size=50000):
             
             for filename in files:
                 if "rosout.log" in filename:
-                    with open(filename, 'r', encoding='utf8') as file:
+                    with open(filename, 'r', encoding='utf8', errors='ignore') as file:
                         lines = file.readlines()
                         count_file += 1
                         count_line += len(lines)
