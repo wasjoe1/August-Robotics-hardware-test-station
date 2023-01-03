@@ -3,7 +3,7 @@ services:
 
   lionel:
     container_name: lionel
-    image: "lionel-melodic:3.5"
+    image: "lionel-melodic:3.6"
     user: "augbooth"
     privileged: true
     network_mode: "host"
