@@ -51,7 +51,7 @@ class cali_cont(Logging):
 
     def _cb_set_rb(self, msg):
         self.loginfo("Got msg {}..".format(msg))
-        data = msg.split("_")
+        data = msg.data.split("_")
         rb_id = int(data[0])
         self.hor[rb_id] = float(data[1])
 
