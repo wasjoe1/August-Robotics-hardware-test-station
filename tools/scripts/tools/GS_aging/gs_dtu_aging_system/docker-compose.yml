@@ -14,16 +14,27 @@ services:
     environment:
       - CONTAINER_NAME=boothbot_roscore
 
+  gs_hub:
+    extends:
+      file: "common-services.yml"
+      service: lionel
+    restart: always
+    container_name: gs_hub
+    command: "/home/augbooth/catkin_ws/local/calibration/gs_hub.bash"
+    environment:
+      - CONTAINER_NAME=gs_hub
+    depends_on:
+      - boothbot_roscore
+
+
   aging:
     extends:
       file: "common-services.yml"
       service: lionel
     restart: always
-    container_name: cali_platform_drivers
+    container_name: aging
     command: "/home/augbooth/catkin_ws/local/calibration/aging.bash"
     environment:
       - CONTAINER_NAME=aging
     depends_on:
-      - boothbot_roscore
-
-
+      - gs_hub
