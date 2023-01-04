@@ -71,43 +71,19 @@
 
 ## DTU 老化服务器开始工作
 
-1. 进入 `manual_mode`
+1. 进入 `cali_mode`
 
     ```bash
-    manual_mode
+    cali_mode
     ```
 
-2. `tmux` 开一个窗口按顺序执行下列命令
-
-    ```bash
-    debug_shell
-    roscore
-    ```
-
-3. `tmux` 开一个窗口按顺序执行下列命令
+2. `tmux` 开一个窗口按顺序执行下列命令，设置 `RB` 的颜色以及三个 `RB` 的水平角度值
 
     ```bash
     debug_shell
-    roslaunch boothbot_portal gs_hub.launch --screen
-    ```
+    rostopic pub /set_rb std_msgs/String "data: 'c_ROG'"
+    rostopic pub /set_rb std_msgs/String "data: '0_-1.55029'"
+    rostopic pub /set_rb std_msgs/String "data: '1_-0.02354'"
+    rostopic pub /set_rb std_msgs/String "data: '2_1.1'"
 
-4. `tmux` 开一个窗口按顺序执行下列命令
-
-    ```bash
-    debug_shell
-    vim ~/catkin_ws/src/augustbot-tools/tools/scripts/tools/GS_aging/dtu_server_for_gs_aging.py
-    ```
-
-5. 编辑 `~/catkin_ws/src/augustbot-tools/tools/scripts/tools/GS_aging/dtu_server_for_gs_aging.py` 里面的代码写入正确的位置信息
-
-    ```python
-    self.dis = [14.9,50,9]
-    self.hor = [-1.51396,0.03396,1.1]
-    ```
-
-6. 执行该脚本开始老化
-
-    ```bash
-    cd ~/catkin_ws/src/augustbot-tools/tools/scripts/tools/GS_aging
-    python gs_dtu_aging.py
     ```

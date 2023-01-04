@@ -32,6 +32,7 @@ class cali_cont(Logging):
         self.gid = 2
         self.gshc.cancel_goal()
         self.gshc.reset()
+        self.color = COLOR
         self.i = 0
         self.gs_current_pose = self.gshc.get_current_gs_pose()
         self.gs_last_pose = None
@@ -52,8 +53,11 @@ class cali_cont(Logging):
     def _cb_set_rb(self, msg):
         self.loginfo("Got msg {}..".format(msg))
         data = msg.data.split("_")
-        rb_id = int(data[0])
-        self.hor[rb_id] = float(data[1])
+        if msg.data.startswith("c"):
+            self.color = data[1]
+        else:
+            rb_id = int(data[0])
+            self.hor[rb_id] = float(data[1])
 
     def run(self):
         if not self.gshc.is_done():
@@ -127,7 +131,7 @@ class cali_cont(Logging):
                         self.task_done = True
                     self.gid += 1
                     return
-                self.gshc.targeting(self.gid,COLOR,self.dis[self.i],self.hor[self.i],0,True,False)
+                self.gshc.targeting(self.gid,self.color,self.dis[self.i],self.hor[self.i],0,True,False)
                 self.state = 1
             elif self.state == 1:
                 if not self.gshc.is_failed() and not self.gshc.is_succeeded():
