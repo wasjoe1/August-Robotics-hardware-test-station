@@ -19,6 +19,7 @@ class Get8Dir():
         self.time = None
         self.res = {}
         self.new_res = {}
+        self.measure_data = {}
         self.cvs =None
         self.init()
 
@@ -67,8 +68,12 @@ class Get8Dir():
             print(su)
             print(self.get_error(i))
             self.res[su] = self.get_error(i)
+            self.measure_data[su] = self.get_measure_data(i)
+            print("``````````````````")
+            # print(self.measure_data)
 
     def get_successed(self,i):
+        # return the measure radian...
         d1 = re.search("Registering last succeeded result as: \[(-?\d+)(\.\d+), (-?\d+)(\.\d+), (-?\d+)(\.\d+)\]", self.data[i], re.M|re.I)
         if d1 is None:
             return None
@@ -76,9 +81,11 @@ class Get8Dir():
         d3 = re.search("Calibration is done successfully!", self.data[i+4], re.M|re.I)
         if d2 is None and d3 is None:
             return None
+        # return the measure radian...
         return float(d1.group(3)+d1.group(4))
 
     def get_error(self,i):
+        # return the calibration error..
         for index in range(20):
             d1 = re.search("beacause the error is: (-?\d+)(\.\d+)?m",self.data[index+i],re.M|re.I)
             if d1 is None:
@@ -87,9 +94,22 @@ class Get8Dir():
             return float(d1.group(1)+d1.group(2))
         return None
 
+    def get_measure_data(self,i):
+        data = []
+        l = 0
+        while True:
+            if len(data) == 6:
+                # print(data)
+                data.reverse()
+                return data
+            d1 = re.search("Registering last succeeded result as: \[(-?\d+)(\.\d+)?, (-?\d+)(\.\d+)?, (-?\d+)(\.\d+)?\]",self.data[i-l],re.M|re.I)
+            if d1 is not None:
+                data.append([float(d1.group(1)+d1.group(2)), float(d1.group(3)+d1.group(4)), float(d1.group(5)+d1.group(6))])
+            l += 1
+
 
     def handle_res(self):
-        print(self.res)
+        # print(self.res)
         last_rad = 99.
         for k, v in self.res.items():
             if not math.isclose(last_rad, k, rel_tol=0.1):
@@ -98,7 +118,7 @@ class Get8Dir():
                 last_rad = k
             else:
                 self.new_res[last_rad].append(v)
-        print(self.new_res)
+        # print(self.new_res)
 
 
     def convert_cvs(self):
@@ -138,13 +158,13 @@ class Get8Dir():
 
 
 if __name__ == "__main__":
-    args = sys.argv
-    print(args)
-    hostname = args[1] + ".local"
-    print("Getting file from .... {}".format(hostname))
-    gf = Get_file(hostname)
-    fn = gf.get_calibration_file_name()
-    gf.get_file(fn)
+    # args = sys.argv
+    # print(args)
+    # hostname = args[1] + ".local"
+    # print("Getting file from .... {}".format(hostname))
+    # gf = Get_file(hostname)
+    # fn = gf.get_calibration_file_name()
+    # gf.get_file(fn)
     gd = Get8Dir()
     gd.get_res()
     gd.handle_res()
