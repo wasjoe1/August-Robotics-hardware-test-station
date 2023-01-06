@@ -1,1 +1,0 @@
-KERNEL=="ttyUSB*", GROUP:="dialout", SYMLINK+="dtu"             TEST=="power/control" ATTR{power/control}="on"
