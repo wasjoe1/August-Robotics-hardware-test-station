@@ -21,12 +21,22 @@ class GSCalibration(CalibrationController):
         os.system("rosnode kill /servos_driver")
         super(GSCalibration, self).kill_servos_node()
 
+<<<<<<< HEAD
     # def servos_enable(self):
     #     self.loginfo("gs servo enable")
     #     super(GSCalibration, self).get_servo_radians()
     #     self.servo_move(self.track_target)
     #     time.sleep(0.1)
     #     super(GSCalibration, self).servos_enable()
+=======
+    def servos_enable(self):
+        if get_gs_type() == "stepper":
+            self.loginfo("gs servo enable")
+            super(GSCalibration, self).get_servo_radians()
+            self.servo_move(self.track_target)
+            time.sleep(0.1)
+        super(GSCalibration, self).servos_enable()
+>>>>>>> efa030ce7c55aff1ca17671614b81de8e526eeb5
 
 if __name__ == "__main__":
     rospy.init_node("gs_calibration_controller")
