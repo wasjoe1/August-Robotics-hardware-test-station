@@ -48,18 +48,31 @@
 
 ## GS 开始老化
 
-1. 打开 `GS` 的控制主页: http://gsp4-00xx.local
-2. 将 GS 设备设置成 DTU 工作模式，然后进入 docker_mode
+1. 打开 `GS` 的控制主页: http://gspx-0xxx.local
+2. 将 GS 设备设置成 `DTU` 工作模式，然后进入 docker_mode，请注意不要有其他设备工作在同一个 `DTU` 频道下
 
     ```bash
     docker_mode
     ```
 
-3. 手动标定 `GS`
-4. 标定成功后，从主页上复制 `GS` 的位置，替换到 `gs_dtu_aging.py` 的 `GS` 的位置，保存退出
+3. 手动标定 `GS`，然后通过日志得到 `15米` `RB` 和 `48米` `RB` 的水平弧度值
+
+    ```bash
+    roslog meas
+    ```
+
+    进入日志后，依次使用下面命令，可看到页面上显示角度值，将 `15米` `RB` 和  `48米` `RB` 的值记下来
+
+    ```bash
+    /
+    at 
+    ```
+
+4. 标定成功后，从主页上复制 `GS` 的位置，替换到 `gs_dtu_aging.py` 的 `GS` 的位置，修改 `RB` 的颜色，保存退出
 
     ```python
-    GUESS_POSE = (-0.0091,-0.2978,-1.550929)
+    COLOR = "ROG"
+    GUESS_POSE = (-0.0091, -0.2978, -1.550929)
     ```
 
 5. 在该文件夹下执行该脚本
@@ -71,13 +84,17 @@
 
 ## DTU 老化服务器开始工作
 
-1. 进入 `cali_mode`
+1. 进入 `DTU` 老化服务器 `cali_mode`
+
+    ```bash
+    ssh augbooth@gsp4-0055.local
+    ```
 
     ```bash
     cali_mode
     ```
 
-2. `tmux` 开一个窗口按顺序执行下列命令，设置 `RB` 的颜色以及三个 `RB` 的水平角度值
+2. `tmux` 开一个窗口按顺序执行下列命令，设置 `RB` 的颜色以及三个 `RB` 的水平角度值，`0_` 和 `1_` 分别是  `15米` `RB` 和  `48米` `RB` 的角度值  
 
     ```bash
     debug_shell
