@@ -28,6 +28,8 @@ from boothbot_config.device_settings import CONFIG_PATH
 from boothbot_perception.track.tracking_camera import TrackingCamera
 from boothbot_perception.track import settings
 
+from boothbot_perception.check.roi_calibration import roi_calibration
+
 from boothbot_common.settings import BOOTHBOT_GET_CONFIG
 
 from boothbot_common.module_base import ModuleBase
@@ -902,12 +904,27 @@ class CalibrationController(ModuleBase):
             self.sub_state = 2
         elif self.sub_state == 2:
             # TODO
+            if not self.painter.is_done():
+                return
             if not self.run_flag:
                 return
             self.sub_state = 3
         elif self.sub_state == 3:
-            #TODO
+            self.loginfo("start to roi calibration")
+            res = roi_calibration()
+            if res is None:
+                self.loginfo("Got None result...")
+                return
             # calculate the param..
+            self.set_job_current_time()
+            (x,y,w,h) = res
+            self._job_data["x"] = x
+            self._job_data["y"] = y
+            self._job_data["w"] = w
+            self._job_data["h"] = h
+            self.sub_state = 4
+        elif self.sub_state == 4:
+            self.loginfo_throttle(4, "roi  calibration done.")
             pass
 
 if __name__ == "__main__":

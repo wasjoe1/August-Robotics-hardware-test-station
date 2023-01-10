@@ -17,7 +17,7 @@ JOB_DATA = {
     CS.VERTICAL_SERVO_ZERO.name: ["vertical_offset", "measurement_time"],
     CS.IMU_CALIBRATION.name: ["measurement_time", "inclinometer_x", "imu_x", "imu_y", "imu_z", "imu_w", "inclinometer_y","offset_x","offset_y"],
     CS.HORIZONTAL_OFFSET.name: ["measurement_time", "horizontal_offset"],
-    CS.MARKING_ROI.name: []
+    CS.MARKING_ROI.name: ["measurement_time", "x", "y", "w", "h"]
 }
 
 SAVE_DATA_TITLE = {
@@ -31,7 +31,7 @@ SAVE_DATA_TITLE = {
     CS.VERTICAL_SERVO_ZERO.name: ["vertical_offset", "measurement_time"],
     CS.IMU_CALIBRATION.name: ["measurement_time", "inclinometer_x", "inclinometer_y", "imu_x", "imu_y", "imu_z", "imu_w","offset_x","offset_y"],
     CS.HORIZONTAL_OFFSET.name: ["measurement_time", "horizontal_offset"],
-    CS.MARKING_ROI.name: []
+    CS.MARKING_ROI.name: ["measurement_time", "x", "y", "w", "h"]
 }
 
 JOS_SETTINGS = {
