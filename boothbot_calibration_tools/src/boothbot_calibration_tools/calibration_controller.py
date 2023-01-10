@@ -43,9 +43,7 @@ from boothbot_msgs.ros_interfaces import (
 )
 
 from augustbot_msgs.srv import (
-    Command,
     CommandRequest,
-    CommandResponse
 )
 
 import std_msgs.msg as stmsgs
@@ -255,7 +253,10 @@ class CalibrationController(ModuleBase):
         self.loginfo("initializing ....")
         self.last_json_file = self.get_last_json()
         self.check_yaml_dir()
-        self.get_last_data()
+        try:
+            self.get_last_data()
+        except Exception as e:
+            self.logerr("Got last data error....")
         now = datetime.now()
         date_time = now.strftime("%m-%d-%Y-%H-%M-%S")
         self.json_file = self.config_dir + '/' + socket.gethostname() + "-" + \
@@ -456,14 +457,6 @@ class CalibrationController(ModuleBase):
                         last_data = json.load(data_file)
                         self._data["data"]["last_data"].update(last_data)
 
-        # if self.last_json_file is None:
-        #     self._data["last_data"] = {}
-        # else:
-        #     with open(self.last_json_file, "r") as f:
-        #         # last_data = json.loads
-        #         last_data = json.load(f)
-        #         self._data["data"]["last_data"] = last_data
-
     def save_json(self):
         save_path = self.json_file+"_"+self._job.name+".json"
         self.logwarn("save data to {}".format(save_path))
@@ -491,16 +484,6 @@ class CalibrationController(ModuleBase):
 
         doc['servos_driver']['servo_parameter']['horizontal']['zero_offset'] = self._job_data["servo_h"]
         doc['servos_driver']['servo_parameter']['vertical']['zero_offset'] = self._job_data["servo_v"]
-
-        # servo_save_data = {
-        #     CS.INITIALIZE_SERVO.name: {
-        #         "time": time.time(),
-        #         "servo_h": self._job_data["servo_h"],
-        #         "servo_v": self._job_data["servo_v"],
-        #     }
-        # }
-
-        # self._save_data.update(servo_save_data)
 
         with open(DEVICE_SETTINGS_FILE_PATH, 'w') as f:
             oyaml.dump(doc, f, default_flow_style=False)
@@ -750,11 +733,6 @@ class CalibrationController(ModuleBase):
                 d2 = math.atan2(GS_CAMERA_VERTICAL_DIST, projection_dis)
                 d1 = short_offset[1]
                 cameras_angle = -d1-d2
-                # _x, _y = bt.angle(center)
-                # _offset_yaw, _offset_pitch = -_x, _y
-                # dist_angle = math.atan2(GS_CAMERA_VERTICAL_DIST, dist)
-                # # ideal _y should be under middle line
-                # angle_offset = -_offset_pitch - dist_angle
 
                 self.loginfo("d1: {}, d2: {}, d3: {}".format(
                     d1, d2, (cameras_angle)))
@@ -846,13 +824,12 @@ class CalibrationController(ModuleBase):
         if self.sub_state == 0:
             self.sub_state = 1
         elif self.sub_state == 1:
-            self._job_data["offset_x"] = self.incli_data.data[0]
-            self._job_data["offset_y"] = self.incli_data.data[1]
+            if self.incli_data is not None:
+                self._job_data["offset_x"] = self.incli_data.data[0]
+                self._job_data["offset_y"] = self.incli_data.data[1]
             self._job_data.update(self.imu_data)
 
     def cali_imu(self, prarm):
-        # rospy.wait_for_service(IMU_SERVICE)
-        # chassis_cmd = rospy.ServiceProxy()
         cmd = CommandRequest()
         cmd.command = "IMU"
         cmd.parameter = prarm
