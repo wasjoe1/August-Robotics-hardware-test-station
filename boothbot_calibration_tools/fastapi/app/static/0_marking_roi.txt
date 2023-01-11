@@ -1,9 +1,5 @@
-1. Along the y-axis of GS, one RB is placed at a distance of 7 meters from the GS, and the other RB is placed at a distance of -7 meters from the GS
-2. Level the GS
-3. Turn on the laser level, adjust the  laser level, and aim the laser at the center of the long camera
-4. Adjust the height of the RB until the laser of the laser level is aimed at the center point on the green light of the RB
-5. Open RB
-6. Click the RUN button
-7. Wait for the job to finish
-8. Click the SAVE_DATA button
-9. Click the DONE button when finished
+1. Install the marking camera ROI workpiece to Lionel
+2. Click the RUN button 
+3. Wait for the job to finish
+4. Click the SAVE_DATA button
+5. Click the DOWNLOAD_DATA button
