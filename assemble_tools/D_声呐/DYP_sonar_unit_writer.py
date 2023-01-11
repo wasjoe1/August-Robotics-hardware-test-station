@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import time 
+import time
 from boothbot_driver.modbus_driver import ModbusDriver
 import rospy as logger
 from assemble_tools.get_key import GetKey
 import os
-BAUDRATE = 3
+from pymodbus.client.sync import ModbusSerialClient as ModbusClient
+
+BAUDRATE = 3 #9600
+PORT = ["/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2"]
 INSTRUCTION = """
 Key functions:
-s: Start setting sonar unit  
+s: Start setting sonar unit
 q: Exiting...
 """
 
@@ -17,33 +20,38 @@ SONAR_ID = """
 
 Input number and you can set the address
 ___________________________________________
-|     |  0  |     |  1  |     |  2  |     |         
-|     |0xe6 |     |0xe8 |     |0xd0 |     |         
-|_____|_____|_____|_____|_____|_____|_____|                 
-|     |                             |     |                    
-|     |                             |     |            
-|_____|                             |_____|                   
-|  9  |                             |  3  |                            
-|0xec |                             |0xfa | 
-|_____|                             |_____|   
-|     |                             |     |                            
-|     |                             |     | 
+|     |  0  |     |  1  |     |  2  |     |
+|     |0xe6 |     |0xe8 |     |0xd0 |     |
+|_____|_____|_____|_____|_____|_____|_____|
+|     |                             |     |
+|     |                             |     |
 |_____|                             |_____|
-|  8  |                             |  4  |                            
-|0xd2 |                             |0xfe | 
-|_____|                             |_____|                     
-|     |                             |     |       
-|     |                             |     |                               
-|_____|_____ _____ _____ _____ _____|_____|       
-|     |  7  |     |  6  |     |  5  |     |                    
-|     |0xe2 |     |0xe4 |     |0xea |     |                                    
-|_____|_____|_____|_____|_____|_____|_____|                
+|  9  |                             |  3  |
+|0xec |                             |0xfa |
+|_____|                             |_____|
+|     |                             |     |
+|     |                             |     |
+|_____|                             |_____|
+|  8  |                             |  4  |
+|0xd2 |                             |0xfe |
+|_____|                             |_____|
+|     |                             |     |
+|     |                             |     |
+|_____|_____ _____ _____ _____ _____|_____|
+|     |  7  |     |  6  |     |  5  |     |
+|     |0xe2 |     |0xe4 |     |0xea |     |
+|_____|_____|_____|_____|_____|_____|_____|
 
 """
 
 
 
-
+def detect_baudrate_and_unit_id(port):
+    with ModbusClient(method='rtu', port=port, baudrate=115200, parity='N', timeout=0.1) as client:
+        response=client.read_holding_registers(0x200, 1, unit=0xFF)
+        if not response.isError():
+            return  port
+    time.sleep(0.5)
 
 UNIT_DICT = {
             "0": 0xe6,
@@ -63,44 +71,37 @@ class DYP_SONAR_UNIT_WRITTER(object):
         super(DYP_SONAR_UNIT_WRITTER, self).__init__()
         self.modbus_driver = modbus_driver
 
-
-
-
-
-
-
-
     def check_unit(self):
-        response=self.modbus_driver.read_holding_registers(0x200, 1, unit=0xFF)  
+        response=self.modbus_driver.read_holding_registers(0x200, 1, unit=0xFF)
 
         try:
-            unit = response.registers[0] 
+            unit = response.registers[0]
         except:
             unit = None
         return unit
 
     def check_baudrate(self):
-        response=self.modbus_driver.read_holding_registers(0x201, 1, unit=0xFF)  
+        response=self.modbus_driver.read_holding_registers(0x201, 1, unit=0xFF)
 
         try:
-            baudrate = response.registers[0] 
+            baudrate = response.registers[0]
         except:
             baudrate = None
         return baudrate
 
-    def set_unit(self,unit):     
+    def set_unit(self,unit):
         UNIT=UNIT_DICT[unit]
         self.modbus_driver.write_register(0x200, UNIT, unit=0xFF)
-        
-    def set_baudrate(self):     
+
+    def set_baudrate(self):
         try:
             self.modbus_driver.write_register(0x201, BAUDRATE, unit=0xFF)
         except RemoteProcessFailed as e:
             logger.logwarn(e)
- 
+
 
     def distance_pub(self,unit):
-        response=self.modbus_driver.read_holding_registers(0x0101, 1, unit=unit)    
+        response=self.modbus_driver.read_holding_registers(0x0101, 1, unit=unit)
         try:
             distance = response.registers[0]
         except:
@@ -115,14 +116,14 @@ def run():
         key = get_key.get_key()
         if key in ("s", "S"):
             os.system('clear')
-            while not logger.is_shutdown():  
+            while not logger.is_shutdown():
                 # DYP.set_baudrate()
                 # mbd = ModbusDriver(**modbus_config).client
-                # DYP = DYP_SONAR_UNIT_WRITTER(mbd) 
+                # DYP = DYP_SONAR_UNIT_WRITTER(mbd)
                 logger.logwarn(SONAR_ID)
                 key = get_key.get_key()
-                
-                for i in range(0,10):                   
+
+                for i in range(0,10):
                     if key in (str(i), str(i)):
                         if _in  == 1:
                             modbus_config["baudrate"] = 115200
@@ -131,7 +132,7 @@ def run():
                             DYP.set_baudrate()
                             modbus_config["baudrate"] = 9600
                             mbd = ModbusDriver(**modbus_config).client
-                            DYP = DYP_SONAR_UNIT_WRITTER(mbd) 
+                            DYP = DYP_SONAR_UNIT_WRITTER(mbd)
                             #_in  = 0
                         os.system('clear')
                         DYP.set_unit(key)
@@ -144,13 +145,13 @@ def run():
                         else:
                             logger.logwarn("Setting failed, please retry again")
                         while not logger.is_shutdown():
-                            
+
                             key1 = get_key.get_key()
                             if key1 in ("a", "A"):
                                 while not logger.is_shutdown():
                                     distance = DYP.distance_pub(UNIT_DICT[key])
                                     baudrate = DYP.check_baudrate()
-                              
+
                                     unit = DYP.check_unit()
                                     if unit is not None:
                                         unit = hex(unit)
@@ -170,7 +171,7 @@ def run():
                             if key1 in ("q", "Q"):
                                 os.system('clear')
                                 get_key.end_get_key()
-                                
+
                                 break
                 if key in ("q", "Q"):
                     os.system('clear')
@@ -187,12 +188,17 @@ def run():
 
 
 if __name__ == '__main__':
+    for port in PORT:
+        try:
+            _port = detect_baudrate_and_unit_id(port)
+        except:
+            print()
     modbus_config = {
-    "port": "/dev/ttyUSB0",
+    "port": _port,
     "baudrate": 115200,
     "parity": "N",
     "timeout": 0.5,
-}   
+}
     run()
 
 

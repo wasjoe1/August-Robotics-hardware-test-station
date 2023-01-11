@@ -4,7 +4,7 @@ import rospy
 import os
 import time
 
-from guiding_beacon_system.drivers.laser_driver_py3 import LaserRangeFinder
+from boothbot_calibration_tools.drivers.laser_driver_py3 import LaserRangeFinder
 from boothbot_calibration_tools.calibration_controller import CalibrationController
 # TOLERANCE = (0.0005, 0.001)
 

@@ -7,11 +7,11 @@ import rospy
 logger = rospy
 
 from boothbot_driver.modbus_driver import ModbusDriver
-from guiding_beacon_system_measurement.inclinometer_driver_base import (
+from boothbot_calibration_tools.inclinometer_driver_base import (
     InclinometerDriverBase,
     InclinometerDriver,
 )
-from guiding_beacon_system_measurement.first_order_kalman_filter import (
+from boothbot_calibration_tools.first_order_kalman_filter import (
     FirstOrderKalmanFilter,
 )
 

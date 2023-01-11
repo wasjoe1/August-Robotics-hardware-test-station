@@ -1,0 +1,4 @@
+<launch>
+    <node pkg="assemble_tools" type="e4_power_module_check.py" name="e4_power_module_check">
+    </node>
+</launch>

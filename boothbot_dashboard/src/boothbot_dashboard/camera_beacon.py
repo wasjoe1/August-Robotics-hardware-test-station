@@ -7,7 +7,7 @@ import numpy as np
 from device_module import DeviceModule, Image
 from device_states import DeviceStates
 from device import Device
-from boothbot_perception.track_client import TargetTracker
+from boothbot_perception import TargetTracker
 from boothbot_driver.servos_client import ServosClient
 from boothbot_common.error_code import ErrCode
 from boothbot_msgs.ros_interfaces import (

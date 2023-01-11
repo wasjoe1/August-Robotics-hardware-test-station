@@ -9,6 +9,12 @@ The format is based on `Keep a Changelog <https://keepachangelog.com/en/1.0.0/>`
 ------------------------------
 Added
 ^^^^^
+
   1. assemble_tools
     a. add gs-dtu-aging
 
+  1. boothbot-reporter:
+    a. added ability that can process all log in one go, and output a csv file.
+
+Known Issue
+^^^^^^^^^^^
