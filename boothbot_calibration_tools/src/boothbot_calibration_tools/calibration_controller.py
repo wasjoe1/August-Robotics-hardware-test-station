@@ -75,7 +75,7 @@ CAMERA_FILTER_COUNT = 3
 class CalibrationController(ModuleBase):
     def __init__(self,
                  name, rate, states=None, transitions=None, commands=None, status_inf=None, srv_cmd_inf=None, need_robot_status=False, error_codes=None,
-                 laser=None):
+                 laser=None, max_encoding=None):
         super(CalibrationController, self).__init__(
             name=name,
             rate=rate,
@@ -95,6 +95,7 @@ class CalibrationController(ModuleBase):
             }
         )
         self.puber_data = APPS_CALIBRATION_DATA.Publisher()
+        self.max_encoding = max_encoding
 
         DRIVERS_SERVOS_PDO.Subscriber(self.servo_pdo_cb)
         DRIVERS_CHASSIS_IMU.Subscriber(self.imu_cb)
@@ -826,11 +827,10 @@ class CalibrationController(ModuleBase):
                 avg2 = np.average(arr2)
                 arr = np.array(self.vertical_encoder)
                 avg = np.average(arr)
-                max_encoder = get_max_encoder()
-                if math.fabs(avg1-avg2) > max_encoder/2:
-                    avg = avg + max_encoder/2
-                if avg >= max_encoder:
-                    avg = avg - max_encoder
+                if math.fabs(avg1-avg2) > self.max_encoding/2:
+                    avg = avg + self.max_encoding/2
+                if avg >= self.max_encoding:
+                    avg = avg - self.max_encoding
                 self.loginfo("verticalencoder is {}".format(avg))
                 self._job_data["vertical_offset"] = avg
                 self.set_job_current_time()

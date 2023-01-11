@@ -36,11 +36,3 @@ def get_gs_type():
         return "stepper"
     else:
         return "default"
-
-def get_max_encoder():
-    if socket.gethostname().lower().startswith("gs"):
-        return 8388608
-    else:
-        return 16384
-
-
