@@ -114,23 +114,19 @@ class Get8DirResult():
             rb1_measurement_avg = (rb1_measurement[:, 0].mean() + 0.05, rb1_measurement[:, 1].mean(), rb1_measurement[:, 2].mean())
             rb2_measurement_avg = (rb2_measurement[:, 0].mean() + 0.05, rb2_measurement[:, 1].mean(), rb2_measurement[:, 2].mean())
 
-            # try:
-            calibrated_pose = do_calibration({
-                "coordinates": [
-                    rb1,
-                    rb2,
-                ],
-                "measurements": [
-                    rb1_measurement_avg,
-                    rb2_measurement_avg,
-                ],
-            }, tolerance=0.05)
-            # except RefsDistanceNotMatch as e:
-            #     logger.logerr(e)
-            #     calibrated_pose = [0., 0., 0.]
-            # except ACosDataRangeError as e:
-            #     logger.logerr(e)
-            #     calibrated_pose = [0., 0., 0.]
+            try:
+                calibrated_pose = do_calibration({
+                    "coordinates": [
+                        rb1,
+                        rb2,
+                    ],
+                    "measurements": [
+                        rb1_measurement_avg,
+                        rb2_measurement_avg,
+                    ],
+                }, tolerance=0.05)
+            except Exception as e:
+                print("calibration error {}".format(e))
 
             # Scoring the result
             distance_of_rb = np.linalg.norm(np.array(rb2) - np.array(rb1))
