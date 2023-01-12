@@ -10,6 +10,12 @@ import sys
 
 from get_file import Get_file
 
+def median(data):
+    data.sort()
+    half = len(data) // 2
+    return (data[half] + data[~half])/2
+
+error = 0.003
 
 class Get8Dir():
     def __init__(self) -> None:
@@ -112,10 +118,17 @@ class Get8Dir():
             for k, v in self.new_res.items():
                 data = []
                 data.append(k)
+                mean_of_data = median(v)
+                print("this dir data: {}".format(v))
+                print("mean of data: {}".format(mean_of_data))
                 for d in range(10):
                     # if v[d] is not None:
                     try:
-                        data.append(v[d])
+                        if math.isclose(v[d], mean_of_data, abs_tol=error):
+                            data.append(v[d])
+                        else:
+                            print("data {} is outlier..".format(v[d]))
+                            data.append("")
                     except IndexError:
                         data.append("")
                 data.append("=AVERAGE(B"+str(i)+":K"+str(i)+")")

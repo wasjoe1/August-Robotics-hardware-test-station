@@ -27,6 +27,7 @@ MINAS_SERVO_RESOLUTION = 8388607
 
 rb1 = (-15.54288662, -1.659951443)
 rb2 = (2.445430569, -48.48078833)
+error = 0.003
 
 # gd = Get8Dir()
 # gd.get_res()
@@ -34,6 +35,12 @@ rb2 = (2.445430569, -48.48078833)
 
 # print(gd.device)
 # print(os.path.join(home, "catkin_ws/src/boothbot-config/boothbot_config/config/device_settings"),gd.device,"device_settings.yaml")
+
+def median(data):
+    data.sort()
+    half = len(data) // 2
+    return (data[half] + data[~half])/2
+
 
 class GetOriEnc():
     def __init__(self) -> None:
@@ -159,11 +166,18 @@ class Get8DirResult():
             i = 2
             for k, v in self.final_data.items():
                 data = []
+                mean_of_data = median(v)
+                print("this dir data: {}".format(v))
+                print("mean of data: {}".format(mean_of_data))
                 data.append(k)
                 for d in range(10):
                     # if v[d] is not None:
                     try:
-                        data.append(v[d])
+                        if math.isclose(v[d], mean_of_data, abs_tol=error):
+                            data.append(v[d])
+                        else:
+                            print("data {} is outlier..".format(v[d]))
+                            data.append("")
                     except IndexError:
                         data.append("")
                 data.append("=AVERAGE(B"+str(i)+":K"+str(i)+")")
@@ -172,8 +186,8 @@ class Get8DirResult():
             spamwriter.writerow(["","","","","","","","","","","","=MAX(L2:L9)-MIN(L2:L9)","=AVERAGE(B2:K9)"])
 
     def move_data(self, device):
-        dir = "./8_dir"
-        has_handle = "./8_dir/" + device
+        dir = "./8_dir/"
+        has_handle = dir + device
         if not os.path.exists(has_handle):
             os.makedirs(has_handle)
         shutil.copy(self.cvs, has_handle)
