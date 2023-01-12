@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+
 import os
 import rospy
 import json
@@ -15,13 +16,31 @@ from rospy_message_converter import json_message_converter
 
 from boothbot_common.ros_logger_wrap import ROSLogging as Logging
 from guiding_beacon_system.guiding_station_measurement_module_client import GuidingStationMeasurementClient
+# from gbs_measurement.gs_measurement_module_client import GuidingStationMeasurementClient
 import guiding_beacon_system_msgs.msg as gbmsgs
 
+from guiding_beacon_system_msgs.ros_interfaces import (
+    GS_0_CMDWORD,
+    GS_0_FEEDBACK,
+    GS_0_GOAL,
+    GS_0_STATE,
+    GS_0_SET_POSE,
+    GS_0_UPDATE_POSE,
+    MODULES_MEASUREMENT_ACT_MEASURE
+)
+
+from guiding_beacon_system_msgs.msg import (GBMeasureGoal,
+GBMeasureResult,
+GBMeasureActionGoal,
+GBMeasureActionResult
+)
+
+from threading import Lock
 
 from guiding_beacon_system.guiding_station_calibration_app_client import GuidingStationCalibrationAppClient
 
-COLOR = "ROG"
-GUESS_POSE = (0, 0.0, -1.45)
+COLOR = "BOG"
+GUESS_POSE = (-0.0091,	-0.2978,	-1.550929)
 
 
 # TEST_GOAL_0 = {"x": 2.901149754, "y": 22.77927683}
@@ -31,9 +50,6 @@ GUESS_POSE = (0, 0.0, -1.45)
 # TEST_GOAL_0 = {"x": -15.54288662, "y": -1.659957859} #15
 # TEST_GOAL_1 = {"x": 2.445583913, "y": -48.48100228} #48
 # TEST_GOAL_2 = {"x": 8.566780444, "y": -3.244379861} #9
-
-# 15.672 17.057
-# -16.571 15.226
 
 TEST_GOAL_0 = {"x": -15.54288662, "y": -1.659951443} # 15
 TEST_GOAL_1 = {"x": 2.445430569, "y": -48.48078833} # 48
@@ -46,46 +62,50 @@ goal_list.append(TEST_GOAL_0)
 goal_list.append(TEST_GOAL_1)
 goal_list.append(TEST_GOAL_2)
 
-M_TEST_GOAL_0 = gbmsgs.GBMeasureGoal(
-    gid=1,
-    color="ROG",
-    distance=14.9,
-    rad_hor=-1.59,
-    rad_ver=-0.05,
-    is_initialpose=False,
-    unique_id=1,
-)
+# M_TEST_GOAL_0 = gbmsgs.GBMeasureGoal(
+#     gid=1,
+#     color=COLOR,
+#     distance=14.9,
+#     rad_hor=-1.59,
+#     rad_ver=-0.05,
+#     is_initialpose=False,
+#     unique_id=1,
+# )
 
-M_TEST_GOAL_1 = gbmsgs.GBMeasureGoal(
-    gid=1,
-    color="ROG",
-    distance=48.,
-    rad_hor=-0.06,
-    rad_ver=0.005,
-    is_initialpose=False,
-    unique_id=1,
-)
+# M_TEST_GOAL_1 = gbmsgs.GBMeasureGoal(
+#     gid=1,
+#     color=COLOR,
+#     distance=48.,
+#     rad_hor=-0.06,
+#     rad_ver=0.005,
+#     is_initialpose=False,
+#     unique_id=1,
+# )
 
-M_TEST_GOAL_2 = gbmsgs.GBMeasureGoal(
-    gid=1,
-    color="ROG",
-    distance=9,
-    rad_hor=1.103,
-    rad_ver=0.05,
-    is_initialpose=False,
-    unique_id=1,
-)
+# M_TEST_GOAL_2 = gbmsgs.GBMeasureGoal(
+#     gid=1,
+#     color=COLOR,
+#     distance=9,
+#     rad_hor=1.103,
+#     rad_ver=0.05,
+#     is_initialpose=False,
+#     unique_id=1,
+# )
 
-measurement_goal_list = []
-measurement_goal_list.append(M_TEST_GOAL_0)
-measurement_goal_list.append(M_TEST_GOAL_1)
-measurement_goal_list.append(M_TEST_GOAL_2)
+# measurement_goal_list = []
+# measurement_goal_list.append(M_TEST_GOAL_0)
+# measurement_goal_list.append(M_TEST_GOAL_1)
+# measurement_goal_list.append(M_TEST_GOAL_2)
 
 INIT = "init"
 RUNNING = "running"
 CALIBRATING = "calibrating"
 MEASURING = "measuring"
 
+goal = None
+goal_id = None
+result = None
+# temp_lock = Lock()
 
 class json_handler():
     def __init__(self):
@@ -117,6 +137,30 @@ class LOGMGS(Logging):
     def __init__(self, name):
         super(LOGMGS, self).__init__(name)
 
+def get_goal(msg):
+    # global temp_lock
+    global goal
+    global goal_id
+    # with temp_lock:
+    if msg.goal.is_initialpose is True:
+        pass
+    else:
+        goal = msg
+        goal_id = goal.goal_id.id
+        # print(goal)
+
+def get_result(msg):
+    # global temp_lock
+    global result
+    # global goal_id
+    # global goal
+    # with temp_lock:
+
+        # if msg.status.goal_id.id == goal_id:
+    if msg.status.goal_id.id.startswith("/guiding_station_portal"):
+        result = msg
+        # print("Got topic")
+        # print(result)
 
 if __name__ == "__main__":
     rospy.init_node("gs_measurement_test")
@@ -138,6 +182,15 @@ if __name__ == "__main__":
     # new calibration test
 
     gscc = GuidingStationCalibrationAppClient(using_fleet_rb=False)
+    # /modules/measurement/act_measure/goal
+    # /modules/measurement/act_measure/result
+    # GBMeasureGoal
+    rospy.Subscriber("/modules/measurement/act_measure/goal", GBMeasureActionGoal, get_goal, queue_size=1)
+    rospy.Subscriber("/modules/measurement/act_measure/result", GBMeasureActionResult, get_result, queue_size=1)
+
+
+    set_pose = GS_0_SET_POSE.Publisher()
+    set_pose_type = GS_0_SET_POSE.type()
 
     rospy.sleep(3)
     gscc.reset()
@@ -145,18 +198,13 @@ if __name__ == "__main__":
 
     cali_state = INIT
     cali_sub_state = 0
+    mesu_sub_state = 0
     cali_group = 0
     rb_id = 0
-    # gid = 0
-    # gscc.calibrate(
-    #     (75, 2.3, 0.),
-    #     0.03,
-    #     COLOR,
-    #     (28.767, 10.976),
-    #     COLOR,
-    #     (81.532, 10.976)
-    # )
-    cali_rate = rospy.Rate(5)
+    c_t = 0
+    m_t = 0
+
+    cali_rate = rospy.Rate(2)
     while not rospy.is_shutdown():
         if cali_state == INIT:
             if gscc.connect():
@@ -164,6 +212,17 @@ if __name__ == "__main__":
                 cali_sub_state = 0
                 cali_state = CALIBRATING
         elif cali_state == CALIBRATING:
+            c_t += 1
+            lm.loginfo_throttle(4, "cali time {}".format(c_t))
+            if c_t >= 500:
+                save_data['c']["calibration_is_succeeded"] = "false"
+                lm.loginfo("save data: {}".format(save_data))
+                jh.write_json(gid, save_data)   
+                lm.loginfo("cali timeout...")             
+                gscc.reset()
+                c_t = 0
+                cali_sub_state = 0
+
             if cali_sub_state == 0:
                 lm.loginfo("start to calibration")
                 cali_id = gid % 3
@@ -207,6 +266,11 @@ if __name__ == "__main__":
                         lm.loginfo("gs calibration succeeded.")
                         cali_res = gscc.get_result()
                         lm.loginfo(cali_res)
+                        set_pose_type.pose = cali_res.calibrated_pose
+                        for x in range(5):
+                            lm.loginfo("updating new pose via dtu..")
+                            set_pose.publish(set_pose_type)
+                            time.sleep(0.3)
                         cali_state = MEASURING
                         # save_data = {"type": "calibration",
                         #              "calibration_is_succeeded": "true",
@@ -224,42 +288,116 @@ if __name__ == "__main__":
                     save_data["c_diff_time"] = (
                         c_end_time - c_start_time).total_seconds()
                     gscc.reset()
+                    c_t = 0
                     cali_sub_state = 0
                 else:
-                    lm.loginfo_throttle(5, "waiting for calibration done.")
+                    lm.loginfo_throttle(5, "waiting for calibration done. {}".format(gscc.is_done()))
+
+
         elif cali_state == MEASURING:
+            lm.loginfo_throttle(4, "measure time {}".format(m_t))
+            m_t += 1
             # for m in measurement_goal_list:
-            if cali_sub_state == 0:
-                # lm.loginfo("measure goal {}".format(measurement_goal_list[rb_id]))
-                gsc.send_goal(measurement_goal_list[rb_id])
-                save_data["m"][str(rb_id)] = {}
-                cali_sub_state = 1
-                m_start_time = datetime.datetime.now()
-                save_data["m"][str(rb_id)]["m_start_time"] = str(m_start_time)
-            elif cali_sub_state == 1:
-                if gsc.is_done():
+            # lm.loginfo((goal,result))
+            if mesu_sub_state == 0:
+                # with temp_lock:
+                if goal is not None:
+                    dis = goal.goal.distance
+                    if int(dis) in range(13,17) and rb_id == 0:
+                        lm.loginfo("got goal 0")
+                        goal_id = goal.goal_id.id
+                        pass
+                    elif int(dis) in range(45,51) and rb_id == 1:
+                        lm.loginfo("got goal 1")
+                        goal_id = goal.goal_id.id
+                        pass
+                    elif int(dis) in range(7,11) and rb_id == 2:
+                        lm.loginfo("got goal 2")
+                        goal_id = goal.goal_id.id
+                        pass
+                    else:
+                        lm.loginfo("error message, dis {}, rb_id {}".format(dis, rb_id))
+                        cali_rate.sleep()
+                        continue
+
+                    m_t = 0
+                    mesu_sub_state = 1
+                    lm.loginfo("get goal, goal id {}, goal distance {}, goal rad_hor {}, goal rad_ver {}".format(goal.goal_id.id, goal.goal.distance, 
+                    goal.goal.rad_hor, goal.goal.rad_ver))
+                    goal_b = goal
+                    goal = None
+                    # lm.loginfo("measure goal {}".format(measurement_goal_list[rb_id]))
+                    # gsc.send_goal(measurement_goal_list[rb_id])
+                    save_data["m"][str(rb_id)] = {}
+                    cali_sub_state = 1
+                    m_start_time = datetime.datetime.now()
+                    save_data["m"][str(rb_id)]["m_start_time"] = str(m_start_time)
+            if mesu_sub_state == 1:
+                # with temp_lock:
+                if result is not None:
+                    if goal_id != result.status.goal_id.id:
+                        lm.loginfo("goal id not match {} {}".format(goal_id, result.status.goal_id.id))
+                        result = None
+
+                    mesu_sub_state = 0
+                    # if result.status.goal_id.id != goal_id:
+                    #     cali_rate.sleep()
+                    #     continue
+                        
+                    # lm.loginfo("get result {}".format(result.result))
+                    lm.loginfo("get result, result id {}, result distance {}, result rad_hor {}, result rad_ver {}".format(result.status.goal_id.id,
+                    result.result.distance, 
+                    result.result.rad_hor, result.result.rad_ver))
+                    # if not gsc.is_succeeded() and not gsc.is_failed():
+                    #     lm.loginfo("waitting measure done.")
+                    #     cali_rate.sleep()
+                    #     continue
+                    # else:
+                    #     lm.logwarn("measurment done..")
+
+                    # if gsc.is_done():
+                    # if not save_data["m"].has_key(str(rb_id)):
+                    #     save_data["m"][str(rb_id)] = {}
+                    #     m_start_time = datetime.datetime.now()
+                    #     save_data["m"][str(rb_id)]["m_start_time"] = str(m_start_time)                            
+                    result_b = result
+                    result = None
+                    goal_id = None
                     m_end_time = datetime.datetime.now()
                     save_data["m"][str(rb_id)]["m_end_time"] = str(m_end_time)
-                    if gsc.is_succeeded():
+                    if result_b.result.located:
+                        goal_id = None
                         lm.loginfo("measurement succeeded.")
-                        measurement_res = gsc.get_result()
-                        lm.loginfo(measurement_res)
+                        # measurement_res = gsc.get_result()
+                        # lm.loginfo(result.result)
                         # save_data["m"][str(rb_id)] = {"measurement_is_succeeded": "true",
                         #              "measurement_data": jh.msg2json(measurement_res)}
                         save_data["m"][str(rb_id)]["measurement_is_succeeded"] = "true"
                         save_data["m"][str(rb_id)]["measurement_data"] = json_message_converter.convert_ros_message_to_json(
-                            measurement_res)
-                    elif gsc.is_failed():
+                            result_b.result)
+                    else:
                         lm.loginfo("measurement failed.")
                         # save_data["m"][str(rb_id)] = {"measurement_is_succeeded": "false"}
                         save_data["m"][str(rb_id)]["measurement_is_succeeded"] = "false"
                     save_data["m"][str(rb_id)]["m_diff_time"] = (
                         m_start_time - m_end_time).total_seconds()
                     gsc.reset()
+                    lm.loginfo_throttle(2, "rb_id {}, cali_sub_state {}".format(rb_id, cali_sub_state))
                     rb_id += 1
                     cali_sub_state = 0
+                
+            if m_t >= 150:
+                lm.loginfo("measure timeout")
+                save_data["m"][str(rb_id)] = {}
+                save_data["m"][str(rb_id)]["measurement_is_succeeded"] = "false"
+                # save_data["m"][str(rb_id)]["m_diff_time"] = (
+                #     m_start_time - m_end_time).total_seconds()
+                rb_id += 1
+                cali_sub_state = 0
+
             if rb_id == 3:
                 rb_id = 0
+                m_t = 0
                 lm.loginfo("save data: {}".format(save_data))
                 jh.write_json(gid, save_data)
                 gid += 1

@@ -1,0 +1,40 @@
+version: "3"
+volumes:
+  code_app:
+
+services:
+
+  boothbot_roscore:
+    extends:
+      file: "common-services.yml"
+      service: lionel
+    restart: always
+    container_name: boothbot_roscore
+    command: "/home/augbooth/catkin_ws/local/calibration/boothbot_roscore.bash"
+    environment:
+      - CONTAINER_NAME=boothbot_roscore
+
+  gs_hub:
+    extends:
+      file: "common-services.yml"
+      service: lionel
+    restart: always
+    container_name: gs_hub
+    command: "/home/augbooth/catkin_ws/local/calibration/gs_hub.bash"
+    environment:
+      - CONTAINER_NAME=gs_hub
+    depends_on:
+      - boothbot_roscore
+
+
+  aging:
+    extends:
+      file: "common-services.yml"
+      service: lionel
+    restart: always
+    container_name: aging
+    command: "/home/augbooth/catkin_ws/local/calibration/aging.bash"
+    environment:
+      - CONTAINER_NAME=aging
+    depends_on:
+      - gs_hub

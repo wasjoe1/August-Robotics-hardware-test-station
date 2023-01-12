@@ -63,8 +63,7 @@ from boothbot_calibration_tools.settings import (
 )
 
 from boothbot_calibration_tools.utils import (
-    get_tolerance,
-    get_max_encoder
+    get_tolerance
 )
 
 TRACKER_CONFIG = BOOTHBOT_GET_CONFIG(name="tracker_driver")
@@ -81,7 +80,7 @@ CAMERA_FILTER_COUNT = 3
 class CalibrationController(ModuleBase):
     def __init__(self,
                  name, rate, states=None, transitions=None, commands=None, status_inf=None, srv_cmd_inf=None, need_robot_status=False, error_codes=None,
-                 laser=None):
+                 laser=None, max_encoding=None):
         super(CalibrationController, self).__init__(
             name=name,
             rate=rate,
@@ -101,6 +100,7 @@ class CalibrationController(ModuleBase):
             }
         )
         self.puber_data = APPS_CALIBRATION_DATA.Publisher()
+        self.max_encoding = max_encoding
 
         DRIVERS_SERVOS_PDO.Subscriber(self.servo_pdo_cb)
         DRIVERS_CHASSIS_IMU.Subscriber(self.imu_cb)
@@ -457,10 +457,16 @@ class CalibrationController(ModuleBase):
             for t in self.save_data_title:
                 if t in f:
                     self.loginfo("open file {}".format(f))
-                    with open(self.config_dir+"/" + f, "r") as data_file:
-                        # last_data = json.loads
-                        last_data = json.load(data_file)
-                        self._data["data"]["last_data"].update(last_data)
+                    file_path = self.config_dir+"/" + f
+                    try:
+                        with open(file_path, "r") as data_file:
+                            # last_data = json.loads
+                            last_data = json.load(data_file)
+                            self._data["data"]["last_data"].update(last_data)
+                    except FileNotFoundError as not_found_e:
+                        self.loginfo("{} not found...".format(file_path))
+                    except json.decoder.JSONDecodeError as file_e:
+                        self.loginfo("load file {} error...".format(file_path))
 
     def save_json(self):
         save_path = self.json_file+"_"+self._job.name+".json"
@@ -822,11 +828,10 @@ class CalibrationController(ModuleBase):
                 avg2 = np.average(arr2)
                 arr = np.array(self.vertical_encoder)
                 avg = np.average(arr)
-                max_encoder = get_max_encoder()
-                if math.fabs(avg1-avg2) > max_encoder/2:
-                    avg = avg + max_encoder/2
-                if avg >= max_encoder:
-                    avg = avg - max_encoder
+                if math.fabs(avg1-avg2) > self.max_encoding/2:
+                    avg = avg + self.max_encoding/2
+                if avg >= self.max_encoding:
+                    avg = avg - self.max_encoding
                 self.loginfo("verticalencoder is {}".format(avg))
                 self._job_data["vertical_offset"] = avg
                 self.set_job_current_time()
