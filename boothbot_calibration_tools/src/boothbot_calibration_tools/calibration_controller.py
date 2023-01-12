@@ -25,8 +25,8 @@ from boothbot_calibration_tools.constants import CalibrationCommand as CS
 # from boothbot_common.settings import BOOTHBOT_GET_CONFIG
 from boothbot_config.device_settings import DEVICE_SETTINGS_FILE_PATH
 from boothbot_config.device_settings import CONFIG_PATH
-from boothbot_perception.tracking_camera import TrackingCamera
-from boothbot_perception import settings
+from boothbot_perception.track.tracking_camera import TrackingCamera
+from boothbot_perception.track import settings
 
 from boothbot_common.settings import BOOTHBOT_GET_CONFIG
 
@@ -57,8 +57,7 @@ from boothbot_calibration_tools.settings import (
 )
 
 from boothbot_calibration_tools.utils import (
-    get_tolerance,
-    get_max_encoder
+    get_tolerance
 )
 
 TRACKER_CONFIG = BOOTHBOT_GET_CONFIG(name="tracker_driver")
