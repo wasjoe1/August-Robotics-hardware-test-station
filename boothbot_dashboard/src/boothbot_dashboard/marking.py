@@ -27,7 +27,7 @@ from boothbot_marking.settings import (
     BIT_DRAIN_OUT_TRAY,
 )
 
-from boothbot_perception.check_client import MarkChecker
+from boothbot_perception import MarkChecker
 
 class CtrlIO(Device):
     def __init__(self, io, bit, *args, **kwargs):

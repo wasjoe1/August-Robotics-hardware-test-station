@@ -9,7 +9,7 @@ logger = rospy
 from assemble_tools.get_key import GetKey
 
 
-from boothbot_perception.track_client import TargetTracker, Status
+from boothbot_perception.track.track_client import TargetTracker, Status
 from boothbot_msgs.ros_interfaces import MODULES_PERCEPT_SRV_TRACK
 from client_hub import GuidingStationClientHub
 

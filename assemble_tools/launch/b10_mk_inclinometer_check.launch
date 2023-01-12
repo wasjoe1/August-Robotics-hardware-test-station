@@ -1,0 +1,4 @@
+<launch>
+    <node pkg="assemble_tools" type="b10_mk_inclinometer_check.py" name="b10_mk_inclinometer_check">
+    </node>
+</launch>
