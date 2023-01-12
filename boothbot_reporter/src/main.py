@@ -56,3 +56,4 @@ if __name__ == "__main__":
     entities = analyse_data.analyse_data(data_lines)
     results = generate_result.generate_result(entities)
     write_csv.write_to_csv(results, localpath)
+    print("Report has been put into " + localpath)
