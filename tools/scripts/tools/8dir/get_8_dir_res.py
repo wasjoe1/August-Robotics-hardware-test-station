@@ -91,7 +91,7 @@ class Get8Dir():
     def get_error(self,i):
         for index in range(20):
             if "beacause the error is" not in self.data[index+i]:
-                continue            
+                continue
             d1 = re.search("beacause the error is: (-?\d+)(\.\d+)?m",self.data[index+i],re.M|re.I)
             d_scientific_notation = re.search("beacause the error is: ([+|-]?\d\.\d+[Ee][-]?\d.)m",self.data[index+i],re.M|re.I)
             if d_scientific_notation is not None:
