@@ -10,7 +10,7 @@ The format is based on `Keep a Changelog <https://keepachangelog.com/en/1.0.0/>`
 Added
 ^^^^^
 
-  1. assemble_tools
+  1. assemble_tools:
     a. add gs-dtu-aging
 
   2. boothbot-reporter:
@@ -18,6 +18,9 @@ Added
 
   3. boothbot_calibration_tools:
     a. add marking camera roi calibration tools.
+
+  4. tools:
+    a. add a scripts, this scripts handle mutil compensation file by use one time 8_dir measurement result.
 
 Known Issue
 ^^^^^^^^^^^

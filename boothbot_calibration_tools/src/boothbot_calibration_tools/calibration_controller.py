@@ -45,8 +45,6 @@ from boothbot_msgs.ros_interfaces import (
     DRIVERS_CHASSIS_IMU,
 )
 
-from boothbot_painter.painter_client import PainterClient
-
 from augustbot_msgs.srv import (
     CommandRequest,
 )
@@ -80,8 +78,9 @@ CAMERA_FILTER_COUNT = 3
 
 class CalibrationController(ModuleBase):
     def __init__(self,
-                 name, rate, states=None, transitions=None, commands=None, status_inf=None, srv_cmd_inf=None, need_robot_status=False, error_codes=None,
-                 laser=None, max_encoding=None, have_short_camera=True):
+                 name, rate, states=None, transitions=None, commands=None, status_inf=None,
+                 srv_cmd_inf=None, need_robot_status=False, error_codes=None,
+                 laser=None, max_encoding=None, painter=None, have_short_camera=True):
         super(CalibrationController, self).__init__(
             name=name,
             rate=rate,
@@ -160,7 +159,7 @@ class CalibrationController(ModuleBase):
             "imu_w": None
         }
 
-        self.painter = PainterClient()
+        self.painter = painter
 
         self.job_setting = JOS_SETTINGS
 
