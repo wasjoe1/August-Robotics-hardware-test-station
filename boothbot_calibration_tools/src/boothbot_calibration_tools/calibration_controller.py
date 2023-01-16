@@ -302,6 +302,7 @@ class CalibrationController(ModuleBase):
             self.loginfo("use long camera")
             self.job_setting[CS.CAMERA_SHARPNESS.name]["camera"] = LONG
         elif CS.USE_SHORT_CAMERA == command:
+            # TODO, support lnp6
             self.loginfo("use short camera")
             self.job_setting[CS.CAMERA_SHARPNESS.name]["camera"] = SHORT
         elif CS.TEST_TRACK == command:
@@ -513,12 +514,14 @@ class CalibrationController(ModuleBase):
         pass
 
     def cameras_idle(self):
+        # TODO, support lnp6
         if (self.cameras[LONG] is None) or (self.cameras[SHORT] is None):
             return False
         else:
             return self.cameras[LONG].is_camera_idle() and self.cameras[SHORT].is_camera_idle()
 
     def get_cameras_frames(self):
+        # TODO, support lnp6
         for type in (LONG, SHORT):
             frame = self.cameras[type].cap()
             self.cameras_frame[type] = self.img2textfromcv2(frame)
@@ -569,6 +572,7 @@ class CalibrationController(ModuleBase):
         return self.camera_filter_count > cameras_offset
 
     def _do_cameras_alignment(self):
+        # TODO, support lnp6
         if self.sub_state == 0:
             self.init_cameras(5, 5)
             self._sub_state = 1
@@ -663,6 +667,7 @@ class CalibrationController(ModuleBase):
                     self.track_beacon(LONG, 3)
 
     def init_camera(self, type, dis):
+        # TODO, support lnp6
         try:
             if self.cameras[type] is None:
                 self.cameras[type] = TrackingCamera(
@@ -692,6 +697,7 @@ class CalibrationController(ModuleBase):
         return angle
 
     def cameras_handle(self, type=LONG, dis=0.0, compensation=False, angle=None):
+        # TODO, support lnp6
         if type != LONG:
             return self.get_camera_result(SHORT, dis, compensation, angle)
         else:
@@ -702,6 +708,7 @@ class CalibrationController(ModuleBase):
                 return long_anle
 
     def _do_cameras_angle(self):
+        # TODO, support lnp6
         if self.sub_state == 0:
             if self.init_cameras(4, 4):
                 self._sub_state = 1
