@@ -40,6 +40,10 @@ class Get8Dir():
             if d.startswith("cali"):
                 self.file = d
                 print(d)
+                return True
+        print("No calibration data file found...")
+        print("Script end...")
+        exit(0)  
 
     def get_data(self):
         print("Using readlines()")
@@ -48,7 +52,6 @@ class Get8Dir():
             # for line in Lines:
             #     count += 1
             #     print("Line{}: {}".format(count, line.strip()))
-  
 
     def get_device(self):
         for l in self.data:
@@ -87,6 +90,8 @@ class Get8Dir():
 
     def get_error(self,i):
         for index in range(20):
+            if "beacause the error is" not in self.data[index+i]:
+                continue            
             d1 = re.search("beacause the error is: (-?\d+)(\.\d+)?m",self.data[index+i],re.M|re.I)
             d_scientific_notation = re.search("beacause the error is: ([+|-]?\d\.\d+[Ee][-]?\d.)m",self.data[index+i],re.M|re.I)
             if d_scientific_notation is not None:
@@ -98,8 +103,6 @@ class Get8Dir():
             # print(d1.group())
             return float(d1.group(1)+d1.group(2))
         return None
-        # return 0.0
-
 
     def handle_res(self):
         print(self.res)
@@ -153,18 +156,24 @@ class Get8Dir():
         os.rename(self.file, new_file_name)
         shutil.copy(new_file_name,has_handle)
         os.remove(self.cvs)
+        os.remove(new_file_name)
 
 
 
 
 if __name__ == "__main__":
+    print("Note: this script has tested passed on v3.7.1...")
+    print("If something wrong on other version, please connect shenzhen office..")
     args = sys.argv
     print(args)
-    hostname = args[1] + ".local"
-    print("Getting file from .... {}".format(hostname))
-    gf = Get_file(hostname)
-    fn = gf.get_calibration_file_name()
-    gf.get_file(fn)
+    if len(args) == 1:
+        pass
+    else:
+        hostname = args[1] + ".local"
+        print("Getting file from .... {}".format(hostname))
+        gf = Get_file(hostname)
+        fn = gf.get_calibration_file_name()
+        gf.get_file(fn)
     gd = Get8Dir()
     gd.get_res()
     gd.handle_res()
