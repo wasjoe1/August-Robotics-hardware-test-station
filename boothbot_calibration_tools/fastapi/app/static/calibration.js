@@ -14,6 +14,7 @@ var CAMERAS_ANGLE = "CAMERAS_ANGLE"
 var VERTICAL_SERVO_ZERO = "VERTICAL_SERVO_ZERO"
 var IMU_CALIBRATION = "IMU_CALIBRATION"
 var HORIZONTAL_OFFSET = "HORIZONTAL_OFFSET"
+var MARKING_ROI = "MARKING_ROI"
 
 // var default_lang = 1
 var server_lang
@@ -184,7 +185,8 @@ function get_save_data(ws_json, first_key) {
             get_function_data(first_key, VERTICAL_SERVO_ZERO) +
             get_function_data(first_key, CAMERA_SHARPNESS) +
             get_function_data(first_key, HORIZONTAL_OFFSET) +
-            get_function_data(first_key, IMU_CALIBRATION)
+            get_function_data(first_key, IMU_CALIBRATION) + 
+            get_function_data(first_key, MARKING_ROI)
     }
     return data_content
 }
@@ -434,11 +436,11 @@ document.onkeydown=function(event){
         command('SERVOS_ENABLE')
     }
     if(e && e.keyCode==66){ 
-        console.log("ENABLE")
+        console.log("USE_SHORT_CAMERA")
         command('USE_SHORT_CAMERA')
     }
     if(e && e.keyCode==83){ 
-        console.log("ENABLE")
+        console.log("USE_LONG_CAMERA")
         command('USE_LONG_CAMERA')
     }
 }; 

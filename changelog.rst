@@ -13,8 +13,11 @@ Added
   1. assemble_tools
     a. add gs-dtu-aging
 
-  1. boothbot-reporter:
+  2. boothbot-reporter:
     a. added ability that can process all log in one go, and output a csv file.
+
+  3. boothbot_calibration_tools:
+    a. add marking camera roi calibration tools.
 
 Known Issue
 ^^^^^^^^^^^
