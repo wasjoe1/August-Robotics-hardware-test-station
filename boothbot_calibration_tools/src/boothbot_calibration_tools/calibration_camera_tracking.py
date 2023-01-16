@@ -9,7 +9,10 @@ class CaliTrackingCamera():
         self.enable = enable
 
     def cap(self):
-        return self.ontology.cap()
+        if self.enable:
+            return self.ontology.cap()
+        else:
+            return None
 
     def is_camera_idle(self):
         if self.enable:

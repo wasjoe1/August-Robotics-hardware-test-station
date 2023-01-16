@@ -25,7 +25,7 @@ from boothbot_calibration_tools.constants import CalibrationCommand as CS
 # from boothbot_common.settings import BOOTHBOT_GET_CONFIG
 from boothbot_config.device_settings import DEVICE_SETTINGS_FILE_PATH
 from boothbot_config.device_settings import CONFIG_PATH
-from boothbot_perception.track.tracking_camera import TrackingCamera
+# from boothbot_perception.track.tracking_camera import TrackingCamera
 from boothbot_calibration_tools.calibration_camera_tracking import CaliTrackingCamera
 from boothbot_perception.track import settings
 
@@ -233,11 +233,11 @@ class CalibrationController(ModuleBase):
             self._do_initialize_servo()
         elif self._job == CS.CAMERA_SHARPNESS:
             self._do_sharpness()
-        elif self._job == CS.CAMERAS_ALIGNMENT:
+        elif self._job == CS.CAMERAS_ALIGNMENT and self.have_short_camera:
             self._do_cameras_alignment()
         elif self._job == CS.CAMERA_LASER_ALIGNMENT:
             self._do_camera_laser_alignment()
-        elif self._job == CS.CAMERAS_ANGLE:
+        elif self._job == CS.CAMERAS_ANGLE and self.have_short_camera:
             self._do_cameras_angle()
         elif self._job == CS.VERTICAL_SERVO_ZERO:
             self._do_vertical_offset()
