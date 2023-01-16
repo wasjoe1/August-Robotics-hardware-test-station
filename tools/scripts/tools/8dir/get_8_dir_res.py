@@ -160,11 +160,11 @@ class Get8Dir():
 if __name__ == "__main__":
     args = sys.argv
     print(args)
-    # hostname = args[1] + ".local"
-    # print("Getting file from .... {}".format(hostname))
-    # gf = Get_file(hostname)
-    # fn = gf.get_calibration_file_name()
-    # gf.get_file(fn)
+    hostname = args[1] + ".local"
+    print("Getting file from .... {}".format(hostname))
+    gf = Get_file(hostname)
+    fn = gf.get_calibration_file_name()
+    gf.get_file(fn)
     gd = Get8Dir()
     gd.get_res()
     gd.handle_res()
