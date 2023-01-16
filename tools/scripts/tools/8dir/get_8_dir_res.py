@@ -11,6 +11,7 @@ import sys
 from get_file import Get_file
 
 def median(data):
+    print(data)
     data.sort()
     half = len(data) // 2
     return (data[half] + data[~half])/2
@@ -87,11 +88,17 @@ class Get8Dir():
     def get_error(self,i):
         for index in range(20):
             d1 = re.search("beacause the error is: (-?\d+)(\.\d+)?m",self.data[index+i],re.M|re.I)
+            d_scientific_notation = re.search("beacause the error is: ([+|-]?\d\.\d+[Ee][-]?\d.)m",self.data[index+i],re.M|re.I)
+            if d_scientific_notation is not None:
+                print("Got scientific notation..{}".format(d_scientific_notation.group(1)))
+                # print(d_scientific_notation.group(1))
+                return float(d_scientific_notation.group(1))
             if d1 is None:
                 continue
             # print(d1.group())
             return float(d1.group(1)+d1.group(2))
         return None
+        # return 0.0
 
 
     def handle_res(self):
@@ -153,11 +160,11 @@ class Get8Dir():
 if __name__ == "__main__":
     args = sys.argv
     print(args)
-    hostname = args[1] + ".local"
-    print("Getting file from .... {}".format(hostname))
-    gf = Get_file(hostname)
-    fn = gf.get_calibration_file_name()
-    gf.get_file(fn)
+    # hostname = args[1] + ".local"
+    # print("Getting file from .... {}".format(hostname))
+    # gf = Get_file(hostname)
+    # fn = gf.get_calibration_file_name()
+    # gf.get_file(fn)
     gd = Get8Dir()
     gd.get_res()
     gd.handle_res()
