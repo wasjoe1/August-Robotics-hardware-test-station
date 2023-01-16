@@ -43,9 +43,7 @@ from boothbot_msgs.ros_interfaces import (
 )
 
 from augustbot_msgs.srv import (
-    Command,
     CommandRequest,
-    CommandResponse
 )
 
 import std_msgs.msg as stmsgs
@@ -58,7 +56,9 @@ from boothbot_calibration_tools.settings import (
     SAVE_ARG
 )
 
-from boothbot_calibration_tools.utils import get_tolerance
+from boothbot_calibration_tools.utils import (
+    get_tolerance
+)
 
 TRACKER_CONFIG = BOOTHBOT_GET_CONFIG(name="tracker_driver")
 GS_CAMERA_VERTICAL_DIST = TRACKER_CONFIG["long_cam_laser_dist"] + \
@@ -74,7 +74,7 @@ CAMERA_FILTER_COUNT = 3
 class CalibrationController(ModuleBase):
     def __init__(self,
                  name, rate, states=None, transitions=None, commands=None, status_inf=None, srv_cmd_inf=None, need_robot_status=False, error_codes=None,
-                 laser=None):
+                 laser=None, max_encoding=None):
         super(CalibrationController, self).__init__(
             name=name,
             rate=rate,
@@ -94,6 +94,7 @@ class CalibrationController(ModuleBase):
             }
         )
         self.puber_data = APPS_CALIBRATION_DATA.Publisher()
+        self.max_encoding = max_encoding
 
         DRIVERS_SERVOS_PDO.Subscriber(self.servo_pdo_cb)
         DRIVERS_CHASSIS_IMU.Subscriber(self.imu_cb)
@@ -255,7 +256,10 @@ class CalibrationController(ModuleBase):
         self.loginfo("initializing ....")
         self.last_json_file = self.get_last_json()
         self.check_yaml_dir()
-        self.get_last_data()
+        try:
+            self.get_last_data()
+        except Exception as e:
+            self.logerr("Got last data error....")
         now = datetime.now()
         date_time = now.strftime("%m-%d-%Y-%H-%M-%S")
         self.json_file = self.config_dir + '/' + socket.gethostname() + "-" + \
@@ -451,18 +455,16 @@ class CalibrationController(ModuleBase):
             for t in self.save_data_title:
                 if t in f:
                     self.loginfo("open file {}".format(f))
-                    with open(self.config_dir+"/" + f, "r") as data_file:
-                        # last_data = json.loads
-                        last_data = json.load(data_file)
-                        self._data["data"]["last_data"].update(last_data)
-
-        # if self.last_json_file is None:
-        #     self._data["last_data"] = {}
-        # else:
-        #     with open(self.last_json_file, "r") as f:
-        #         # last_data = json.loads
-        #         last_data = json.load(f)
-        #         self._data["data"]["last_data"] = last_data
+                    file_path = self.config_dir+"/" + f
+                    try:
+                        with open(file_path, "r") as data_file:
+                            # last_data = json.loads
+                            last_data = json.load(data_file)
+                            self._data["data"]["last_data"].update(last_data)
+                    except FileNotFoundError as not_found_e:
+                        self.loginfo("{} not found...".format(file_path))
+                    except json.decoder.JSONDecodeError as file_e:
+                        self.loginfo("load file {} error...".format(file_path))
 
     def save_json(self):
         save_path = self.json_file+"_"+self._job.name+".json"
@@ -491,16 +493,6 @@ class CalibrationController(ModuleBase):
 
         doc['servos_driver']['servo_parameter']['horizontal']['zero_offset'] = self._job_data["servo_h"]
         doc['servos_driver']['servo_parameter']['vertical']['zero_offset'] = self._job_data["servo_v"]
-
-        # servo_save_data = {
-        #     CS.INITIALIZE_SERVO.name: {
-        #         "time": time.time(),
-        #         "servo_h": self._job_data["servo_h"],
-        #         "servo_v": self._job_data["servo_v"],
-        #     }
-        # }
-
-        # self._save_data.update(servo_save_data)
 
         with open(DEVICE_SETTINGS_FILE_PATH, 'w') as f:
             oyaml.dump(doc, f, default_flow_style=False)
@@ -750,11 +742,6 @@ class CalibrationController(ModuleBase):
                 d2 = math.atan2(GS_CAMERA_VERTICAL_DIST, projection_dis)
                 d1 = short_offset[1]
                 cameras_angle = -d1-d2
-                # _x, _y = bt.angle(center)
-                # _offset_yaw, _offset_pitch = -_x, _y
-                # dist_angle = math.atan2(GS_CAMERA_VERTICAL_DIST, dist)
-                # # ideal _y should be under middle line
-                # angle_offset = -_offset_pitch - dist_angle
 
                 self.loginfo("d1: {}, d2: {}, d3: {}".format(
                     d1, d2, (cameras_angle)))
@@ -833,8 +820,16 @@ class CalibrationController(ModuleBase):
             self.loginfo("job vertical iter: {}, len(vertical_encoder): {}, {}".format(
                 self._job_vertical_iter, len(self.vertical_encoder), self.vertical_encoder))
             if self._job_vertical_iter >= 2:
+                arr1 = np.array(self.vertical_encoder[0:4])
+                avg1 = np.average(arr1)
+                arr2 = np.array(self.vertical_encoder[5:9])
+                avg2 = np.average(arr2)
                 arr = np.array(self.vertical_encoder)
                 avg = np.average(arr)
+                if math.fabs(avg1-avg2) > self.max_encoding/2:
+                    avg = avg + self.max_encoding/2
+                if avg >= self.max_encoding:
+                    avg = avg - self.max_encoding
                 self.loginfo("verticalencoder is {}".format(avg))
                 self._job_data["vertical_offset"] = avg
                 self.set_job_current_time()
@@ -846,13 +841,12 @@ class CalibrationController(ModuleBase):
         if self.sub_state == 0:
             self.sub_state = 1
         elif self.sub_state == 1:
-            self._job_data["offset_x"] = self.incli_data.data[0]
-            self._job_data["offset_y"] = self.incli_data.data[1]
+            if self.incli_data is not None:
+                self._job_data["offset_x"] = self.incli_data.data[0]
+                self._job_data["offset_y"] = self.incli_data.data[1]
             self._job_data.update(self.imu_data)
 
     def cali_imu(self, prarm):
-        # rospy.wait_for_service(IMU_SERVICE)
-        # chassis_cmd = rospy.ServiceProxy()
         cmd = CommandRequest()
         cmd.command = "IMU"
         cmd.parameter = prarm

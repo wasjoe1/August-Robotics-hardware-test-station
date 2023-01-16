@@ -6,6 +6,7 @@ from boothbot_common.settings import(
 )
 import numpy as np
 import scipy.optimize as optimize
+
 def get_host_ip():
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -29,8 +30,21 @@ def get_tolerance():
     else:
         return (1e-5, 5e-5)
 
+
+def get_gs_type():
+    gs_type = SERVO_PARAMETER["platform"].get('servo_types', ['stepper', 'stepper'])
+    if gs_type == ['minas', 'minas']:
+        return "minas"
+        # PLATFORM_DEFAULT_TOLERANCE = SERVO_PARAMETER["platform"].get('tolerance', (1e-5, 5e-5))
+    elif gs_type == ['minas', 'stepper']:
+        return "stepper"
+    else:
+        return "default"
+
+
 def sincurve(x, offset=0, volume=1., shift=0.):
     return np.sin(x + offset) * volume + shift
+
 
 def get_estimated_inclination(x_axis, y_axis, offset0=0., volume0=1., shift0=0.):
     # use the collected inclination with yaw data to curve_fit
