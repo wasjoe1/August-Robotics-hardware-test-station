@@ -1,0 +1,5 @@
+1. Install the marking camera ROI workpiece to Lionel
+2. Click the RUN button 
+3. Wait for the job to finish
+4. Click the SAVE_DATA button
+5. Click the DOWNLOAD_DATA button

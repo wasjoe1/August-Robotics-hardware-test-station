@@ -8,6 +8,7 @@ var refresh_page_once_list = [
     "VERTICAL_SERVO_ZERO",
     "IMU_CALIBRATION",
     "HORIZONTAL_OFFSET",
+    "MARKING_ROI",
     "switch_lang",
     "camera_select_long",
     "camera_select_short",

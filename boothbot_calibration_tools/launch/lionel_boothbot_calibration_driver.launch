@@ -8,4 +8,16 @@
 	<include file="$(find boothbot_calibration_tools)/launch/lionel_base.launch"></include>
 	<node name="inclinometer_driver" pkg="boothbot_calibration_tools" type="inclinometer_driver.py" output="log" respawn="true" respawn_delay="5"> 
 	</node>
+    <!-- <node name="marking_module" pkg="boothbot_marking" type="marking_node.py" output="log">
+    </node>	 -->
+
+    <node name="io_driver" pkg="boothbot_driver" type="io_driver_node.py" output="log">
+    </node>
+
+	<node name="painter_driver" pkg="boothbot_painter" type="painter_driver.py" output="log">
+	</node>
+
+	<include file="$(find boothbot_perception)/launch/check_server.launch"></include>
+
+
 </launch>

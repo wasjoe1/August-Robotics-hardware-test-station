@@ -28,6 +28,8 @@ from boothbot_config.device_settings import CONFIG_PATH
 from boothbot_perception.track.tracking_camera import TrackingCamera
 from boothbot_perception.track import settings
 
+from boothbot_perception.check.roi_calibration import roi_calibration
+
 from boothbot_common.settings import BOOTHBOT_GET_CONFIG
 
 from boothbot_common.module_base import ModuleBase
@@ -42,6 +44,8 @@ from boothbot_msgs.ros_interfaces import (
     DRIVERS_CHASSIS_IMU,
 )
 
+from boothbot_painter.painter_client import PainterClient
+
 from augustbot_msgs.srv import (
     CommandRequest,
 )
@@ -53,7 +57,9 @@ from boothbot_calibration_tools.settings import (
     SAVE_DATA_TITLE,
     TRANSITIONS,
     CALI_ARG,
-    SAVE_ARG
+    SAVE_ARG,
+    JOS_SETTINGS,
+    LAST_SAVE_TILE
 )
 
 from boothbot_calibration_tools.utils import (
@@ -154,20 +160,11 @@ class CalibrationController(ModuleBase):
             "imu_w": None
         }
 
-        self.job_setting = {
-            CS.INITIALIZE_SERVO.name: {},
-            CS.CAMERA_SHARPNESS.name: {"camera": "long", "exp_dis": {"long": 40, "short": 5}},
-            CS.CAMERAS_ALIGNMENT.name: {"default_h": 1.38},
-            CS.CAMERA_LASER_ALIGNMENT.name: {},
-            CS.CAMERAS_ANGLE.name: {"default_h": 1.38},
-            CS.VERTICAL_SERVO_ZERO.name: [1.57, -1.57],
-            CS.IMU_CALIBRATION.name: {},
-        }
+        self.painter = PainterClient()
 
-        self.save_data_title = [CS.INITIALIZE_SERVO.name,
-                                CS.CAMERAS_ANGLE.name, CS.VERTICAL_SERVO_ZERO.name,
-                                CS.CAMERA_SHARPNESS.name,
-                                CS.CAMERAS_ALIGNMENT.name]
+        self.job_setting = JOS_SETTINGS
+
+        self.save_data_title = LAST_SAVE_TILE
 
     def update_data(self):
         if self._job is not None:
@@ -250,6 +247,9 @@ class CalibrationController(ModuleBase):
         elif self._job == CS.HORIZONTAL_OFFSET:
             if not self.is_gs:
                 self._do_horizontal_offset()
+        elif self._job == CS.MARKING_ROI:
+            if not self.is_gs:
+                self._do_marking_camera_roi()
 
     def initialize(self):
         # TODO
@@ -326,6 +326,8 @@ class CalibrationController(ModuleBase):
     def update_client_status(self):
         if self.servos.is_ready():
             self.client_status["servos"] = "OK"
+        elif self.servos.error:
+            self.client_status["servos"] = "ERROR"
         else:
             self.client_status["servos"] = "not ready"
 
@@ -892,6 +894,43 @@ class CalibrationController(ModuleBase):
     def _iucli_cb(self, msg):
         self.incli_data = msg
 
+    def _do_marking_camera_roi(self):
+        if self.sub_state == 0:
+            if not self.painter.connect():
+                return
+            #TODO
+            # camera init
+            self._sub_state = 1
+        elif self.sub_state == 1:
+            # waiting painter home
+            if not self.painter.is_done():
+                return
+            self.painter.set_goal_enable()
+            self.sub_state = 2
+        elif self.sub_state == 2:
+            # TODO
+            if not self.painter.is_done():
+                return
+            if not self.run_flag:
+                return
+            self.sub_state = 3
+        elif self.sub_state == 3:
+            self.loginfo("start to roi calibration")
+            res = roi_calibration()
+            if res is None:
+                self.loginfo("Got None result...")
+                return
+            # calculate the param..
+            self.set_job_current_time()
+            (x,y,w,h) = res
+            self._job_data["x"] = x
+            self._job_data["y"] = y
+            self._job_data["w"] = w
+            self._job_data["h"] = h
+            self.sub_state = 4
+        elif self.sub_state == 4:
+            self.loginfo_throttle(4, "roi  calibration done.")
+            pass
 
 if __name__ == "__main__":
     rospy.init_node("calibration_controller")
