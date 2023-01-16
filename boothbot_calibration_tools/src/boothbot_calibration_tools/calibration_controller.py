@@ -26,6 +26,7 @@ from boothbot_calibration_tools.constants import CalibrationCommand as CS
 from boothbot_config.device_settings import DEVICE_SETTINGS_FILE_PATH
 from boothbot_config.device_settings import CONFIG_PATH
 from boothbot_perception.track.tracking_camera import TrackingCamera
+from boothbot_calibration_tools.calibration_camera_tracking import CaliTrackingCamera
 from boothbot_perception.track import settings
 
 from boothbot_perception.check.roi_calibration import roi_calibration
@@ -80,7 +81,7 @@ CAMERA_FILTER_COUNT = 3
 class CalibrationController(ModuleBase):
     def __init__(self,
                  name, rate, states=None, transitions=None, commands=None, status_inf=None, srv_cmd_inf=None, need_robot_status=False, error_codes=None,
-                 laser=None, max_encoding=None):
+                 laser=None, max_encoding=None, have_short_camera=True):
         super(CalibrationController, self).__init__(
             name=name,
             rate=rate,
@@ -119,8 +120,6 @@ class CalibrationController(ModuleBase):
         self._done_list = {}
 
         # driver
-        self.camera_long = None
-        self.camera_short = None
         self.servos = ServosClient()
         # self.laser = LaserRangeFinderGenerator.detect_laser_range_finder()
         self.laser = laser
@@ -148,6 +147,7 @@ class CalibrationController(ModuleBase):
         self.current_rad = (0.0, 0.0)
         self._tolerance = get_tolerance()
         self.logwarn("tolerance auto seleted {}.".format(self._tolerance))
+        self.have_short_camera = have_short_camera
 
         self.cameras_angle = []
         self.vertical_encoder = []
@@ -666,12 +666,13 @@ class CalibrationController(ModuleBase):
                 if self.servos.done:
                     self.track_beacon(LONG, 3)
 
-    def init_camera(self, type, dis):
+    def init_camera(self, type, dis, ena):
         # TODO, support lnp6
         try:
             if self.cameras[type] is None:
-                self.cameras[type] = TrackingCamera(
-                    "/dev/camera_"+type.lower(), laser_dist=dis)
+                # TODO, use local Camera driver
+                self.cameras[type] = CaliTrackingCamera(
+                    "/dev/camera_"+type.lower(), laser_dist=dis, enable=ena)
         except Exception as e:
             self.logerr("{} camera init error".format(type))
             self.cameras[type] = None
@@ -679,8 +680,8 @@ class CalibrationController(ModuleBase):
         return True
 
     def init_cameras(self, long_dist, short_dist):
-        long_init_res = self.init_camera(LONG, long_dist)
-        short_init_res = self.init_camera(SHORT, short_dist)
+        long_init_res = self.init_camera(LONG, long_dist, True)
+        short_init_res = self.init_camera(SHORT, short_dist, self.have_short_camera)
         if long_init_res and short_init_res:
             return True
         else:
