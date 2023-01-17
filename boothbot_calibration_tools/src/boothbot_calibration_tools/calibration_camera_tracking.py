@@ -46,4 +46,7 @@ class CaliTrackingCamera():
         return self.ontology.draw_beacon(frame, beacon_res)
 
     def shutdown(self):
-        return self.ontology.shutdown()
+        if self.enable:
+            return self.ontology.shutdown()
+        else:
+            return True
