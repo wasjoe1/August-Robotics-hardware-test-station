@@ -55,6 +55,10 @@ LAST_SAVE_TILE = [CS.INITIALIZE_SERVO.name,
 # SETUP="SETUP"
 CALI_ARG = "CALIBRATE"
 SAVE_ARG = "SAVE"
+LONG = "long"
+SHORT = "short"
+COLOR = "CALI"
+CAMERA_FILTER_COUNT = 3
 
 IMU_SERVICE = "/drivers/chassis/srv_cmd"
 

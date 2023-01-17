@@ -9,6 +9,10 @@ from boothbot_calibration_tools.calibration_controller import CalibrationControl
 # TOLERANCE = (1e-5, 5e-5)
 from boothbot_calibration_tools.utils import get_gs_type
 
+from boothbot_perception.track.settings import HAVE_SHORT_CAMERA
+
+print("have short camera {}".format(HAVE_SHORT_CAMERA))
+
 MINAS_SERVO_RESOLUTION = 1 << 23
 
 class GSCalibration(CalibrationController):
@@ -16,7 +20,8 @@ class GSCalibration(CalibrationController):
                 srv_cmd_inf=None, need_robot_status=False, error_codes=None, laser=None):
         laser = LaserRangeFinderGenerator.detect_laser_range_finder()
         # tolerance = TOLERANCE
-        super().__init__(name, rate, states, transitions, commands, status_inf, srv_cmd_inf, need_robot_status, error_codes, laser, MINAS_SERVO_RESOLUTION)
+        painter = None
+        super().__init__(name, rate, states, transitions, commands, status_inf, srv_cmd_inf, need_robot_status, error_codes, laser, MINAS_SERVO_RESOLUTION, painter, HAVE_SHORT_CAMERA)
 
     def kill_servos_node(self):
         self.logerr("kill lionel servos node.")

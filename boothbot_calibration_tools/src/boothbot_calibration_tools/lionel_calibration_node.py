@@ -9,6 +9,8 @@ from boothbot_calibration_tools.calibration_controller import CalibrationControl
 # TOLERANCE = (0.0005, 0.001)
 from boothbot_perception.track.settings import HAVE_SHORT_CAMERA
 
+print("have short camera {}".format(HAVE_SHORT_CAMERA))
+
 from boothbot_painter.painter_client import PainterClient
 
 STEPPER_MAX_ENCODING = (1 << 14) - 1

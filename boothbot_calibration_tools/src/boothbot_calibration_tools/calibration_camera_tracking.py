@@ -2,11 +2,18 @@
 # -*- coding: utf-8 -*-
 
 from boothbot_perception.track.tracking_camera import TrackingCamera
+from boothbot_calibration_tools.settings import (
+    LONG,
+    SHORT,
+    COLOR
+)
 
 class CaliTrackingCamera():
-    def __init__(self, camera_type, dis=50, enable=True):
-        self.ontology = TrackingCamera(camera_type, dis)
+    def __init__(self, camera_type, laser_dist=50, enable=True):
         self.enable = enable
+        self.ontology = None
+        if self.enable:
+            self.ontology = TrackingCamera(camera_type, laser_dist)
 
     def cap(self):
         if self.enable:
@@ -34,3 +41,9 @@ class CaliTrackingCamera():
 
     def get_laser_result(self, frame, laser_dot):
         return self.ontology.get_laser_result(frame, laser_dot)
+
+    def draw_beacon(self, frame, beacon_res):
+        return self.ontology.draw_beacon(frame, beacon_res)
+
+    def shutdown(self):
+        return self.ontology.shutdown()

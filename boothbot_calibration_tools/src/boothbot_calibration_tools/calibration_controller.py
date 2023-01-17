@@ -58,7 +58,11 @@ from boothbot_calibration_tools.settings import (
     CALI_ARG,
     SAVE_ARG,
     JOS_SETTINGS,
-    LAST_SAVE_TILE
+    LAST_SAVE_TILE,
+    SHORT,
+    LONG,
+    COLOR,
+    CAMERA_FILTER_COUNT
 )
 
 from boothbot_calibration_tools.utils import (
@@ -68,12 +72,6 @@ from boothbot_calibration_tools.utils import (
 TRACKER_CONFIG = BOOTHBOT_GET_CONFIG(name="tracker_driver")
 GS_CAMERA_VERTICAL_DIST = TRACKER_CONFIG["long_cam_laser_dist"] + \
     TRACKER_CONFIG["short_cam_laser_dist"]
-
-
-LONG = "long"
-SHORT = "short"
-COLOR = "CALI"
-CAMERA_FILTER_COUNT = 3
 
 
 class CalibrationController(ModuleBase):
@@ -523,7 +521,9 @@ class CalibrationController(ModuleBase):
         # TODO, support lnp6
         for type in (LONG, SHORT):
             frame = self.cameras[type].cap()
-            self.cameras_frame[type] = self.img2textfromcv2(frame)
+            if frame is not None:
+                # self.loginfo("Got {} frame {}".format(type, frame))
+                self.cameras_frame[type] = self.img2textfromcv2(frame)
 
     def _do_sharpness(self):
         camera_type = self.job_setting[CS.CAMERA_SHARPNESS.name]['camera']
