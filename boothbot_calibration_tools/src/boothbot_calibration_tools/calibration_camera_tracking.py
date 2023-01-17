@@ -2,30 +2,22 @@
 # -*- coding: utf-8 -*-
 
 from boothbot_perception.track.tracking_camera import TrackingCamera
+from boothbot_calibration_tools.calibration_camera_tracking_base import CaliTrackingCameraBase
 from boothbot_calibration_tools.settings import (
     LONG,
     SHORT,
     COLOR
 )
 
-class CaliTrackingCamera():
-    def __init__(self, camera_type, laser_dist=50, enable=True):
-        self.enable = enable
-        self.ontology = None
-        if self.enable:
-            self.ontology = TrackingCamera(camera_type, laser_dist)
+class CaliTrackingCamera(CaliTrackingCameraBase):
+    def __init__(self, camera_type, laser_dist=50):
+        self.ontology = TrackingCamera(camera_type, laser_dist)
 
     def cap(self):
-        if self.enable:
-            return self.ontology.cap()
-        else:
-            return None
+        return self.ontology.cap()
 
     def is_camera_idle(self):
-        if self.enable:
-            return self.ontology.is_camera_idle()
-        else:
-            return True
+        return self.ontology.is_camera_idle()
 
     def find_beacon(self, frame, dis, color, color_range):
         return self.ontology.find_beacon(frame, dis, color, color_range)
@@ -46,7 +38,5 @@ class CaliTrackingCamera():
         return self.ontology.draw_beacon(frame, beacon_res)
 
     def shutdown(self):
-        if self.enable:
-            return self.ontology.shutdown()
-        else:
-            return True
+        return self.ontology.shutdown()
+

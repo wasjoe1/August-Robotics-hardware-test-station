@@ -4,7 +4,6 @@
 import rospy
 import math
 import numpy as np
-import cv2
 import os
 import time
 import oyaml
@@ -14,9 +13,7 @@ import json
 import socket
 import shutil
 
-import base64
-from PIL import Image
-from io import BytesIO
+
 from datetime import datetime
 
 from boothbot_calibration_tools.constants import CalibrationStates as MS
@@ -27,6 +24,8 @@ from boothbot_config.device_settings import DEVICE_SETTINGS_FILE_PATH
 from boothbot_config.device_settings import CONFIG_PATH
 # from boothbot_perception.track.tracking_camera import TrackingCamera
 from boothbot_calibration_tools.calibration_camera_tracking import CaliTrackingCamera
+from boothbot_calibration_tools.calibration_camera_tracking_base import CaliTrackingCameraBase
+
 from boothbot_perception.track import settings
 
 from boothbot_perception.check.roi_calibration import roi_calibration
@@ -66,7 +65,8 @@ from boothbot_calibration_tools.settings import (
 )
 
 from boothbot_calibration_tools.utils import (
-    get_tolerance
+    get_tolerance,
+    img2textfromcv2
 )
 
 TRACKER_CONFIG = BOOTHBOT_GET_CONFIG(name="tracker_driver")
@@ -404,24 +404,6 @@ class CalibrationController(ModuleBase):
             self.to_RUNNING()
             return
 
-    # image handler for get image data from rostopic
-    def img2textfromcv2(self, frame):
-        # From BGR to RGB
-        frame = cv2.resize(frame, None, fx=0.25, fy=0.25,
-                           interpolation=cv2.INTER_LINEAR)
-        if self._job != CS.CAMERA_LASER_ALIGNMENT:
-            width = frame.shape[0]
-            height = frame.shape[1]
-            cv2.line(frame,(0,int(width/2)),(int(height),int(width/2)),(0x00,0xA5,0xFF),2)
-            cv2.line(frame,(int(height/2),0),(int(height/2),int(width)),(0x00,0xA5,0xFF),2)
-        im = frame[:, :, ::-1]
-        im = Image.fromarray(im)
-        buf = BytesIO()
-        im.save(buf, format="JPEG")
-        im_binary = base64.b64encode(buf.getvalue())
-        im_text = im_binary.decode()
-        return im_text
-
     def reset_image_flag(self):
         for k, v in self.cameras_frame.items():
             self.cameras_frame[k] = None
@@ -521,9 +503,13 @@ class CalibrationController(ModuleBase):
         # TODO, support lnp6
         for type in (LONG, SHORT):
             frame = self.cameras[type].cap()
-            if frame is not None:
+            if frame is None:
+                continue
+            if self._job in (CS.CAMERA_LASER_ALIGNMENT):
                 # self.loginfo("Got {} frame {}".format(type, frame))
-                self.cameras_frame[type] = self.img2textfromcv2(frame)
+                self.cameras_frame[type] = img2textfromcv2(frame, False)
+            else:
+                self.cameras_frame[type] = img2textfromcv2(frame, True)
 
     def _do_sharpness(self):
         camera_type = self.job_setting[CS.CAMERA_SHARPNESS.name]['camera']
@@ -544,7 +530,7 @@ class CalibrationController(ModuleBase):
             self.loginfo("Got {} frame".format(type))
             beacon_res = self.cameras[type].find_beacon(frame, 0.0, COLOR, self.color_range)
             self.cameras[type].draw_beacon(frame, beacon_res)
-            self.cameras_frame[type] = self.img2textfromcv2(frame)
+            self.cameras_frame[type] = (frame, True)
             self.loginfo("beacon_res {}".format(beacon_res))
             sharpness_result = self.cameras[type].get_sharpness(
                 frame, beacon_res, self.job_setting[CS.CAMERA_SHARPNESS.name]["exp_dis"][type])
@@ -655,24 +641,30 @@ class CalibrationController(ModuleBase):
             frame = self.cameras[LONG].cap()
             print("Got long frame")
             laser_dot = self.cameras[LONG].find_laser_dot(frame)
-            self.loginfo("laser_dot {}".format(laser_dot))
+            # self.loginfo("laser_dot {}".format(laser_dot))
             result = self.cameras[LONG].get_laser_result(frame, laser_dot)
-            self.loginfo("result  {}".format(result))
+            # self.loginfo("result  {}".format(result))
             self._job_data["camera_laser_alignment"] = result
-            self.cameras_frame[LONG] = self.img2textfromcv2(frame)
+            self.cameras_frame[LONG] = img2textfromcv2(frame, False)
             if self.test_track:
                 pass
                 if self.servos.done:
-                    self.track_beacon(LONG, 3)
+                    self.track_beacon(LONG, CAMERA_FILTER_COUNT)
 
     def init_camera(self, type, dis, ena):
         # TODO, support lnp6
         try:
             if self.cameras[type] is None:
                 # TODO, use local Camera driver
-                self.cameras[type] = CaliTrackingCamera(
-                    "/dev/camera_"+type.lower(), laser_dist=dis, enable=ena)
+                if ena is False:
+                    self.cameras[type] = CaliTrackingCameraBase(
+                        "/dev/camera_"+type.lower(), laser_dist=dis)
+                else:
+                    self.cameras[type] = CaliTrackingCamera(
+                        "/dev/camera_"+type.lower(), laser_dist=dis)
+
         except Exception as e:
+            self.logerr(e)
             self.logerr("{} camera init error".format(type))
             self.cameras[type] = None
             return False
@@ -690,7 +682,7 @@ class CalibrationController(ModuleBase):
         frame = self.cameras[type].cap()
         beacon_res = self.cameras[type].find_beacon(frame, dis, COLOR, self.color_range)
         self.cameras[type].draw_beacon(frame, beacon_res)
-        self.cameras_frame[type] = self.img2textfromcv2(frame)
+        self.cameras_frame[type] = img2textfromcv2(frame, True)
         self.loginfo("long short angle {}".format(long_shrot_angle))
         angle = self.cameras[type].get_beacon_angle(
             beacon_res, dis, compensation, long_shrot_angle)
@@ -722,21 +714,21 @@ class CalibrationController(ModuleBase):
             self.sub_state = 2
         elif self.sub_state == 2:
             if self.servos.done:
-                long_res, long_offset = self.track_beacon(camera_filter_time=3)
+                long_res, long_offset = self.track_beacon(camera_filter_time=CAMERA_FILTER_COUNT)
                 if long_res:
                     self.sub_state = 3
                     return
         elif self.sub_state == 3:
             self.loginfo_throttle(
                 2, "long camera track done. track with short camera track")
-            long_res, long_offset = self.track_beacon(LONG, 3)
+            long_res, long_offset = self.track_beacon(LONG, CAMERA_FILTER_COUNT)
             if not long_res:
                 self.loginfo(
                     "long camera detected moved. return to substate 3")
                 self.sub_state = 2
                 return
             self.loginfo("check short camera now")
-            short_res, short_offset = self.track_beacon(SHORT, 3)
+            short_res, short_offset = self.track_beacon(SHORT, CAMERA_FILTER_COUNT)
             try:
                 res, dis = self.laser.get_distance()
             except Exception as e:
@@ -807,14 +799,14 @@ class CalibrationController(ModuleBase):
                 self.sub_state = 3
         elif self.sub_state == 3:
             if self.servos.done:
-                long_res, long_offset = self.track_beacon(camera_filter_time=3)
+                long_res, long_offset = self.track_beacon(camera_filter_time=CAMERA_FILTER_COUNT)
                 if long_res:
                     self.sub_state = 4
                     return
         elif self.sub_state == 4:
             self.loginfo_throttle(
                 2, "long camera track done.")
-            long_res, long_offset = self.track_beacon(LONG, 3)
+            long_res, long_offset = self.track_beacon(LONG, CAMERA_FILTER_COUNT)
             if not long_res:
                 self.loginfo(
                     "long camera detected moved. return to substate 3")
@@ -876,14 +868,14 @@ class CalibrationController(ModuleBase):
             self.sub_state = 2
         elif self.sub_state == 2:
             if self.servos.done:
-                long_res, long_offset = self.track_beacon(camera_filter_time=3)
+                long_res, long_offset = self.track_beacon(camera_filter_time=CAMERA_FILTER_COUNT)
                 if long_res:
                     self.sub_state = 3
                     return
         elif self.sub_state == 3:
             self.loginfo_throttle(
                 2, "long camera track done.")
-            long_res, long_offset = self.track_beacon(camera_filter_time=3)
+            long_res, long_offset = self.track_beacon(camera_filter_time=CAMERA_FILTER_COUNT)
             if long_res:
                 self.horizontal_offset.append(self._job_data["servo_h"])
             else:

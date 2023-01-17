@@ -6,6 +6,10 @@ from boothbot_common.settings import(
 )
 import numpy as np
 import scipy.optimize as optimize
+import cv2
+import base64
+from PIL import Image
+from io import BytesIO
 
 def get_host_ip():
     try:
@@ -62,3 +66,21 @@ def generate_yaw_array(N):
     negative = np.linspace(-np.pi, 0, int(N/2) + 1).tolist()
 
     return positive + to_minus_pi + negative
+
+# image handler for get image data from rostopic
+def img2textfromcv2(frame, draw_line):
+    # From BGR to RGB
+    frame = cv2.resize(frame, None, fx=0.25, fy=0.25,
+                        interpolation=cv2.INTER_LINEAR)
+    if draw_line:
+        width = frame.shape[0]
+        height = frame.shape[1]
+        cv2.line(frame,(0,int(width/2)),(int(height),int(width/2)),(0x00,0xA5,0xFF),2)
+        cv2.line(frame,(int(height/2),0),(int(height/2),int(width)),(0x00,0xA5,0xFF),2)
+    im = frame[:, :, ::-1]
+    im = Image.fromarray(im)
+    buf = BytesIO()
+    im.save(buf, format="JPEG")
+    im_binary = base64.b64encode(buf.getvalue())
+    im_text = im_binary.decode()
+    return im_text
