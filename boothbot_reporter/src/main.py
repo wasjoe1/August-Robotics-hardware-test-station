@@ -54,6 +54,6 @@ if __name__ == "__main__":
         data_lines = analyse_data.filter_DATA(chunk)
 
     entities = analyse_data.analyse_data(data_lines)
-    results = generate_result.generate_result(entities)
-    write_csv.write_to_csv(results, localpath)
+    results, lionel_name = generate_result.generate_result(entities)
+    write_csv.write_to_csv(results, lionel_name, localpath)
     print("Report has been put into " + localpath)

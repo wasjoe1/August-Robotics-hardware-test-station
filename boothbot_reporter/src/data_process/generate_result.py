@@ -19,10 +19,11 @@ def generate_result(entities):
         _type_: data rows
     """
     # the header
-    results = [['Name_of_Lionel', 'Name_of_GS', 'Date_of_aging', 'Starting_time', 'Ending_time',
+    results = [['Name_of_Lionel', 'Name_of_GS', 'Date_of_aging', 'Starting_time', 
                'Avg_localisation_duration', 'Avg_mark_duration', 'Avg_navigation_duration', 'Avg_localisation_times',
-               'marks_per_hour', 'total_hours', 'total_localisation', 'total_mark', 'total_navigation']]
-    
+               'marks_per_hour', 'total_hours', 'total_localisation', 'total_mark', 'total_navigation', 'Ending_time',
+               'Communication_method', 'Map_ID']]
+    lionel_name = ""
     for entity in entities:
         result = []
         
@@ -41,12 +42,14 @@ def generate_result(entities):
         result.append(str(len(entity.mark_data)))
         result.append(str(len(entity.nav_data)))
         result.append(entity.end_time)
-        result.append(entity.commumcation_method)
+        result.append(entity.communication_method)
         result.append(entity.gotomark_map_id)
         
         results.append(result)
+        
+        lionel_name = entity.lionel_name
     # the results contains all data rows
-    return results
+    return results, lionel_name
 
 
 def cal_avg(list_dict, function):
