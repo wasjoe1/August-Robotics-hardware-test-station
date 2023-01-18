@@ -47,7 +47,7 @@ def generate_result(entities):
         
         results.append(result)
         
-        lionel_name = entity.lionel_name
+        lionel_name = str(entity.lionel_name)
     # the results contains all data rows
     return results, lionel_name
 
