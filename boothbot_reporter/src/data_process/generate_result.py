@@ -30,7 +30,7 @@ def generate_result(entities):
         result.append(entity.gs_name)
         result.append(entity.date)
         result.append(entity.start_time)
-        result.append(entity.end_time)
+        
         result.append(cal_avg(entity.loc_data, lambda x: x["end_time"] - x["start_time"]))
         result.append(cal_avg(entity.mark_data, lambda x: x["end_time"] - x["start_time"]))
         result.append(cal_avg(entity.nav_data, lambda x: x["end_time"] - x["start_time"]))
@@ -40,9 +40,11 @@ def generate_result(entities):
         result.append(str(len(entity.loc_data)))
         result.append(str(len(entity.mark_data)))
         result.append(str(len(entity.nav_data)))
-
+        result.append(entity.end_time)
+        result.append(entity.commumcation_method)
+        result.append(entity.gotomark_map_id)
+        
         results.append(result)
-
     # the results contains all data rows
     return results
 

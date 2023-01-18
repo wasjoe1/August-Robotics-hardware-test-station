@@ -45,9 +45,11 @@ def analyse_data(DATA_lines):
     # class varaibles
     lionel_name = None
     gs_name = None
+    commumcation_method = None
+    gotomark_map_id = None
     date = None
     start_time = None
-    end_time = None
+    end_time = None 
 
     navigation_entities = []
     navigation_entity = {"start_time": None, "end_time": None, "nav_goal_succeeded": None,
@@ -72,6 +74,10 @@ def analyse_data(DATA_lines):
             lionel_name = data
         elif code == DataCode.GS_NAME:
             gs_name = data
+        elif code == DataCode.COMMUNICATION_METHOD:
+            commumcation_method = data
+        elif code == DataCode.GOTOMARK_MAP_ID:
+            gotomark_map_id = data
         elif code == DataCode.GOTOMARK_START_TIME:
             start_time = data
             date = datetime.datetime.utcfromtimestamp(data).strftime('%Y-%m-%d')
@@ -84,7 +90,7 @@ def analyse_data(DATA_lines):
             total_time = data-start_time
             start_time = datetime.datetime.utcfromtimestamp(start_time).strftime('%H:%M:%S')
             # construct the object of Entity class
-            entity = Entity(lionel_name, gs_name, date, start_time, end_time, total_time)
+            entity = Entity(lionel_name, gs_name, commumcation_method, gotomark_map_id, date, start_time, end_time, total_time)
             entity.nav_data = navigation_entities
             entity.mark_data = mark_entites
             entity.loc_data = localisation_entities
