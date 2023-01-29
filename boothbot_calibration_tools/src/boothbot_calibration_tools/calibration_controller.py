@@ -527,7 +527,7 @@ class CalibrationController(ModuleBase):
             self.loginfo("Got {} frame".format(type))
             beacon_res = self.cameras[type].find_beacon(frame, 0.0, COLOR, self.color_range)
             self.cameras[type].draw_beacon(frame, beacon_res)
-            self.cameras_frame[type] = (frame, True)
+            self.cameras_frame[type] = img2textfromcv2(frame, True)
             self.loginfo("beacon_res {}".format(beacon_res))
             sharpness_result = self.cameras[type].get_sharpness(
                 frame, beacon_res, self.job_setting[CS.CAMERA_SHARPNESS.name]["exp_dis"][type])
