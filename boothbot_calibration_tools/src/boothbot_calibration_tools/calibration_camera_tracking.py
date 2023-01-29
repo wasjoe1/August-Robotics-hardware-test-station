@@ -28,6 +28,9 @@ class CaliTrackingCamera(CaliTrackingCameraBase):
     def get_color_value(self, frame, beacon_res, color):
         return self.ontology.get_color_value(frame, beacon_res, color)
 
+    def get_beacon_angle(self, beacon_res, dis, compensation, long_shrot_angle):
+        return self.ontology.get_beacon_angle(beacon_res, dis, compensation, long_shrot_angle)
+
     def find_laser_dot(self, frame):
         return self.ontology.find_laser_dot(frame)
 

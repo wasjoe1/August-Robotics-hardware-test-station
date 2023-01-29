@@ -26,6 +26,9 @@ class CaliTrackingCameraBase():
     def get_color_value(self, frame, beacon_res, color):
         return None
 
+    def get_beacon_angle(self, beacon_res, dis, compensation, long_shrot_angle):
+        return None
+
     def find_laser_dot(self, frame):
         return None
 
