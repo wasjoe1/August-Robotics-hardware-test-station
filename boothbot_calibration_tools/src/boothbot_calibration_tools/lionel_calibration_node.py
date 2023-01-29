@@ -6,10 +6,7 @@ import time
 
 from boothbot_calibration_tools.drivers.laser_driver_py3 import LaserRangeFinder
 from boothbot_calibration_tools.calibration_controller import CalibrationController
-# TOLERANCE = (0.0005, 0.001)
-from boothbot_perception.track.settings import HAVE_SHORT_CAMERA
-
-print("have short camera {}".format(HAVE_SHORT_CAMERA))
+from boothbot_calibration_tools.utils import have_short_camera
 
 from boothbot_painter.painter_client import PainterClient
 
@@ -19,7 +16,8 @@ class LionelCalibration(CalibrationController):
     def __init__(self, name, rate, states=None, transitions=None, commands=None, status_inf=None, srv_cmd_inf=None, need_robot_status=False, error_codes=None, laser=None):
         laser = LaserRangeFinder("")
         painter = PainterClient()
-        super().__init__(name, rate, states, transitions, commands,status_inf, srv_cmd_inf, need_robot_status, error_codes, laser, STEPPER_MAX_ENCODING, painter, HAVE_SHORT_CAMERA)
+        use_short_camera = have_short_camera()
+        super().__init__(name, rate, states, transitions, commands,status_inf, srv_cmd_inf, need_robot_status, error_codes, laser, STEPPER_MAX_ENCODING, painter, use_short_camera())
 
     #TODO
     def _do_cameras_angle(self):

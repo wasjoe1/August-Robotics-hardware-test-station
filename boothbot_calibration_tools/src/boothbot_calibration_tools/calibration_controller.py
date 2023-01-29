@@ -249,7 +249,6 @@ class CalibrationController(ModuleBase):
                 self._do_marking_camera_roi()
 
     def initialize(self):
-        # TODO
         self.loginfo("initializing ....")
         self.last_json_file = self.get_last_json()
         self.check_yaml_dir()
@@ -393,8 +392,6 @@ class CalibrationController(ModuleBase):
         self.imu_data["imu_y"] = msg.orientation.y
         self.imu_data["imu_z"] = msg.orientation.z
         self.imu_data["imu_w"] = msg.orientation.w
-        # pass
-        # self.loginfo(msg)
 
     def turn_to_step(self, CS):
         if (self._job) != CS or (self._job is None):
@@ -505,7 +502,7 @@ class CalibrationController(ModuleBase):
             frame = self.cameras[type].cap()
             if frame is None:
                 continue
-            if self._job in (CS.CAMERA_LASER_ALIGNMENT):
+            if self._job in [CS.CAMERA_LASER_ALIGNMENT]:
                 # self.loginfo("Got {} frame {}".format(type, frame))
                 self.cameras_frame[type] = img2textfromcv2(frame, False)
             else:
@@ -897,7 +894,6 @@ class CalibrationController(ModuleBase):
         if self.sub_state == 0:
             if not self.painter.connect():
                 return
-            #TODO
             # camera init
             self._sub_state = 1
         elif self.sub_state == 1:
@@ -907,7 +903,6 @@ class CalibrationController(ModuleBase):
             self.painter.set_goal_enable()
             self.sub_state = 2
         elif self.sub_state == 2:
-            # TODO
             if not self.painter.is_done():
                 return
             if not self.run_flag:

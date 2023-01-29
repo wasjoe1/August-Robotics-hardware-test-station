@@ -84,3 +84,13 @@ def img2textfromcv2(frame, draw_line):
     im_binary = base64.b64encode(buf.getvalue())
     im_text = im_binary.decode()
     return im_text
+
+def have_short_camera():
+    try:
+        # TOLERANCE = (0.0005, 0.001)
+        from boothbot_perception.track.settings import HAVE_SHORT_CAMERA
+        print("have short camera {}".format(HAVE_SHORT_CAMERA))
+        return HAVE_SHORT_CAMERA
+    except Exception as e:
+        print("Got error via checking whether have short camera {}".format(e))
+        return True
