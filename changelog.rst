@@ -18,6 +18,7 @@ Added
 
   3. boothbot_calibration_tools:
     a. add marking camera roi calibration tools.
+    b. add single camera calibration for LNP6.
 
   4. tools:
     a. add a scripts, this scripts handle mutil compensation file by use one time 8_dir measurement result.
