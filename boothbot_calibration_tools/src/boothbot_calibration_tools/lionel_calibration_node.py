@@ -17,7 +17,7 @@ class LionelCalibration(CalibrationController):
         laser = LaserRangeFinder("")
         painter = PainterClient()
         use_short_camera = have_short_camera()
-        super().__init__(name, rate, states, transitions, commands,status_inf, srv_cmd_inf, need_robot_status, error_codes, laser, STEPPER_MAX_ENCODING, painter, use_short_camera())
+        super().__init__(name, rate, states, transitions, commands,status_inf, srv_cmd_inf, need_robot_status, error_codes, laser, STEPPER_MAX_ENCODING, painter, use_short_camera)
 
     #TODO
     def _do_cameras_angle(self):

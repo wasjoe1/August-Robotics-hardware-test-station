@@ -91,6 +91,8 @@ def have_short_camera():
         from boothbot_perception.track.settings import HAVE_SHORT_CAMERA
         print("have short camera {}".format(HAVE_SHORT_CAMERA))
         return HAVE_SHORT_CAMERA
-    except Exception as e:
-        print("Got error via checking whether have short camera {}".format(e))
+    except ImportError as e:
+        print("import HAVE_SHORT_CAMERA error {}.".format(e))
         return True
+    except:
+        print("something error occured that we have not tested..")
