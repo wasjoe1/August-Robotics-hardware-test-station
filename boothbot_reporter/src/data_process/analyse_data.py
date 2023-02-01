@@ -55,11 +55,14 @@ def analyse_data(DATA_lines):
     navigation_entity = {"start_time": None, "end_time": None, "nav_goal_succeeded": None,
                          "nav_times_of_gs_loc": None}
 
-    mark_entites = []
+    mark_entities = []
     mark_entity = {"start_time": None, "end_time": None, "mark_goal_succeeded": None}
 
     localisation_entities = []
     localisation_entity = {"start_time": None, "end_time": None, "loc_goal_succeeded": None}
+    
+    submap_entities = []
+    submap_entity = {"start_time": None, "end_time": None}
 
     datacode_regex = "\[(([A-Z]+_?)+)\]"
     data_pattern = re.compile("^(.*\[DATA\] " + datacode_regex + " (.*))$")
@@ -83,8 +86,9 @@ def analyse_data(DATA_lines):
             date = datetime.datetime.utcfromtimestamp(data).strftime('%Y-%m-%d')
             # reset three data sets
             navigation_entities = []
-            mark_entites = []
+            mark_entities = []
             localisation_entities = []
+            submap_entities = []
         elif code == DataCode.GOTOMARK_END_TIME:
             end_time = datetime.datetime.utcfromtimestamp(data).strftime('%H:%M:%S')
             total_time = data-start_time
@@ -92,11 +96,13 @@ def analyse_data(DATA_lines):
             # construct the object of Entity class
             entity = Entity(lionel_name, gs_name, communication_method, gotomark_map_id, date, start_time, end_time, total_time)
             entity.nav_data = navigation_entities
-            entity.mark_data = mark_entites
+            entity.mark_data = mark_entities
             entity.loc_data = localisation_entities
+            entity.submap_data = submap_entities
             navigation_entities = []
-            mark_entites = []
+            mark_entities = []
             localisation_entities = []
+            submap_entities = []
             entities.append(entity)
 
         if code == DataCode.NAV_GOAL_START_TIME:
@@ -118,7 +124,7 @@ def analyse_data(DATA_lines):
             mark_entity["mark_goal_succeeded"] = data
         elif code == DataCode.MRK_GOAL_END_TIME:
             mark_entity["end_time"] = data
-            mark_entites.append(mark_entity)
+            mark_entities.append(mark_entity)
             mark_entity = dict.fromkeys(mark_entity, None)
 
         if code == DataCode.LOC_GOAL_START_TIME:
@@ -130,5 +136,13 @@ def analyse_data(DATA_lines):
             localisation_entity["end_time"] = data
             localisation_entities.append(localisation_entity)
             localisation_entity = dict.fromkeys(localisation_entity, None)
+            
+        if code == DataCode.FLEET_PULL_SUBMAP_START_TIME:
+            submap_entity = dict.fromkeys(submap_entity, None)
+            submap_entity["start_time"] = data
+        elif code == DataCode.FLEET_PULL_SUBMAP_END_TIME:
+            submap_entity["end_time"] = data
+            submap_entities.append(submap_entity)
+            submap_entity = dict.fromkeys(submap_entity, None)
 
     return entities

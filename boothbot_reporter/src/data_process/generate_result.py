@@ -19,10 +19,23 @@ def generate_result(entities):
         _type_: data rows
     """
     # the header
-    results = [['Name_of_Lionel', 'Name_of_GS', 'Date_of_aging', 'Starting_time', 
-               'Avg_localisation_duration', 'Avg_mark_duration', 'Avg_navigation_duration', 'Avg_localisation_times',
-               'marks_per_hour', 'total_hours', 'total_localisation', 'total_mark', 'total_navigation', 'Ending_time',
-               'Communication_method', 'Map_ID']]
+    results = [['Name_of_Lionel', 
+                'Name_of_GS', 
+                'Date_of_aging', 
+                'Starting_time', 
+                'Avg_localisation_duration (Second)', 
+                'Avg_mark_duration (Second)', 
+                'Avg_navigation_duration (Second)', 
+                'Avg_pull_submap_duration (Second)'
+                'Avg_localisation_times',
+                'marks_per_hour', 
+                'total_hours', 
+                'total_localisation', 
+                'total_mark', 'total_navigation', 
+                'Ending_time',
+                'Communication_method', 
+                'Map_ID']]
+    
     lionel_name = ""
     for entity in entities:
         result = []
@@ -35,6 +48,7 @@ def generate_result(entities):
         result.append(cal_avg(entity.loc_data, lambda x: x["end_time"] - x["start_time"]))
         result.append(cal_avg(entity.mark_data, lambda x: x["end_time"] - x["start_time"]))
         result.append(cal_avg(entity.nav_data, lambda x: x["end_time"] - x["start_time"]))
+        result.append(cal_avg(entity.submap_data, lambda x: x["end_time"] - x["start_time"]))
         result.append(cal_avg(entity.nav_data, lambda x: x["nav_times_of_gs_loc"]))
         result.append(str(len(entity.mark_data) / (entity.total_time / 3600)))
         result.append(str(entity.total_time / 3600))
