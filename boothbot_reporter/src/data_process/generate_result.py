@@ -26,7 +26,7 @@ def generate_result(entities):
                 'Avg_localisation_duration (Second)', 
                 'Avg_mark_duration (Second)', 
                 'Avg_navigation_duration (Second)', 
-                'Avg_pull_submap_duration (Second)'
+                'Avg_pull_submap_duration (Second)',
                 'Avg_localisation_times',
                 'marks_per_hour', 
                 'total_hours', 
