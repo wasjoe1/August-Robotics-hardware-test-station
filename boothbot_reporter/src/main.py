@@ -24,6 +24,27 @@ def help():
 HOME_PATH = os.environ.get('HOME')
 DEFAULT_LOGS_PATH = os.path.join(HOME_PATH, 'catkin_ws/local/roslogs/')
 
+def log_latest():
+    data_lines = []
+    for chunk in load_logs.chunks(os.path.join(DEFAULT_LOGS_PATH, 'latest/')):
+        data_lines = analyse_data.filter_DATA(chunk)
+        
+    entities = analyse_data.analyse_data(data_lines)
+    results, lionel_name = generate_result.generate_result(entities)
+    write_csv.write_to_csv(results, lionel_name, localpath)
+    print("Report has been put into " + localpath)
+   
+def log_every():
+    data_lines = []
+    for chunk in load_logs.chunks(DEFAULT_LOGS_PATH):
+        data_lines = analyse_data.filter_DATA(chunk)
+
+    entities = analyse_data.analyse_data(data_lines)
+    results, lionel_name = generate_result.generate_result(entities)
+    write_csv.write_to_csv(results, lionel_name, localpath)
+    print("Report has been put into " + localpath) 
+    
+     
 if __name__ == "__main__":
     try:
         opts, args = getopt.getopt(sys.argv[1:], 
@@ -49,11 +70,4 @@ if __name__ == "__main__":
         sys.exit(1)
 
 
-    data_lines = []
-    for chunk in load_logs.chunks(DEFAULT_LOGS_PATH):
-        data_lines = analyse_data.filter_DATA(chunk)
-
-    entities = analyse_data.analyse_data(data_lines)
-    results, lionel_name = generate_result.generate_result(entities)
-    write_csv.write_to_csv(results, lionel_name, localpath)
-    print("Report has been put into " + localpath)
+    log_every()
