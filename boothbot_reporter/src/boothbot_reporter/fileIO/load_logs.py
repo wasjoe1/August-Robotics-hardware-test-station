@@ -34,17 +34,25 @@ def chunks(logs_path, size=50000):
             
             for filename in files:
                 if "rosout.log" in filename:
-                    with open(filename, 'r', encoding='utf8', errors='ignore') as file:
-                        lines = file.readlines()
-                        count_file += 1
-                        count_line += len(lines)
-                        print("total number of lines of the file:", filename, "is: ", len(lines))
-                        for i in range(0, len(lines), size):
-                            yield lines[i: i + size]
+                    if sys.version_info[0] == 3:
+                        with open(filename, 'r', encoding='utf8', errors='ignore') as file:
+                            lines = file.readlines()
+                            count_file += 1
+                            count_line += len(lines)
+                            print("total number of lines of the file:", filename, "is: ", len(lines))
+                            for i in range(0, len(lines), size):
+                                yield lines[i: i + size]
+                    elif sys.version_info[0] ==2:
+                        with open(filename, 'r') as file:
+                            lines = file.readlines()
+                            count_file += 1
+                            count_line += len(lines)
+                            print("total number of lines of the file:", filename, "is: ", len(lines))
+                            for i in range(0, len(lines), size):
+                                yield lines[i: i + size]
 
     except IOError:
         print("\nCannot open the file ", filename)
-        sys.exit(1)
     except Exception as e:
         print(e)
         sys.exit(1)

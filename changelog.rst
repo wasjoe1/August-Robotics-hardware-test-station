@@ -5,7 +5,20 @@ The format is based on `Keep a Changelog <https://keepachangelog.com/en/1.0.0/>`
 
 格式基于 `如何更新维护日志 <https://keepachangelog.com/zh-CN/1.0.0/>`_
 
-[v3.8 - unreleased] - 2022-12-27
+[v3.9 - unreleased] - 2022-02-06
+------------------------------
+Added
+^^^^^
+
+  1. boothbot-reporter:
+    a. auto generate result after each goto_mark.
+
+
+Known Issue
+^^^^^^^^^^^
+
+
+[v3.8 - released] - 2023-01-18
 ------------------------------
 Added
 ^^^^^

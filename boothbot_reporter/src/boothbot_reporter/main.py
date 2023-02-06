@@ -9,8 +9,8 @@ import sys
 import os
 import getopt
 
-from fileIO import load_logs, write_csv
-from data_process import analyse_data, generate_result
+from boothbot_reporter.fileIO import load_logs, write_csv
+from boothbot_reporter.data_process import analyse_data, generate_result
 
 
 def help():
@@ -26,13 +26,14 @@ DEFAULT_LOGS_PATH = os.path.join(HOME_PATH, 'catkin_ws/local/roslogs/')
 
 def log_latest():
     data_lines = []
+    localpath = os.path.join(HOME_PATH, 'catkin_ws/local/report/')
     for chunk in load_logs.chunks(os.path.join(DEFAULT_LOGS_PATH, 'latest/')):
         data_lines = analyse_data.filter_DATA(chunk)
         
     entities = analyse_data.analyse_data(data_lines)
     results, lionel_name = generate_result.generate_result(entities)
     write_csv.write_to_csv(results, lionel_name, localpath)
-    print("Report has been put into " + localpath)
+    return "The marking report has been put into " + localpath
    
 def log_every():
     data_lines = []
@@ -68,6 +69,5 @@ if __name__ == "__main__":
         print(error, "\n")
         help()
         sys.exit(1)
-
 
     log_every()

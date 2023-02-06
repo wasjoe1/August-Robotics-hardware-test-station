@@ -8,7 +8,7 @@ __author__ = "Jiancheng Zhang"
 import re
 import datetime
 from boothbot_common.datacode import DataCode
-from data_process.entity_data import Entity
+from boothbot_reporter.data_process.entity_data import Entity
 
 data_lines = []
 

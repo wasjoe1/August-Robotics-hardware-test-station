@@ -7,6 +7,7 @@ __author__ = "Jiancheng Zhang"
 
 import datetime
 import os
+import sys
 import csv
 
 def write_to_csv(results, lionel_name, target_path):
@@ -17,6 +18,12 @@ def write_to_csv(results, lionel_name, target_path):
     if not os.path.exists(target_path):
         os.makedirs(target_path)
         
-    with open(filename, "w", newline='') as file:
-        writer = csv.writer(file)
-        writer.writerows(results)
+    if sys.version_info[0] == 3:
+        with open(filename, "w", newline='') as file:
+            writer = csv.writer(file)
+            writer.writerows(results)
+    elif sys.version_info[0] == 2:
+        with open(filename, "w") as file:
+            writer = csv.writer(file)
+            writer.writerows(results)
+            
