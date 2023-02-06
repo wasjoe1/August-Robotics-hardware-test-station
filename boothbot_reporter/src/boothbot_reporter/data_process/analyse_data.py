@@ -37,6 +37,7 @@ def filter_ERROR(DATA_lines):
 
 
 def analyse_data(DATA_lines):
+    global data_lines
     all_error_lines, no_error_lines = filter_ERROR(DATA_lines)
 
     # we will return a set of entities
@@ -145,4 +146,5 @@ def analyse_data(DATA_lines):
             submap_entities.append(submap_entity)
             submap_entity = dict.fromkeys(submap_entity, None)
 
+    data_lines = []
     return entities
