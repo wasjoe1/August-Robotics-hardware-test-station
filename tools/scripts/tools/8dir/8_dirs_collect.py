@@ -25,22 +25,25 @@ COLOR = "BOG"
 
 NUM_RBS = 4
 
+NUM_DIRS = 8
+
 class Collect8Dir(ROSLogging):
     def __init__(self, name):
         super(Collect8Dir, self).__init__(name)
         self.state = INIT
         self.m_raw_data = {}
         self.rb_pose = {}
-        self.cali_done = 0
         self.current_radians = []
         self.current_servos_states = []
         self.next_m = None
         self.current_m = None
         self.current_c = None
         self.next_c = None
-        self.next_c = None
         self.num_rbs = NUM_RBS
         self.cali_count = 0
+        self.reset_flag = False
+        self.one_dir_done = False
+        self.current_dir = 0
 
         # ros
         rospy.Subscriber("~cmd", String, self.cmd_cb)
@@ -58,9 +61,13 @@ class Collect8Dir(ROSLogging):
                 return
             self.next_m = m_id
             self.loginfo("set next_m as {}".format(self.next_m))
-        elif cmd.startswith("s"):
-            self.next_c = 0
-            self.loginfo("run now...")
+        # elif cmd.startswith("s"):
+        #     self.next_c = 0
+        #     self.loginfo("run now...")
+        elif cmd.startswith("reset"):
+            self.reset_flag = True
+
+        
 
     def init(self):
         self.loginfo("init.....")
@@ -77,9 +84,11 @@ class Collect8Dir(ROSLogging):
             self.disable_state = False
             self.loginfo("all measurements done... waiting to start calibration..")
             self.calc_poses()
+            self.next_c = 0
             return True
 
         if not self.gsmc.is_done():
+            self.logdebug_throttle(5, "current m_data {}".format(self.m_raw_data))
             return
 
         [hor, ver] = self.current_radians
@@ -187,6 +196,13 @@ class Collect8Dir(ROSLogging):
 
         if self.next_c == 4:
             self.loginfo("do all calibration done...")
+            self.current_dir += 1
+            if self.current_dir == 8:
+                self.loginfo("{} dirs cali done.. script exit..".format(self.current_dir))
+                exit(0)
+                # self.one_dir_done = False
+            else:
+                self.one_dir_done = True
             return True
 
         return False
@@ -197,7 +213,35 @@ class Collect8Dir(ROSLogging):
             return (i, 0)
         return (i, i+1)
 
+    def reset_handle(self):
+        if self.one_dir_done:
+            self.loginfo("one dir cali done..reset....")
+            self.reset()
+            self.one_dir_done = False
+            return
+        if self.reset_flag:
+            self.reset()
+            self.reset_flag = False
+        
+    def reset(self):
+        self.gscc.reset()
+        self.gsmc.reset()
+        self.state = INIT
+        self.m_raw_data = {}
+        self.rb_pose = {}
+        self.current_radians = []
+        self.current_servos_states = []
+        self.next_m = None
+        self.current_m = None
+        self.current_c = None
+        self.next_c = None
+        self.next_c = None
+        self.num_rbs = NUM_RBS
+        self.cali_count = 0
+        self.one_dir_done = False
+
     def run(self):
+        self.reset_handle()
         if self.state == INIT:
             if self.init():
                 self.state = COLLECT
