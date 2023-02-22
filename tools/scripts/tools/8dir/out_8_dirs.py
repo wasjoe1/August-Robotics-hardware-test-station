@@ -8,6 +8,7 @@ import csv
 import numpy as np
 import math
 from encoder_compensate import EncoderCompensate
+import time
 
 MINAS_SERVO_RESOLUTION = 8388607
 
@@ -19,6 +20,9 @@ def polar2pose(dis, yaw, pitch):
 
 rb1 = (-15.54288662, -1.659951443)
 rb2 = (2.445430569, -48.48078833)
+
+def in_range(n, start, end = 0):
+  return start <= n <= end if end >= start else end <= n <= start
 
 class get_file():
     def __init__(self, file_type=None, hostname=None):
@@ -173,8 +177,6 @@ class OutputCSV():
         self.test_time =test_time
         self.save()
 
-
-
     def save(self, ):
         pass
     
@@ -210,29 +212,282 @@ class OutputCSV():
                 spamwriter.writerow(data)
                 # csv_data.append(data)
             # spamwriter.writerow(csv_data)
+
+class Get8results():
+    def __init__(self, data, compen=None):
+        self.data = data
+        self.comp = compen+".yaml"
+        self._encoder_compensate = EncoderCompensate("test", MINAS_SERVO_RESOLUTION-1, self.comp)
+        self.raw_data = []
+        self.cvs_res = []
+
+    def get_result(self, comp=True):
+        
+        results = []
+
+        for k,v in self.data.items():
+            if k == "cali_id_13":
+                continue
+            m1 = []
+            m2 = []
+            rad_ver1 = []
+            rad_ver2 = []
+
+            rad_hor1 = []
+            rad_hor2 = []
+
+            encoding1 = []
+            encoding2 = []
+            for k1,v1 in v.items():
+                i = 0
+                i2 = 0
+                if k1.startswith("r"):
+                    # get laser
+                    for k2,v2 in v1.items():
+                        # print(k2, v2)
+                        if i < 3:
+                            # print(i)
+                            m1.append(float(v2[0]))
+                            rad_ver1.append(float(v2[2]))
+                        else:
+                            # if v2[0] != str(47.9959):
+                            m2.append(float(v2[0]))
+                            rad_ver2.append(float(v2[2]))
+                        i += 1
+                if k1.startswith("e"):
+                    for k2, v2 in v1.items():
+                        if i2 < 3:
+                            d = int(v2[2])
+                            if comp:
+                                d +=  self._encoder_compensate.enc_compensate(int(v2[2]), "show_compen")
+                            # print(d)
+                            encoding1.append(d)
+                            rad_hor1.append((2*math.pi*d)/(1<<23))
+                            
+                        else:
+                            d = int(v2[2])
+                            if comp:
+                                d +=  self._encoder_compensate.enc_compensate(int(v2[2]), "show_compen")
+                            encoding2.append(d)
+                            rad_hor2.append((2*math.pi*d)/(1<<23))
+                                    
+                        i2 += 1
+            
+            rb1_list = []
+            rb2_list = []
+            raw_data1=[]
+            raw_data2=[]
+            for i in range(3):
+                r1 = rad_hor1[i]
+                r2 = rad_hor2[i]
+                if rad_hor1[i] > math.pi:
+                    r1 = rad_hor1[i] - 2*math.pi
+                # print("r1",rad_hor1[i],r1)
+                if rad_hor2[i]> math.pi:
+                    r2 = rad_hor2[i] - 2*math.pi
+                # print("r2",rad_hor2[i],r2)
+                rb1_list.append((m1[i],r1,rad_ver1[i]))
+                raw_data1.append((m1[i],encoding1[i],r1,rad_ver1[i]))
+            # for i in range(3,6):
+                rb2_list.append((m2[i],r2,rad_ver2[i]))
+                raw_data2.append((m2[i],encoding2[i],r2,rad_ver2[i]))
+
+                # for i2 in range()
+            # print(rb1_list)
+            # print(rb2_list)
+            # print(math.sqrt(rb2_list[0][0]*rb2_list[0][0] + rb1_list[0][0]*rb1_list[0][0]
+            #                 - 2*rb2_list[0][0]*rb1_list[0][0]*math.cos(rb2_list[0][1]-rb1_list[0][1])))
+            rb1_measurement = np.array(rb1_list)
+            rb2_measurement = np.array(rb2_list)
+
+            raw_data1 = np.array(raw_data1)
+            raw_data2 = np.array(raw_data2)
+            
+            rb1_measurement_avg = (rb1_measurement[:, 0].mean() + 0.05, rb1_measurement[:, 1].mean(), rb1_measurement[:, 2].mean())
+            rb2_measurement_avg = (rb2_measurement[:, 0].mean() + 0.05, rb2_measurement[:, 1].mean(), rb2_measurement[:, 2].mean())
+            raw_data1_avg = (raw_data1[:,0].mean()+0.05, raw_data1[:,1].mean(), raw_data1[:,2].mean(), raw_data1[:,3].mean())
+            raw_data2_avg = (raw_data2[:,0].mean()+0.05, raw_data2[:,1].mean(), raw_data2[:,2].mean(), raw_data2[:,3].mean())
+            # print(rb1_measurement_avg, rb2_measurement_avg)
+            # print(raw_data1_avg,raw_data2_avg)
+            distance_of_rb = np.linalg.norm(np.array(rb2) - np.array(rb1))
+            distance_of_rb_m = np.linalg.norm(np.array(polar2pose(*rb2_measurement_avg) - np.array(polar2pose(*rb1_measurement_avg))))
+            distance_err = distance_of_rb_m - distance_of_rb
+            print(k,distance_of_rb, distance_of_rb_m, rb2_measurement[:, 1].mean(), distance_err)
+            self.cvs_res.append((rb2_measurement[:, 1].mean(), distance_err))
+
+
+            results.append(distance_err)
+            self.raw_data.append((raw_data1_avg,raw_data2_avg,distance_err, distance_of_rb_m))
+
+        # save 
+        # with open("test.csv", 'w', newline='') as csvfile:
+        #     spamwriter = csv.writer(csvfile)            
+        #     spamwriter.writerow(["radian"])
+        #     for d in self.cvs_res:
+        #         spamwriter.writerow([d[0],d[1]])
+
+        print(max(results)-min(results))
+
+
+class EncoderComp():
+    def __init__(self,data):
+        self.data = data
+        self.dis_err_mean = None
+        self.dis_rbs = None
+        self.calc_mean_err()
+        self.real_dis()
+        self.compen_data = []
+        self.merge_data = []
+        self.yaml_data = []
+        self.all_first_data = []
+        # self.merge_data
+
+    def real_dis(self):
+        self.dis_rbs = np.linalg.norm(np.array(rb2) - np.array(rb1)) + self.dis_err_mean
+
+    def calc_mean_err(self):
+        data = np.array(self.data)
+        self.dis_err_mean = data[:,2].mean()
+        print("mean error is {}".format(self.dis_err_mean))
+
+    def calc_comp(self):
+        for d in self.data:
+            offset = d[3] - self.dis_rbs
+            a = d[0][0]
+            b = d[1][0]
+            c = d[3]
+            std_c = self.dis_rbs
+            radian_c = math.acos((a*a+b*b-c*c)/(2*a*b))
+            std_radian_c = math.acos((a*a+b*b-std_c*std_c)/(2*a*b))
+            radian_offset = radian_c - std_radian_c
+            encoding_offset = (1<<23)*radian_offset/(2*math.pi)
+            # print("{} to {} has radian_offset {}, encoding offset {}".format(d[0][1], d[1][1], radian_offset, encoding_offset))
+            self.compen_data.append((int(d[0][1]), int(d[1][1]), encoding_offset))
+        
+        print(self.compen_data)
+            # c*c = a*a + b*b - 2*a*b*cos(C)
+            # C = acos((a*a+b*b-c*c)/2*a*b)
+            # std_radian = math.acos((a*a+b*b-c*c)/2*a*b))
+
+    def handle_res(self):
+        last_rad = 9999999999
+        for v in self.compen_data:
+            print(v[0])
+            if not math.isclose(last_rad, v[0], abs_tol=2e2):
+                # self.new_res[k] = []
+                self.merge_data.append(v)
+                last_rad = v[0]
+            # else:
+            #     self.new_res[last_rad].append(v)
+        # print(self.new_res)
+        print(self.merge_data)
+
+
+    def out_compen(self):
+        target = [0]
+        offset = [0]
+        real = [0]
+        self.yaml_data = [target, offset, real]
+        # find min in data
+        # all_data = []
+        for d in self.merge_data:
+            # all_data.append(d[0])
+            self.all_first_data.append(d[1])
+        print(self.all_first_data)
+        self.all_first_data.sort()
+
+        real.append(self.all_first_data[0])
+        offset.append(0)
+        target.append(self.all_first_data[0])
+        ind, ind_ = self.find_index(self.all_first_data[0])
+        if ind_ == 1:
+            ind_ = 0
+        else:
+            ind_ = 1
+        real.append(self.merge_data[ind][ind_])
+        offset.append(int(self.merge_data[ind][2]))
+        # TODO
+        target.append(self.merge_data[ind][ind_] + self.merge_data[ind][2])
+
+        del target[0]
+        del offset[0]
+        del real[0]
+
+        print(self.all_first_data)
+
+        # for d in self.all_first_data:
+        #     if self.has_in_yaml(d):
+        #         continue
+        #     ind, ind_ = self.find_index(d)
+        self.tmp()
+
+        print(self.yaml_data)
+
+    def tmp(self):
+        # while len(self.yaml_data[0]) == 16:
+        for d in self.all_first_data:
+            if self.has_in_yaml(d):
+                continue
+            self.find_in_yaml(d)
             
 
-                    # data.append(float(self.dict["cali_id_"+str(test_id)]["radian_laser"]["laser_radian_"+str(measure_id)][0]))
-            # for k, v in self.dict.items():
-            #     print(k,v)
-            #     data = []
-            #     for k1, v1 in v.items():
-            #         print(v1)
-            #         for k2,v2 in v1.items():
-            #             print()
-                    # data.append()
-                # data.append
-                # exit(0)
-                # data.append(k)
-                # for d in range(10):
-                #     # if v[d] is not None:
-                #     try:
-                #         data.append(v[d])
-                #     except IndexError:
-                #         data.append("")
-                # data.append("=AVERAGE(B"+str(i)+":K"+str(i)+")")
-                # i += 1
-                # spamwriter.writerow(data)        
+
+    def find_index(self, data):
+        print("find data {}".format(data))
+        for ind, val in enumerate(self.merge_data):
+            for i in range(2):
+                if data == val[i]:
+                    return ind, i
+        return None
+
+    def find_in_yaml(self, data):
+        #now, the yaml data length
+        l = len(self.yaml_data[0])
+        for i in range(l-1):
+            print(data)
+            if in_range(data, self.yaml_data[2][i], self.yaml_data[2][i+1]):
+                print("data {} in range {} and {}".format(data, self.yaml_data[2][i], self.yaml_data[2][i+1]))
+
+
+    
+    def has_in_yaml(self, data):
+        print("find data {} in merge_data".format(data))
+        for d in self.yaml_data[2]:
+            if d == data:
+                return True
+
+        # for d in data2:
+        #     if d == data:
+        #         return True
+        
+        return False
+        # for ind, val in enumerate(self.merge_data):
+        #     for i in range(2):
+        #         if data == val[i]:
+        #             return True
+        return False
+
+        # at last, handle the  first data 0
+
+    # def handle_data(self):
+    #     # last_data = None
+    #     for val in self.compen_data:
+    #         if len(self.merge_data) is 0:
+    #             self.merge_data.append(val)
+    #             # last_data = 
+    #             continue
+    #         for ind, val2 in enumerate(self.merge_data):
+    #             if math.isclose(val[0], val2[0],abs_tol=200) and math.isclose(val[1], val2[1],abs_tol=200):
+    #                 print(math.isclose(val[0], val2[0],abs_tol=200))
+    #                 print(math.isclose(val[1], val2[1],abs_tol=200))
+    #                 print("close data {} and {}".format(val, val2))
+    #                 self.merge_data[ind] = ((val[0]+self.merge_data[ind][0])/2,
+    #                                         (val[1]+self.merge_data[ind][0])/2,
+    #                                         (val[2]+self.merge_data[ind][0])/2)
+    #             else:
+    #                 self.merge_data.append(val2)
+    #     print(self.merge_data)
+
 
 if __name__ == "__main__":
     gf = get_file()
@@ -240,126 +495,13 @@ if __name__ == "__main__":
     print("time: {}".format(gf.time))
     hd = HandleData(gf.raw_log_data)
     hd.get_res()
-    results = []
-    compen_file = "encoder_alignment_20-Feb-23_11-12-21"+".yaml"
-    _encoder_compensate = EncoderCompensate("test", MINAS_SERVO_RESOLUTION-1, compen_file)
 
-    for k,v in hd.res_data.items():
-        if k == "cali_id_13":
-            continue
-        # print(k, v)
-        # print(k)
-        m1 = []
-        m2 = []
+    g8r = Get8results(hd.res_data, "GSP4_0077_21-Feb-23_07-21-26")
+    g8r.get_result(True)
+    print(g8r.raw_data)
 
-        rad_ver1 = []
-        rad_ver2 = []
-
-        rad_hor1 = []
-        rad_hor2 = []
-
-        encoding1 = []
-        encoding2 = []
-            # radian_laser or encodings:
-        for k1,v1 in v.items():
-            # print(k1,v1)
-            i = 0
-            i2 = 0
-            if k1.startswith("r"):
-                # get laser
-                for k2,v2 in v1.items():
-                    # print(k2, v2)
-                    if i < 3:
-                        # print(i)
-                        m1.append(float(v2[0]))
-                        rad_ver1.append(float(v2[2]))
-                    else:
-                        if v2[0] != str(47.9959):
-                            m2.append(float(v2[0]))
-                            rad_ver2.append(float(v2[2]))
-                    i += 1
-            # print("eeeeeeeeee",k1)
-            if k1.startswith("e"):
-                for k2,v2 in v1.items():
-                    if i2 < 3:
-                        d = int(v2[2])
-                        d +=  _encoder_compensate.enc_compensate(int(v2[2]), "show_compen") 
-                        print(d)
-                        encoding1.append(d)
-                        # print()
-                        # rad_hor1.append((1<<23)/(2*math.pi*d))
-                        rad_hor1.append((2*math.pi*d)/(1<<23))
-                        
-                    else:
-                        d = int(v2[2])
-                        d +=  _encoder_compensate.enc_compensate(int(v2[2]), "show_compen") 
-                        print(d)
-                        # print(d)
-                        encoding2.append(d)
-                        # print(v2[2])
-                        # print((1<<23)/(2*math.pi*d))
-                        rad_hor2.append((2*math.pi*d)/(1<<23))
-                        # rad_hor2.append((1<<23)/(2*math.pi*int(v2[2])))
-                                
-                    i2 += 1
-        # print(encoding1)
-        # print(encoding2)
-        
-        rb1_list = []
-        rb2_list = []
-        # print(m1, encoding1, rad_hor1)
-        # print(m2, encoding2, rad_hor2)
-        # print(1<<23)
-        for i in range(3):
-            r1 = rad_hor1[i]
-            r2 = rad_hor2[i]
-            if rad_hor1[i] > math.pi:
-                r1 = rad_hor1[i] - 2*math.pi
-            # print("r1",rad_hor1[i],r1)
-            if rad_hor2[i]> math.pi:
-                r2 = rad_hor2[i] - 2*math.pi
-            # print("r2",rad_hor2[i],r2)
-            rb1_list.append((m1[i],r1,rad_ver1[i]))
-        # for i in range(3,6):
-            rb2_list.append((m2[i],r2,rad_ver2[i]))
-            # for i2 in range()
-        # print(rb1_list)
-        # print(rb2_list)
-        # print(math.sqrt(rb2_list[0][0]*rb2_list[0][0] + rb1_list[0][0]*rb1_list[0][0]
-        #                 - 2*rb2_list[0][0]*rb1_list[0][0]*math.cos(rb2_list[0][1]-rb1_list[0][1])))
-        rb1_measurement = np.array(rb1_list)
-        rb2_measurement = np.array(rb2_list)
-        rb1_measurement_avg = (rb1_measurement[:, 0].mean() + 0.05, rb1_measurement[:, 1].mean(), rb1_measurement[:, 2].mean())
-        rb2_measurement_avg = (rb2_measurement[:, 0].mean() + 0.05, rb2_measurement[:, 1].mean(), rb2_measurement[:, 2].mean())
-
-        # try:
-        #     calibrated_pose = do_calibration({
-        #         "coordinates": [
-        #             rb1,
-        #             rb2,
-        #         ],
-        #         "measurements": [
-        #             rb1_measurement_avg,
-        #             rb2_measurement_avg,
-        #         ],
-        #     }, tolerance=0.05)
-        # except Exception as e:
-        #     print("calibration error {}".format(e))
-
-        # Scoring the result
-        distance_of_rb = np.linalg.norm(np.array(rb2) - np.array(rb1))
-        distance_of_rb_m = np.linalg.norm(np.array(polar2pose(*rb2_measurement_avg) - np.array(polar2pose(*rb1_measurement_avg))))
-        distance_err = distance_of_rb_m - distance_of_rb
-        print(k,distance_of_rb, distance_of_rb_m,distance_err)
-        results.append(distance_err)
-        
-    print(max(results)-min(results))
-        # print(m1)
-        # print(m2)
-        # print(encoding1)
-        # print(encoding2)
-                    # print(v2)
-        # exit(0)
-    # print(hd.res_data)
-    # ocsv = OutputCSV(hd.res_data, gf.device, gf.time)
-    # ocsv.convert_cvs()
+    ec = EncoderComp(g8r.raw_data)
+    # ec.calc_mean_err()
+    ec.calc_comp()
+    ec.handle_res()
+    ec.out_compen()
