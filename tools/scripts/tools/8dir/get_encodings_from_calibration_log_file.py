@@ -181,12 +181,11 @@ class OutputCSV():
         pass
     
     def convert_cvs(self):
-        self.cvs = self.device + "_" + self.test_time + '.csv'
+        self.cvs = self.device.upper() + "_" + self.test_time + '.csv'
         with open(self.cvs, 'w', newline='') as csvfile:
         # spamwriter = csv.writer(csvfile, delimiter=' ',
         #                         quotechar='|', quoting=csv.QUOTE_MINIMAL)
             spamwriter = csv.writer(csvfile)            
-            spamwriter.writerow(["test_id"])
             # i = 2
             csv_data = []
             for test_id in range(0,1000):
