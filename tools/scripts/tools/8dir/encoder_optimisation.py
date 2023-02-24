@@ -340,6 +340,6 @@ if __name__ == "__main__":
         i += 1
 
         groundtruth_sides = cal_groundtruth_side(len_sides)
-        post_check(1412.5351, 18.8971, groundtruth_sides)
+        post_check(result.x[0], result.x[1], groundtruth_sides)
 
     print("Done!")
