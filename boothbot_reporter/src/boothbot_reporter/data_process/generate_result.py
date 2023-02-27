@@ -43,7 +43,7 @@ def generate_result(entities):
                 'total_localisation', 
                 'total_mark',
                 'total_navigation',
-                'total_number_of_pull_submap'
+                'total_number_of_pull_submap',
                 'Map_ID',
                 ]]
     
