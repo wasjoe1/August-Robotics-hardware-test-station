@@ -6,8 +6,10 @@
 
 __author__ = "Jiancheng Zhang"
 
+
 class Entity:
-    def __init__(self, lionel_name, gs_name, communication_method, gotomark_map_id, date, start_time, end_time, total_time):
+    def __init__(self, lionel_name, gs_name, communication_method, gotomark_map_id, date, start_time, end_time,
+                 total_time):
         self.lionel_name = lionel_name
         self.gs_name = gs_name
         self.communication_method = communication_method
