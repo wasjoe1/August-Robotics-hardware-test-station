@@ -61,7 +61,10 @@ def generate_result(entities):
         result.append(str(len(entity.mark_data) / (entity.total_time / 3600)))
         result.append(str(cal_avg(entity.nav_data, lambda x: x["end_time"] - x["start_time"]) +
                           cal_avg(entity.mark_data, lambda x: x["end_time"] - x["start_time"])))
-        result.append(str(entity.total_time / len(entity.mark_data)))
+        try:
+            result.append(str(entity.total_time / len(entity.mark_data)))
+        except ZeroDivisionError:
+            result.append("0")
 
         result.append(str(cal_avg(entity.nav_data, lambda x: x["end_time"] - x["start_time"])))
         result.append(str(cal_avg(entity.nav_data, lambda x: x["end_time"] - x["start_time"]) -
