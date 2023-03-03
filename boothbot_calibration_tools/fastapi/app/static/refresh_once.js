@@ -28,4 +28,6 @@ var refresh_page_once_list = [
     "download_data",
     "data_need_save",
     "last_data_title",
+    "MARKING_ROI",
+    "CB_INCLINATION"
 ]

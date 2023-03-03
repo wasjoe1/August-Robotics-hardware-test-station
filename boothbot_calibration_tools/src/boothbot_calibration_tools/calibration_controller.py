@@ -18,6 +18,7 @@ from datetime import datetime
 
 from boothbot_calibration_tools.constants import CalibrationStates as MS
 from boothbot_calibration_tools.constants import CalibrationCommand as CS
+from boothbot_calibration_tools.constants import JobStatus as JS
 
 # from boothbot_common.settings import BOOTHBOT_GET_CONFIG
 from boothbot_config.device_settings import DEVICE_SETTINGS_FILE_PATH
@@ -44,11 +45,15 @@ from boothbot_msgs.ros_interfaces import (
     DRIVERS_CHASSIS_IMU,
 )
 
+from guiding_beacon_system_msgs.ros_interfaces import (
+    DRIVERS_INCLINOMETER_INCLINATION_FILTERED_RAD
+)
+
 from augustbot_msgs.srv import (
     CommandRequest,
 )
 
-import std_msgs.msg as stmsgs
+from std_msgs.msg import String, Int16
 
 from boothbot_calibration_tools.settings import (
     JOB_DATA,
@@ -62,6 +67,12 @@ from boothbot_calibration_tools.settings import (
     LONG,
     COLOR,
     CAMERA_FILTER_COUNT
+)
+
+from boothbot_calibration_tools.constants import(
+    CB_INCLI_CMD,
+    CB_INCLI_STATE,
+    CB_INCLI_RES
 )
 
 from boothbot_calibration_tools.utils import (
@@ -97,14 +108,19 @@ class CalibrationController(ModuleBase):
                 MS.ERROR: [],
             }
         )
-        self.puber_data = APPS_CALIBRATION_DATA.Publisher()
         self.max_encoding = max_encoding
 
+        # ROS
+        self.puber_data = APPS_CALIBRATION_DATA.Publisher()
         DRIVERS_SERVOS_PDO.Subscriber(self.servo_pdo_cb)
         DRIVERS_CHASSIS_IMU.Subscriber(self.imu_cb)
-        rospy.Subscriber('/inclinometer', stmsgs.Float64MultiArray, self._iucli_cb)
-        self.incli_data = None
+        DRIVERS_INCLINOMETER_INCLINATION_FILTERED_RAD.Subscriber(self._iucli_cb)
+        self.cb_incli_pub = rospy.Publisher(CB_INCLI_CMD, String, queue_size=10)
+        rospy.Subscriber(CB_INCLI_STATE, Int16, self.cb_cb_incli_state)
+        rospy.Subscriber(CB_INCLI_RES, String, self.cb_cb_incli_res)
+        self.cb_incli_state = None
 
+        # JOB
         self._data = {}
         self._data["data"] = {}
         self._job_data = {}
@@ -139,7 +155,7 @@ class CalibrationController(ModuleBase):
         # cameras
         self.cameras = {LONG: None, SHORT: None}
         self.cameras_frame = {LONG: None, SHORT: None}
-        self.client_status = {"servos": None, "cameras": None}
+        self.client_status = {"servos": None, "cameras": None, "job_status": JS.INIT.name}
         self.servos_save_encoder = []
         self.current_rad = (0.0, 0.0)
         self._tolerance = get_tolerance()
@@ -150,6 +166,11 @@ class CalibrationController(ModuleBase):
         self.vertical_encoder = []
         self.horizontal_offset = []
         self._job_vertical_iter = 0
+
+        # CB and inclination
+        self.incli_data = None
+        self.cb_row = None
+        self.cb_pitch = None
         self.imu_data = {
             "imu_x": None,
             "imu_y": None,
@@ -204,6 +225,7 @@ class CalibrationController(ModuleBase):
         self.laser.reset()
         self.clear_data()
         self.to_IDLE()
+        self.cb_incli_pub.publish(String("reset"))
         return True
 
     def clear_data(self):
@@ -216,6 +238,12 @@ class CalibrationController(ModuleBase):
         self._job_vertical_iter = 0
         self.camera_filter_count = 0
         self.test_track = False
+        self.cb_incli_state = None
+        self.set_job_status(JS.INIT.name)
+
+
+    def set_job_status(self, status):
+        self.client_status["job_status"] = status
 
     def on_IDLE(self):
         self.update_client_status()
@@ -247,6 +275,9 @@ class CalibrationController(ModuleBase):
         elif self._job == CS.MARKING_ROI:
             if not self.is_gs:
                 self._do_marking_camera_roi()
+        elif self._job == CS.CB_INCLINATION:
+            if not self.is_gs:
+                self._do_cb_inclination()
 
     def initialize(self):
         self.loginfo("initializing ....")
@@ -513,6 +544,7 @@ class CalibrationController(ModuleBase):
         if self.sub_state == 0:
             if self.init_cameras(40, 5):
                 self._sub_state = 1
+                self.set_job_status(JS.RUNNING.name)
         elif self.sub_state == 1:
             if not self.cameras_idle():
                 return
@@ -566,6 +598,7 @@ class CalibrationController(ModuleBase):
                 return
             self.laser.laser_on()
             self.sub_state = 2
+            self.set_job_status(JS.RUNNING.name)
         elif self.sub_state == 2:
             if self.servos.done:
                 long_res, long_offset = self.track_beacon(LONG, 1)
@@ -628,6 +661,7 @@ class CalibrationController(ModuleBase):
         if self.sub_state == 0:
             if self.init_cameras(49, 5):
                 self._sub_state = 1
+                self.set_job_status(JS.RUNNING.name)
         elif self.sub_state == 1:
             if not self.cameras_idle():
                 return
@@ -709,6 +743,7 @@ class CalibrationController(ModuleBase):
                 return
             self.laser.laser_on()
             self.sub_state = 2
+            self.set_job_status(JS.RUNNING.name)
         elif self.sub_state == 2:
             if self.servos.done:
                 long_res, long_offset = self.track_beacon(camera_filter_time=CAMERA_FILTER_COUNT)
@@ -787,6 +822,7 @@ class CalibrationController(ModuleBase):
             #     return
             self.laser.laser_on()
             self.sub_state = 2
+            self.set_job_status(JS.RUNNING.name)
         elif self.sub_state == 2:
             # for k, v in self.job_setting[CS.VERTICAL_SERVO_ZERO.name].items():
             if self.servos.done:
@@ -834,15 +870,52 @@ class CalibrationController(ModuleBase):
                 self.sub_state = 5
         elif self.sub_state == 5:
             self.loginfo_throttle(2, "{} job done.".format(self._job.name))
+            self.set_job_status(JS.DONE.name)
 
     def _do_imu_calibration(self):
         if self.sub_state == 0:
             self.sub_state = 1
+            self.set_job_status(JS.RUNNING.name)
         elif self.sub_state == 1:
             if self.incli_data is not None:
                 self._job_data["offset_x"] = self.incli_data.data[0]
                 self._job_data["offset_y"] = self.incli_data.data[1]
             self._job_data.update(self.imu_data)
+
+    def _do_cb_inclination(self):
+        if self.sub_state == 0:
+            if not self.run_flag:
+                return
+            self.sub_state = 1
+        elif self.sub_state == 1:
+            self.loginfo("start this job...")
+            data = String()
+            data.data = "start"
+            self.cb_incli_pub.publish(data)
+            self.sub_state = 2
+            self.set_job_status(JS.RUNNING.name)
+        elif self.sub_state == 2:
+            if self.cb_incli_state == 2:
+                self.sub_state = 3
+            elif self.cb_cb_incli_state == 99:
+                self.logerr_throttle(2, "cb incli error...")
+        elif self.sub_state == 3:
+            if self.cb_row is not None and self.cb_pitch is not None:
+                self._job_data["row"] = self.cb_row
+                self._job_data["pitch"] = self.cb_pitch
+                self.set_job_current_time()
+            self.loginfo_throttle(2,"cb inclination successed..")
+            self.set_job_status(JS.DONE.name)
+        
+    def cb_cb_incli_state(self,msg):
+        self.cb_incli_state = msg.data
+
+    def cb_cb_incli_res(self, msg):
+        data = msg.data
+        if data.startswith("inc_x"):
+            self.cb_row = float(data.split('_')[2])
+        if data.startswith("inc_y"):
+            self.cb_pitch = float(data.split('_')[2])
 
     def cali_imu(self, prarm):
         cmd = CommandRequest()
@@ -863,6 +936,7 @@ class CalibrationController(ModuleBase):
                 return
             self.laser.laser_on()
             self.sub_state = 2
+            self.set_job_status(JS.RUNNING.name)
         elif self.sub_state == 2:
             if self.servos.done:
                 long_res, long_offset = self.track_beacon(camera_filter_time=CAMERA_FILTER_COUNT)
@@ -886,6 +960,8 @@ class CalibrationController(ModuleBase):
                 self.sub_state = 4
         elif self.sub_state == 4:
             self.loginfo_throttle(2, "horizontal job done.")
+            self.set_job_status(JS.DONE.name)
+
 
     def _iucli_cb(self, msg):
         self.incli_data = msg
@@ -908,6 +984,7 @@ class CalibrationController(ModuleBase):
             if not self.run_flag:
                 return
             self.sub_state = 3
+            self.set_job_status(JS.RUNNING.name)
         elif self.sub_state == 3:
             self.loginfo("start to roi calibration")
             res = roi_calibration()
@@ -924,7 +1001,7 @@ class CalibrationController(ModuleBase):
             self.sub_state = 4
         elif self.sub_state == 4:
             self.loginfo_throttle(4, "roi  calibration done.")
-            pass
+            self.set_job_status(JS.DONE.name)
 
 if __name__ == "__main__":
     rospy.init_node("calibration_controller")

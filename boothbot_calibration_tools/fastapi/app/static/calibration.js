@@ -15,6 +15,7 @@ var VERTICAL_SERVO_ZERO = "VERTICAL_SERVO_ZERO"
 var IMU_CALIBRATION = "IMU_CALIBRATION"
 var HORIZONTAL_OFFSET = "HORIZONTAL_OFFSET"
 var MARKING_ROI = "MARKING_ROI"
+var CB_INCLINATION = "CB_INCLINATION"
 
 // var default_lang = 1
 var server_lang
@@ -104,8 +105,9 @@ data_socket.onmessage = function(evt) {
 
     // client status
     var ele_client_status = get_id("client_status")
-    ele_client_status.innerHTML = get_lang("servos") + ":" + ws_json["client_status"]["servos"] + ", " +
-        get_lang("cameras") + ":" + ws_json["client_status"]["cameras"] + "</br>"
+    ele_client_status.innerHTML = get_lang("servos") + ":" + ws_json["client_status"]["servos"] + " | " +
+        get_lang("cameras") + ":" + ws_json["client_status"]["cameras"] + " | " +
+        get_lang("job_status") + ":" + ws_json["client_status"]["job_status"] + "</br>"
 
     set_button()
 
@@ -186,7 +188,8 @@ function get_save_data(ws_json, first_key) {
             get_function_data(first_key, CAMERA_SHARPNESS) +
             get_function_data(first_key, HORIZONTAL_OFFSET) +
             get_function_data(first_key, IMU_CALIBRATION) + 
-            get_function_data(first_key, MARKING_ROI)
+            get_function_data(first_key, MARKING_ROI) +
+            get_function_data(first_key, CB_INCLINATION)
     }
     return data_content
 }
@@ -423,23 +426,23 @@ function updata_user_manual(data) {
 // }
 document.onkeydown=function(event){
     var e = event || window.event || arguments.callee.caller.arguments[0];
-    if(e && e.keyCode==76){ 
+    if(e && e==76){ 
         console.log("LASER_ON")
         command('LASER_ON')
       }
-    if(e && e.keyCode==78){ 
+    if(e && e==78){ 
         console.log("DISABLE")
         command('SERVOS_DISABLE')
        }            
-     if(e && e.keyCode==82){ 
+     if(e && e==82){ 
         console.log("ENABLE")
         command('SERVOS_ENABLE')
     }
-    if(e && e.keyCode==66){ 
+    if(e && e==66){ 
         console.log("USE_SHORT_CAMERA")
         command('USE_SHORT_CAMERA')
     }
-    if(e && e.keyCode==83){ 
+    if(e && e==83){ 
         console.log("USE_LONG_CAMERA")
         command('USE_LONG_CAMERA')
     }

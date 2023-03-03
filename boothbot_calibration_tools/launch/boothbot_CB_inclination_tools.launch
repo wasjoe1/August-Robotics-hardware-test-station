@@ -1,6 +1,6 @@
 <launch>
     <!-- inclinometer -->
-    <node pkg="boothbot_calibration_tools" type="inclinometer_driver_node.py" name="inclinometer_driver_node" output="log">
+    <node pkg="boothbot_calibration_tools" type="inclinometer_driver_node.py" name="inclinometer_driver_node" output="log"  respawn="true" respawn_delay="5">
     </node>
     <!-- caculate CB inclination  -->
     <node pkg="boothbot_calibration_tools" type="CB_inclinometer_driver.py" name="CB_inclinometer_driver" output="log">

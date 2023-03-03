@@ -15,7 +15,7 @@ import math
 import rospy
 import std_msgs.msg as stmsgs
 from  guiding_beacon_system_msgs.msg import ServosMoveActionGoal
-
+from std_msgs.msg import String, Int16
 
 from boothbot_common.ros_logger_wrap import ROSLogging as Logging
 from pymodbus.exceptions import ModbusIOException
@@ -35,7 +35,6 @@ from boothbot_calibration_tools.utils import (
 
 
 from guiding_beacon_system_msgs.ros_interfaces import (
-
     DRIVERS_INCLINOMETER_INCLINATION_FILTERED_RAD,
 )
 
@@ -45,6 +44,11 @@ from boothbot_calibration_tools.settings import(
     LASER_HEIGHT
 )
 
+from boothbot_calibration_tools.constants import(
+    CB_INCLI_CMD,
+    CB_INCLI_STATE,
+    CB_INCLI_RES
+)
 
 
 
@@ -63,6 +67,7 @@ if not os.path.exists(TEST_DATA_PATH):
 class InclinometerDriver(Logging):
     def __init__(self,
                  modbus_client=None,
+                 servo_cli=None,
                 n_times_per_2pi=DEFAULT_TIMES_PER_2PI,
                 stablize_timeout=DEFAULT_STABLIZE_TIMEOUT,
                  name="c"):
@@ -75,18 +80,18 @@ class InclinometerDriver(Logging):
         self.N = n_times_per_2pi
         self.stablize_timeout = stablize_timeout
         self.gs_yaw_array = generate_yaw_array(self.N)
-
+        rospy.Subscriber(CB_INCLI_CMD, String, self.cb_cli)
+        self._puber_state = rospy.Publisher(CB_INCLI_STATE, Int16, queue_size=10)
+        self._puber_result = rospy.Publisher(CB_INCLI_RES, String, queue_size=10)
         self.measured_inclinations = [
 
         ]
 
-        #set inclinometer drivers
-        self.__mb = modbus_client
-        self.mb_client = self.__mb
-
-
-        # md = ModbusDriver()
-        # self.mb_client = md.client
+        self.start = None
+        self.state = 0
+        self.result = None
+        self.inc_x = None
+        self.inc_y = None
 
         self.x_data = 99.99
         self.y_data = 99.99
@@ -138,7 +143,19 @@ class InclinometerDriver(Logging):
             }
         )
 
-
+    def cb_cli(self, msg):
+        cmd = msg.data
+        if cmd.startswith("start"):
+            logger.loginfo("CB inclination start...")
+            self.start = True
+            self.state = 1
+        if cmd == "reset":
+            self.sub_state = 0
+            self.inc_x = None
+            self.inc_y = None
+            self.gs_yaw_array = generate_yaw_array(self.N)
+            self.start = False
+            self.measured_inclinations = []
 
     def get_inclination_params(self):
         gs_yaw_radians = []
@@ -164,6 +181,8 @@ class InclinometerDriver(Logging):
             sincurve(np.pi / 2, param_x[0], param_x[1], 0.0)
             + sincurve(0.0, param_y[0], param_y[1], 0.0)
         ) / 2
+        self.inc_x = "inc_x_"+str(inc_x)
+        self.inc_y = "inc_y_"+str(inc_y)
         return [inc_x, inc_y]
 
     def save_log(self):
@@ -217,6 +236,7 @@ class InclinometerDriver(Logging):
                     self.servos_cli.get_arrived_radians(),
                     self.msg_inclinometer_filtered_rad.data,
                 )
+        return None
 
 
     def _inclination_cb(self, msg):
@@ -248,6 +268,11 @@ class InclinometerDriver(Logging):
         self.offset_pub.publish(self.offset)
 
 
+    def pub_res(self):
+        if self.inc_x is not None and self.inc_y is not None:
+            self._puber_result.publish(self.inc_x)
+            rospy.sleep(0.1)
+            self._puber_result.publish(self.inc_y)
 
 
 
@@ -261,13 +286,24 @@ if __name__ == "__main__":
     inc.servos_cli.connect()
     inc.sub_state = 0
     while True:
-        ret = inc.set_cb_radians()
-        if rospy.is_shutdown():
-            logger.logfatal("Is shutting down....")
-            break
-        if ret is False:
-            logger.logfatal("Running failed, will exit...")
-            break
-        elif ret is True:
-            logger.loginfo("All pose inclination got, now finishing...")
-            break
+        rospy.sleep(0.1)
+        if inc.start is True:
+            ret = inc.set_cb_radians()
+            if rospy.is_shutdown():
+                logger.logfatal("Is shutting down....")
+                break
+            if ret is None:
+                logger.loginfo("not done...")
+            elif ret is False:
+                logger.logfatal("Running failed, will exit...")
+                inc.start = False
+                inc.state = 99
+                # break
+            elif ret is True:
+                logger.loginfo("All pose inclination got, now finishing...")
+                inc.start = False
+                inc.state = 2
+                # break
+        inc._puber_state.publish(inc.state)
+        # inc._puber_state.publish(inc.)
+        inc.pub_res()
