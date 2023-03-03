@@ -61,6 +61,19 @@ LAST_SAVE_TILE = [CS.INITIALIZE_SERVO.name,
                 CS.CB_INCLINATION.name,
                 ]
 
+JOB_DONE_STATUS = {
+    CS.INITIALIZE_SERVO : 90,
+    CS.CAMERA_SHARPNESS : 91,
+    CS.CAMERAS_ALIGNMENT : 92,
+    CS.CAMERA_LASER_ALIGNMENT : 93,
+    CS.CAMERAS_ANGLE : 6,
+    CS.VERTICAL_SERVO_ZERO : 5,
+    CS.IMU_CALIBRATION : 94,
+    CS.HORIZONTAL_OFFSET : 4,
+    CS.MARKING_ROI : 4,
+    CS.CB_INCLINATION : 3
+}
+
 # SETUP="SETUP"
 CALI_ARG = "CALIBRATE"
 SAVE_ARG = "SAVE"
@@ -70,13 +83,6 @@ COLOR = "CALI"
 CAMERA_FILTER_COUNT = 3
 
 IMU_SERVICE = "/drivers/chassis/srv_cmd"
-
-# CMD="roslaunch ../launch/base_production.launch"
-# RECORD="rostopic echo -c /drivers/chassis/imu"
-# SETUPCMD="rosservice call /drivers/chassis/srv_cmd '{command: "IMU", parameter: ${SETUP}}'"
-# CALICMD="rosservice call /drivers/chassis/srv_cmd '{command: "IMU", parameter: ${CALI_ARG}}'"
-# SAVECMD="rosservice call /drivers/chassis/srv_cmd '{command: "IMU", parameter: ${SAVE_ARG}}'"
-
 
 TRANS_BEACON = [0, 0, 0] # [0, 0, 0]
 TRANS_BEACON_RCENTER  = [0, 0, 0]# [0, 0, 0]
