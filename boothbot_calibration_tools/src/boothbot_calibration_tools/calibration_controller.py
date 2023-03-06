@@ -550,7 +550,7 @@ class CalibrationController(ModuleBase):
         camera_type = self.job_setting[CS.CAMERA_SHARPNESS.name]['camera']
         if self.sub_state == 0:
             if self.init_cameras(40, 5):
-                self._sub_state = 1
+                self.sub_state = 1
         elif self.sub_state == 1:
             if not self.cameras_idle():
                 return
@@ -595,7 +595,7 @@ class CalibrationController(ModuleBase):
         # TODO, support lnp6
         if self.sub_state == 0:
             self.init_cameras(5, 5)
-            self._sub_state = 1
+            self.sub_state = 1
         elif self.sub_state == 1:
             if not self.cameras_idle():
                 return
@@ -665,7 +665,7 @@ class CalibrationController(ModuleBase):
     def _do_camera_laser_alignment(self):
         if self.sub_state == 0:
             if self.init_cameras(49, 5):
-                self._sub_state = 1
+                self.sub_state = 1
         elif self.sub_state == 1:
             if not self.cameras_idle():
                 return
@@ -738,7 +738,7 @@ class CalibrationController(ModuleBase):
         # TODO, support lnp6
         if self.sub_state == 0:
             if self.init_cameras(4, 4):
-                self._sub_state = 1
+                self.sub_state = 1
         elif self.sub_state == 1:
             if not self.cameras_idle():
                 return
@@ -796,7 +796,7 @@ class CalibrationController(ModuleBase):
                 self.save_angle(self._job_data["cameras_angle"])
                 self.sub_state = 5
         elif self.sub_state == 5:
-            self._sub_state = 6
+            self.sub_state = 6
         elif self.sub_state == 6:
             if not self.cameras_idle():
                 return
@@ -814,7 +814,7 @@ class CalibrationController(ModuleBase):
     def _do_vertical_offset(self):
         if self.sub_state == 0:
             if self.init_cameras(7, 7):
-                self._sub_state = 1
+                self.sub_state = 1
         elif self.sub_state == 1:
             if not self.cameras_idle():
                 return
@@ -925,7 +925,7 @@ class CalibrationController(ModuleBase):
     def _do_horizontal_offset(self):
         if self.sub_state == 0:
             if self.init_cameras(4, 4):
-                self._sub_state = 1
+                self.sub_state = 1
         elif self.sub_state == 1:
             if not self.cameras_idle():
                 return
@@ -967,7 +967,7 @@ class CalibrationController(ModuleBase):
             if not self.painter.connect():
                 return
             # camera init
-            self._sub_state = 1
+            self.sub_state = 1
         elif self.sub_state == 1:
             # waiting painter home
             if not self.painter.is_done():
