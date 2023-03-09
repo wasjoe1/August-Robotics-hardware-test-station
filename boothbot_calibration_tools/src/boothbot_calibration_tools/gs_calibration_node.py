@@ -5,6 +5,8 @@ import os
 import time
 
 from boothbot_calibration_tools.drivers.laser_driver_py3 import LaserRangeFinderGenerator
+# from boothbot_driver.lrf_drivers import LDMS60Driver
+from boothbot_calibration_tools.drivers.ldms_60_py3 import LDMS60Driver
 from boothbot_calibration_tools.calibration_controller import CalibrationController
 # TOLERANCE = (1e-5, 5e-5)
 from boothbot_calibration_tools.utils import (
@@ -17,7 +19,10 @@ MINAS_SERVO_RESOLUTION = 1 << 23
 class GSCalibration(CalibrationController):
     def __init__(self, name, rate, states=None, transitions=None, commands=None, status_inf=None, 
                 srv_cmd_inf=None, need_robot_status=False, error_codes=None, laser=None):
-        laser = LaserRangeFinderGenerator.detect_laser_range_finder()
+        if os.path.exists("/dev/ldms_60"):
+            laser = LDMS60Driver()
+        else:
+            laser = LaserRangeFinderGenerator.detect_laser_range_finder()
         # tolerance = TOLERANCE
         painter = None
         use_short_camera = have_short_camera()
