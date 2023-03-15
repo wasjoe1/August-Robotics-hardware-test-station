@@ -691,7 +691,7 @@ class CalibrationController(ModuleBase):
             return self.get_camera_result(SHORT, dis, compensation, angle)
         else:
             long_anle = self.get_camera_result(LONG, dis, compensation, angle)
-            if long_anle is None:
+            if long_anle is None and self.have_short_camera:
                 return self.get_camera_result(SHORT, dis, compensation, angle)
             else:
                 return long_anle
