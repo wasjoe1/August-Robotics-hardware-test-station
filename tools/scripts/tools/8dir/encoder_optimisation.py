@@ -53,7 +53,7 @@ def output_yaml(result, gs_name):
 
     encoder_offseted = []
     offsets = []
-    encoder_raw = np.arange(0, HOR_ENCODER_TOTAL, int(HOR_ENCODER_TOTAL / 100))
+    encoder_raw = np.arange(0, HOR_ENCODER_TOTAL, int(HOR_ENCODER_TOTAL / 100))[0:100]
 
     for e in encoder_raw:
         encoder = int(e)
