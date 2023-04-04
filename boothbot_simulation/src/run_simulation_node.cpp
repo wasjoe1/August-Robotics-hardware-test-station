@@ -41,11 +41,11 @@
         std::cout << time_now << std::endl;
         ros::WallTime realStart = ros::WallTime::now();
         ros::WallTime realCurrent = ros::WallTime::now();
-        ros::WallRate loop_rate(2000);
+        ros::WallRate loop_rate(400);
         msg.clock = time_now;
         while(ros::ok()) {
             realCurrent = ros::WallTime::now();
-            time_now = time_now + ros::Duration((realCurrent - realStart).toSec()) * 10;
+            time_now = time_now + ros::Duration((realCurrent - realStart).toSec()) * 2;
             msg.clock = time_now;
             clock_pub.publish(msg);
             realStart = ros::WallTime::now();
