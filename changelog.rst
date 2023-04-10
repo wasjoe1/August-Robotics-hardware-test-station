@@ -5,6 +5,19 @@ The format is based on `Keep a Changelog <https://keepachangelog.com/en/1.0.0/>`
 
 格式基于 `如何更新维护日志 <https://keepachangelog.com/zh-CN/1.0.0/>`_
 
+[v3.11 - unreleased] - 2023-04-10
+------------------------------
+Added
+^^^^^
+
+  1. boothbot-simulation:
+    a. rostopic /clock for speeding up simulation
+
+
+Known Issue
+^^^^^^^^^^^
+
+
 [v3.9 - unreleased] - 2022-02-06
 ------------------------------
 Added
