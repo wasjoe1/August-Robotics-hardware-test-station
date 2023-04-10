@@ -16,7 +16,7 @@ from pymodbus.exceptions import ModbusIOException
 from boothbot_calibration_tools.settings \
     import LEVEL_INCLINOMETER_UNIT
 
-from boothbot_calibration_tools.drivers.base import ModbusDriver
+# from boothbot_calibration_tools.drivers.base import ModbusDriver
 
 import tf.transformations as tftrans
 

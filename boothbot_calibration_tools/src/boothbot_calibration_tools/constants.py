@@ -11,6 +11,11 @@ class CalibrationStates(Enum):
 
     RUNNING = 4
 
+class JobStatus(Enum):
+    INIT = 0
+    RUNNING = 1
+    DONE = 2
+
 class CalibrationCommand(Enum):
     NONE = 0
     RESET = 1
@@ -33,6 +38,11 @@ class CalibrationCommand(Enum):
     IMU_CALIBRATION = 26
     HORIZONTAL_OFFSET = 27
     MARKING_ROI = 28
+    CB_INCLINATION = 29
 
     USE_LONG_CAMERA = 50
     USE_SHORT_CAMERA = 51
+
+CB_INCLI_CMD = "/cb_incli/cmd"
+CB_INCLI_STATE = "/cb_incli/state"
+CB_INCLI_RES =  "/cb_incli/res"

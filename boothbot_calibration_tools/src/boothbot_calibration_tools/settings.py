@@ -6,6 +6,9 @@ from boothbot_calibration_tools.constants import CalibrationCommand as CS
 
 LEVEL_PORT = "/dev/incli"
 LEVEL_INCLINOMETER_UNIT = 1
+DEFAULT_TIMES_PER_2PI = 17
+DEFAULT_STABLIZE_TIMEOUT = 5.0
+
 
 JOB_DATA = {
     CS.INITIALIZE_SERVO.name: ["servo_h", "servo_v", "measurement_time"],
@@ -17,7 +20,8 @@ JOB_DATA = {
     CS.VERTICAL_SERVO_ZERO.name: ["vertical_offset", "measurement_time"],
     CS.IMU_CALIBRATION.name: ["measurement_time", "inclinometer_x", "imu_x", "imu_y", "imu_z", "imu_w", "inclinometer_y","offset_x","offset_y"],
     CS.HORIZONTAL_OFFSET.name: ["measurement_time", "horizontal_offset"],
-    CS.MARKING_ROI.name: ["measurement_time", "x", "y", "w", "h"]
+    CS.MARKING_ROI.name: ["measurement_time", "x", "y", "w", "h"],
+    CS.CB_INCLINATION.name: ["measurement_time", "row", "pitch"],
 }
 
 SAVE_DATA_TITLE = {
@@ -31,7 +35,9 @@ SAVE_DATA_TITLE = {
     CS.VERTICAL_SERVO_ZERO.name: ["vertical_offset", "measurement_time"],
     CS.IMU_CALIBRATION.name: ["measurement_time", "inclinometer_x", "inclinometer_y", "imu_x", "imu_y", "imu_z", "imu_w","offset_x","offset_y"],
     CS.HORIZONTAL_OFFSET.name: ["measurement_time", "horizontal_offset"],
-    CS.MARKING_ROI.name: ["measurement_time", "x", "y", "w", "h"]
+    CS.MARKING_ROI.name: ["measurement_time", "x", "y", "w", "h"],
+    CS.CB_INCLINATION.name: ["measurement_time", "row", "pitch"],
+
 }
 
 JOS_SETTINGS = {
@@ -42,6 +48,7 @@ JOS_SETTINGS = {
     CS.CAMERAS_ANGLE.name: {"default_h": 1.38},
     CS.VERTICAL_SERVO_ZERO.name: [1.57, -1.57],
     CS.IMU_CALIBRATION.name: {},
+    CS.CB_INCLINATION.name: {},
 }
 
 LAST_SAVE_TILE = [CS.INITIALIZE_SERVO.name,
@@ -50,7 +57,22 @@ LAST_SAVE_TILE = [CS.INITIALIZE_SERVO.name,
                 CS.CAMERA_SHARPNESS.name,
                 CS.CAMERAS_ALIGNMENT.name,
                 CS.HORIZONTAL_OFFSET.name,
-                CS.MARKING_ROI.name]
+                CS.MARKING_ROI.name,
+                CS.CB_INCLINATION.name,
+                ]
+
+JOB_DONE_STATUS = {
+    CS.INITIALIZE_SERVO : 90,
+    CS.CAMERA_SHARPNESS : 91,
+    CS.CAMERAS_ALIGNMENT : 92,
+    CS.CAMERA_LASER_ALIGNMENT : 93,
+    CS.CAMERAS_ANGLE : 6,
+    CS.VERTICAL_SERVO_ZERO : 5,
+    CS.IMU_CALIBRATION : 94,
+    CS.HORIZONTAL_OFFSET : 4,
+    CS.MARKING_ROI : 4,
+    CS.CB_INCLINATION : 3
+}
 
 # SETUP="SETUP"
 CALI_ARG = "CALIBRATE"
@@ -61,13 +83,6 @@ COLOR = "CALI"
 CAMERA_FILTER_COUNT = 3
 
 IMU_SERVICE = "/drivers/chassis/srv_cmd"
-
-# CMD="roslaunch ../launch/base_production.launch"
-# RECORD="rostopic echo -c /drivers/chassis/imu"
-# SETUPCMD="rosservice call /drivers/chassis/srv_cmd '{command: "IMU", parameter: ${SETUP}}'"
-# CALICMD="rosservice call /drivers/chassis/srv_cmd '{command: "IMU", parameter: ${CALI_ARG}}'"
-# SAVECMD="rosservice call /drivers/chassis/srv_cmd '{command: "IMU", parameter: ${SAVE_ARG}}'"
-
 
 TRANS_BEACON = [0, 0, 0] # [0, 0, 0]
 TRANS_BEACON_RCENTER  = [0, 0, 0]# [0, 0, 0]

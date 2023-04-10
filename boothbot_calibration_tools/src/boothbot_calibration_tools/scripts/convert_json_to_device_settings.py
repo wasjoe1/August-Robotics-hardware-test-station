@@ -75,6 +75,10 @@ def ln_replace_setting(device_settings_path, json_path):
     servo_h = None
     servo_v = None
     cameras_angle = None
+    roi = []
+    row = None
+    pitch = None
+
     # vertical_offset = None
     if 'HORIZONTAL_OFFSET' in json_data.keys():
         servo_h = json_data["HORIZONTAL_OFFSET"]["horizontal_offset"]
@@ -82,6 +86,15 @@ def ln_replace_setting(device_settings_path, json_path):
         servo_v = json_data["VERTICAL_SERVO_ZERO"]["vertical_offset"]
     if 'CAMERAS_ANGLE' in json_data.keys():
         cameras_angle = json_data["CAMERAS_ANGLE"]["cameras_angle"]
+    if 'CB_INCLINATION' in json_data.keys():
+        row = json_data["CB_INCLINATION"]["row"]
+        pitch = json_data["CB_INCLINATION"]["pitch"]
+    if 'MARKING_ROI' in json_data.keys():
+        roi.append(json_data["MARKING_ROI"]["x"])
+        roi.append(json_data["MARKING_ROI"]["y"])
+        roi.append(json_data["MARKING_ROI"]["w"])
+        roi.append(json_data["MARKING_ROI"]["h"])
+        # cameras_angle = json_data["MARKING_ROI"]["x"]
     # if 'VERTICAL_SERVO_ZERO' in json_data.keys():
     #     vertical_offset = json_data["VERTICAL_SERVO_ZERO"]["vertical_offset"]
 
@@ -97,6 +110,10 @@ def ln_replace_setting(device_settings_path, json_path):
                 servo_v)
         if cameras_angle is not None:
             doc['tracker_driver']['long_short_cam_angle_offset'] = cameras_angle
+        if roi != []:
+            doc['checker_driver']['text_roi'] = roi
+        if row is not None and pitch is not None:
+            doc['servos_driver']['cb_inclination'] = [row, pitch, 0.0]
         # if vertical_offset is not None:
         #     doc['servos_driver']['servo_parameter']['vertical']['zero_offset'] = int(vertical_offset)
 

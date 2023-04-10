@@ -39,4 +39,6 @@ var lang = {
     "imu_cali": ["IMU_CALI", "IMU写入0点"],
     "imu_save": ["SAVE", "IMU保存0点"],
     "MARKING_ROI": ["9.MARKING_ROI", "9.相机ROI"],
+    "CB_INCLINATION": ["10.CB_INCLINATION", "CB倾角"],
+    "job_status": ["job_status", "任务状态"]
 }

@@ -5,7 +5,7 @@ The format is based on `Keep a Changelog <https://keepachangelog.com/en/1.0.0/>`
 
 格式基于 `如何更新维护日志 <https://keepachangelog.com/zh-CN/1.0.0/>`_
 
-[v3.11 - unreleased] - 2023-04-10
+[v3.11 - unreleased] 
 ------------------------------
 Added
 ^^^^^
@@ -16,6 +16,8 @@ Added
 
 Known Issue
 ^^^^^^^^^^^
+  1. boothbot_calibration_tools:
+    a. auto cb calibration in calibration tools, and user can operate on gui.
 
 
 [v3.9 - unreleased] - 2022-02-06
