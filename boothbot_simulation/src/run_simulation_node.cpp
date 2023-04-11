@@ -31,14 +31,13 @@
 
 		ros::init(argc, argv, "sim_clock");
 		ros::NodeHandle nh("~");
-        int time_scale;
         int default_rate;
         default_rate = 200;
 		// create PDDL action subscriber
 //		KCL_rosplan::SimClock sc(nh);
         std::string time_scale_temp;
         nh.getParam("/set_time_scale",time_scale_temp);
-        time_scale = int(time_scale_temp);
+        int time_scale = std::stoi(time_scale_temp);
         ros::Publisher clock_pub = nh.advertise<rosgraph_msgs::Clock>("/clock", 1, true);
 
         rosgraph_msgs::Clock msg;
