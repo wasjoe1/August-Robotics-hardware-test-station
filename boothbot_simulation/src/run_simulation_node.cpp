@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 #include <ros/package.h>
 #include "rosgraph_msgs/Clock.h"
+#include <string>
 
 
 /* The implementation of SimClock.h */
@@ -30,10 +31,14 @@
 
 		ros::init(argc, argv, "sim_clock");
 		ros::NodeHandle nh("~");
-
+        int time_scale;
+        int default_rate;
+        default_rate = 200;
 		// create PDDL action subscriber
 //		KCL_rosplan::SimClock sc(nh);
-
+        std::string time_scale_temp;
+        nh.getParam("/set_time_scale",time_scale_temp);
+        int time_scale = int(time_scale_temp);
         ros::Publisher clock_pub = nh.advertise<rosgraph_msgs::Clock>("/clock", 1, true);
 
         rosgraph_msgs::Clock msg;
@@ -41,11 +46,11 @@
         std::cout << time_now << std::endl;
         ros::WallTime realStart = ros::WallTime::now();
         ros::WallTime realCurrent = ros::WallTime::now();
-        ros::WallRate loop_rate(400);
+        ros::WallRate loop_rate(default_rate * time_scale);
         msg.clock = time_now;
         while(ros::ok()) {
             realCurrent = ros::WallTime::now();
-            time_now = time_now + ros::Duration((realCurrent - realStart).toSec()) * 2;
+            time_now = time_now + ros::Duration((realCurrent - realStart).toSec()) * time_scale;
             msg.clock = time_now;
             clock_pub.publish(msg);
             realStart = ros::WallTime::now();
