@@ -30,15 +30,14 @@
 	int main(int argc, char **argv) {
 
 		ros::init(argc, argv, "sim_clock");
-		ros::NodeHandle nh("~");
+		ros::NodeHandle nh("/");
         int default_rate;
         default_rate = 200;
-		// create PDDL action subscriber
-//		KCL_rosplan::SimClock sc(nh);
-        std::string time_scale_temp;
-        nh.getParam("set_time_scale",time_scale_temp);
-        ROS_INFO_STREAM(""<<time_scale_temp);
-        int time_scale = std::stoi(time_scale_temp);
+
+        auto time_scale = nh.param("/set_time_scale", 1);
+
+        ROS_INFO_STREAM("Current acceleration rate is: "<<time_scale);
+
         ros::Publisher clock_pub = nh.advertise<rosgraph_msgs::Clock>("/clock", 1, true);
 
         rosgraph_msgs::Clock msg;
