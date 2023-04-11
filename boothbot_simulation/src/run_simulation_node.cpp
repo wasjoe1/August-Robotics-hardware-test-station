@@ -37,6 +37,7 @@
 //		KCL_rosplan::SimClock sc(nh);
         std::string time_scale_temp;
         nh.getParam("set_time_scale",time_scale_temp);
+        ROS_INFO_STREAM(""<<time_scale_temp);
         int time_scale = std::stoi(time_scale_temp);
         ros::Publisher clock_pub = nh.advertise<rosgraph_msgs::Clock>("/clock", 1, true);
 
