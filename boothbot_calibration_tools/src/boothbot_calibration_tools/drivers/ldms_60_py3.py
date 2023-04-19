@@ -124,22 +124,32 @@ class LDMS60Driver(LaserRangeFinderBase):
         self.port.reset_output_buffer()
         logger.loginfo("Executing command_str: {}".format(command_str))
         self.port.write(command_str.encode())
+        incom_val = None
         if return_valid:
             for _ in range(timeout_times):
                 ret = self.port.read_until(expected="\r\n")
                 _ret = ret.decode("utf-8")
-                # _ret = _ret.decode(encoding='hex')
                 if _ret:
                     logger.loginfo("Received return value: {}".format(_ret))
+                    if incom_val is not None:
+                        logger.logwarn("add {} to old data {}".format(_ret, incom_val))
+                        incom_val += _ret
+                        return incom_val
                     if _ret.startswith(command_str[:5]):
                         ret_tail = _ret[5:]
                         # Detect laser whether received incomplete value.
-                        measure_head = ":" + LDMS_DEVICE_ADDRESS + "S1+"
-                        if _ret[:5] == measure_head and len(ret_tail) != 10:
-                            logger.logwarn("Received incomplete value: {}".format(ret_tail))
-                            error_code = LDMSECInternal.ReturnNotValid
-                            return error_code
-                        if ret_tail[0] == "@":
+                        measure_head = ":" + LDMS_DEVICE_ADDRESS + "S1"
+                        if _ret[:5] == measure_head:
+                            if len(ret_tail) != 12:
+                                incom_val = ret_tail
+                                logger.logwarn("Received incomplete value: {} , len: {} set value to {}".format(ret_tail, len(ret_tail), incom_val))
+                                continue
+                                # error_code = LDMSECInternal.ReturnNotValid
+                                # return error_code
+                            else:
+                                logger.logwarn("Got full distance {}".format(ret_tail))
+                                return ret_tail
+                        if ret_tail[0] == "@" or len(ret_tail) == 0:
                             error_code = LDMSECInternal(ret_tail[1:4])
                             logger.logwarn("Failed due to: {}".format(error_code))
                             return error_code
