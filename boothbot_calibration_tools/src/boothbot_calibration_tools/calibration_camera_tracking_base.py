@@ -17,6 +17,9 @@ class CaliTrackingCameraBase():
     def is_camera_idle(self):
         return True
 
+    def set_expo(self):
+        return True
+
     def find_beacon(self, frame, dis, color, color_range):
         return None
 
