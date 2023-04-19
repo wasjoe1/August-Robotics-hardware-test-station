@@ -19,6 +19,10 @@ class CaliTrackingCamera(CaliTrackingCameraBase):
     def is_camera_idle(self):
         return self.ontology.is_camera_idle()
 
+    def set_expo(self, expo):
+        self.ontology.cam_dev.set_exposure(expo)
+        return True
+
     def find_beacon(self, frame, dis, color, color_range):
         return self.ontology.find_beacon(frame, dis, color, color_range)
 

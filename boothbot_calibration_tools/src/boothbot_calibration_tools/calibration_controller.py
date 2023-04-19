@@ -665,14 +665,21 @@ class CalibrationController(ModuleBase):
     def _do_camera_laser_alignment(self):
         if self.sub_state == 0:
             if self.init_cameras(49, 5):
-                self.sub_state = 1
-        elif self.sub_state == 1:
+                self._sub_state = 1
+        elif self._sub_state == 1:
+            self.laser.laser_on()
+            self._sub_state = 2
+        elif self._sub_state == 2:
+            #TODO
+            if not self.have_short_camera:
+                self.set_camera_expo(LONG, 8)
+            self._sub_state = 3
+        elif self.sub_state == 3:
             if not self.cameras_idle():
                 return
             if not self.run_flag:
                 self.get_cameras_frames()
                 return
-            self.laser.laser_on()
             frame = self.cameras[LONG].cap()
             print("Got long frame")
             laser_dot = self.cameras[LONG].find_laser_dot(frame)
@@ -712,6 +719,10 @@ class CalibrationController(ModuleBase):
             return True
         else:
             return False
+    
+    def set_camera_expo(self, type, expo):
+        self.loginfo("Set {} exposure to {}".format(type, expo))
+        self.cameras[type].set_expo(expo)
 
     def get_camera_result(self, type, dis=0.0, compensation=False, long_shrot_angle=None):
         frame = self.cameras[type].cap()
