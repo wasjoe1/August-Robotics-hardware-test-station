@@ -12,6 +12,8 @@ Added
 
   1. boothbot-simulation:
     a. rostopic /clock for speeding up simulation
+  2. tools
+    a. add get_incli_data.py for check inclination data
 
 
 Known Issue
