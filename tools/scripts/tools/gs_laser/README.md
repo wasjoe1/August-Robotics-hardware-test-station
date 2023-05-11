@@ -14,7 +14,7 @@ debug_shell
 rosnode kill /measurement
 ```
 
-5. Go to this directory and run the
+5. Go to this directory and run the script
 
 ```bash
 cd ~/catkin_ws/src/augustbot-tools/tools/scripts/tools/gs_laser
@@ -25,9 +25,6 @@ python gs_laser.py
 
 6. If we want to end this test, quit this script `CTRL` + `c`
 
-```bash
-ls
-```
 
 7. In this diectory `~/catkin_ws/src/augustbot-tools/tools/scripts/tools/gs_laser` on GS, we see there is a json file named like `GSP4-0089_2023-05-11-06-38-41.json`
 8. Send it to our computer via `scp`:
