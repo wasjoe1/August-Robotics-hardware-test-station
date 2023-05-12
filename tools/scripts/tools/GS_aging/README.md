@@ -149,7 +149,7 @@
 
 8. Check aging data.
 
-    We see there is a new folder name with GS-SN.  
+    We see there is a new folder name with GSP4-0089.  
     ![folder](./img/aging_data.jpg)
 
     Open the excel file, we can check measurement of RBs in sheet `sp_1`, `sp_2`, `sp_3`.  
