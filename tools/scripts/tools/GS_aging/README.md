@@ -8,11 +8,11 @@
 
 3. Do the `Auto Check Inclination`.
 
-4. Option Step. Set the coordinate of two RBs on GS pages.
+4. Option Step. Set the coordinate of two RBs on GS pages.  
     ![coordinate_rbs](./img/rbs_coordinate.jpg)
 
     Do manual or auto cali once on GS.  
-    If successed, we got the Pose of GS on Page. This pose can be set as GUESS_POSE in step 6.
+    If successed, we got the Pose of GS on Page. This pose can be set as GUESS_POSE in step 6.  
     ![GSpose](./img/gs_pose.jpg)
 
 5. Option Step. If step 3 has been done, we can find more infomation in logs.
@@ -25,7 +25,7 @@
     cat measurement-6.log | grep "at "
     ```
 
-    ![radian_horizontal_vertical](./img/rad_hor_ver.jpg)
+    ![radian_horizontal_vertical](./img/rad_hor_ver.jpg)  
     This values(groups of three, cause calibration would measure each rb three times) are the horizontal and vertical radian of RBs.  
     These can be set as rad_hor and rad_ver of M_TEST_GOAL_X in step 6.
 
@@ -34,7 +34,7 @@
     ```
 
     The first valuse is distance between GS and RB.  
-    It can be set as of distance M_TEST_GOAL_X in step 6.
+    It can be set as of distance M_TEST_GOAL_X in step 6.  
 
     ![laser_data](./img/laser.jpg)
 
@@ -149,7 +149,7 @@
 
 8. Check aging data.
 
-    We see there is a new folder name with GS-SN.
+    We see there is a new folder name with GS-SN.  
     ![folder](./img/aging_data.jpg)
 
     Open the excel file, we can check measurement of RBs in sheet `sp_1`, `sp_2`, `sp_3`.  
