@@ -14,44 +14,42 @@ from rospy_message_converter import json_message_converter
 # from boothbot_common import ros_logger_wrap as
 
 from boothbot_common.ros_logger_wrap import ROSLogging as Logging
-from guiding_beacon_system.guiding_station_measurement_module_client import GuidingStationMeasurementClient
+# from guiding_beacon_system.guiding_station_measurement_module_client import GuidingStationMeasurementClient
+from gbs_measurement.gs_measurement_module_client import GuidingStationMeasurementClient
 import guiding_beacon_system_msgs.msg as gbmsgs
 
 
 from guiding_beacon_system.guiding_station_calibration_app_client import GuidingStationCalibrationAppClient
 
+# Modify as needed: this is RBs color.
 COLOR = "ROG"
+
+# Modify as needed: this is the pose we guessed gs. (x, y, rz(radian))
 GUESS_POSE = (0, 0.0, -1.45)
 
+# Modify as needed: these are the coordinates of RBs. more accurate is better.
+TEST_GOAL_0 = {"x": -15.54288662, "y": -1.659951443} 
+TEST_GOAL_1 = {"x": 2.445430569, "y": -48.48078833} 
+TEST_GOAL_2 = {"x": 8.566331757, "y": -3.244249486} 
 
-# TEST_GOAL_0 = {"x": 2.901149754, "y": 22.77927683}
-# TEST_GOAL_1 = {"x": 12.13942357, "y": -1.18506726}
-# TEST_GOAL_2 = {"x": -3.416903625, "y": -0.138446967}
-
-# TEST_GOAL_0 = {"x": -15.54288662, "y": -1.659957859} #15
-# TEST_GOAL_1 = {"x": 2.445583913, "y": -48.48100228} #48
-# TEST_GOAL_2 = {"x": 8.566780444, "y": -3.244379861} #9
-
-# 15.672 17.057
-# -16.571 15.226
-
-TEST_GOAL_0 = {"x": -15.54288662, "y": -1.659951443} # 15
-TEST_GOAL_1 = {"x": 2.445430569, "y": -48.48078833} # 48
-TEST_GOAL_2 = {"x": 8.566331757, "y": -3.244249486} # 9
-
-
-
+# Need not modify.
 goal_list = []
 goal_list.append(TEST_GOAL_0)
 goal_list.append(TEST_GOAL_1)
 goal_list.append(TEST_GOAL_2)
 
+# Modify as needed: TORLERANCE means the error of coordinate distance of two RBs and measurement distance of two RBs
+# If we cannot offer the accuracy of RB, tune bigger of this value(m).
+TORLERANCE = 0.5
+
+# Modify as needed: there are the messages we guess where the RBs are.
+# Just modify the values of distance, rad_hor, rad_ver.
 M_TEST_GOAL_0 = gbmsgs.GBMeasureGoal(
     gid=1,
     color="ROG",
     distance=14.9,
     rad_hor=-1.59,
-    rad_ver=-0.05,
+    rad_ver=-0.00,
     is_initialpose=False,
     unique_id=1,
 )
@@ -61,7 +59,7 @@ M_TEST_GOAL_1 = gbmsgs.GBMeasureGoal(
     color="ROG",
     distance=48.,
     rad_hor=-0.06,
-    rad_ver=0.005,
+    rad_ver=0.000,
     is_initialpose=False,
     unique_id=1,
 )
@@ -71,7 +69,7 @@ M_TEST_GOAL_2 = gbmsgs.GBMeasureGoal(
     color="ROG",
     distance=9,
     rad_hor=1.103,
-    rad_ver=0.05,
+    rad_ver=0.00,
     is_initialpose=False,
     unique_id=1,
 )
@@ -133,8 +131,6 @@ if __name__ == "__main__":
     state = INIT
     sub_state = 0
     sub_count = 0
-    lm.loginfo("j1900-1057")
-
     # new calibration test
 
     gscc = GuidingStationCalibrationAppClient(using_fleet_rb=False)
@@ -174,7 +170,7 @@ if __name__ == "__main__":
                 # if cali_id == 0:
                 gscc.calibrate(
                     GUESS_POSE,
-                    0.03,
+                    TORLERANCE,
                     COLOR,
                     (goal_list[cali_id_f]["x"],
                      goal_list[cali_id_f]["y"]),
