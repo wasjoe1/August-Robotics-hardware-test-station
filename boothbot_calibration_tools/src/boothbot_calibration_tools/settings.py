@@ -89,6 +89,10 @@ TRANS_BEACON_RCENTER  = [0, 0, 0]# [0, 0, 0]
 
 LASER_HEIGHT = 0.78
 
+# LIONEL INLCINATION
+CB_INCLI_PORT_NAME = "/dev/incli"
+LIONEL_INCLI_PORT_NAME = "/dev/incli_lionel"
+
 TRANSITIONS_TOP = [
     {
         # Error state manual entrance
