@@ -64,8 +64,8 @@ class MKInclinometerDriverROS(object):
         self.sensor_driver = []
         self.msg_cmdword = None
 
-        self.x_kf = FirstOrderKalmanFilter(Q=1e-5, R=2e-3)
-        self.y_kf = FirstOrderKalmanFilter(Q=1e-5, R=2e-3)
+        self.x_kf = [FirstOrderKalmanFilter(Q=1e-5, R=2e-3), FirstOrderKalmanFilter(Q=1e-5, R=2e-3)]
+        self.y_kf = [FirstOrderKalmanFilter(Q=1e-5, R=2e-3), FirstOrderKalmanFilter(Q=1e-5, R=2e-3)]
 
     def start(self):
         self.sensor_driver.append(self.find_inclinometer(1))
@@ -154,8 +154,8 @@ class MKInclinometerDriverROS(object):
                 x, y = sensor.get_inclinometer_data_xy_deg()
                 if x is not None:
                     # filter result
-                    kf_x = self.x_kf.update_observed(x)
-                    kf_y = self.y_kf.update_observed(y)
+                    kf_x = self.x_kf[sid].update_observed(x)
+                    kf_y = self.y_kf[sid].update_observed(y)
 
                     # inclination original data (degree)
                     msg = stmsgs.Float32MultiArray()

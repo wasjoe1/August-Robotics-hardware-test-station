@@ -115,7 +115,7 @@ class CalibrationController(ModuleBase):
         self.puber_data = APPS_CALIBRATION_DATA.Publisher()
         DRIVERS_SERVOS_PDO.Subscriber(self.servo_pdo_cb)
         DRIVERS_CHASSIS_IMU.Subscriber(self.imu_cb)
-        DRIVERS_INCLINOMETER_INCLINATION_FILTERED_RAD.Subscriber(self._iucli_cb)
+        DRIVERS_INCLINOMETER_INCLINATION_FILTERED_RAD.Subscriber(self._incli_cb)
         self.cb_incli_pub = rospy.Publisher(CB_INCLI_CMD, String, queue_size=10)
         rospy.Subscriber(CB_INCLI_STATE, Int16, self.cb_cb_incli_state)
         rospy.Subscriber(CB_INCLI_RES, String, self.cb_cb_incli_res)
@@ -970,7 +970,7 @@ class CalibrationController(ModuleBase):
             self.loginfo_throttle(2, "horizontal job done.")
 
 
-    def _iucli_cb(self, msg):
+    def _incli_cb(self, msg):
         self.incli_data = msg
 
     def _do_marking_camera_roi(self):
