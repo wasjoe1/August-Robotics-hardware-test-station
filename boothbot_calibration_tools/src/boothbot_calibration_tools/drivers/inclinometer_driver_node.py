@@ -39,6 +39,8 @@ from boothbot_calibration_tools.utils import two_incli
 NODE_NAME = "inclinometer_driver"
 NODE_RATE = 10.0
 
+PORT_PREFIX = "/dev/ttyUSB"
+
 class MKInclinometerDriverROS(object):
     def __init__(self, fake_driver=False, two_drivers=None):
         self.modbus_config = [{
@@ -59,47 +61,74 @@ class MKInclinometerDriverROS(object):
         self.two_drivers = two_drivers
         self.fake_driver = fake_driver
         self.modbus_driver = [None, None]
-        self.sensor_driver = [None, None]
+        self.sensor_driver = []
         self.msg_cmdword = None
 
         self.x_kf = FirstOrderKalmanFilter(Q=1e-5, R=2e-3)
         self.y_kf = FirstOrderKalmanFilter(Q=1e-5, R=2e-3)
 
     def start(self):
+        self.sensor_driver.append(self.find_inclinometer(1))
+        self.sensor_driver.append(self.find_inclinometer(3))
         self.initialize()
         self.run()
+
+    def find_inclinometer(self, unit):
+        for i in range(0,10):
+            modbus_config = {
+                "method": "rtu",
+                "port": PORT_PREFIX+str(i),
+                "baudrate": 115200,
+                "parity": "N",
+                "timeout": 0.5,
+            }
+            modbus_driver = ModbusDriver(**modbus_config)
+            # if 
+            senser_driver = InclinometerDriver(modbus_driver.client, unit_id=unit)
+            x, y = senser_driver.get_inclinometer_data_xy_deg()
+            if x is not None:
+                logger.loginfo("ttyUSB: {} has selected for unit {}".format(i, unit))
+                return senser_driver
+        return None
+
+
 
     def initialize(self):
         if self.fake_driver:
             logger.logwarn("Inclinometer driver: Node running with fake driver!!!")
             self.sensor_driver = [InclinometerDriverBase(),InclinometerDriverBase()]
         else:
-            if self.two_drivers is True:
-                self.modbus_driver = [ModbusDriver(**(self.modbus_config[0])), ModbusDriver(**(self.modbus_config[1]))]
-                self.sensor_driver = [
-                    InclinometerDriver(
-                        modbus_client=self.modbus_driver[0].client, unit_id=AUTOLEVEL_INCLINOMETER_UNIT
-                    ),
-                    InclinometerDriver(
-                        modbus_client=self.modbus_driver[1].client, unit_id=LIONEL_LEVEL_INCLINOMETER_UNIT
-                    )
-                ]
-            if self.two_drivers is False:
-                self.modbus_driver = [ModbusDriver(**(self.modbus_config[0])), None]
-                self.sensor_driver = [
-                    InclinometerDriver(
-                        modbus_client=self.modbus_driver[0].client, unit_id=AUTOLEVEL_INCLINOMETER_UNIT
-                    ),
-                    None
-                ]
+            pass
+            # if self.two_drivers is True:
+            #     logger.loginfo("Two inclinometers drivers!!!")
+            #     self.modbus_driver = [ModbusDriver(**(self.modbus_config[0])), ModbusDriver(**(self.modbus_config[1]))]
+            #     self.sensor_driver = [
+            #         InclinometerDriver(
+            #             modbus_client=self.modbus_driver[0].client, unit_id=AUTOLEVEL_INCLINOMETER_UNIT
+            #         ),
+            #         InclinometerDriver(
+            #             modbus_client=self.modbus_driver[1].client, unit_id=LIONEL_LEVEL_INCLINOMETER_UNIT
+            #         )
+            #     ]
+            # # if self.two_drivers is False:
+            #     logger.loginfo("One inclinometer drivers!!!")
+            #     self.modbus_driver = [ModbusDriver(**(self.modbus_config[0])), None]
+            #     self.sensor_driver = [
+            #         InclinometerDriver(
+            #             modbus_client=self.modbus_driver[0].client, unit_id=AUTOLEVEL_INCLINOMETER_UNIT
+            #         ),
+            #         None
+            #     ]
+            # if self.two_drivers is None:
+            #     logger.loginfo("No inclinometer driver!!!")
 
         rospy.Subscriber(
             "/debug/incli_cmdword", stmsgs.String, callback=self._cmdword_cb
         )
 
-        self.pub_data_lionel_incli = rospy.Publisher("/drivers/inclinometer/incalination_lionel", Float32MultiArray)
-        self.pub_data_lionel_incli_filtered = rospy.Publisher("/drivers/inclinometer/incalination_lionel_filtered", Float32MultiArray)
-        self.pub_data_lionel_incli_rad_filtered = rospy.Publisher("/drivers/inclinometer/incalination_lionel_rad_filtered", Float32MultiArray)
+        self.pub_data_lionel_incli = rospy.Publisher("/drivers/inclinometer/incalination_lionel", Float32MultiArray, queue_size=1)
+        self.pub_data_lionel_incli_filtered = rospy.Publisher("/drivers/inclinometer/incalination_lionel_filtered", Float32MultiArray , queue_size=1)
+        self.pub_data_lionel_incli_rad_filtered = rospy.Publisher("/drivers/inclinometer/incalination_lionel_rad_filtered", Float32MultiArray , queue_size=1)
 
         self.pub_data = DRIVERS_INCLINOMETER_INCLINATION.Publisher()
         self.pub_data_filtered = DRIVERS_INCLINOMETER_INCLINATION_FILTERED.Publisher()
@@ -120,6 +149,8 @@ class MKInclinometerDriverROS(object):
             #         self.sensor_driver.set_zero_point()
             #     self.msg_cmdword = None
             for sid, sensor in enumerate(self.sensor_driver):
+                if sensor is None:
+                    continue
                 x, y = sensor.get_inclinometer_data_xy_deg()
                 if x is not None:
                     # filter result
