@@ -31,7 +31,8 @@ from guiding_beacon_system_msgs.ros_interfaces import (
 
 from boothbot_calibration_tools.settings import (
     CB_INCLI_PORT_NAME,
-    LIONEL_INCLI_PORT_NAME
+    LIONEL_INCLI_PORT_NAME,
+    D_INCLI_INCLI_LIONEL_RAD_FILTERED
 )
 
 from boothbot_calibration_tools.utils import two_incli
@@ -43,16 +44,17 @@ PORT_PREFIX = "/dev/ttyUSB"
 
 class MKInclinometerDriverROS(object):
     def __init__(self, fake_driver=False, two_drivers=None):
+        self.incli_feature = {1:"Lionel_level", 3:"cb_calibration"}
         self.modbus_config = [{
             "method": "rtu",
-            "port": CB_INCLI_PORT_NAME,
+            "port": LIONEL_INCLI_PORT_NAME,
             "baudrate": 115200,
             "parity": "N",
             "timeout": 0.5,
         },
         {
             "method": "rtu",
-            "port": LIONEL_INCLI_PORT_NAME,
+            "port": CB_INCLI_PORT_NAME,
             "baudrate": 115200,
             "parity": "N",
             "timeout": 0.5,
@@ -87,7 +89,7 @@ class MKInclinometerDriverROS(object):
             senser_driver = InclinometerDriver(modbus_driver.client, unit_id=unit)
             x, y = senser_driver.get_inclinometer_data_xy_deg()
             if x is not None:
-                logger.loginfo("ttyUSB: {} has selected for unit {}".format(i, unit))
+                logger.loginfo("ttyUSB: {} has selected for unit {}, for {}".format(i, unit, self.incli_feature[unit]))
                 return senser_driver
         return None
 
@@ -128,7 +130,7 @@ class MKInclinometerDriverROS(object):
 
         self.pub_data_lionel_incli = rospy.Publisher("/drivers/inclinometer/incalination_lionel", Float32MultiArray, queue_size=1)
         self.pub_data_lionel_incli_filtered = rospy.Publisher("/drivers/inclinometer/incalination_lionel_filtered", Float32MultiArray , queue_size=1)
-        self.pub_data_lionel_incli_rad_filtered = rospy.Publisher("/drivers/inclinometer/incalination_lionel_rad_filtered", Float32MultiArray , queue_size=1)
+        self.pub_data_lionel_incli_rad_filtered = rospy.Publisher(D_INCLI_INCLI_LIONEL_RAD_FILTERED, Float32MultiArray , queue_size=1)
 
         self.pub_data = DRIVERS_INCLINOMETER_INCLINATION.Publisher()
         self.pub_data_filtered = DRIVERS_INCLINOMETER_INCLINATION_FILTERED.Publisher()

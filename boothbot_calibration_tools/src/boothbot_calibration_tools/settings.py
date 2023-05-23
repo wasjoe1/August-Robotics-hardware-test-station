@@ -129,3 +129,9 @@ TRANSITIONS = TRANSITIONS_TOP + [
         "dest": MS.RUNNING,
     },
 ]
+
+
+### ROS
+#"/drivers/inclinometer/incalination_lionel"
+#"/drivers/inclinometer/incalination_lionel_filtered"
+D_INCLI_INCLI_LIONEL_RAD_FILTERED = "/drivers/inclinometer/incalination_lionel_rad_filtered"
