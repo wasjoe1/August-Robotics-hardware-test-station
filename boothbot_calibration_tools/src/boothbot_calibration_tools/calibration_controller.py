@@ -905,6 +905,8 @@ class CalibrationController(ModuleBase):
             self.cb_incli_pub.publish(data)
             self.sub_state = 2
         elif self.sub_state == 2:
+            self._job_data["offset_x"] = self.incli_data.data[0]
+            self._job_data["offset_y"] = self.incli_data.data[1]
             if self.cb_incli_state == 2:
                 self.sub_state = 3
             elif self.cb_cb_incli_state == 99:

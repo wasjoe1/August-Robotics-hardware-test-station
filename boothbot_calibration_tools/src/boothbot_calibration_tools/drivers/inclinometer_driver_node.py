@@ -32,7 +32,7 @@ from guiding_beacon_system_msgs.ros_interfaces import (
 from boothbot_calibration_tools.settings import (
     CB_INCLI_PORT_NAME,
     LIONEL_INCLI_PORT_NAME,
-    D_INCLI_INCLI_LIONEL_RAD_FILTERED
+    D_INCLI_INCLI_CB_RAD_FILTERED
 )
 
 from boothbot_calibration_tools.utils import two_incli
@@ -128,9 +128,9 @@ class MKInclinometerDriverROS(object):
             "/debug/incli_cmdword", stmsgs.String, callback=self._cmdword_cb
         )
 
-        self.pub_data_lionel_incli = rospy.Publisher("/drivers/inclinometer/incalination_lionel", Float32MultiArray, queue_size=1)
-        self.pub_data_lionel_incli_filtered = rospy.Publisher("/drivers/inclinometer/incalination_lionel_filtered", Float32MultiArray , queue_size=1)
-        self.pub_data_lionel_incli_rad_filtered = rospy.Publisher(D_INCLI_INCLI_LIONEL_RAD_FILTERED, Float32MultiArray , queue_size=1)
+        self.pub_data_lionel_incli = rospy.Publisher("/drivers/inclinometer/incalination_cb", Float32MultiArray, queue_size=1)
+        self.pub_data_lionel_incli_filtered = rospy.Publisher("/drivers/inclinometer/incalination_cb_filtered", Float32MultiArray , queue_size=1)
+        self.pub_data_lionel_incli_rad_filtered = rospy.Publisher(D_INCLI_INCLI_CB_RAD_FILTERED, Float32MultiArray , queue_size=1)
 
         self.pub_data = DRIVERS_INCLINOMETER_INCLINATION.Publisher()
         self.pub_data_filtered = DRIVERS_INCLINOMETER_INCLINATION_FILTERED.Publisher()

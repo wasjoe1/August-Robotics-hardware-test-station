@@ -44,7 +44,7 @@ from boothbot_calibration_tools.settings import(
     TRANS_BEACON,
     TRANS_BEACON_RCENTER,
     LASER_HEIGHT,
-    D_INCLI_INCLI_LIONEL_RAD_FILTERED
+    D_INCLI_INCLI_CB_RAD_FILTERED
 )
 
 from boothbot_calibration_tools.constants import(
@@ -119,7 +119,7 @@ class InclinometerDriver(Logging):
         # DRIVERS_INCLINOMETER_INCLINATION_FILTERED_RAD.Subscriber(
         #     callback=self._inclination_cb
         # )
-        rospy.SubscribeListener(D_INCLI_INCLI_LIONEL_RAD_FILTERED, Float32MultiArray, self._inclination_cb)
+        rospy.SubscribeListener(D_INCLI_INCLI_CB_RAD_FILTERED, Float32MultiArray, self._inclination_cb)
 
         self.timu = tftrans.compose_matrix(
             translate=(0., 0., 0.), angles=(0.0, 0.0, 0.0))
