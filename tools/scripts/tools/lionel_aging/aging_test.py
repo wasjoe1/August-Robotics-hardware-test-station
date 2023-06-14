@@ -15,7 +15,7 @@ def enable_repeat_marking(args):
         stdout, stderr = shell_cmd(cmd)
         print(f'repeat marking accept status:{stdout},{stderr}')
     else:
-        print('Will not enable repeat marking,since option is:'.format({args[2]}))
+        print('Will not enable repeat marking,since option is:'.format(args[2]))
 
 
 def close_on_pump(args):
