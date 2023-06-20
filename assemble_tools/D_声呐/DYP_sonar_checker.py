@@ -12,7 +12,11 @@ UNIT_DICT = [0xe6 ,0xe8 ,0xd0,0xfa,0xfe,0xea,0xe4,0xe2,0xd2,0xec ]
 def detect_baudrate_and_unit_id(port):
     for baud in BAUDRATES:
         with ModbusClient(method='rtu', port=port, baudrate=baud, parity='N', timeout=0.1) as client:
-            response=client.read_holding_registers(0x200, 1, unit=0xFF)
+            for rate in UNIT_DICT:
+                try:
+                    response=client.read_holding_registers(0x200, 1, unit=rate)
+                except:
+                    print("try again")
             if not response.isError():
                 print(baud,port)
                 return baud, port
