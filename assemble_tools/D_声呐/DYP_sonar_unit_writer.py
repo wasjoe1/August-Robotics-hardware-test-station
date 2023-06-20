@@ -131,6 +131,17 @@ def run():
                     if key in (str(i), str(i)):
                         if _in  == 1:
                             # modbus_config["baudrate"] = 115200
+                            for port in PORT:
+                                    try:
+                                        baud, _port = detect_baudrate_and_unit_id(port)
+                                    except:
+                                        print()
+                            modbus_config = {
+                                "port": _port,
+                                "baudrate": baud,
+                                "parity": "N",
+                                "timeout": 0.5,
+                            }
                             mbd = ModbusDriver(**modbus_config).client
                             DYP = DYP_SONAR_UNIT_WRITTER(mbd)
                             DYP.set_baudrate()
@@ -194,11 +205,12 @@ def run():
 
 
 if __name__ == '__main__':
-    for port in PORT:
-        try:
-            baud, _port = detect_baudrate_and_unit_id(port)
-        except:
-            print()
+    for i in range(3):
+        for port in PORT:
+            try:
+                baud, _port = detect_baudrate_and_unit_id(port)
+            except:
+                print()
     modbus_config = {
     "port": _port,
     "baudrate": baud,
