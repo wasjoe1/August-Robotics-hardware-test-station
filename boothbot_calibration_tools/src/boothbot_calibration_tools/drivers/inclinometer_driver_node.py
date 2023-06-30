@@ -85,9 +85,14 @@ class MKInclinometerDriverROS(object):
                 "timeout": 0.5,
             }
             modbus_driver = ModbusDriver(**modbus_config)
-            # if 
+            # if            
             senser_driver = InclinometerDriver(modbus_driver.client, unit_id=unit)
-            x, y = senser_driver.get_inclinometer_data_xy_deg()
+            x = None
+            y = None
+            try:
+                x, y = senser_driver.get_inclinometer_data_xy_deg()
+            except Exception as e:
+                logger.loginfo(e)
             if x is not None:
                 logger.loginfo("ttyUSB: {} has selected for unit {}, for {}".format(i, unit, self.incli_feature[unit]))
                 return senser_driver

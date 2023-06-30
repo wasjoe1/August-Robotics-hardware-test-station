@@ -240,6 +240,7 @@ class CalibrationController(ModuleBase):
         self.camera_filter_count = 0
         self.test_track = False
         self.cb_incli_state = None
+        self.laser_distance = None
         self.set_job_status(JS.INIT.name)
 
 
@@ -306,6 +307,12 @@ class CalibrationController(ModuleBase):
     def handle_inputs(self, command):
         if command != CS.NONE:
             self.logwarn("Got command. {}".format(command))
+
+        if command.name.startswith("M_LASER_DIS"):
+            [k,v] = command.split("=")
+            self.loginfo("set laser distance {} in laser camera alignment.".format(v))
+            self.laser_distance = float(v)
+
         if command == CS.NONE:
             pass
         elif CS.RESET == command:
@@ -663,9 +670,22 @@ class CalibrationController(ModuleBase):
         self.track_target = (self.servos.radians[0], self.servos.radians[1])
 
     def _do_camera_laser_alignment(self):
+        # check laser distance changed by user..
+        if self.laser_distance is not None:
+            self.loginfo("param laser distance changed, will reset laser camera alignment..")
+            self.reset_camera()
+            self.sub_state = 0
+            return
         if self.sub_state == 0:
-            if self.init_cameras(49, 5):
-                self._sub_state = 1
+            if self.laser_distance is None:
+                self.loginfo("set laser distance to default 49")
+                if self.init_cameras(49, 5):
+                    self._sub_state = 1
+            else:
+                self.loginfo("set laser distance to {}".format(self.laser_distance))
+                if self.init_cameras(self.laser_distance, 5):
+                    self.laser_distance = None
+                    self._sub_state = 1
         elif self._sub_state == 1:
             self.laser.laser_on()
             self._sub_state = 2

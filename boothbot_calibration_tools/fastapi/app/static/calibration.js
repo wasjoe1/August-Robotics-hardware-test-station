@@ -19,6 +19,8 @@ var HORIZONTAL_OFFSET = "HORIZONTAL_OFFSET"
 var MARKING_ROI = "MARKING_ROI"
 var CB_INCLINATION = "CB_INCLINATION"
 
+var SET_PARAM = "set_param"
+
 const gs_job_list = [
     INITIALIZE_SERVO,
     CAMERA_SHARPNESS,
@@ -378,6 +380,18 @@ function refresh_page_once(l) {
 function command(cmd) {
     console.log("send cmd :" + cmd)
     var url = "http://" + ip_addr + "/command/" + cmd
+    var request = new XMLHttpRequest()
+    request.open("GET", url)
+    request.send()
+}
+
+function modify_laser_distance(cmd) {
+    dis = get_id("laser_distance").value
+    console.log(dis)
+    // console.log("send cmd :" + cmd + ", distance "+ dis)
+    set_param = SET_PARAM + "=" + cmd + "=" + dis
+    console.log(set_param)
+    var url = "http://" + ip_addr + "/command/" + set_param
     var request = new XMLHttpRequest()
     request.open("GET", url)
     request.send()

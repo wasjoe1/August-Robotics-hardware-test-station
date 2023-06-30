@@ -30,7 +30,7 @@ from proto_msg import (
 
 PORT = 50052
 FASTAPI_GRPC_PORT = 50051
-
+SET_PARAM = "set_param"
 
 class DataService(data_pb2_grpc.data_ServiceServicer):
     def GetMsg(self, request, context):
@@ -41,9 +41,21 @@ class DataService(data_pb2_grpc.data_ServiceServicer):
             #     logger.loginfo("send new step {}".format(v))
             # # APPS_CALIBRATION_SRV_CMD.service_call(v)
             # elif k == "command":
-            self.set_command(v)
+            [set_param,k_tmp,v_tmp] = v.split("-")
+            if v.startswith(SET_PARAM):
+                self.set_param(k_tmp,v_tmp)
+            else:
+                self.set_command(v)
 
         return data_pb2.dataResponse()
+    
+    def set_param(self,k,v):
+        try:
+            v = float(v)
+        except ValueError:
+            logger.logerr("cannot convert {} to float".format(v))
+            return False
+        return APPS_CALIBRATION_SRV_CMD.service_call(command=k + "=" +v)        
 
     def set_command(self, cmd):
         """
