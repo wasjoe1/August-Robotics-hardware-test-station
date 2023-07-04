@@ -3,23 +3,19 @@ import json
 
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
-from fastapi.responses import StreamingResponse
 
 import asyncio
 import socket
 
-import base64
 from fastapi import Request
 from fastapi import WebSocket
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-import random
 
 import os
 
 import grpc
-import numpy as np
 # import cv2
 import _thread
 import time

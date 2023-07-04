@@ -385,11 +385,11 @@ function command(cmd) {
     request.send()
 }
 
-function modify_laser_distance(cmd) {
+function modify_laser_distance() {
     dis = get_id("laser_distance").value
     console.log(dis)
     // console.log("send cmd :" + cmd + ", distance "+ dis)
-    set_param = SET_PARAM + "=" + cmd + "=" + dis
+    set_param = SET_PARAM + "=" + dis
     console.log(set_param)
     var url = "http://" + ip_addr + "/command/" + set_param
     var request = new XMLHttpRequest()

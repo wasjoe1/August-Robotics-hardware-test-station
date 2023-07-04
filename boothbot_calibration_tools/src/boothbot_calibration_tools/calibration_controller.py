@@ -49,11 +49,13 @@ from guiding_beacon_system_msgs.ros_interfaces import (
     DRIVERS_INCLINOMETER_INCLINATION_FILTERED_RAD
 )
 
-from augustbot_msgs.srv import (
+from boothbot_msgs.srv import (
     CommandRequest,
+    Command
 )
 
 from std_msgs.msg import String, Int16
+# from boothbot_msgs.srv import Command
 
 from boothbot_calibration_tools.settings import (
     JOB_DATA,
@@ -67,7 +69,9 @@ from boothbot_calibration_tools.settings import (
     LONG,
     COLOR,
     CAMERA_FILTER_COUNT,
-    JOB_DONE_STATUS
+    JOB_DONE_STATUS,
+    APPS_CALIBRATION_SET_PARAM,
+    PARAM_DICT
 )
 
 from boothbot_calibration_tools.constants import(
@@ -120,6 +124,8 @@ class CalibrationController(ModuleBase):
         rospy.Subscriber(CB_INCLI_STATE, Int16, self.cb_cb_incli_state)
         rospy.Subscriber(CB_INCLI_RES, String, self.cb_cb_incli_res)
         self.cb_incli_state = None
+
+        rospy.Service(APPS_CALIBRATION_SET_PARAM, Command, self._set_param)
 
         # JOB
         self._data = {}
@@ -241,6 +247,7 @@ class CalibrationController(ModuleBase):
         self.test_track = False
         self.cb_incli_state = None
         self.laser_distance = None
+        self.long_camera_exposure = None
         self.set_job_status(JS.INIT.name)
 
 
@@ -307,11 +314,6 @@ class CalibrationController(ModuleBase):
     def handle_inputs(self, command):
         if command != CS.NONE:
             self.logwarn("Got command. {}".format(command))
-
-        if command.name.startswith("M_LASER_DIS"):
-            [k,v] = command.split("=")
-            self.loginfo("set laser distance {} in laser camera alignment.".format(v))
-            self.laser_distance = float(v)
 
         if command == CS.NONE:
             pass
@@ -670,12 +672,17 @@ class CalibrationController(ModuleBase):
         self.track_target = (self.servos.radians[0], self.servos.radians[1])
 
     def _do_camera_laser_alignment(self):
+        if self.cameras[LONG] is not None and self.long_camera_exposure is not None:
+            if self.cameras_idle():
+                # self.loginfo("")
+                self.set_camera_expo(LONG, int(self.long_camera_exposure))
+                self.long_camera_exposure = None
+                return
         # check laser distance changed by user..
         if self.laser_distance is not None:
             self.loginfo("param laser distance changed, will reset laser camera alignment..")
             self.reset_camera()
             self.sub_state = 0
-            return
         if self.sub_state == 0:
             if self.laser_distance is None:
                 self.loginfo("set laser distance to default 49")
@@ -692,7 +699,7 @@ class CalibrationController(ModuleBase):
         elif self._sub_state == 2:
             #TODO
             if not self.have_short_camera:
-                self.set_camera_expo(LONG, 8)
+                self.set_camera_expo(LONG, 7000)
             self._sub_state = 3
         elif self.sub_state == 3:
             if not self.cameras_idle():
@@ -994,6 +1001,17 @@ class CalibrationController(ModuleBase):
 
     def _incli_cb(self, msg):
         self.incli_data = msg
+    
+    def _set_param(self, cmd):
+        self.loginfo("Got cammand: {}".format(cmd))
+        if cmd.command.startswith("L=") or cmd.command.startswith("E="):
+            [k,v] = cmd.command.split("=")
+            self.loginfo("set {} to  {} in laser camera alignment.".format(PARAM_DICT[k],v))
+            # self.laser_distance = float(v)
+            if k == "L":
+                self.laser_distance = float(v)
+            elif k == "E":
+                self.long_camera_exposure = float(v)
 
     def _do_marking_camera_roi(self):
         if self.sub_state == 0:

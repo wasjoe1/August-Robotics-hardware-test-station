@@ -20,8 +20,10 @@ from boothbot_msgs.ros_interfaces import(
     APPS_CALIBRATION_DATA
 )
 
-from constants import CalibrationCommand as CS
+from boothbot_calibration_tools.constants import CalibrationCommand as CS
 
+from boothbot_calibration_tools.settings import APPS_CALIBRATION_SET_PARAM
+from boothbot_msgs.srv import (Command, CommandRequest)
 
 from proto_msg import (
     data_pb2,
@@ -41,10 +43,13 @@ class DataService(data_pb2_grpc.data_ServiceServicer):
             #     logger.loginfo("send new step {}".format(v))
             # # APPS_CALIBRATION_SRV_CMD.service_call(v)
             # elif k == "command":
-            [set_param,k_tmp,v_tmp] = v.split("-")
             if v.startswith(SET_PARAM):
+                [set_param,k_tmp,v_tmp] = v.split("=")
+                logger.loginfo("set param: {} {}".format(k_tmp, v_tmp))
                 self.set_param(k_tmp,v_tmp)
             else:
+                logger.loginfo("set command: {}".format(v))
+                # logger.loginfo("set command: {} {}".format(k_tmp, v_tmp))
                 self.set_command(v)
 
         return data_pb2.dataResponse()
@@ -55,7 +60,12 @@ class DataService(data_pb2_grpc.data_ServiceServicer):
         except ValueError:
             logger.logerr("cannot convert {} to float".format(v))
             return False
-        return APPS_CALIBRATION_SRV_CMD.service_call(command=k + "=" +v)        
+        logger.loginfo("service call {} {}".format(k, v))
+        # return APPS_CALIBRATION_SRV_CMD.service_call(command=(k + "=" +v)) 
+        call_srv = rospy.ServiceProxy(APPS_CALIBRATION_SET_PARAM, Command)
+        cmd = CommandRequest()
+        cmd.command = str(k) + "=" + str(v)
+        return  call_srv(cmd)
 
     def set_command(self, cmd):
         """
