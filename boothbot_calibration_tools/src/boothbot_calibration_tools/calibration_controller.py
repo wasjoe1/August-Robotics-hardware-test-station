@@ -672,6 +672,8 @@ class CalibrationController(ModuleBase):
         self.track_target = (self.servos.radians[0], self.servos.radians[1])
 
     def _do_camera_laser_alignment(self):
+        if self.have_short_camera:
+            self.laser.laser_on()
         if self.cameras[LONG] is not None and self.long_camera_exposure is not None:
             if self.cameras_idle():
                 # self.loginfo("")
@@ -1009,7 +1011,11 @@ class CalibrationController(ModuleBase):
             self.loginfo("set {} to  {} in laser camera alignment.".format(PARAM_DICT[k],v))
             # self.laser_distance = float(v)
             if k == "L":
-                self.laser_distance = float(v)
+                try:
+                    self.laser_distance = float(v)
+                except Exception as e:
+                    self.logerr(e)
+                    self.logerr("exception occur when got laser distance...")
             elif k == "E":
                 self.long_camera_exposure = float(v)
 

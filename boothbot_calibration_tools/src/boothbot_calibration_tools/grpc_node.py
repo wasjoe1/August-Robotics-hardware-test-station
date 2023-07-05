@@ -44,6 +44,10 @@ class DataService(data_pb2_grpc.data_ServiceServicer):
             # # APPS_CALIBRATION_SRV_CMD.service_call(v)
             # elif k == "command":
             if v.startswith(SET_PARAM):
+                set_param_data_from_page = v.split("=")
+                if len(set_param_data_from_page) !=3:
+                    logger.loginfo("got error data {}".format(v))
+                    return False
                 [set_param,k_tmp,v_tmp] = v.split("=")
                 logger.loginfo("set param: {} {}".format(k_tmp, v_tmp))
                 self.set_param(k_tmp,v_tmp)
