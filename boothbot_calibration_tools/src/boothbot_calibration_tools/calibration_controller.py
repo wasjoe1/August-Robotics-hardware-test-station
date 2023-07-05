@@ -699,7 +699,7 @@ class CalibrationController(ModuleBase):
         elif self._sub_state == 2:
             #TODO
             if not self.have_short_camera:
-                self.set_camera_expo(LONG, 7000)
+                self.set_camera_expo(LONG, 8000)
             self._sub_state = 3
         elif self.sub_state == 3:
             if not self.cameras_idle():
