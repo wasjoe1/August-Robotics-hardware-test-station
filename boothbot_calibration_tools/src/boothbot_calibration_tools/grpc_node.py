@@ -20,8 +20,10 @@ from boothbot_msgs.ros_interfaces import(
     APPS_CALIBRATION_DATA
 )
 
-from constants import CalibrationCommand as CS
+from boothbot_calibration_tools.constants import CalibrationCommand as CS
 
+from boothbot_calibration_tools.settings import APPS_CALIBRATION_SET_PARAM
+from boothbot_msgs.srv import (Command, CommandRequest)
 
 from proto_msg import (
     data_pb2,
@@ -30,7 +32,7 @@ from proto_msg import (
 
 PORT = 50052
 FASTAPI_GRPC_PORT = 50051
-
+SET_PARAM = "set_param"
 
 class DataService(data_pb2_grpc.data_ServiceServicer):
     def GetMsg(self, request, context):
@@ -41,9 +43,33 @@ class DataService(data_pb2_grpc.data_ServiceServicer):
             #     logger.loginfo("send new step {}".format(v))
             # # APPS_CALIBRATION_SRV_CMD.service_call(v)
             # elif k == "command":
-            self.set_command(v)
+            if v.startswith(SET_PARAM):
+                set_param_data_from_page = v.split("=")
+                if len(set_param_data_from_page) !=3:
+                    logger.loginfo("got error data {}".format(v))
+                    return False
+                [set_param,k_tmp,v_tmp] = v.split("=")
+                logger.loginfo("set param: {} {}".format(k_tmp, v_tmp))
+                self.set_param(k_tmp,v_tmp)
+            else:
+                logger.loginfo("set command: {}".format(v))
+                # logger.loginfo("set command: {} {}".format(k_tmp, v_tmp))
+                self.set_command(v)
 
         return data_pb2.dataResponse()
+    
+    def set_param(self,k,v):
+        try:
+            v = float(v)
+        except ValueError:
+            logger.logerr("cannot convert {} to float".format(v))
+            return False
+        logger.loginfo("service call {} {}".format(k, v))
+        # return APPS_CALIBRATION_SRV_CMD.service_call(command=(k + "=" +v)) 
+        call_srv = rospy.ServiceProxy(APPS_CALIBRATION_SET_PARAM, Command)
+        cmd = CommandRequest()
+        cmd.command = str(k) + "=" + str(v)
+        return  call_srv(cmd)
 
     def set_command(self, cmd):
         """

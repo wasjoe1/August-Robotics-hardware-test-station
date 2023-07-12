@@ -10,6 +10,7 @@ import cv2
 import base64
 from PIL import Image
 from io import BytesIO
+import os
 
 def get_host_ip():
     try:
@@ -98,3 +99,12 @@ def have_short_camera():
         return True
     except:
         print("something error occured that we have not tested..")
+
+def two_incli(port1, port2):
+    if os.path.exists(port1) and os.path.exists(port2):
+        return True
+    if os.path.exists(port1) and not os.path.exists(port2):
+        return False
+    if not os.path.exists(port1) and not os.path.exists(port2):
+        return None
+    return None

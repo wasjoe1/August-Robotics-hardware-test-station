@@ -19,6 +19,8 @@ var HORIZONTAL_OFFSET = "HORIZONTAL_OFFSET"
 var MARKING_ROI = "MARKING_ROI"
 var CB_INCLINATION = "CB_INCLINATION"
 
+var SET_PARAM = "set_param"
+
 const gs_job_list = [
     INITIALIZE_SERVO,
     CAMERA_SHARPNESS,
@@ -383,6 +385,18 @@ function command(cmd) {
     request.send()
 }
 
+function set_parameter() {
+    dis = get_id("laser_distance").value
+    console.log(dis)
+    // console.log("send cmd :" + cmd + ", distance "+ dis)
+    set_param = SET_PARAM + "=" + dis
+    console.log(set_param)
+    var url = "http://" + ip_addr + "/command/" + set_param
+    var request = new XMLHttpRequest()
+    request.open("GET", url)
+    request.send()
+}
+
 function download() {
     var pom = document.createElement('a');
     pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(JSON.stringify(download_data)));
@@ -462,23 +476,24 @@ function updata_user_manual(data) {
 // }
 document.onkeydown=function(event){
     var e = event || window.event || arguments.callee.caller.arguments[0];
-    if(e && e==76){ 
+    console.log(e.keyCode)
+    if(e && e.keyCode==76){ 
         console.log("LASER_ON")
         command('LASER_ON')
       }
-    if(e && e==78){ 
+    if(e && e.keyCode==78){ 
         console.log("DISABLE")
         command('SERVOS_DISABLE')
        }            
-     if(e && e==82){ 
+     if(e && e.keyCode==82){ 
         console.log("ENABLE")
         command('SERVOS_ENABLE')
     }
-    if(e && e==66){ 
+    if(e && e.keyCode==66){ 
         console.log("USE_SHORT_CAMERA")
         command('USE_SHORT_CAMERA')
     }
-    if(e && e==83){ 
+    if(e && e.keyCode==83){ 
         console.log("USE_LONG_CAMERA")
         command('USE_LONG_CAMERA')
     }
