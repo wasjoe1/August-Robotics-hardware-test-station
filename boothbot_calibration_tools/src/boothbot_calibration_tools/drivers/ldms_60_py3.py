@@ -62,6 +62,8 @@ class LDMS60Driver(LaserRangeFinderBase):
     def connect(self, timeout=None):
         try:
             self.port = Serial(**self.serial_config)
+            self.port.close()
+            self.port = Serial(**self.serial_config)
             if self.port.isOpen():
                 if self.get_measure_mode() != LDMSMeasureMode.Unknown:
                     return True

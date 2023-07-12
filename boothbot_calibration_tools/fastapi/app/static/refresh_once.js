@@ -29,5 +29,6 @@ var refresh_page_once_list = [
     "data_need_save",
     "last_data_title",
     "MARKING_ROI",
-    "CB_INCLINATION"
+    "CB_INCLINATION",
+    "set_param"
 ]

@@ -21,7 +21,7 @@ JOB_DATA = {
     CS.IMU_CALIBRATION.name: ["measurement_time", "inclinometer_x", "imu_x", "imu_y", "imu_z", "imu_w", "inclinometer_y","offset_x","offset_y"],
     CS.HORIZONTAL_OFFSET.name: ["measurement_time", "horizontal_offset"],
     CS.MARKING_ROI.name: ["measurement_time", "x", "y", "w", "h"],
-    CS.CB_INCLINATION.name: ["measurement_time", "row", "pitch"],
+    CS.CB_INCLINATION.name: ["measurement_time", "offset_x","offset_y" ,"row", "pitch"],
 }
 
 SAVE_DATA_TITLE = {
@@ -36,7 +36,7 @@ SAVE_DATA_TITLE = {
     CS.IMU_CALIBRATION.name: ["measurement_time", "inclinometer_x", "inclinometer_y", "imu_x", "imu_y", "imu_z", "imu_w","offset_x","offset_y"],
     CS.HORIZONTAL_OFFSET.name: ["measurement_time", "horizontal_offset"],
     CS.MARKING_ROI.name: ["measurement_time", "x", "y", "w", "h"],
-    CS.CB_INCLINATION.name: ["measurement_time", "row", "pitch"],
+    CS.CB_INCLINATION.name: ["measurement_time", "offset_x","offset_y" ,"row", "pitch"],
 
 }
 
@@ -83,11 +83,22 @@ COLOR = "CALI"
 CAMERA_FILTER_COUNT = 3
 
 IMU_SERVICE = "/drivers/chassis/srv_cmd"
+APPS_CALIBRATION_SET_PARAM = '/apps/calibration/set_param'
+
+PARAM_DICT={
+  "L": "laser_distance",
+  "E": "long_camera_exposure"
+}
+
 
 TRANS_BEACON = [0, 0, 0] # [0, 0, 0]
 TRANS_BEACON_RCENTER  = [0, 0, 0]# [0, 0, 0]
 
 LASER_HEIGHT = 0.78
+
+# LIONEL INLCINATION
+CB_INCLI_PORT_NAME = "/dev/incli"
+LIONEL_INCLI_PORT_NAME = "/dev/incli_lionel"
 
 TRANSITIONS_TOP = [
     {
@@ -125,3 +136,9 @@ TRANSITIONS = TRANSITIONS_TOP + [
         "dest": MS.RUNNING,
     },
 ]
+
+
+### ROS
+#"/drivers/inclinometer/incalination_lionel"
+#"/drivers/inclinometer/incalination_lionel_filtered"
+D_INCLI_INCLI_CB_RAD_FILTERED = "/drivers/inclinometer/incalination_cb_rad_filtered"
