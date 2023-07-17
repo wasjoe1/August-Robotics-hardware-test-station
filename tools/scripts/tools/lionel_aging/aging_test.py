@@ -21,10 +21,10 @@ def enable_repeat_marking(args):
 def close_on_pump(args):
     ser = serial.Serial('/dev/painter', 115200)
     if args[1].lower() == 'on':
-        ser.write('T0\n'.encode())
+        ser.write('M221S100\n'.encode())
         print('turn on the pump')
     elif args[1].lower() == 'close':
-        ser.write('T1\n'.encode())
+        ser.write('M221S0\n'.encode())
         print('closed the pump')
     else:
         print(f'invalid option:{args[1]}\n'
