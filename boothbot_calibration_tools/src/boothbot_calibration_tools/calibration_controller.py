@@ -50,8 +50,11 @@ from guiding_beacon_system_msgs.ros_interfaces import (
 )
 
 from boothbot_msgs.srv import (
-    CommandRequest,
     Command
+)
+
+from augustbot_msgs.srv import (
+    CommandRequest
 )
 
 from std_msgs.msg import String, Int16
