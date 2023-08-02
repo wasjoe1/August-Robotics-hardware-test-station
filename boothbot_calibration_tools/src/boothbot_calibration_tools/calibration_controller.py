@@ -567,11 +567,11 @@ class CalibrationController(ModuleBase):
         elif self.sub_state == 1:
             if not self.cameras_idle():
                 return
-            self.sub_state = 1
-        elif self.sub_state == 1:
-            self.set_camera_expo(LONG, 4000)
             self.sub_state = 2
         elif self.sub_state == 2:
+            self.set_camera_expo(LONG, 4000)
+            self.sub_state = 3
+        elif self.sub_state == 3:
             if not self.run_flag:
                 self.get_cameras_frames()
                 return
