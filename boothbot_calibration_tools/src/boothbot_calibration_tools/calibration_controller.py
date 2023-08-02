@@ -560,12 +560,18 @@ class CalibrationController(ModuleBase):
 
     def _do_sharpness(self):
         camera_type = self.job_setting[CS.CAMERA_SHARPNESS.name]['camera']
+        # self.set_camera_expo(LONG, 4000)
         if self.sub_state == 0:
             if self.init_cameras(40, 5):
                 self.sub_state = 1
         elif self.sub_state == 1:
             if not self.cameras_idle():
                 return
+            self.sub_state = 1
+        elif self.sub_state == 1:
+            self.set_camera_expo(LONG, 4000)
+            self.sub_state = 2
+        elif self.sub_state == 2:
             if not self.run_flag:
                 self.get_cameras_frames()
                 return
@@ -753,8 +759,9 @@ class CalibrationController(ModuleBase):
             return False
     
     def set_camera_expo(self, type, expo):
-        self.loginfo("Set {} exposure to {}".format(type, expo))
-        self.cameras[type].set_expo(expo)
+        if expo is not None:
+            self.loginfo("Set {} exposure to {}".format(type, expo))
+            self.cameras[type].set_expo(expo)
 
     def get_camera_result(self, type, dis=0.0, compensation=False, long_shrot_angle=None):
         frame = self.cameras[type].cap()
