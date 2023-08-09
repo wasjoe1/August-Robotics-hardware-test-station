@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import rospy as logger
 import rospy
 import apriltag
 from sensor_msgs.msg import Image, CameraInfo
@@ -27,7 +28,7 @@ _NEXT_AXIS = [1, 2, 0, 1]
 
 class ImageProcessing:
     def __init__(self):
-        rospy.init_node('get_dep_cam_image',anonymous=True)
+        # rospy.init_node('get_dep_cam_image',anonymous=True)
         rospy.Subscriber("/camera/color/image_raw",Image,self.get_image)
         rospy.Subscriber("/camera/color/camera_info",CameraInfo,self.get_camera_info)
         self.bridge = CvBridge()
@@ -37,9 +38,9 @@ class ImageProcessing:
         try:
             # self.cv_image = self.bridge.imgmsg_to_cv2(image, "bgr8")
             self.cv_image = np.frombuffer(data.data, dtype=np.uint8).reshape(data.height,data.width,-1)
-            # print(cv_image)
+            # logger.loginfo(cv_image)
         except CvBridgeError as e:
-            print(e)
+            logger.loginfo(e)
 
     def get_camera_info(self, data):
         self.camera_params = [data.K[0],data.K[4],data.K[2],data.K[5]] #640*360
@@ -54,13 +55,13 @@ class ImageProcessing:
 
     def save_image(self,image_name):
         if self.cv_image is not None:
-            # print("{}{}".format(IMAGE_PATH,image_name))
-            # print(self.cv_image)
+            # logger.loginfo("{}{}".format(IMAGE_PATH,image_name))
+            # logger.loginfo(self.cv_image)
             self.cv_image = cv2.cvtColor(self.cv_image, cv2.COLOR_BGR2GRAY)
             cv2.imwrite("{}{}".format(IMAGE_PATH,image_name),self.cv_image)
             return True
         else:
-            print("cv_image is None!")
+            logger.loginfo("cv_image is None!")
             return False
     def euler_matrix(self, ai, aj, ak, axes='sxyz'):
         """Return homogeneous rotation matrix from Euler angles and axis sequence.
@@ -143,30 +144,34 @@ class ImageProcessing:
 
     def get_tf_from_apriltag(self, image_name):
         detector = apriltag.Detector()
-        print("---------------------------------------------------------")
+        logger.loginfo("---------------------------------------------------------")
         try:
             img = cv2.imread("{}{}".format(IMAGE_PATH,image_name), cv2.IMREAD_GRAYSCALE)
             result = detector.detect(img)
+            logger.loginfo(result)
+            if len(result) == 0:
+                return None, None
             for _result in result:
-                pose_result = detector.detection_pose(_result,self.camera_params,tag_size = 0.05) #tag_size = 0.039
+                pose_result = detector.detection_pose(_result,self.camera_params,tag_size = 0.04) #tag_size = 0.039
                 tag_rotation = pose_result[0][:3,:3]
                 result_R = self.rot2eul(tag_rotation)
                 result_T = pose_result[0][:3,3]
-                print(result_R)
+                logger.loginfo(result_R)
                 camera_base_to_base = self.concatenate_matrices(self.euler_matrix(np.pi, 0, -np.pi/2),self.convert_to_4x4(np.linalg.inv(tag_rotation)),np.linalg.inv(self.euler_matrix(-np.pi/2, 0, -np.pi/2)))
                 euler_camera_base_to_base = self.rot2eul(camera_base_to_base)
 
 
-                print("euler_camera_base_to_base:{}".format((math.degrees(euler_camera_base_to_base[0]),math.degrees(euler_camera_base_to_base[1]),math.degrees(euler_camera_base_to_base[2]))))
+                logger.loginfo("euler_camera_base_to_base:{}".format((math.degrees(euler_camera_base_to_base[0]),math.degrees(euler_camera_base_to_base[1]),math.degrees(euler_camera_base_to_base[2]))))
                 Tc_a = pose_result[0]
                 T = self.concatenate_matrices(camera_base_to_base, self.euler_matrix(-np.pi/2, 0, -np.pi/2), Tc_a)
                 translation_camera_base_to_base = [0.3, 0, -T[2,3]]
-                print("depth_camera_joint rpy:{}".format(euler_camera_base_to_base))  #tf: depth_camera_joint  
-                print("depth_camera_joint xyz:{}".format([0.3, 0, -T[2,3]]))  #tf: depth_camera_joint  
+                logger.loginfo("depth_camera_joint rpy:{}".format(euler_camera_base_to_base))  #tf: depth_camera_joint  
+                logger.loginfo("depth_camera_joint xyz:{}".format([0.3, 0, -T[2,3]]))  #tf: depth_camera_joint  
             return euler_camera_base_to_base, translation_camera_base_to_base
 
         except Exception as e:
-            print(e)
+            logger.loginfo(e)
+            return None, None
         
     def compute_the_average(self, R_list, T_list):
         roll = sum([R[0] for R in R_list])/len(R_list)
@@ -185,7 +190,7 @@ if __name__ == '__main__':
     translation_camera_base_to_base_list = []
     while not rospy.is_shutdown():
         if a >= 10:
-            print(image_process.compute_the_average(euler_camera_base_to_base_list,translation_camera_base_to_base_list))
+            logger.loginfo(image_process.compute_the_average(euler_camera_base_to_base_list,translation_camera_base_to_base_list))
             break
         else:
             image_name = "{}.jpg".format(a)

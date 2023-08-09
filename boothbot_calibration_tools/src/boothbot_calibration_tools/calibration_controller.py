@@ -962,7 +962,7 @@ class CalibrationController(ModuleBase):
                 self.logerr_throttle(2, "cb incli error...")
         elif self.sub_state == 3:
             if self.cb_row is not None and self.cb_pitch is not None:
-                self._job_data["row"] = self.cb_row
+                self._job_data["roll"] = self.cb_row
                 self._job_data["pitch"] = self.cb_pitch
                 self.set_job_current_time()
             self.loginfo_throttle(2,"cb inclination successed..")
@@ -1092,6 +1092,8 @@ class CalibrationController(ModuleBase):
                 time.sleep(0.5)
                 if res is True:
                     euler_camera_base_to_base, translation_camera_base_to_base = self.image_processing.get_tf_from_apriltag(image_name)
+                    if euler_camera_base_to_base is None:
+                        return
                     self._job_dep_cam_iter+=1
                     self.euler_camera_base_to_base_list.append(euler_camera_base_to_base)
                     self.translation_camera_base_to_base_list.append(translation_camera_base_to_base)
@@ -1100,7 +1102,13 @@ class CalibrationController(ModuleBase):
                 self.sub_state = 3
         elif self.sub_state == 3:
             res1, res2 = self.image_processing.compute_the_average(self.euler_camera_base_to_base_list,self.translation_camera_base_to_base_list)
-            self.loginfo_throttle(2, "depth camera done. results {}".format(res1, res2))
+            self._job_data["yaw"] = 0.0
+            self._job_data["roll"] = res1[0]
+            self._job_data["pitch"] = res1[1]
+            self._job_data["x"] = res2[0]
+            self._job_data["y"] = res2[1]
+            self._job_data["z"] = res2[2]
+            self.loginfo_throttle(2, "depth camera done. results {}, {}".format(res1, res2))
             # self._job_data[]
         
 
