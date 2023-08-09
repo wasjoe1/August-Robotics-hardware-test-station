@@ -22,6 +22,7 @@ JOB_DATA = {
     CS.HORIZONTAL_OFFSET.name: ["measurement_time", "horizontal_offset"],
     CS.MARKING_ROI.name: ["measurement_time", "x", "y", "w", "h"],
     CS.CB_INCLINATION.name: ["measurement_time", "offset_x","offset_y" ,"row", "pitch"],
+    CS.DEPTH_CAMERA.name: ["measurement_time", "offset_x","offset_y" ,"row", "pitch"],
 }
 
 SAVE_DATA_TITLE = {
@@ -37,6 +38,7 @@ SAVE_DATA_TITLE = {
     CS.HORIZONTAL_OFFSET.name: ["measurement_time", "horizontal_offset"],
     CS.MARKING_ROI.name: ["measurement_time", "x", "y", "w", "h"],
     CS.CB_INCLINATION.name: ["measurement_time", "offset_x","offset_y" ,"row", "pitch"],
+    CS.DEPTH_CAMERA.name: ["measurement_time", "roll", "pitch","yaw", "x", "y", "z"],
 
 }
 
@@ -49,6 +51,7 @@ JOS_SETTINGS = {
     CS.VERTICAL_SERVO_ZERO.name: [1.57, -1.57],
     CS.IMU_CALIBRATION.name: {},
     CS.CB_INCLINATION.name: {},
+    CS.DEPTH_CAMERA.name: {},
 }
 
 LAST_SAVE_TILE = [CS.INITIALIZE_SERVO.name,
@@ -59,6 +62,7 @@ LAST_SAVE_TILE = [CS.INITIALIZE_SERVO.name,
                 CS.HORIZONTAL_OFFSET.name,
                 CS.MARKING_ROI.name,
                 CS.CB_INCLINATION.name,
+                CS.DEPTH_CAMERA.name,
                 ]
 
 JOB_DONE_STATUS = {

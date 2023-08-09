@@ -18,6 +18,7 @@ var IMU_CALIBRATION = "IMU_CALIBRATION"
 var HORIZONTAL_OFFSET = "HORIZONTAL_OFFSET"
 var MARKING_ROI = "MARKING_ROI"
 var CB_INCLINATION = "CB_INCLINATION"
+var DEPTH_CAMERA = "DEPTH_CAMERA"
 
 var SET_PARAM = "set_param"
 
@@ -39,7 +40,8 @@ const lionel_job_list = [
     IMU_CALIBRATION,
     HORIZONTAL_OFFSET,
     MARKING_ROI,
-    CB_INCLINATION
+    CB_INCLINATION,
+    DEPTH_CAMERA
 ]
 
 // var default_lang = 1
@@ -227,7 +229,8 @@ function get_save_data(ws_json, first_key) {
             get_function_data(first_key, HORIZONTAL_OFFSET) +
             get_function_data(first_key, IMU_CALIBRATION) + 
             get_function_data(first_key, MARKING_ROI) +
-            get_function_data(first_key, CB_INCLINATION)
+            get_function_data(first_key, CB_INCLINATION) +
+            get_function_data(first_key, DEPTH_CAMERA)
     }
     return data_content
 }

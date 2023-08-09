@@ -80,8 +80,8 @@ def ln_replace_setting(device_settings_path, json_path):
     pitch = None
 
     # vertical_offset = None
-    if 'HORIZONTAL_OFFSET' in json_data.keys():
-        servo_h = json_data["HORIZONTAL_OFFSET"]["horizontal_offset"]
+    if 'INITIALIZE_SERVO' in json_data.keys():
+        servo_h = json_data["INITIALIZE_SERVO"]["servo_h"]
     if 'VERTICAL_SERVO_ZERO' in json_data.keys():
         servo_v = json_data["VERTICAL_SERVO_ZERO"]["vertical_offset"]
     if 'CAMERAS_ANGLE' in json_data.keys():
