@@ -6,7 +6,7 @@
 		<arg name="enable_side_sonar" value="false" />
 	</include> -->
 	<include file="$(find boothbot_calibration_tools)/launch/lionel_base.launch"></include>
-	<include file="$(find boothbot_calibration_tools)/launch/dabai_dcw.launch"></include>
+	<include file="$(find boothbot_calibration_tools)/launch/depth_camera.launch"></include>
 	
 	<!-- <include file="$(find boothbot_calibration_tools)/launch/boothbot_CB_inclination_tools.launch"></include> -->
     <!-- inclinometer -->
