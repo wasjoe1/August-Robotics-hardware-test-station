@@ -1,0 +1,22 @@
+<launch>
+
+  <arg name="depcam_type"   default="$(optenv BOOTHBOT_DEPCAM_TYPE RS_D435)"/>
+
+  <!-- static transform for depth camera link -->
+  <!-- <node name="depth_camera_staticstf_broadcaster" pkg="boothbot_driver"
+        type="depth_camera_staticstf_broadcaster.py" output="log">
+  </node> -->
+
+  <!-- Enable realsense -->
+  <group if="$(eval depcam_type == 'RS_D435')">
+    <include file="$(find boothbot_calibration_tools)/launch/rs_camera.launch">
+        <arg name="initial_reset"       value="false"/>
+    </include>
+  </group>
+
+  <!-- Enable Orbbec dabai_dcw -->
+  <group if="$(eval depcam_type == 'ORBBEC_DABAI')">
+    <!-- <node pkg="tf" type="static_transform_publisher" name="orbbec_tf_match" args="0 0 0 0 0 0 depth_camera_link orbbec_depth_camera_link 200" /> -->
+    <include file="$(find boothbot_calibration_tools)/launch/dabai_dcw.launch"/>
+  </group>
+</launch>
