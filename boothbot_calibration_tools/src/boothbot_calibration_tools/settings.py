@@ -21,7 +21,8 @@ JOB_DATA = {
     CS.IMU_CALIBRATION.name: ["measurement_time", "inclinometer_x", "imu_x", "imu_y", "imu_z", "imu_w", "inclinometer_y","offset_x","offset_y"],
     CS.HORIZONTAL_OFFSET.name: ["measurement_time", "horizontal_offset"],
     CS.MARKING_ROI.name: ["measurement_time", "x", "y", "w", "h"],
-    CS.CB_INCLINATION.name: ["measurement_time", "offset_x","offset_y" ,"row", "pitch"],
+    CS.CB_INCLINATION.name: ["measurement_time", "offset_x","offset_y" ,"roll", "pitch"],
+    CS.DEPTH_CAMERA.name: ["measurement_time","roll", "pitch","yaw", "x", "y", "z"],
 }
 
 SAVE_DATA_TITLE = {
@@ -36,7 +37,8 @@ SAVE_DATA_TITLE = {
     CS.IMU_CALIBRATION.name: ["measurement_time", "inclinometer_x", "inclinometer_y", "imu_x", "imu_y", "imu_z", "imu_w","offset_x","offset_y"],
     CS.HORIZONTAL_OFFSET.name: ["measurement_time", "horizontal_offset"],
     CS.MARKING_ROI.name: ["measurement_time", "x", "y", "w", "h"],
-    CS.CB_INCLINATION.name: ["measurement_time", "offset_x","offset_y" ,"row", "pitch"],
+    CS.CB_INCLINATION.name: ["measurement_time", "offset_x","offset_y" ,"roll", "pitch"],
+    CS.DEPTH_CAMERA.name: ["measurement_time", "roll", "pitch","yaw", "x", "y", "z"],
 
 }
 
@@ -49,6 +51,7 @@ JOS_SETTINGS = {
     CS.VERTICAL_SERVO_ZERO.name: [1.57, -1.57],
     CS.IMU_CALIBRATION.name: {},
     CS.CB_INCLINATION.name: {},
+    CS.DEPTH_CAMERA.name: {},
 }
 
 LAST_SAVE_TILE = [CS.INITIALIZE_SERVO.name,
@@ -59,6 +62,7 @@ LAST_SAVE_TILE = [CS.INITIALIZE_SERVO.name,
                 CS.HORIZONTAL_OFFSET.name,
                 CS.MARKING_ROI.name,
                 CS.CB_INCLINATION.name,
+                CS.DEPTH_CAMERA.name,
                 ]
 
 JOB_DONE_STATUS = {
@@ -71,7 +75,8 @@ JOB_DONE_STATUS = {
     CS.IMU_CALIBRATION : 94,
     CS.HORIZONTAL_OFFSET : 4,
     CS.MARKING_ROI : 4,
-    CS.CB_INCLINATION : 3
+    CS.CB_INCLINATION : 3,
+    CS.DEPTH_CAMERA : 3
 }
 
 # SETUP="SETUP"

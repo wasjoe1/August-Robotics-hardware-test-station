@@ -26,6 +26,7 @@ from boothbot_config.device_settings import CONFIG_PATH
 # from boothbot_perception.track.tracking_camera import TrackingCamera
 from boothbot_calibration_tools.calibration_camera_tracking import CaliTrackingCamera
 from boothbot_calibration_tools.calibration_camera_tracking_base import CaliTrackingCameraBase
+from boothbot_calibration_tools.dep_camera_cali_tool import ImageProcessing
 
 from boothbot_perception.track import settings
 
@@ -50,8 +51,11 @@ from guiding_beacon_system_msgs.ros_interfaces import (
 )
 
 from boothbot_msgs.srv import (
-    CommandRequest,
     Command
+)
+
+from augustbot_msgs.srv import (
+    CommandRequest
 )
 
 from std_msgs.msg import String, Int16
@@ -173,7 +177,9 @@ class CalibrationController(ModuleBase):
         self.vertical_encoder = []
         self.horizontal_offset = []
         self._job_vertical_iter = 0
-
+        self._job_dep_cam_iter = 0
+        self.euler_camera_base_to_base_list = []
+        self.translation_camera_base_to_base_list = []
         # CB and inclination
         self.incli_data = None
         self.cb_row = None
@@ -186,6 +192,7 @@ class CalibrationController(ModuleBase):
         }
 
         self.painter = painter
+        self.image_processing = None
 
         self.job_setting = JOS_SETTINGS
 
@@ -242,7 +249,10 @@ class CalibrationController(ModuleBase):
         self.cameras_angle = []
         self.vertical_encoder = []
         self.horizontal_offset = []
+        self.euler_camera_base_to_base_list = []
+        self.translation_camera_base_to_base_list = []
         self._job_vertical_iter = 0
+        self._job_dep_cam_iter = 0
         self.camera_filter_count = 0
         self.test_track = False
         self.cb_incli_state = None
@@ -287,6 +297,9 @@ class CalibrationController(ModuleBase):
         elif self._job == CS.CB_INCLINATION:
             if not self.is_gs:
                 self._do_cb_inclination()
+        elif self._job == CS.DEPTH_CAMERA:
+            if not self.is_gs:
+                self._do_depth_camera()
 
     def initialize(self):
         self.loginfo("initializing ....")
@@ -557,12 +570,18 @@ class CalibrationController(ModuleBase):
 
     def _do_sharpness(self):
         camera_type = self.job_setting[CS.CAMERA_SHARPNESS.name]['camera']
+        # self.set_camera_expo(LONG, 4000)
         if self.sub_state == 0:
             if self.init_cameras(40, 5):
                 self.sub_state = 1
         elif self.sub_state == 1:
             if not self.cameras_idle():
                 return
+            self.sub_state = 2
+        elif self.sub_state == 2:
+            self.set_camera_expo(LONG, 4000)
+            self.sub_state = 3
+        elif self.sub_state == 3:
             if not self.run_flag:
                 self.get_cameras_frames()
                 return
@@ -750,8 +769,9 @@ class CalibrationController(ModuleBase):
             return False
     
     def set_camera_expo(self, type, expo):
-        self.loginfo("Set {} exposure to {}".format(type, expo))
-        self.cameras[type].set_expo(expo)
+        if expo is not None:
+            self.loginfo("Set {} exposure to {}".format(type, expo))
+            self.cameras[type].set_expo(expo)
 
     def get_camera_result(self, type, dis=0.0, compensation=False, long_shrot_angle=None):
         frame = self.cameras[type].cap()
@@ -942,7 +962,7 @@ class CalibrationController(ModuleBase):
                 self.logerr_throttle(2, "cb incli error...")
         elif self.sub_state == 3:
             if self.cb_row is not None and self.cb_pitch is not None:
-                self._job_data["row"] = self.cb_row
+                self._job_data["roll"] = self.cb_row
                 self._job_data["pitch"] = self.cb_pitch
                 self.set_job_current_time()
             self.loginfo_throttle(2,"cb inclination successed..")
@@ -965,40 +985,42 @@ class CalibrationController(ModuleBase):
         # if res.
 
     def _do_horizontal_offset(self):
-        if self.sub_state == 0:
-            if self.init_cameras(4, 4):
-                self.sub_state = 1
-        elif self.sub_state == 1:
-            if not self.cameras_idle():
-                return
-            if not self.run_flag:
-                self.get_cameras_frames()
-                return
-            self.laser.laser_on()
-            self.sub_state = 2
-        elif self.sub_state == 2:
-            if self.servos.done:
-                long_res, long_offset = self.track_beacon(camera_filter_time=CAMERA_FILTER_COUNT)
-                if long_res:
-                    self.sub_state = 3
-                    return
-        elif self.sub_state == 3:
-            self.loginfo_throttle(
-                2, "long camera track done.")
-            long_res, long_offset = self.track_beacon(camera_filter_time=CAMERA_FILTER_COUNT)
-            if long_res:
-                self.horizontal_offset.append(self._job_data["servo_h"])
-            else:
-                self.sub_state = 2
-            if len(self.horizontal_offset) > 5:
-                arr = np.array(self.horizontal_offset)
-                avg = np.average(arr)
-                self.loginfo("verticalencoder is {}".format(avg))
-                self.set_job_current_time()
-                self._job_data["horizontal_offset"] = avg
-                self.sub_state = 4
-        elif self.sub_state == 4:
-            self.loginfo_throttle(2, "horizontal job done.")
+        self.loginfo("horizontal offset calibration deprecate")
+        
+    #     if self.sub_state == 0:
+    #         if self.init_cameras(4, 4):
+    #             self.sub_state = 1
+    #     elif self.sub_state == 1:
+    #         if not self.cameras_idle():
+    #             return
+    #         if not self.run_flag:
+    #             self.get_cameras_frames()
+    #             return
+    #         self.laser.laser_on()
+    #         self.sub_state = 2
+    #     elif self.sub_state == 2:
+    #         if self.servos.done:
+    #             long_res, long_offset = self.track_beacon(camera_filter_time=CAMERA_FILTER_COUNT)
+    #             if long_res:
+    #                 self.sub_state = 3
+    #                 return
+    #     elif self.sub_state == 3:
+    #         self.loginfo_throttle(
+    #             2, "long camera track done.")
+    #         long_res, long_offset = self.track_beacon(camera_filter_time=CAMERA_FILTER_COUNT)
+    #         if long_res:
+    #             self.horizontal_offset.append(self._job_data["servo_h"])
+    #         else:
+    #             self.sub_state = 2
+    #         if len(self.horizontal_offset) > 5:
+    #             arr = np.array(self.horizontal_offset)
+    #             avg = np.average(arr)
+    #             self.loginfo("verticalencoder is {}".format(avg))
+    #             self.set_job_current_time()
+    #             self._job_data["horizontal_offset"] = avg
+    #             self.sub_state = 4
+    #     elif self.sub_state == 4:
+    #         self.loginfo_throttle(2, "horizontal job done.")
 
 
     def _incli_cb(self, msg):
@@ -1053,6 +1075,42 @@ class CalibrationController(ModuleBase):
             self.sub_state = 4
         elif self.sub_state == 4:
             self.loginfo_throttle(4, "roi  calibration done.")
+
+    def _do_depth_camera(self):
+        if self.sub_state == 0:
+            self.image_processing = ImageProcessing()
+            self.sub_state = 1
+            return
+        elif self.sub_state == 1:
+            if not self.run_flag:
+                return
+            self.sub_state = 2
+        elif self.sub_state == 2:
+            if self._job_dep_cam_iter <= 10:
+                image_name = "{}.jpg".format(self._job_dep_cam_iter)
+                res = self.image_processing.save_image(image_name)
+                time.sleep(0.5)
+                if res is True:
+                    euler_camera_base_to_base, translation_camera_base_to_base = self.image_processing.get_tf_from_apriltag(image_name)
+                    if euler_camera_base_to_base is None:
+                        return
+                    self._job_dep_cam_iter+=1
+                    self.euler_camera_base_to_base_list.append(euler_camera_base_to_base)
+                    self.translation_camera_base_to_base_list.append(translation_camera_base_to_base)
+                    res = False
+            else:
+                self.sub_state = 3
+        elif self.sub_state == 3:
+            res1, res2 = self.image_processing.compute_the_average(self.euler_camera_base_to_base_list,self.translation_camera_base_to_base_list)
+            self._job_data["yaw"] = 0.0
+            self._job_data["roll"] = res1[0]
+            self._job_data["pitch"] = res1[1]
+            self._job_data["x"] = res2[0]
+            self._job_data["y"] = res2[1]
+            self._job_data["z"] = res2[2]
+            self.loginfo_throttle(2, "depth camera done. results {}, {}".format(res1, res2))
+            # self._job_data[]
+        
 
 if __name__ == "__main__":
     rospy.init_node("calibration_controller")

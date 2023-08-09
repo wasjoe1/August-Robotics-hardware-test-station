@@ -6,6 +6,7 @@ import rospy as logger
 from assemble_tools.get_key import GetKey
 import os
 from pymodbus.client.sync import ModbusSerialClient as ModbusClient
+BAUDRATES = [9600, 115200]
 
 BAUDRATE = 3 #9600
 PORT = ["/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2"]
@@ -47,11 +48,14 @@ ___________________________________________
 
 
 def detect_baudrate_and_unit_id(port):
-    with ModbusClient(method='rtu', port=port, baudrate=115200, parity='N', timeout=0.1) as client:
-        response=client.read_holding_registers(0x200, 1, unit=0xFF)
-        if not response.isError():
-            return  port
-    time.sleep(0.5)
+    for baud in BAUDRATES:
+        with ModbusClient(method='rtu', port=port, baudrate=baud, parity='N', timeout=0.1) as client:
+            response=client.read_holding_registers(0x200, 1, unit=0xFF)
+            if not response.isError():
+                print(baud,port)
+                time.sleep(1)
+                return baud, port
+        time.sleep(0.5)
 
 UNIT_DICT = {
             "0": 0xe6,
@@ -96,8 +100,8 @@ class DYP_SONAR_UNIT_WRITTER(object):
     def set_baudrate(self):
         try:
             self.modbus_driver.write_register(0x201, BAUDRATE, unit=0xFF)
-        except RemoteProcessFailed as e:
-            logger.logwarn(e)
+        except:
+            logger.logwarn("123")
 
 
     def distance_pub(self,unit):
@@ -126,13 +130,26 @@ def run():
                 for i in range(0,10):
                     if key in (str(i), str(i)):
                         if _in  == 1:
-                            modbus_config["baudrate"] = 115200
+                            # modbus_config["baudrate"] = 115200
+                            for port in PORT:
+                                    try:
+                                        baud, _port = detect_baudrate_and_unit_id(port)
+                                    except:
+                                        print()
+                            modbus_config = {
+                                "port": _port,
+                                "baudrate": baud,
+                                "parity": "N",
+                                "timeout": 0.5,
+                            }
                             mbd = ModbusDriver(**modbus_config).client
                             DYP = DYP_SONAR_UNIT_WRITTER(mbd)
                             DYP.set_baudrate()
+                            time.sleep(1)
                             modbus_config["baudrate"] = 9600
                             mbd = ModbusDriver(**modbus_config).client
                             DYP = DYP_SONAR_UNIT_WRITTER(mbd)
+
                             #_in  = 0
                         os.system('clear')
                         DYP.set_unit(key)
@@ -188,14 +205,15 @@ def run():
 
 
 if __name__ == '__main__':
-    for port in PORT:
-        try:
-            _port = detect_baudrate_and_unit_id(port)
-        except:
-            print()
+    for i in range(3):
+        for port in PORT:
+            try:
+                baud, _port = detect_baudrate_and_unit_id(port)
+            except:
+                print()
     modbus_config = {
     "port": _port,
-    "baudrate": 115200,
+    "baudrate": baud,
     "parity": "N",
     "timeout": 0.5,
 }

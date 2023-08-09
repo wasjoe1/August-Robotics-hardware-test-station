@@ -39,6 +39,7 @@ class CalibrationCommand(Enum):
     HORIZONTAL_OFFSET = 27
     MARKING_ROI = 28
     CB_INCLINATION = 29
+    DEPTH_CAMERA = 30
 
     USE_LONG_CAMERA = 50
     USE_SHORT_CAMERA = 51
