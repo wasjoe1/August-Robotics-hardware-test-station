@@ -30,5 +30,6 @@ var refresh_page_once_list = [
     "last_data_title",
     "MARKING_ROI",
     "CB_INCLINATION",
+    "DEPTH_CAMERA",
     "set_param"
 ]
