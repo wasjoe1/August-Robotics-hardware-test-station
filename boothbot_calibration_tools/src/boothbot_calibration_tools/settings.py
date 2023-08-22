@@ -90,11 +90,6 @@ CAMERA_FILTER_COUNT = 3
 IMU_SERVICE = "/drivers/chassis/srv_cmd"
 APPS_CALIBRATION_SET_PARAM = '/apps/calibration/set_param'
 
-PARAM_DICT={
-  "L": "laser_distance",
-  "E": "long_camera_exposure"
-}
-
 
 TRANS_BEACON = [0, 0, 0] # [0, 0, 0]
 TRANS_BEACON_RCENTER  = [0, 0, 0]# [0, 0, 0]

@@ -74,8 +74,7 @@ from boothbot_calibration_tools.settings import (
     COLOR,
     CAMERA_FILTER_COUNT,
     JOB_DONE_STATUS,
-    APPS_CALIBRATION_SET_PARAM,
-    PARAM_DICT
+    APPS_CALIBRATION_SET_PARAM
 )
 
 from boothbot_calibration_tools.constants import(
@@ -1032,9 +1031,9 @@ class CalibrationController(ModuleBase):
     
     def _set_param(self, cmd):
         self.loginfo("Got cammand: {}".format(cmd))
-        if cmd.command.startswith("L=") or cmd.command.startswith("E="):
+        if "=" in cmd.command:
             [k,v] = cmd.command.split("=")
-            self.loginfo("set {} to  {} in laser camera alignment.".format(PARAM_DICT[k],v))
+            self.loginfo("set {} to  {} in laser camera alignment.".format(v, k))
             try:
                 if k == "L":
                     self.laser_distance = float(v)
