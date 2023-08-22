@@ -142,7 +142,7 @@ class ImageProcessing:
         new_matrix[3,3] = 1
         return new_matrix
 
-    def get_tf_from_apriltag(self, image_name):
+    def get_tf_from_apriltag(self, image_name, tag_size = 0.04):
         detector = apriltag.Detector()
         logger.loginfo("---------------------------------------------------------")
         try:
@@ -152,7 +152,7 @@ class ImageProcessing:
             if len(result) == 0:
                 return None, None
             for _result in result:
-                pose_result = detector.detection_pose(_result,self.camera_params,tag_size = 0.04) #tag_size = 0.039
+                pose_result = detector.detection_pose(_result,self.camera_params,tag_size = tag_size) #tag_size = 0.039
                 tag_rotation = pose_result[0][:3,:3]
                 result_R = self.rot2eul(tag_rotation)
                 result_T = pose_result[0][:3,3]

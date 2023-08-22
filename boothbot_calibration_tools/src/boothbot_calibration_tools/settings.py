@@ -22,7 +22,7 @@ JOB_DATA = {
     CS.HORIZONTAL_OFFSET.name: ["measurement_time", "horizontal_offset"],
     CS.MARKING_ROI.name: ["measurement_time", "x", "y", "w", "h"],
     CS.CB_INCLINATION.name: ["measurement_time", "offset_x","offset_y" ,"roll", "pitch"],
-    CS.DEPTH_CAMERA.name: ["measurement_time","roll", "pitch","yaw", "x", "y", "z"],
+    CS.DEPTH_CAMERA.name: ["measurement_time","roll", "pitch","yaw", "x", "y", "z", "tag_size"],
 }
 
 SAVE_DATA_TITLE = {
@@ -38,7 +38,7 @@ SAVE_DATA_TITLE = {
     CS.HORIZONTAL_OFFSET.name: ["measurement_time", "horizontal_offset"],
     CS.MARKING_ROI.name: ["measurement_time", "x", "y", "w", "h"],
     CS.CB_INCLINATION.name: ["measurement_time", "offset_x","offset_y" ,"roll", "pitch"],
-    CS.DEPTH_CAMERA.name: ["measurement_time", "roll", "pitch","yaw", "x", "y", "z"],
+    CS.DEPTH_CAMERA.name: ["measurement_time", "roll", "pitch","yaw", "x", "y", "z", "tag_size"],
 
 }
 

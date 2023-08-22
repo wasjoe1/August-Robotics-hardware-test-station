@@ -256,8 +256,12 @@ class CalibrationController(ModuleBase):
         self.camera_filter_count = 0
         self.test_track = False
         self.cb_incli_state = None
+
+        # settable param
         self.laser_distance = None
         self.long_camera_exposure = None
+        self.depth_camera_cali_param = 0.04
+
         self.set_job_status(JS.INIT.name)
 
 
@@ -1031,15 +1035,16 @@ class CalibrationController(ModuleBase):
         if cmd.command.startswith("L=") or cmd.command.startswith("E="):
             [k,v] = cmd.command.split("=")
             self.loginfo("set {} to  {} in laser camera alignment.".format(PARAM_DICT[k],v))
-            # self.laser_distance = float(v)
-            if k == "L":
-                try:
+            try:
+                if k == "L":
                     self.laser_distance = float(v)
-                except Exception as e:
-                    self.logerr(e)
-                    self.logerr("exception occur when got laser distance...")
-            elif k == "E":
-                self.long_camera_exposure = float(v)
+                elif k == "E":
+                    self.long_camera_exposure = float(v)
+                elif k == "D":
+                    self.depth_camera_cali_param = float(v)
+            except Exception as e:
+                self.logerr(e)
+                self.logerr("exception occur when got param...")                    
 
     def _do_marking_camera_roi(self):
         if self.sub_state == 0:
@@ -1077,6 +1082,7 @@ class CalibrationController(ModuleBase):
             self.loginfo_throttle(4, "roi  calibration done.")
 
     def _do_depth_camera(self):
+        self._job_data["tag_size"] = self.depth_camera_cali_param
         if self.sub_state == 0:
             self.image_processing = ImageProcessing()
             self.sub_state = 1
@@ -1091,7 +1097,7 @@ class CalibrationController(ModuleBase):
                 res = self.image_processing.save_image(image_name)
                 time.sleep(0.5)
                 if res is True:
-                    euler_camera_base_to_base, translation_camera_base_to_base = self.image_processing.get_tf_from_apriltag(image_name)
+                    euler_camera_base_to_base, translation_camera_base_to_base = self.image_processing.get_tf_from_apriltag(image_name, self.depth_camera_cali_param)
                     if euler_camera_base_to_base is None:
                         return
                     self._job_dep_cam_iter+=1
