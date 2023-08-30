@@ -14,7 +14,8 @@ from rospy_message_converter import json_message_converter
 # from boothbot_common import ros_logger_wrap as
 
 from boothbot_common.ros_logger_wrap import ROSLogging as Logging
-from guiding_beacon_system.guiding_station_measurement_module_client import GuidingStationMeasurementClient
+# from guiding_beacon_system.guiding_station_measurement_module_client import GuidingStationMeasurementClient
+from gbs_measurement.gs_measurement_module_client import GuidingStationMeasurementClient
 import guiding_beacon_system_msgs.msg as gbmsgs
 
 
@@ -228,6 +229,7 @@ if __name__ == "__main__":
                 else:
                     lm.loginfo_throttle(5, "waiting for calibration done.")
         elif cali_state == MEASURING:
+            rospy.sleep(0.1)
             # for m in measurement_goal_list:
             if cali_sub_state == 0:
                 # lm.loginfo("measure goal {}".format(measurement_goal_list[rb_id]))
