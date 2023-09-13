@@ -13,8 +13,8 @@ import math
 
 HOME_PATH = os.environ['HOME']
 IMAGE_PATH = HOME_PATH + "/catkin_ws/local/images/dep_images/"
-# if not os.path.exists(IMAGE_PATH):
-#     os.makedirs(IMAGE_PATH)
+if not os.path.exists(IMAGE_PATH):
+    os.makedirs(IMAGE_PATH)
 _AXES2TUPLE = {
     'sxyz': (0, 0, 0, 0), 'sxyx': (0, 0, 1, 0), 'sxzy': (0, 1, 0, 0),
     'sxzx': (0, 1, 1, 0), 'syzx': (1, 0, 0, 0), 'syzy': (1, 0, 1, 0),
