@@ -70,7 +70,6 @@ def analyse_data(DATA_lines):
 
     datacode_regex = "\[(([A-Z]+_?)+)\]"
     data_pattern = re.compile("^(.*\[DATA\] " + datacode_regex + " (.*))$")
-
     for line in no_error_lines:
         # match datacode
         match = data_pattern.match(line)
@@ -81,7 +80,7 @@ def analyse_data(DATA_lines):
             lionel_name = data
         elif code == DataCode.GS_NAME:
             gs_name = data
-        elif code == DataCode.COMMUNICATION_METHOD:
+        elif code == DataCode.GRPC_CONNECTION_TYPE:
             communication_method = data
         elif code == DataCode.GOTOMARK_MAP_ID:
             gotomark_map_id = data
