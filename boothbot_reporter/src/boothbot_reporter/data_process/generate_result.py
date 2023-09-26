@@ -20,37 +20,38 @@ def generate_result(entities):
     """
     # the header
     results = [[
-                'Name_of_Lionel',
-                'Name_of_GS',
-                'Communication_method',
-                'Date_of_aging', 
-                'Starting_time',
-                'Ending_time',
+        'Name_of_Lionel',
+        'Name_of_GS',
+        'Communication_method',
+        'Date_of_aging',
+        'Starting_time',
+        'Ending_time',
 
-                'marks/hour',
-                'seconds/mark_goal',
+        'marks/hour',
+        'seconds/mark_goal',
 
-                'seconds/navigation',
-                'seconds/moving',
+        'seconds/navigation',
+        'seconds/moving',
 
-                'seconds/marking',
-                'seconds/submap',
-                'seconds/localisation',
-                'localisation_times/nav',
+        'seconds/marking',
+        'seconds/submap',
+        'seconds/localisation',
+        'localisation_times/nav',
 
-                'total_hours', 
-                'total_localisation', 
-                'total_mark',
-                'total_moving',
-                'total_navigation',
-                'total_number_of_pull_submap',
-                'Map_ID',
-                ]]
-    
+        'total_hours',
+        'total_localisation',
+        'total_mark',
+        'total_moving',
+        'total_navigation',
+        'total_number_of_pull_submap',
+        'Map_ID',
+        'time_diff'
+    ]]
+
     lionel_name = ""
     for entity in entities:
         result = []
-        
+
         result.append(entity.lionel_name)
         result.append(entity.gs_name)
         result.append(entity.communication_method)
@@ -77,9 +78,10 @@ def generate_result(entities):
         result.append(str(len(entity.nav_data)))
         result.append(str(len(entity.submap_data)))
         result.append(entity.gotomark_map_id)
-        
+        result.append(str(cal_diff(entity)))
+
         results.append(result)
-        
+
         lionel_name = str(entity.lionel_name)
     # the results contain all data rows
     return results, lionel_name
@@ -90,3 +92,19 @@ def cal_avg(list_dict, function):
         return sum(function(x) for x in list_dict) / len(list_dict)
     except ZeroDivisionError:
         return 0
+
+
+def cal_sum(list_dict, function):
+    try:
+        return sum(function(x) for x in list_dict)
+    except ZeroDivisionError:
+        return 0
+
+
+def cal_diff(entity):
+    return str((entity.total_time / 3600) - cal_sum(entity.mark_data, lambda x: x['end_time']
+                                                                         - x["start_time"]) - cal_sum(
+        entity.loc_data, lambda x: x["end_time"] - x["start_time"]) -
+        cal_sum(entity.submap_data, lambda x: x["end_time"] - x["start_time"]) - cal_sum(entity.move_data,
+                                                                                         lambda x: x["end_time"] - x[
+                                                                                             "start_time"]))
