@@ -47,6 +47,7 @@ def analyse_data(DATA_lines):
     lionel_name = None
     gs_name = None
     communication_method = None
+    version = None
     gotomark_map_id = None
     date = None
     start_time = None
@@ -80,6 +81,8 @@ def analyse_data(DATA_lines):
             lionel_name = data
         elif code == DataCode.GS_NAME:
             gs_name = data
+        elif code == DataCode.GIT_INFO:
+            version = data
         elif code == DataCode.GRPC_CONNECTION_TYPE:
             communication_method = data
         elif code == DataCode.GOTOMARK_MAP_ID:
@@ -98,7 +101,7 @@ def analyse_data(DATA_lines):
             total_time = data - start_time
             start_time = datetime.datetime.utcfromtimestamp(start_time).strftime('%H:%M:%S')
             # construct the object of Entity class
-            entity = Entity(lionel_name, gs_name, communication_method, gotomark_map_id, date, start_time, end_time,
+            entity = Entity(lionel_name, gs_name, communication_method, version, gotomark_map_id, date, start_time, end_time,
                             total_time)
             entity.nav_data = navigation_entities
             entity.mark_data = mark_entities
