@@ -110,6 +110,7 @@ def analyse_data(DATA_lines):
             entity.mark_data = mark_entities
             entity.loc_data = localisation_entities
             entity.move_data = movement_entities
+            entity.get_goal_data = get_goal_entities
             entity.switch_map_data = switch_map_entities
             navigation_entities = []
             movement_entities = []
@@ -174,7 +175,6 @@ def analyse_data(DATA_lines):
             switch_map_entity = dict.fromkeys(switch_map_entity, None)
             switch_map_entity["start_time"] = data
         elif code == DataCode.SWITCH_MAP_SUCCEEDED:
-            switch_map_entity = dict.fromkeys(switch_map_entity, None)
             switch_map_entity["switch_map_succeeded"] = data
         elif code == DataCode.SWITCH_MAP_END_TIME:
             switch_map_entity["end_time"] = data

@@ -43,13 +43,13 @@ def generate_result(entities):
         else:
             minmoduleline += ['{}'.format(i)] + [''] * 2
     count_list = ['Ratio', 'Total', 'Fail']
-    comment1 = "Mark's time partially overlaps with the time of the goal"
+    comment1 = "Mark's time partially overlaps with the time of get_goal"
     comment2 = "The first time of SWITCH_MAP is not in the GET_GOAL"
     comment3 = "time diff is use Total time of GOTO - Total time of get_goal" \
                ",move,locate and mark"
 
     results = [
-        ['comments:', f'{comment1}', f'{comment2}'],
+        ['comments:', '{}'.format(comment1), '{}'.format(comment2), '{}'.format(comment3)],
         mainmoduleline,
         submoduleline,
         minmoduleline,
@@ -101,7 +101,7 @@ def generate_result(entities):
 
         result.append(str(cal_avg(entity.switch_map_data, lambda x: x["end_time"] - x["start_time"])))
         result.append(str(len(entity.switch_map_data)))
-        result.append(str(cal_fail_count(entity.get_goal_data, lambda x: x["switch_map_succeeded"] == False)))
+        result.append(str(cal_fail_count(entity.switch_map_data, lambda x: x["switch_map_succeeded"] == False)))
 
         result.append(str(cal_avg(entity.nav_data, lambda x: x["end_time"] - x["start_time"])))
         result.append(str(len(entity.nav_data)))
