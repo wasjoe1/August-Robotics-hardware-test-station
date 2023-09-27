@@ -66,8 +66,11 @@ def analyse_data(DATA_lines):
     movement_entities = []
     movement_entity = {"start_time": None, "end_time": None, "move_goal_succeeded": None}
 
-    submap_entities = []
-    submap_entity = {"start_time": None, "end_time": None}
+    get_goal_entities = []
+    get_goal_entity = {"start_time": None, "end_time": None, "get_goal_succeeded": None}
+
+    switch_map_entities = []
+    switch_map_entity = {"start_time": None, "end_time": None, "switch_map_succeeded": None}
 
     datacode_regex = "\[(([A-Z]+_?)+)\]"
     data_pattern = re.compile("^(.*\[DATA\] " + datacode_regex + " (.*))$")
@@ -95,7 +98,7 @@ def analyse_data(DATA_lines):
             mark_entities = []
             localisation_entities = []
             movement_entities = []
-            submap_entities = []
+            switch_map_entities = []
         elif code == DataCode.GOTOMARK_END_TIME:
             end_time = datetime.datetime.utcfromtimestamp(data).strftime('%H:%M:%S')
             total_time = data - start_time
@@ -107,13 +110,23 @@ def analyse_data(DATA_lines):
             entity.mark_data = mark_entities
             entity.loc_data = localisation_entities
             entity.move_data = movement_entities
-            entity.submap_data = submap_entities
+            entity.switch_map_data = switch_map_entities
             navigation_entities = []
             movement_entities = []
             localisation_entities = []
             mark_entities = []
-            submap_entities = []
+            switch_map_entities = []
             entities.append(entity)
+
+        if code == DataCode.GET_GOAL_START_TIME:
+            get_goal_entity = dict.fromkeys(get_goal_entity, None)
+            get_goal_entity["start_time"] = data
+        elif code == DataCode.GET_GOAL_SUCCEEDED:
+            get_goal_entity["get_goal_succeeded"] = data
+        elif code == DataCode.GET_GOAL_END_TIME:
+            get_goal_entity["end_time"] = data
+            get_goal_entities.append(get_goal_entity)
+            get_goal_entity = dict.fromkeys(get_goal_entity, None)
 
         if code == DataCode.NAV_GOAL_START_TIME:
             navigation_entity = dict.fromkeys(navigation_entity, None)
@@ -157,13 +170,16 @@ def analyse_data(DATA_lines):
             movement_entities.append(movement_entity)
             movement_entity = dict.fromkeys(movement_entity, None)
 
-        if code == DataCode.FLEET_PULL_SUBMAP_START_TIME:
-            submap_entity = dict.fromkeys(submap_entity, None)
-            submap_entity["start_time"] = data
-        elif code == DataCode.FLEET_PULL_SUBMAP_END_TIME:
-            submap_entity["end_time"] = data
-            submap_entities.append(submap_entity)
-            submap_entity = dict.fromkeys(submap_entity, None)
+        if code == DataCode.SWITCH_MAP_START_TIME:
+            switch_map_entity = dict.fromkeys(switch_map_entity, None)
+            switch_map_entity["start_time"] = data
+        elif code == DataCode.SWITCH_MAP_SUCCEEDED:
+            switch_map_entity = dict.fromkeys(switch_map_entity, None)
+            switch_map_entity["switch_map_succeeded"] = data
+        elif code == DataCode.SWITCH_MAP_END_TIME:
+            switch_map_entity["end_time"] = data
+            switch_map_entities.append(switch_map_entity)
+            switch_map_entity = dict.fromkeys(switch_map_entity, None)
 
     data_lines = []
     return entities

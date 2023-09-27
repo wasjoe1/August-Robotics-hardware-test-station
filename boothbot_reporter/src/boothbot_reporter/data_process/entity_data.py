@@ -23,4 +23,5 @@ class Entity:
         self.mark_data = []
         self.loc_data = []
         self.move_data = []
-        self.submap_data = []
+        self.switch_map_data = []
+        self.get_goal_data = []
