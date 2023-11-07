@@ -93,11 +93,12 @@ def analyse_data(DATA_lines):
         elif code == DataCode.GOTOMARK_START_TIME:
             start_time = data
             date = datetime.datetime.utcfromtimestamp(data).strftime('%Y-%m-%d')
-            # reset three data sets
+            # reset data sets
+            get_goal_entities = []
             navigation_entities = []
-            mark_entities = []
-            localisation_entities = []
             movement_entities = []
+            localisation_entities = []
+            mark_entities = []
             switch_map_entities = []
         elif code == DataCode.GOTOMARK_END_TIME:
             end_time = datetime.datetime.utcfromtimestamp(data).strftime('%H:%M:%S')
@@ -112,6 +113,7 @@ def analyse_data(DATA_lines):
             entity.move_data = movement_entities
             entity.get_goal_data = get_goal_entities
             entity.switch_map_data = switch_map_entities
+            get_goal_entities = []
             navigation_entities = []
             movement_entities = []
             localisation_entities = []
