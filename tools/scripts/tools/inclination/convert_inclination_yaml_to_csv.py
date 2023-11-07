@@ -10,14 +10,6 @@ yaml_data = None
 
 if __name__ == "__main__":
 
-    print(sys.argv)
-
-    if len(sys.argv) != 2:
-        print("You must input the gs sn param like GSP5-0111.")
-        exit(0)
-
-    sn = sys.argv[1]
-
     file_list = os.listdir()
     print(file_list)
 
@@ -41,7 +33,7 @@ if __name__ == "__main__":
 
         for k,v in yaml_data.items():
             print("converting yaml to csv")
-            with open(sn+"_"+y[:-5]+"_"+k+".csv", "w") as f:
+            with open(y[:-5]+"_"+k+".csv", "w") as f:
                 cr = csv.writer(f)
                 cr.writerow(["timestamp","servo_h","done","incli_x","incli_y"])
                 for k1, v1 in v.items():
