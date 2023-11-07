@@ -93,7 +93,7 @@ def analyse_data(DATA_lines):
         elif code == DataCode.GOTOMARK_START_TIME:
             start_time = data
             date = datetime.datetime.utcfromtimestamp(data).strftime('%Y-%m-%d')
-            # reset three data sets
+            # reset data sets
             get_goal_entities = []
             navigation_entities = []
             movement_entities = []
