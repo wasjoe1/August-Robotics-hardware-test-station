@@ -88,6 +88,25 @@ def img2textfromcv2(frame, draw_line):
     im_text = im_binary.decode()
     return im_text
 
+def occlusion_image(frame, size, type="vertical"):
+    if size is None:
+        return frame
+    h, w, _ = frame.shape
+    size = int(size)
+    if size < 0:
+        return frame
+    if type is "vertical":
+        if size >= w//2:
+            return frame
+        out_image = cv2.rectangle(frame, (0, 0), (w // 2-size, h), (255, 255, 255), cv2.FILLED)
+        out_image = cv2.rectangle(out_image, (w//2+size, 0), (w, h), (255, 255, 255), cv2.FILLED)
+    else:
+        if size >= h//2:
+            return frame        
+        out_image = cv2.rectangle(frame, (0, 0), (w, h // 2-size), (255, 255, 255), cv2.FILLED)
+        out_image = cv2.rectangle(out_image, (0, h//2+size), (w, h), (255, 255, 255), cv2.FILLED)
+    return out_image
+
 def have_short_camera():
     try:
         # TOLERANCE = (0.0005, 0.001)

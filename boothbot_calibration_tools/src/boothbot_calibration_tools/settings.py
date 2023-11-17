@@ -18,10 +18,10 @@ JOB_DATA = {
     CS.CAMERA_LASER_ALIGNMENT.name: ["camera_laser_alignment"],
     CS.CAMERAS_ANGLE.name: ["cameras_angle", "measurement_time"],
     CS.VERTICAL_SERVO_ZERO.name: ["vertical_offset", "measurement_time"],
-    CS.IMU_CALIBRATION.name: ["measurement_time", "inclinometer_x", "imu_x", "imu_y", "imu_z", "imu_w", "inclinometer_y","offset_x","offset_y"],
+    CS.IMU_CALIBRATION.name: ["measurement_time", "inclinometer_x", "imu_x", "imu_y", "imu_z", "imu_w", "inclinometer_y","base_offset_x","base_offset_y"],
     CS.HORIZONTAL_OFFSET.name: ["measurement_time", "horizontal_offset"],
     CS.MARKING_ROI.name: ["measurement_time", "x", "y", "w", "h"],
-    CS.CB_INCLINATION.name: ["measurement_time", "offset_x","offset_y" ,"roll", "pitch"],
+    CS.CB_INCLINATION.name: ["measurement_time", "cb_offset_x", "cb_offset_y", "base_offset_x", "base_offset_y", "roll", "pitch"],
     CS.DEPTH_CAMERA.name: ["measurement_time","roll", "pitch","yaw", "x", "y", "z", "tag_size"],
 }
 
@@ -34,10 +34,10 @@ SAVE_DATA_TITLE = {
     CS.CAMERA_LASER_ALIGNMENT.name: [],
     CS.CAMERAS_ANGLE.name: ["cameras_angle", "measurement_time"],
     CS.VERTICAL_SERVO_ZERO.name: ["vertical_offset", "measurement_time"],
-    CS.IMU_CALIBRATION.name: ["measurement_time", "inclinometer_x", "inclinometer_y", "imu_x", "imu_y", "imu_z", "imu_w","offset_x","offset_y"],
+    CS.IMU_CALIBRATION.name: ["measurement_time", "inclinometer_x", "inclinometer_y", "imu_x", "imu_y", "imu_z", "imu_w","base_offset_x","base_offset_y"],
     CS.HORIZONTAL_OFFSET.name: ["measurement_time", "horizontal_offset"],
     CS.MARKING_ROI.name: ["measurement_time", "x", "y", "w", "h"],
-    CS.CB_INCLINATION.name: ["measurement_time", "offset_x","offset_y" ,"roll", "pitch"],
+    CS.CB_INCLINATION.name: ["measurement_time", "cb_offset_x", "cb_offset_y", "base_offset_x", "base_offset_y", "roll", "pitch"],
     CS.DEPTH_CAMERA.name: ["measurement_time", "roll", "pitch","yaw", "x", "y", "z", "tag_size"],
 
 }
