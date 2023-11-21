@@ -43,8 +43,7 @@ from guiding_beacon_system_msgs.ros_interfaces import (
 from boothbot_calibration_tools.settings import(
     TRANS_BEACON,
     TRANS_BEACON_RCENTER,
-    LASER_HEIGHT,
-    D_INCLI_INCLI_CB_RAD_FILTERED
+    LASER_HEIGHT
 )
 
 from boothbot_calibration_tools.constants import(
@@ -53,6 +52,11 @@ from boothbot_calibration_tools.constants import(
     CB_INCLI_RES
 )
 
+from boothbot_common.interface_with_type import InterfaceWithType
+
+DRIVERS_INCLINOMETER_INCLINATION_CB = InterfaceWithType('/drivers/inclinometer/inclination_cb', stmsgs.Float32MultiArray)
+DRIVERS_INCLINOMETER_INCLINATION_CB_FILTERED = InterfaceWithType('/drivers/inclinometer/inclination_cb_filtered', stmsgs.Float32MultiArray)
+DRIVERS_INCLINOMETER_INCLINATION_CB_FILTERED_RAD = InterfaceWithType('/drivers/inclinometer/inclination_cb_filtered_rad', stmsgs.Float32MultiArray)
 
 
 #######################################
@@ -119,7 +123,7 @@ class InclinometerDriver(Logging):
         # DRIVERS_INCLINOMETER_INCLINATION_FILTERED_RAD.Subscriber(
         #     callback=self._inclination_cb
         # )
-        rospy.Subscriber(D_INCLI_INCLI_CB_RAD_FILTERED, Float32MultiArray, self._inclination_cb)
+        DRIVERS_INCLINOMETER_INCLINATION_CB_FILTERED_RAD.Subscriber(self._inclination_cb)
 
         self.timu = tftrans.compose_matrix(
             translate=(0., 0., 0.), angles=(0.0, 0.0, 0.0))

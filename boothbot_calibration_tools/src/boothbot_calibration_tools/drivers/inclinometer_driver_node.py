@@ -37,7 +37,6 @@ from guiding_beacon_system_msgs.ros_interfaces import (
 from boothbot_calibration_tools.settings import (
     CB_INCLI_PORT_NAME,
     LIONEL_INCLI_PORT_NAME,
-    D_INCLI_INCLI_CB_RAD_FILTERED
 )
 
 from boothbot_calibration_tools.utils import two_incli
@@ -80,6 +79,7 @@ class MKInclinometerDriverROS(object):
                 modbus_driver = ModbusDriver(**modbus_config)
                 # if            
                 senser_driver = InclinometerDriver(modbus_driver.client, unit_id=unit)
+                rospy.sleep(0.1)
                 x = None
                 y = None
                 for repeat in range(0,3):
@@ -90,6 +90,7 @@ class MKInclinometerDriverROS(object):
                     if x is not None:
                         logger.loginfo("ttyUSB: {} has selected for unit {}, for {}".format(i, unit, self.incli_feature[unit]))
                         return senser_driver
+                rospy.sleep(0.1)                    
         return None
 
     def initialize(self):

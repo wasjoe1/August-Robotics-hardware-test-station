@@ -137,8 +137,3 @@ TRANSITIONS = TRANSITIONS_TOP + [
     },
 ]
 
-
-### ROS
-#"/drivers/inclinometer/incalination_lionel"
-#"/drivers/inclinometer/incalination_lionel_filtered"
-D_INCLI_INCLI_CB_RAD_FILTERED = "/drivers/inclinometer/incalination_cb_rad_filtered"

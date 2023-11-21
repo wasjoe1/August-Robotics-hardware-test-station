@@ -948,16 +948,23 @@ class CalibrationController(ModuleBase):
         elif self.sub_state == 5:
             self.loginfo_throttle(2, "{} job done.".format(self._job.name))
 
+    def set_incli_data(self):
+        if self.incli_base_data is not None:
+            self._job_data["base_offset_x"] = self.incli_base_data.data[0]
+            self._job_data["base_offset_y"] = self.incli_base_data.data[1]
+        if self.incli_cb_data is not None:
+            self._job_data["cb_offset_x"] = self.incli_cb_data.data[0]
+            self._job_data["cb_offset_y"] = self.incli_cb_data.data[1]
+
     def _do_imu_calibration(self):
+        self.set_incli_data()
         if self.sub_state == 0:
             self.sub_state = 1
         elif self.sub_state == 1:
-            if self.incli_base_data is not None:
-                self._job_data["base_offset_x"] = self.incli_base_data.data[0]
-                self._job_data["base_offset_y"] = self.incli_base_data.data[1]
             self._job_data.update(self.imu_data)
 
     def _do_cb_inclination(self):
+        self.set_incli_data()
         if self.sub_state == 0:
             if not self.run_flag:
                 return
@@ -969,10 +976,6 @@ class CalibrationController(ModuleBase):
             self.cb_incli_pub.publish(data)
             self.sub_state = 2
         elif self.sub_state == 2:
-            self._job_data["base_offset_x"] = self.incli_base_data.data[0]
-            self._job_data["base_offset_y"] = self.incli_base_data.data[1]
-            self._job_data["cb_offset_x"] = self.incli_cb_data.data[0]
-            self._job_data["cb_offset_y"] = self.incli_cb_data.data[1]
             if self.cb_incli_state == 2:
                 self.sub_state = 3
             elif self.cb_cb_incli_state == 99:
@@ -1113,12 +1116,13 @@ class CalibrationController(ModuleBase):
             if self.depth_camera_cali_param is None:
                 return
             self._job_data["tag_size"] = self.depth_camera_cali_param
-            self._job_data["has_set_tag"] = True
-        elif self.sub_state == 1:
-            if not self.run_flag:
-                return
+            self._job_data["has_set_tag"] = "has set"
             self.sub_state = 2
         elif self.sub_state == 2:
+            if not self.run_flag:
+                return
+            self.sub_state = 3
+        elif self.sub_state == 3:
             if self._job_dep_cam_iter <= 10:
                 image_name = "{}.jpg".format(self._job_dep_cam_iter)
                 res = self.image_processing.save_image(image_name)
@@ -1132,8 +1136,8 @@ class CalibrationController(ModuleBase):
                     self.translation_camera_base_to_base_list.append(translation_camera_base_to_base)
                     res = False
             else:
-                self.sub_state = 3
-        elif self.sub_state == 3:
+                self.sub_state = 4
+        elif self.sub_state == 4:
             res1, res2 = self.image_processing.compute_the_average(self.euler_camera_base_to_base_list,self.translation_camera_base_to_base_list)
             self._job_data["yaw"] = 0.0
             self._job_data["roll"] = res1[0]

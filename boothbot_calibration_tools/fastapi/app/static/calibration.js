@@ -372,9 +372,9 @@ function refresh_page_once(l) {
 // }
 
 function check_prepare(current_step){
-    consolog.log("has set tag", ws_json["job_data"]["has_set_tag"])
+    console.log("has set tag", ws_json["job_data"]["has_set_tag"])
     if (prepare_job_list.includes(current_step)){
-        if (ws_json["job_data"]["has_set_tag"] == true){
+        if (ws_json["job_data"]["has_set_tag"] == "has set"){
             return true
         }else{
             return false
