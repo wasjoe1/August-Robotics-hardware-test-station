@@ -22,7 +22,7 @@ JOB_DATA = {
     CS.HORIZONTAL_OFFSET.name: ["measurement_time", "horizontal_offset"],
     CS.MARKING_ROI.name: ["measurement_time", "x", "y", "w", "h"],
     CS.CB_INCLINATION.name: ["measurement_time", "cb_offset_x", "cb_offset_y", "base_offset_x", "base_offset_y", "roll", "pitch"],
-    CS.DEPTH_CAMERA.name: ["measurement_time","roll", "pitch","yaw", "x", "y", "z", "tag_size"],
+    CS.DEPTH_CAMERA.name: ["measurement_time","roll", "pitch","yaw", "x", "y", "z", "tag_size", "has_set_tag"],
 }
 
 SAVE_DATA_TITLE = {
@@ -38,13 +38,13 @@ SAVE_DATA_TITLE = {
     CS.HORIZONTAL_OFFSET.name: ["measurement_time", "horizontal_offset"],
     CS.MARKING_ROI.name: ["measurement_time", "x", "y", "w", "h"],
     CS.CB_INCLINATION.name: ["measurement_time", "cb_offset_x", "cb_offset_y", "base_offset_x", "base_offset_y", "roll", "pitch"],
-    CS.DEPTH_CAMERA.name: ["measurement_time", "roll", "pitch","yaw", "x", "y", "z", "tag_size"],
+    CS.DEPTH_CAMERA.name: ["measurement_time", "roll", "pitch","yaw", "x", "y", "z", "tag_size", "has_set_tag"],
 
 }
 
 JOS_SETTINGS = {
     CS.INITIALIZE_SERVO.name: {},
-    CS.CAMERA_SHARPNESS.name: {"camera": "long", "exp_dis": {"long": 40, "short": 5}},
+    CS.CAMERA_SHARPNESS.name: {"camera": "long", "exp_dis": {"long": 48, "short": 5}},
     CS.CAMERAS_ALIGNMENT.name: {"default_h": 1.38},
     CS.CAMERA_LASER_ALIGNMENT.name: {},
     CS.CAMERAS_ANGLE.name: {"default_h": 1.38},

@@ -1,3 +1,6 @@
+Note: We can set param in this calibration.
+1. For example Type "L=30" in input box, means calibrate camera laser alignment base 30meters distance.
+
 1. Paste A4 paper on the wall 50 meters away from GS
 2. Click DISABLE_SERVOS button
 3. Click LASER_ON button

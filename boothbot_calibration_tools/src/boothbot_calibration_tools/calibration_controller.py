@@ -50,6 +50,7 @@ from boothbot_msgs.ros_interfaces import (
     DRIVERS_CHASSIS_IMU,
 )
 
+
 from guiding_beacon_system_msgs.ros_interfaces import (
     DRIVERS_INCLINOMETER_INCLINATION_FILTERED_RAD
 )
@@ -272,7 +273,7 @@ class CalibrationController(ModuleBase):
         # settable param
         self.laser_distance = None
         self.long_camera_exposure = None
-        self.depth_camera_cali_param = 0.04
+        self.depth_camera_cali_param = None
         self.laser_align_no_occlusion_size = None
 
         self.set_job_status(JS.INIT.name)
@@ -1102,11 +1103,17 @@ class CalibrationController(ModuleBase):
             self.loginfo_throttle(4, "roi  calibration done.")
 
     def _do_depth_camera(self):
-        self._job_data["tag_size"] = self.depth_camera_cali_param
+        # self._job_data["tag_size"] = self.depth_camera_cali_param
         if self.sub_state == 0:
             self.image_processing = ImageProcessing()
             self.sub_state = 1
             return
+        #TODO
+        elif self.sub_state == 1:
+            if self.depth_camera_cali_param is None:
+                return
+            self._job_data["tag_size"] = self.depth_camera_cali_param
+            self._job_data["has_set_tag"] = True
         elif self.sub_state == 1:
             if not self.run_flag:
                 return
