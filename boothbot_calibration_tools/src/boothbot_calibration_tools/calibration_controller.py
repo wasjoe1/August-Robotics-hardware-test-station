@@ -976,11 +976,13 @@ class CalibrationController(ModuleBase):
             self.cb_incli_pub.publish(data)
             self.sub_state = 2
         elif self.sub_state == 2:
+            self.set_job_state("RUNNING")
             if self.cb_incli_state == 2:
                 self.sub_state = 3
             elif self.cb_cb_incli_state == 99:
                 self.logerr_throttle(2, "cb incli error...")
         elif self.sub_state == 3:
+            self.set_job_state("DONE")
             if self.cb_row is not None and self.cb_pitch is not None:
                 self._job_data["roll"] = self.cb_row
                 self._job_data["pitch"] = self.cb_pitch
@@ -1089,6 +1091,7 @@ class CalibrationController(ModuleBase):
                 return
             self.sub_state = 3
         elif self.sub_state == 3:
+            self.set_job_state("RUNNING")
             self.loginfo("start to roi calibration")
             res = roi_calibration()
             if res is None:
@@ -1103,6 +1106,7 @@ class CalibrationController(ModuleBase):
             self._job_data["h"] = h
             self.sub_state = 4
         elif self.sub_state == 4:
+            self.set_job_state("DONE")
             self.loginfo_throttle(4, "roi  calibration done.")
 
     def _do_depth_camera(self):
@@ -1123,6 +1127,7 @@ class CalibrationController(ModuleBase):
                 return
             self.sub_state = 3
         elif self.sub_state == 3:
+            self.set_job_state("RUNNING, cali time: {}".format(self._job_dep_cam_iter))
             if self._job_dep_cam_iter <= 10:
                 image_name = "{}.jpg".format(self._job_dep_cam_iter)
                 res = self.image_processing.save_image(image_name)
@@ -1138,6 +1143,7 @@ class CalibrationController(ModuleBase):
             else:
                 self.sub_state = 4
         elif self.sub_state == 4:
+            self.set_job_state("DONE")
             res1, res2 = self.image_processing.compute_the_average(self.euler_camera_base_to_base_list,self.translation_camera_base_to_base_list)
             self._job_data["yaw"] = 0.0
             self._job_data["roll"] = res1[0]
@@ -1148,6 +1154,11 @@ class CalibrationController(ModuleBase):
             self.loginfo_throttle(2, "depth camera done. results {}, {}".format(res1, res2))
             # self._job_data[]
         
+    # set job state
+    def set_job_state(self, str):
+        self._job_data["job_state"] = str
+
+
 
 if __name__ == "__main__":
     rospy.init_node("calibration_controller")
