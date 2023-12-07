@@ -5,7 +5,19 @@ The format is based on `Keep a Changelog <https://keepachangelog.com/en/1.0.0/>`
 
 格式基于 `如何更新维护日志 <https://keepachangelog.com/zh-CN/1.0.0/>`_
 
-[v3.11 - unreleased] 
+[unreleased] 
+------------------------------
+Added
+^^^^^
+
+  1. boothbot-calibration-tools:
+    a. display two inclinometers data on page
+    b. add a parameter to cut blocks of image which token from camera when doing laser alignment
+    c. add description of 4 parameters for calibration tools
+    d. must input depth camera parameter before doing depth camera calibration 
+
+
+[v3.11] 
 ------------------------------
 Added
 ^^^^^

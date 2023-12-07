@@ -8,7 +8,8 @@ import shutil
 
 import os
 
-home = os.path.expanduser('~')
+# home = os.path.expanduser('~')
+home = "/media/veracrypt7"
 
 
 def get_file():
@@ -49,7 +50,7 @@ def gs_replace_setting(device_settings_path, json_path):
 
     with open(device_settings_path, "r") as f:
         print(device_settings_path)
-        doc = oyaml.safe_load(f)
+        doc = oyaml.full_load(f)
         print(doc)
         if servo_h is not None:
             doc['servos_driver']['servo_parameter']['horizontal']['zero_offset'] = int(

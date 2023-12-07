@@ -1,3 +1,7 @@
+Note: We can set param in this calibration.
+1. For example Type "D=0.164" in input box, means the edge length of apriltag is 0.164m.
+
 1. Put the apriltag on the floor front the Lionel, make sure the depth camera can see the whole tag
-2. Set the correct tag_size, for example: input D=0.16 in the input box
-3. Click RUN and wait the result
+2. Set the correct tag_size
+3. If the tag_size have been set correctly, the page would should show the corresponding value.
+4. Click RUN and wait the result

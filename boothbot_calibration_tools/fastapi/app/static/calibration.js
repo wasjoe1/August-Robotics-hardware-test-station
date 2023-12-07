@@ -44,6 +44,10 @@ const lionel_job_list = [
     DEPTH_CAMERA
 ]
 
+const prepare_job_list = [
+    DEPTH_CAMERA
+]
+
 // var default_lang = 1
 var server_lang
 var cur_lang = 1
@@ -75,18 +79,6 @@ function get_id(id) {
     return document.getElementById(id)
 }
 
-function set_job_invisiable(is_gs){
-    if (is_gs === true){
-        for (let i=0; i<gs_job_list.length; ++i){
-            get_id(gs_job_list[i]).removeAttribute("hidden")
-        }
-    }else if(is_gs === false){
-        for (let i=0; i<lionel_job_list.length; ++i){
-            get_id(lionel_job_list[i]).removeAttribute("hidden")
-        }
-    }
-}
-
 data_socket.onmessage = function(evt) {
     // convert data to json
     console.log(evt.data)
@@ -97,7 +89,6 @@ data_socket.onmessage = function(evt) {
     ele_hostanme.innerHTML = get_lang("hostname") + " : " + ws_json["host_name"]
     hostname = ws_json["host_name"]
     is_gs = hostname.includes("GS")
-    // set_job_invisiable(is_gs)
 
     // job_data
     var job_data_content = ""
@@ -380,7 +371,26 @@ function refresh_page_once(l) {
 //     request.send()
 // }
 
+function check_prepare(current_step){
+    console.log("has set tag", ws_json["job_data"]["has_set_tag"])
+    if (prepare_job_list.includes(current_step)){
+        if (ws_json["job_data"]["has_set_tag"] == "has set"){
+            return true
+        }else{
+            return false
+        }
+    }
+    else{
+        return true
+    }
+}
+
+
 function command(cmd) {
+    if (!check_prepare(ws_json["step"])){
+        alert("please must set the param.")
+        return
+    }
     console.log("send cmd :" + cmd)
     var url = "http://" + ip_addr + "/command/" + cmd
     var request = new XMLHttpRequest()
