@@ -44,7 +44,7 @@ SAVE_DATA_TITLE = {
 
 JOS_SETTINGS = {
     CS.INITIALIZE_SERVO.name: {},
-    CS.CAMERA_SHARPNESS.name: {"camera": "long", "exp_dis": {"long": 48, "short": 5}},
+    CS.CAMERA_SHARPNESS.name: {"camera": "long", "exp_dis": {"long": 40, "short": 5}},
     CS.CAMERAS_ALIGNMENT.name: {"default_h": 1.38},
     CS.CAMERA_LASER_ALIGNMENT.name: {},
     CS.CAMERAS_ANGLE.name: {"default_h": 1.38},
