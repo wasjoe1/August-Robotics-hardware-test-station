@@ -254,7 +254,7 @@ class MarkingCamera(Image):
         self.checker.reset()
         if not self.wait_for_server("WAITING_BG", 1):
             return
-        self.checker.check("0", "C-____",  self.on_check_result)
+        self.checker.check("0", "C-____", [], self.on_check_result)
         if not self.wait_for_server("WAITING_BG", 1):
             return
         self.checker.capture_bg()
