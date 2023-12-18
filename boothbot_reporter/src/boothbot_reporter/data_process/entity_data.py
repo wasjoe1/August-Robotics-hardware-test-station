@@ -8,11 +8,12 @@ __author__ = "Jiancheng Zhang"
 
 
 class Entity:
-    def __init__(self, lionel_name, gs_name, communication_method, gotomark_map_id, date, start_time, end_time,
+    def __init__(self, lionel_name, gs_name, communication_method, version, gotomark_map_id, date, start_time, end_time,
                  total_time):
         self.lionel_name = lionel_name
         self.gs_name = gs_name
         self.communication_method = communication_method
+        self.version = version
         self.gotomark_map_id = gotomark_map_id
         self.date = date
         self.start_time = start_time
@@ -21,4 +22,6 @@ class Entity:
         self.nav_data = []
         self.mark_data = []
         self.loc_data = []
-        self.submap_data = []
+        self.move_data = []
+        self.switch_map_data = []
+        self.get_goal_data = []
