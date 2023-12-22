@@ -21,9 +21,14 @@ LIONEL_LEVEL_INCLINOMETER_UNIT = 3
 
 import std_msgs.msg as stmsgs
 from std_msgs.msg import Float32MultiArray
+
+from boothbot_common.interface_with_type import InterfaceWithType
+
+DRIVERS_INCLINOMETER_INCLINATION_CB = InterfaceWithType('/drivers/inclinometer/inclination_cb', stmsgs.Float32MultiArray)
+DRIVERS_INCLINOMETER_INCLINATION_CB_FILTERED = InterfaceWithType('/drivers/inclinometer/inclination_cb_filtered', stmsgs.Float32MultiArray)
+DRIVERS_INCLINOMETER_INCLINATION_CB_FILTERED_RAD = InterfaceWithType('/drivers/inclinometer/inclination_cb_filtered_rad', stmsgs.Float32MultiArray)
+
 from guiding_beacon_system_msgs.ros_interfaces import (
-    DRIVERS_INCLINOMETER_STATUS,
-    DRIVERS_INCLINOMETER_SRV_CMD,
     DRIVERS_INCLINOMETER_INCLINATION,
     DRIVERS_INCLINOMETER_INCLINATION_FILTERED,
     DRIVERS_INCLINOMETER_INCLINATION_FILTERED_RAD,
@@ -32,7 +37,6 @@ from guiding_beacon_system_msgs.ros_interfaces import (
 from boothbot_calibration_tools.settings import (
     CB_INCLI_PORT_NAME,
     LIONEL_INCLI_PORT_NAME,
-    D_INCLI_INCLI_CB_RAD_FILTERED
 )
 
 from boothbot_calibration_tools.utils import two_incli
@@ -45,21 +49,6 @@ PORT_PREFIX = "/dev/ttyUSB"
 class MKInclinometerDriverROS(object):
     def __init__(self, fake_driver=False, two_drivers=None):
         self.incli_feature = {1:"Lionel_level", 3:"cb_calibration"}
-        self.modbus_config = [{
-            "method": "rtu",
-            "port": LIONEL_INCLI_PORT_NAME,
-            "baudrate": 115200,
-            "parity": "N",
-            "timeout": 0.5,
-        },
-        {
-            "method": "rtu",
-            "port": CB_INCLI_PORT_NAME,
-            "baudrate": 115200,
-            "parity": "N",
-            "timeout": 0.5,
-        },
-        ]
         self.two_drivers = two_drivers
         self.fake_driver = fake_driver
         self.modbus_driver = [None, None]
@@ -76,29 +65,33 @@ class MKInclinometerDriverROS(object):
         self.run()
 
     def find_inclinometer(self, unit):
-        for i in range(0,10):
-            modbus_config = {
-                "method": "rtu",
-                "port": PORT_PREFIX+str(i),
-                "baudrate": 115200,
-                "parity": "N",
-                "timeout": 0.5,
-            }
-            modbus_driver = ModbusDriver(**modbus_config)
-            # if            
-            senser_driver = InclinometerDriver(modbus_driver.client, unit_id=unit)
-            x = None
-            y = None
-            try:
-                x, y = senser_driver.get_inclinometer_data_xy_deg()
-            except Exception as e:
-                logger.loginfo(e)
-            if x is not None:
-                logger.loginfo("ttyUSB: {} has selected for unit {}, for {}".format(i, unit, self.incli_feature[unit]))
-                return senser_driver
+        baudrate_list = [9600, 115200]
+        # find device /dev/ttyUSB* in range(0-10), the id 1 means lionel base, id 3 means lionel cb.
+        for b in baudrate_list:
+            for i in range(0,10):
+                modbus_config = {
+                    "method": "rtu",
+                    "port": PORT_PREFIX+str(i),
+                    "baudrate": b,
+                    "parity": "N",
+                    "timeout": 0.5,
+                }
+                modbus_driver = ModbusDriver(**modbus_config)
+                # if            
+                senser_driver = InclinometerDriver(modbus_driver.client, unit_id=unit)
+                rospy.sleep(0.1)
+                x = None
+                y = None
+                for repeat in range(0,3):
+                    try:
+                        x, y = senser_driver.get_inclinometer_data_xy_deg()
+                    except Exception as e:
+                        logger.loginfo(e)
+                    if x is not None:
+                        logger.loginfo("ttyUSB: {} has selected for unit {}, for {}".format(i, unit, self.incli_feature[unit]))
+                        return senser_driver
+                rospy.sleep(0.1)                    
         return None
-
-
 
     def initialize(self):
         if self.fake_driver:
@@ -133,9 +126,13 @@ class MKInclinometerDriverROS(object):
             "/debug/incli_cmdword", stmsgs.String, callback=self._cmdword_cb
         )
 
-        self.pub_data_lionel_incli = rospy.Publisher("/drivers/inclinometer/incalination_cb", Float32MultiArray, queue_size=1)
-        self.pub_data_lionel_incli_filtered = rospy.Publisher("/drivers/inclinometer/incalination_cb_filtered", Float32MultiArray , queue_size=1)
-        self.pub_data_lionel_incli_rad_filtered = rospy.Publisher(D_INCLI_INCLI_CB_RAD_FILTERED, Float32MultiArray , queue_size=1)
+        DRIVERS_INCLINOMETER_INCLINATION_CB = InterfaceWithType('/drivers/inclinometer/inclination_cb', stmsgs.Float32MultiArray)
+        DRIVERS_INCLINOMETER_INCLINATION_CB_FILTERED = InterfaceWithType('/drivers/inclinometer/inclination_cb_filtered', stmsgs.Float32MultiArray)
+        DRIVERS_INCLINOMETER_INCLINATION_CB_FILTERED_RAD = InterfaceWithType('/drivers/inclinometer/inclination_cb_filtered_rad', stmsgs.Float32MultiArray)
+
+        self.pub_data_lionel_incli = DRIVERS_INCLINOMETER_INCLINATION_CB.Publisher()
+        self.pub_data_lionel_incli_filtered = DRIVERS_INCLINOMETER_INCLINATION_CB_FILTERED.Publisher()
+        self.pub_data_lionel_incli_rad_filtered = DRIVERS_INCLINOMETER_INCLINATION_CB_FILTERED_RAD.Publisher()
 
         self.pub_data = DRIVERS_INCLINOMETER_INCLINATION.Publisher()
         self.pub_data_filtered = DRIVERS_INCLINOMETER_INCLINATION_FILTERED.Publisher()

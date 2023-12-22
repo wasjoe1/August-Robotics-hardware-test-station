@@ -28,6 +28,10 @@ from boothbot_calibration_tools.calibration_camera_tracking import CaliTrackingC
 from boothbot_calibration_tools.calibration_camera_tracking_base import CaliTrackingCameraBase
 from boothbot_calibration_tools.dep_camera_cali_tool import ImageProcessing
 
+import boothbot_msgs.srv as bbsrvs
+import boothbot_msgs.msg as bbmsgs
+import std_msgs.msg as stmsgs
+
 from boothbot_perception.track import settings
 
 from boothbot_perception.check.roi_calibration import roi_calibration
@@ -46,9 +50,16 @@ from boothbot_msgs.ros_interfaces import (
     DRIVERS_CHASSIS_IMU,
 )
 
+
 from guiding_beacon_system_msgs.ros_interfaces import (
     DRIVERS_INCLINOMETER_INCLINATION_FILTERED_RAD
 )
+
+from boothbot_common.interface_with_type import InterfaceWithType
+
+DRIVERS_INCLINOMETER_INCLINATION_CB = InterfaceWithType('/drivers/inclinometer/inclination_cb', stmsgs.Float32MultiArray)
+DRIVERS_INCLINOMETER_INCLINATION_CB_FILTERED = InterfaceWithType('/drivers/inclinometer/inclination_cb_filtered', stmsgs.Float32MultiArray)
+DRIVERS_INCLINOMETER_INCLINATION_CB_FILTERED_RAD = InterfaceWithType('/drivers/inclinometer/inclination_cb_filtered_rad', stmsgs.Float32MultiArray)
 
 from boothbot_msgs.srv import (
     Command
@@ -85,7 +96,8 @@ from boothbot_calibration_tools.constants import(
 
 from boothbot_calibration_tools.utils import (
     get_tolerance,
-    img2textfromcv2
+    img2textfromcv2,
+    occlusion_image
 )
 
 TRACKER_CONFIG = BOOTHBOT_GET_CONFIG(name="tracker_driver")
@@ -122,7 +134,8 @@ class CalibrationController(ModuleBase):
         self.puber_data = APPS_CALIBRATION_DATA.Publisher()
         DRIVERS_SERVOS_PDO.Subscriber(self.servo_pdo_cb)
         DRIVERS_CHASSIS_IMU.Subscriber(self.imu_cb)
-        DRIVERS_INCLINOMETER_INCLINATION_FILTERED_RAD.Subscriber(self._incli_cb)
+        DRIVERS_INCLINOMETER_INCLINATION_FILTERED_RAD.Subscriber(self._incli_base_cb)
+        DRIVERS_INCLINOMETER_INCLINATION_CB_FILTERED_RAD.Subscriber(self._incli_cb_cb)
         self.cb_incli_pub = rospy.Publisher(CB_INCLI_CMD, String, queue_size=10)
         rospy.Subscriber(CB_INCLI_STATE, Int16, self.cb_cb_incli_state)
         rospy.Subscriber(CB_INCLI_RES, String, self.cb_cb_incli_res)
@@ -180,7 +193,8 @@ class CalibrationController(ModuleBase):
         self.euler_camera_base_to_base_list = []
         self.translation_camera_base_to_base_list = []
         # CB and inclination
-        self.incli_data = None
+        self.incli_base_data = None
+        self.incli_cb_data = None
         self.cb_row = None
         self.cb_pitch = None
         self.imu_data = {
@@ -259,7 +273,8 @@ class CalibrationController(ModuleBase):
         # settable param
         self.laser_distance = None
         self.long_camera_exposure = None
-        self.depth_camera_cali_param = 0.04
+        self.depth_camera_cali_param = None
+        self.laser_align_no_occlusion_size = None
 
         self.set_job_status(JS.INIT.name)
 
@@ -355,7 +370,6 @@ class CalibrationController(ModuleBase):
             self.loginfo("use long camera")
             self.job_setting[CS.CAMERA_SHARPNESS.name]["camera"] = LONG
         elif CS.USE_SHORT_CAMERA == command:
-            # TODO, support lnp6
             self.loginfo("use short camera")
             self.job_setting[CS.CAMERA_SHARPNESS.name]["camera"] = SHORT
         elif CS.TEST_TRACK == command:
@@ -553,14 +567,12 @@ class CalibrationController(ModuleBase):
         pass
 
     def cameras_idle(self):
-        # TODO, support lnp6
         if (self.cameras[LONG] is None) or (self.cameras[SHORT] is None):
             return False
         else:
             return self.cameras[LONG].is_camera_idle() and self.cameras[SHORT].is_camera_idle()
 
     def get_cameras_frames(self):
-        # TODO, support lnp6
         for type in (LONG, SHORT):
             frame = self.cameras[type].cap()
             if frame is None:
@@ -623,7 +635,6 @@ class CalibrationController(ModuleBase):
         return self.camera_filter_count > cameras_offset
 
     def _do_cameras_alignment(self):
-        # TODO, support lnp6
         if self.sub_state == 0:
             self.init_cameras(5, 5)
             self.sub_state = 1
@@ -721,7 +732,6 @@ class CalibrationController(ModuleBase):
             self.laser.laser_on()
             self._sub_state = 2
         elif self._sub_state == 2:
-            #TODO
             if not self.have_short_camera:
                 self.set_camera_expo(LONG, 8000)
             self._sub_state = 3
@@ -732,6 +742,8 @@ class CalibrationController(ModuleBase):
                 self.get_cameras_frames()
                 return
             frame = self.cameras[LONG].cap()
+            # Add a occlusion on image to cover noise which can affect the detection of red dot. 
+            frame = occlusion_image(frame, self.laser_align_no_occlusion_size)
             print("Got long frame")
             laser_dot = self.cameras[LONG].find_laser_dot(frame)
             # self.loginfo("laser_dot {}".format(laser_dot))
@@ -936,16 +948,23 @@ class CalibrationController(ModuleBase):
         elif self.sub_state == 5:
             self.loginfo_throttle(2, "{} job done.".format(self._job.name))
 
+    def set_incli_data(self):
+        if self.incli_base_data is not None:
+            self._job_data["base_offset_x"] = self.incli_base_data.data[0]
+            self._job_data["base_offset_y"] = self.incli_base_data.data[1]
+        if self.incli_cb_data is not None:
+            self._job_data["cb_offset_x"] = self.incli_cb_data.data[0]
+            self._job_data["cb_offset_y"] = self.incli_cb_data.data[1]
+
     def _do_imu_calibration(self):
+        self.set_incli_data()
         if self.sub_state == 0:
             self.sub_state = 1
         elif self.sub_state == 1:
-            if self.incli_data is not None:
-                self._job_data["offset_x"] = self.incli_data.data[0]
-                self._job_data["offset_y"] = self.incli_data.data[1]
             self._job_data.update(self.imu_data)
 
     def _do_cb_inclination(self):
+        self.set_incli_data()
         if self.sub_state == 0:
             if not self.run_flag:
                 return
@@ -957,13 +976,13 @@ class CalibrationController(ModuleBase):
             self.cb_incli_pub.publish(data)
             self.sub_state = 2
         elif self.sub_state == 2:
-            self._job_data["offset_x"] = self.incli_data.data[0]
-            self._job_data["offset_y"] = self.incli_data.data[1]
+            self.set_job_state("RUNNING")
             if self.cb_incli_state == 2:
                 self.sub_state = 3
             elif self.cb_cb_incli_state == 99:
                 self.logerr_throttle(2, "cb incli error...")
         elif self.sub_state == 3:
+            self.set_job_state("DONE")
             if self.cb_row is not None and self.cb_pitch is not None:
                 self._job_data["roll"] = self.cb_row
                 self._job_data["pitch"] = self.cb_pitch
@@ -1026,21 +1045,29 @@ class CalibrationController(ModuleBase):
     #         self.loginfo_throttle(2, "horizontal job done.")
 
 
-    def _incli_cb(self, msg):
-        self.incli_data = msg
+    def _incli_base_cb(self, msg):
+        self.incli_base_data = msg
     
+    def _incli_cb_cb(self, msg):
+        self.incli_cb_data = msg
+
     def _set_param(self, cmd):
         self.loginfo("Got cammand: {}".format(cmd))
         if "=" in cmd.command:
             [k,v] = cmd.command.split("=")
-            self.loginfo("set {} to  {} in laser camera alignment.".format(v, k))
             try:
                 if k == "L":
+                    self.loginfo("set {} to {}m on laser camera alignment.".format(v, k))
                     self.laser_distance = float(v)
                 elif k == "E":
+                    self.loginfo("set camera exposure to {}.".format(v))
                     self.long_camera_exposure = float(v)
                 elif k == "D":
+                    self.loginfo("set depth camera cali param to {}.".format(v))
                     self.depth_camera_cali_param = float(v)
+                elif k == "LM":
+                    self.loginfo("set laser occlusion pixel param to {}.".format(v))
+                    self.laser_align_no_occlusion_size = int(float(v))
             except Exception as e:
                 self.logerr(e)
                 self.logerr("exception occur when got param...")                    
@@ -1064,6 +1091,7 @@ class CalibrationController(ModuleBase):
                 return
             self.sub_state = 3
         elif self.sub_state == 3:
+            self.set_job_state("RUNNING")
             self.loginfo("start to roi calibration")
             res = roi_calibration()
             if res is None:
@@ -1078,19 +1106,28 @@ class CalibrationController(ModuleBase):
             self._job_data["h"] = h
             self.sub_state = 4
         elif self.sub_state == 4:
+            self.set_job_state("DONE")
             self.loginfo_throttle(4, "roi  calibration done.")
 
     def _do_depth_camera(self):
-        self._job_data["tag_size"] = self.depth_camera_cali_param
+        # self._job_data["tag_size"] = self.depth_camera_cali_param
         if self.sub_state == 0:
             self.image_processing = ImageProcessing()
             self.sub_state = 1
             return
+        #TODO
         elif self.sub_state == 1:
-            if not self.run_flag:
+            if self.depth_camera_cali_param is None:
                 return
+            self._job_data["tag_size"] = self.depth_camera_cali_param
+            self._job_data["has_set_tag"] = "has set"
             self.sub_state = 2
         elif self.sub_state == 2:
+            if not self.run_flag:
+                return
+            self.sub_state = 3
+        elif self.sub_state == 3:
+            self.set_job_state("RUNNING, cali time: {}".format(self._job_dep_cam_iter))
             if self._job_dep_cam_iter <= 10:
                 image_name = "{}.jpg".format(self._job_dep_cam_iter)
                 res = self.image_processing.save_image(image_name)
@@ -1104,8 +1141,9 @@ class CalibrationController(ModuleBase):
                     self.translation_camera_base_to_base_list.append(translation_camera_base_to_base)
                     res = False
             else:
-                self.sub_state = 3
-        elif self.sub_state == 3:
+                self.sub_state = 4
+        elif self.sub_state == 4:
+            self.set_job_state("DONE")
             res1, res2 = self.image_processing.compute_the_average(self.euler_camera_base_to_base_list,self.translation_camera_base_to_base_list)
             self._job_data["yaw"] = 0.0
             self._job_data["roll"] = res1[0]
@@ -1116,6 +1154,11 @@ class CalibrationController(ModuleBase):
             self.loginfo_throttle(2, "depth camera done. results {}, {}".format(res1, res2))
             # self._job_data[]
         
+    # set job state
+    def set_job_state(self, str):
+        self._job_data["job_state"] = str
+
+
 
 if __name__ == "__main__":
     rospy.init_node("calibration_controller")

@@ -18,11 +18,11 @@ JOB_DATA = {
     CS.CAMERA_LASER_ALIGNMENT.name: ["camera_laser_alignment"],
     CS.CAMERAS_ANGLE.name: ["cameras_angle", "measurement_time"],
     CS.VERTICAL_SERVO_ZERO.name: ["vertical_offset", "measurement_time"],
-    CS.IMU_CALIBRATION.name: ["measurement_time", "inclinometer_x", "imu_x", "imu_y", "imu_z", "imu_w", "inclinometer_y","offset_x","offset_y"],
+    CS.IMU_CALIBRATION.name: ["measurement_time", "inclinometer_x", "imu_x", "imu_y", "imu_z", "imu_w", "inclinometer_y","base_offset_x","base_offset_y"],
     CS.HORIZONTAL_OFFSET.name: ["measurement_time", "horizontal_offset"],
-    CS.MARKING_ROI.name: ["measurement_time", "x", "y", "w", "h"],
-    CS.CB_INCLINATION.name: ["measurement_time", "offset_x","offset_y" ,"roll", "pitch"],
-    CS.DEPTH_CAMERA.name: ["measurement_time","roll", "pitch","yaw", "x", "y", "z", "tag_size"],
+    CS.MARKING_ROI.name: ["measurement_time", "x", "y", "w", "h", "job_state"],
+    CS.CB_INCLINATION.name: ["measurement_time", "cb_offset_x", "cb_offset_y", "base_offset_x", "base_offset_y", "roll", "pitch", "job_state"],
+    CS.DEPTH_CAMERA.name: ["measurement_time","roll", "pitch","yaw", "x", "y", "z", "tag_size", "has_set_tag", "job_state"],
 }
 
 SAVE_DATA_TITLE = {
@@ -34,11 +34,11 @@ SAVE_DATA_TITLE = {
     CS.CAMERA_LASER_ALIGNMENT.name: [],
     CS.CAMERAS_ANGLE.name: ["cameras_angle", "measurement_time"],
     CS.VERTICAL_SERVO_ZERO.name: ["vertical_offset", "measurement_time"],
-    CS.IMU_CALIBRATION.name: ["measurement_time", "inclinometer_x", "inclinometer_y", "imu_x", "imu_y", "imu_z", "imu_w","offset_x","offset_y"],
+    CS.IMU_CALIBRATION.name: ["measurement_time", "inclinometer_x", "inclinometer_y", "imu_x", "imu_y", "imu_z", "imu_w","base_offset_x","base_offset_y"],
     CS.HORIZONTAL_OFFSET.name: ["measurement_time", "horizontal_offset"],
-    CS.MARKING_ROI.name: ["measurement_time", "x", "y", "w", "h"],
-    CS.CB_INCLINATION.name: ["measurement_time", "offset_x","offset_y" ,"roll", "pitch"],
-    CS.DEPTH_CAMERA.name: ["measurement_time", "roll", "pitch","yaw", "x", "y", "z", "tag_size"],
+    CS.MARKING_ROI.name: ["measurement_time", "x", "y", "w", "h", "job_state"],
+    CS.CB_INCLINATION.name: ["measurement_time", "cb_offset_x", "cb_offset_y", "base_offset_x", "base_offset_y", "roll", "pitch", "job_state"],
+    CS.DEPTH_CAMERA.name: ["measurement_time", "roll", "pitch","yaw", "x", "y", "z", "tag_size", "has_set_tag", "job_state"],
 
 }
 
@@ -76,7 +76,7 @@ JOB_DONE_STATUS = {
     CS.HORIZONTAL_OFFSET : 4,
     CS.MARKING_ROI : 4,
     CS.CB_INCLINATION : 3,
-    CS.DEPTH_CAMERA : 3
+    CS.DEPTH_CAMERA : 4
 }
 
 # SETUP="SETUP"
@@ -137,8 +137,3 @@ TRANSITIONS = TRANSITIONS_TOP + [
     },
 ]
 
-
-### ROS
-#"/drivers/inclinometer/incalination_lionel"
-#"/drivers/inclinometer/incalination_lionel_filtered"
-D_INCLI_INCLI_CB_RAD_FILTERED = "/drivers/inclinometer/incalination_cb_rad_filtered"
