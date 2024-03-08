@@ -1,0 +1,7 @@
+KERNEL=="ttyUSB*", ATTRS{idVendor}=="1a86", SYMLINK+="incli"    TEST=="power/control" ATTR{power/control}="on"
+KERNEL=="ttyUSB*", ATTRS{idVendor}=="0403", SYMLINK+="incli_lionel"    TEST=="power/control" ATTR{power/control}="on"
+KERNEL=="ttyUSB*", ATTRS{idVendor}=="1a86", SYMLINK+="skd100d"    TEST=="power/control" ATTR{power/control}="on"
+
+big laser:
+1a86:7523
+SUBSYSTEM=="usb", ATTRS{idVendor}=="1a86", MODE="0666" SYMLINK+="skd100d"

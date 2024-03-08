@@ -1,0 +1,7 @@
+<launch>
+	<node name="lds_node" pkg="ldlidar_ros" type="lds_node" output="screen" respawn="true" >
+		<param name="lds_data_serial_port" value="/dev/lidar"/>
+		<param name="frame_id" type = "string" value="laser"/>
+    <remap from="scan" to="/ldlidar/data" />
+	</node>
+</launch>

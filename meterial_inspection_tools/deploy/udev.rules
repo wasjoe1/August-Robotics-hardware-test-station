@@ -1,0 +1,1 @@
+KERNEL=="tty*"    KERNELS=="1-2.1" MODE:="0666" GROUP:="dialout" SYMLINK+="lidar"       TEST=="power/control" ATTR{power/control}="on"
