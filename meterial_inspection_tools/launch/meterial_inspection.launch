@@ -1,5 +1,2 @@
 <launch>
-  <node pkg="meterial_inspection_tools" type="grpc_node.py" name="grpc_node" output="screen" launch-prefix="" >
-  </node>
-
 </launch>
