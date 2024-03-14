@@ -22,3 +22,13 @@ hr {
     display: flex;
     flex-wrap: nowrap;
 }
+
+.flex-container {
+    display: flex;
+    background-color: DodgerBlue;
+}
+
+div label,
+div input {
+    display: block; /* Make labels and inputs behave like block-level elements */
+}

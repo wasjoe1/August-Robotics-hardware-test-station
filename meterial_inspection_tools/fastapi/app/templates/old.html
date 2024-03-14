@@ -1,0 +1,47 @@
+
+<!-- test portion -->
+<div>
+  <div style="height:20%;width:55%;float:left;margin-left: 2%;">
+      <h4 id="long_camera_data">
+      </h4>
+      <canvas id ="lidar" width="500" height="500">
+          An alternative text describing what your canvas displays.
+        </canvas>
+      <!-- <img id="img1" alt="" style="width: 640px; height: 480px; z-index: 99;position: relative;" onmousewheel="return rollImg(this)" /> -->
+
+  </div>
+
+  <div style="height: 20%;width: 100%;">
+      <button id="disable_servos" type="button" class="btn btn-default servos_laser_operate" onmousedown="command('INSPECT')">检查</button>
+      <button id="reset" type="button" class="btn btn-danger" onmousedown="command('RESET')">重置</button>
+      <input id="laser_distance"> </input>
+      <button id="set_param" type="button" class="btn btn-info" onmousedown="command('set_param')">设置参数</button>
+      <!-- <button type="button" class="btn btn-success" onmousedown="command('save_data')">save_data</button> -->
+  </div>
+
+  <div style="background-color:darksalmon;height: 25%;width:45%;margin-left: 55%;">
+      <h3 id="current_task">当前任务</h3>
+  </div>
+
+  <div style="background-color:gold;height: 25%;width:45%;margin-left: 55%;">
+      <h3 id="client_status">任务状态</h3>
+  </div>
+
+  <div style="background-color: aqua;height: 30%;width:45%;margin-left: 55%;">
+      <h2 id="user_manual_title"> 用户操作指南
+      </h2>
+      <h6 id="user_manual">
+          {{just_do}}
+      </h6>
+  </div>
+</div>
+
+
+<div style="background-color:chocolate;height: 50%;width:45%; margin-left: 55%;">
+  <h2 id="task_data_title"> 详细数据
+  </h2>
+  <h3 id="job_data">
+
+  </h3>
+  <!-- <div id='divID'> -->
+</div>
