@@ -74,7 +74,7 @@ responseData = {
 
 def python_to_json_string(k, v):
     data = {}
-    data[k] = v
+    data[k] = v # {"command": wtv cmd data}
     return json.dumps(data) # takes in python objects & converts to json string
 
 def ros_serve():
