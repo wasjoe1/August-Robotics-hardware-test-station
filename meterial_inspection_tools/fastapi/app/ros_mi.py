@@ -26,7 +26,7 @@ class MeterialInspection():
     def send_srv(self, srv):
         srv_dict = json.loads(srv)
         # logger.loginfo("send service {}".format(srv_dict))
-        for sub_node_name, request in srv_dict.items():
+        for sub_node_name, request in srv_dict.items(): # sub node name is "_step_"; request is the "cmd_string"
             command = CommandRequest()
             command.command = request
             logger.loginfo("request {} to {}".format(command, sub_node_name))        
