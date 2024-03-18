@@ -15,11 +15,17 @@ import boothbot_grpc.msg as bgmsgs
 LDLIDAR_DATA = InterfaceWithType('/ldlidar/data', ssmsgs.LaserScan)
 LDLIDAR_SRV_CMD = InterfaceWithType('/ldlidar/srv_cmd', bbsrvs.Command)
 
+IMU_DATA = InterfaceWithType('/imu/data', ssmsgs.Imu)
+IMU_SRV_CMD = InterfaceWithType('/imu/srv_cmd', bbsrvs.Command)
 
 
 msg_dict = {
     "ldlidar":{
-        "topic":LDLIDAR_DATA,
-        "srv":LDLIDAR_SRV_CMD
-    }
+        "topic": LDLIDAR_DATA,
+        "srv": LDLIDAR_SRV_CMD
+    },
+    "imu":{
+        "topic": IMU_DATA,
+        "srv": IMU_SRV_CMD
+    },
 }
