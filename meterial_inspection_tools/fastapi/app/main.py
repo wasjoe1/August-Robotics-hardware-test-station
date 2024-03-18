@@ -60,7 +60,7 @@ logger.info("h_name: {}, IP_address {}".format(h_name, IP_addres))
 rospy.init_node("fastapi_ros") # initialize the ros node
 app.mi = MeterialInspection()
 
-data = {
+responseData = {
     "readings": "{random input 1: input 1, random input 2: input 2, random input 3: input 3}",
     "status": "IDLE",
     "popup_messages": {
@@ -74,7 +74,7 @@ data = {
 
 def python_to_json_string(k, v):
     data = {}
-    data[k] = v
+    data[k] = v # {"command": wtv cmd data}
     return json.dumps(data) # takes in python objects & converts to json string
 
 def ros_serve():
@@ -104,7 +104,6 @@ async def startup_event():
 
 # -------------------------------------------------------------------------------------------------
 # middleware
-
 @app.get("/", response_class=HTMLResponse)
 async def get_html(request: Request): # request is the 1st arg
     app.step = None
@@ -122,13 +121,8 @@ async def step(request: Request, step: str): # step is of string type; its from 
             just_do = f.readlines() # read the lines of the txt file
 
         logger.info(just_do)
-        print("just_do")
-        print(just_do)
-        print("data")
-        print(data)
-        #TODO
 
-        return templates.TemplateResponse("sub_page.html", {"request": request, "just_do": just_do, "data": data}) # directory & context are the arguments
+        return templates.TemplateResponse("sub_page.html", {"request": request, "just_do": just_do, "data": responseData}) # directory & context are the arguments
     else:
         return None
 
@@ -146,32 +140,32 @@ async def command(request: Request, cmd: str):
 # -------------------------------------------------------------------------------------------------
 # websockets
 
-# @app.websocket("/data")
-# async def data(websocket: WebSocket):
-#     logger.info("get data websocket.")
-#     #TODO
-#     await websocket.accept()
-#     # global data
-#     while True:
-#         await asyncio.sleep(0.2)
-#         if app.mi.has_msg:
-#             await websocket.send_text(f"{app.mi.send_queue[0]}")
-#             app.mi.pop_msg()
+@app.websocket("/data")
+async def data(websocket: WebSocket):
+    logger.info("get data websocket.")
+    #TODO
+    await websocket.accept()
+    # global data
+    while True:
+        await asyncio.sleep(0.2)
+        if app.mi.has_msg:
+            await websocket.send_text(f"{app.mi.send_queue[0]}")
+            app.mi.pop_msg()
 
-# @app.websocket("/img_ws")
-# async def img_ws(websocket: WebSocket):
-#     logger.info("started.......")
-#     await websocket.accept()
-#     try:
-#         while True:
-#             encode_string = app.long_img
-#             await websocket.send_bytes(encode_string)
-#             await asyncio.sleep(0.02)
+@app.websocket("/img_ws")
+async def img_ws(websocket: WebSocket):
+    logger.info("started.......")
+    await websocket.accept()
+    try:
+        while True:
+            encode_string = app.long_img
+            await websocket.send_bytes(encode_string)
+            await asyncio.sleep(0.02)
 
-#     except Exception as e:
-#         logger.info(e)
-#     finally:
-#         websocket.close()
+    except Exception as e:
+        logger.info(e)
+    finally:
+        websocket.close()
 
 
 # notes -------------------------------------------------------------------------------------------

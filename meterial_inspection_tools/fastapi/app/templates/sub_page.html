@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="../static/hr.css">
   <script src="../static/draw_lidar.js"></script>
   <script src="../static/meterial_inspection.js"></script>
+  <script src="../static/imu.js"></script>
 </head>
 
 <body onload="">
@@ -40,24 +41,26 @@
       <div style="display: flex; justify-content: space-between;">
         <!-- connect side -->
         <div>
-          <button class="btn btn-default" id="connectBtn">Connect</button>
+          <button class="btn btn-default" id="connectBtn" onclick="onClickBtn(this)">Connect</button>
           <br>
-          <button class="btn btn-default" id="closeBtn">Close</button>
+          <button class="btn btn-default" id="closeBtn" onclick="onClickBtn(this)">Close</button>
         </div>
 
         <!-- scan side -->
         <div>
-          <button class="btn btn-default" id="scanBtn">Scan</button>
+          <button class="btn btn-default" id="scanBtn" onclick="onClickBtn(this)">Scan</button>
           <div> <!-- hide this if scan is not complete-->
             <div display:>
-              <label for="randomInput1">Random input 1:</label>
-              <input type="text" id="randomInput1" name="randomInput1" required minlength="4" maxlength="8" size="10" />
-              <label for="randomInput2">Random input 2:</label>
-              <input type="text" id="randomInput2" name="randomInput2" required minlength="4" maxlength="8" size="10" />
-              <label for="randomInput3">Random input 3:</label>
-              <input type="text" id="randomInput3" name="randomInput3" required minlength="4" maxlength="8" size="10" />
+              <label for="imuInput1">Acceleration Scale:</label>
+              <input type="text" id="imuInput1" name="imuInput1"/>
+              <label for="imuInput2">Gyro scle:</label>
+              <input type="text" id="imuInput2" name="imuInput2"/>
+              <label for="imuInput3">Bandwidth:</label>
+              <input type="text" id="imuInput3" name="imuInput3"/>
+              <label for="imuInput4">Feedback frequency:</label>
+              <input type="text" id="imuInput4" name="imuInput4"/>
             </div>
-            <button class="btn btn-default" id="saveBtn">Save</button>
+            <button class="btn btn-default" id="saveBtn" onclick="onClickBtn(this)">Save</button>
           </div>
         </div>
       </div>
