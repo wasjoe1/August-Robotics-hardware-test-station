@@ -122,6 +122,10 @@ async def step(request: Request, step: str): # step is of string type; its from 
             just_do = f.readlines() # read the lines of the txt file
 
         logger.info(just_do)
+        print("just_do")
+        print(just_do)
+        print("data")
+        print(data)
         #TODO
 
         return templates.TemplateResponse("sub_page.html", {"request": request, "just_do": just_do, "data": data}) # directory & context are the arguments
@@ -142,32 +146,32 @@ async def command(request: Request, cmd: str):
 # -------------------------------------------------------------------------------------------------
 # websockets
 
-@app.websocket("/data")
-async def data(websocket: WebSocket):
-    logger.info("get data websocket.")
-    #TODO
-    await websocket.accept()
-    # global data
-    while True:
-        await asyncio.sleep(0.2)
-        if app.mi.has_msg:
-            await websocket.send_text(f"{app.mi.send_queue[0]}")
-            app.mi.pop_msg()
+# @app.websocket("/data")
+# async def data(websocket: WebSocket):
+#     logger.info("get data websocket.")
+#     #TODO
+#     await websocket.accept()
+#     # global data
+#     while True:
+#         await asyncio.sleep(0.2)
+#         if app.mi.has_msg:
+#             await websocket.send_text(f"{app.mi.send_queue[0]}")
+#             app.mi.pop_msg()
 
-@app.websocket("/img_ws")
-async def img_ws(websocket: WebSocket):
-    logger.info("started.......")
-    await websocket.accept()
-    try:
-        while True:
-            encode_string = app.long_img
-            await websocket.send_bytes(encode_string)
-            await asyncio.sleep(0.02)
+# @app.websocket("/img_ws")
+# async def img_ws(websocket: WebSocket):
+#     logger.info("started.......")
+#     await websocket.accept()
+#     try:
+#         while True:
+#             encode_string = app.long_img
+#             await websocket.send_bytes(encode_string)
+#             await asyncio.sleep(0.02)
 
-    except Exception as e:
-        logger.info(e)
-    finally:
-        websocket.close()
+#     except Exception as e:
+#         logger.info(e)
+#     finally:
+#         websocket.close()
 
 
 # notes -------------------------------------------------------------------------------------------

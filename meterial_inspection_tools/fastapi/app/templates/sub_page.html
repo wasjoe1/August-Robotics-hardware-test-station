@@ -30,9 +30,9 @@
     <!-- left of body -->
     <div>
       <h4 id="readings">Readings</h4>
-      <div>{{ readings }}</div>
+      <div>{{ data["readings"] }}</div>
       <h4 id="status">Status</h4>
-      <div>{{ status }}</div>
+      <div>{{ data["status"] }}</div>
     </div>
 
     <!-- right of body -->
@@ -61,7 +61,7 @@
           </div>
         </div>
       </div>
-      <div style="background-color: chocolate;">{{ popup_messages.isExist ? popup_messages.message : "" }}</div>
+      <div style="background-color: chocolate;">{{ data["popup_messages"]["message"] }}</div>
     </div>
   </div>
 </body>
