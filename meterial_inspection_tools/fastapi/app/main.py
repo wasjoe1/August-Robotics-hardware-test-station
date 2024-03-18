@@ -60,7 +60,7 @@ logger.info("h_name: {}, IP_address {}".format(h_name, IP_addres))
 rospy.init_node("fastapi_ros") # initialize the ros node
 app.mi = MeterialInspection()
 
-data = {
+responseData = {
     "readings": "{random input 1: input 1, random input 2: input 2, random input 3: input 3}",
     "status": "IDLE",
     "popup_messages": {
@@ -122,7 +122,7 @@ async def step(request: Request, step: str): # step is of string type; its from 
 
         logger.info(just_do)
 
-        return templates.TemplateResponse("sub_page.html", {"request": request, "just_do": just_do, "data": data}) # directory & context are the arguments
+        return templates.TemplateResponse("sub_page.html", {"request": request, "just_do": just_do, "data": responseData}) # directory & context are the arguments
     else:
         return None
 
