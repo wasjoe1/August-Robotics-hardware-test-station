@@ -3,8 +3,6 @@ import json
 import rospy
 import rospy as logger
 from meterial_inspection_tools.ros_interface import (
-    LDLIDAR_DATA,
-    LDLIDAR_SRV_CMD,
     msg_dict
 )
 from rospy_message_converter.message_converter import convert_ros_message_to_dictionary
@@ -16,7 +14,7 @@ class MeterialInspection():
         logger.loginfo("init meterial inspection...")
         self.send_queue = []
         for sub_node_name, content in msg_dict.items():
-            content["topic"].Subscriber(self.data_cb, callback_args={"name": sub_node_name})
+            content["topic_data"].Subscriber(self.data_cb, callback_args={"name": sub_node_name})
 
     def data_cb(self, msg, cb_args):
         func = lambda a: a.replace("/","").replace("data","")
@@ -25,12 +23,12 @@ class MeterialInspection():
 
     def send_srv(self, srv):
         srv_dict = json.loads(srv)
-        # logger.loginfo("send service {}".format(srv_dict))
+        logger.loginfo("send service {}".format(srv_dict))
         for sub_node_name, request in srv_dict.items(): # sub node name is "_step_"; request is the "cmd_string"
             command = CommandRequest()
             command.command = request
             logger.loginfo("request {} to {}".format(command, sub_node_name))        
-            msg_dict[sub_node_name]["srv"].service_call(command)
+            msg_dict[sub_node_name]["srv"].service_call(command) # only 2 sub nodes name now => ldlidar & imu
         pass
 
     def has_msg(self):

@@ -72,7 +72,7 @@ responseData = {
 # -------------------------------------------------------------------------------------------------
 # functions
 
-def python_to_json_string(k, v):
+def formatKeyAndVal(k, v):
     data = {}
     data[k] = v # {"command": wtv cmd data}
     return json.dumps(data) # takes in python objects & converts to json string
@@ -130,10 +130,10 @@ async def step(request: Request, step: str): # step is of string type; its from 
 async def command(request: Request, cmd: str):
     try:
         logger.warn("get command {}".format(cmd))
-        grpc_data = python_to_json_string("command", cmd) # json string
-        # msg_dict[sub_node].service_call(cmd) => json string is passed to the node in the service call
-        # TODO
-        app.mi.send_srv(cmd)
+        srv_call_formatted_data = formatKeyAndVal("imu", cmd) # for now put imu only; returns json string
+        # msg_dict[sub_node].service_call(cmd) => json string is passed to the node in the service call; might be the old way of making a service call
+        # TODO service call using app.mi
+        app.mi.send_srv(srv_call_formatted_data)
     except Exception as e:
         print(e)
 
