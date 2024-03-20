@@ -1,0 +1,7 @@
+<launch>
+	</node>
+	<node name="imu_node" pkg="meterial_inspection_tools" type="imu_driver.py" output="screen" respawn="true">
+        <!-- Parameters for imu_node -->
+    </node>
+
+</launch>
