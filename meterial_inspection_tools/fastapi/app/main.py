@@ -140,17 +140,20 @@ async def command(request: Request, cmd: str):
 # -------------------------------------------------------------------------------------------------
 # websockets
 
-@app.websocket("/data")
-async def data(websocket: WebSocket):
-    logger.info("get data websocket.")
+@app.websocket("/data") # web socket decorators to define websocket end points
+async def data(websocket: WebSocket): # web socket event handler
+    logger.info("get websocket data from topic.")
     #TODO
-    await websocket.accept()
+    await websocket.accept() # accept the web socket connection
     # global data
-    while True:
-        await asyncio.sleep(0.2)
+    while True: # enter loop to continuously receive data
+        await asyncio.sleep(0.2) # this is required as it pauses current coroutine to allow execution of other coroutinese
         if app.mi.has_msg:
-            await websocket.send_text(f"{app.mi.send_queue[0]}")
-            app.mi.pop_msg()
+            qData = app.mi.send_queue[0]
+            logger.info("queue data: {}".format(qData))
+            await websocket.send_text(f"{qData}") # always take the 1st message in the queue
+            app.mi.pop_msg() # then pop it off once you are done returning it
+
 
 @app.websocket("/img_ws")
 async def img_ws(websocket: WebSocket):

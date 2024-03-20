@@ -16,6 +16,8 @@ const found = url.match(regex)
 current_step = found[2]
 console.log("current step: ", current_step)
 
+// ------------------------------------------------------------------------------------------------
+// Functions
 function get_ws(ip, route, data) {
     const ws = new WebSocket("ws://" + ip_addr + "/" + route)
     ws.addEventListener('open', function(event) {
@@ -28,18 +30,39 @@ function get_ws(ip, route, data) {
         data = ws_json
         return data
     }
-
 }
-
-
-const data_socket = new WebSocket("ws://" + ip_addr + "/data")
-data_socket.addEventListener('open', function(event) {
-    data_socket.send('Hello ws data!');
-});
 
 function get_id(id) {
     return document.getElementById(id)
 }
+
+function convert_data_to_pointcloud(angle_increment, ranges){
+    start_ang = 0
+    for (let i = 0; i < ranges.length; i++) {
+        ang = start_ang + i*angle_increment
+        lidar_data.push([ranges[i]*Math.cos(ang), ranges[i]*Math.sin(ang)]);
+    }
+}
+
+function command(cmd) {
+    var cmd_dict = {}
+    cmd_dict[current_step] = cmd
+    cmd_str = JSON.stringify(cmd_dict)
+    // cmd_str = current_step + "_" + cmd
+    console.log("send cmd: " + cmd_str)
+    var url = "http://" + ip_addr + "/command/" + cmd_str
+    var request = new XMLHttpRequest()
+    request.open("GET", url)
+    request.send()
+}
+
+// ------------------------------------------------------------------------------------------------
+// socket configs
+// open web socket connection for /data
+const data_socket = new WebSocket("ws://" + ip_addr + "/data")
+data_socket.addEventListener('open', function(event) {
+    data_socket.send('Hello ws data!');
+});
 
 data_socket.onmessage = function(evt) {
     // convert data to json
@@ -52,15 +75,6 @@ data_socket.onmessage = function(evt) {
         find_element()
         drawLidar(lidar_data)
         lidar_data = []
-    }
-}
-
-
-function convert_data_to_pointcloud(angle_increment, ranges){
-    start_ang = 0
-    for (let i = 0; i < ranges.length; i++) {
-        ang = start_ang + i*angle_increment
-        lidar_data.push([ranges[i]*Math.cos(ang), ranges[i]*Math.sin(ang)]);
     }
 }
 
@@ -77,20 +91,6 @@ long_img_socket.onmessage = function(evt) {
         get_id("img1").src = "data:image/jpeg;base64," + ws_json["data"];
         get_id("long_camera_data").innerHTML = "long camera, time: " + time_vis(ws_json["time"]);
     }
-}
-
-
-
-function command(cmd) {
-    var cmd_dict = {}
-    cmd_dict[current_step] = cmd
-    cmd_str = JSON.stringify(cmd_dict)
-    // cmd_str = current_step + "_" + cmd
-    console.log("send cmd: " + cmd_str)
-    var url = "http://" + ip_addr + "/command/" + cmd_str
-    var request = new XMLHttpRequest()
-    request.open("GET", url)
-    request.send()
 }
 
 
