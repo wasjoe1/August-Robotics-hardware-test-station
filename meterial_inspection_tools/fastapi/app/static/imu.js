@@ -35,13 +35,13 @@ function createCmdData(buttonString) {
 function executeCommand(cmd) {
     console.log(cmd)
 
-    // var cmd_dict = {}
-    // cmd_dict[current_step] = cmd
-    // cmd_str = JSON.stringify(cmd_dict)
-    // // cmd_str = current_step + "_" + cmd
-    // console.log("send cmd: " + cmd_str)
-    // var url = "http://" + ip_addr + "/command/" + cmd_str
-    // var request = new XMLHttpRequest()
-    // request.open("GET", url)
-    // request.send()
+    var cmd_dict = {}
+    cmd_dict[current_step] = cmd
+    cmd_str = JSON.stringify(cmd_dict)
+    // cmd_str = current_step + "_" + cmd
+    console.log("send cmd: " + cmd_str)
+    var url = "http://" + ip_addr + "/command/" + cmd_str
+    var request = new XMLHttpRequest()
+    request.open("GET", url)
+    request.send()
 }

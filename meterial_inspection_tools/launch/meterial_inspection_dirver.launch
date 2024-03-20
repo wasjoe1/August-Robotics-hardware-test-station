@@ -1,7 +1,5 @@
 <launch>
-	<node name="lds_node" pkg="ldlidar_ros" type="lds_node" output="screen" respawn="true" >
-		<param name="lds_data_serial_port" value="/dev/lidar"/>
-		<param name="frame_id" type = "string" value="laser"/>
-    <remap from="scan" to="/ldlidar/data" />
+	<node name="imu_node" pkg="meterial_inspection_tools" type="imu_driver.py" output="screen" respawn="true">
+        	<!-- Parameters for imu_node -->
 	</node>
 </launch>

@@ -6,4 +6,4 @@ int32 parameter3
 int32 parameter4
 ---
 #Response
-bool success
+bool accepted

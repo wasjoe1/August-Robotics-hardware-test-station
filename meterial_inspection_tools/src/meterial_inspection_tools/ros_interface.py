@@ -6,24 +6,25 @@ import sensor_msgs.msg as ssmsgs
 import boothbot_msgs.msg as bbmsgs
 import boothbot_msgs.srv as bbsrvs
 import boothbot_grpc.msg as bgmsgs
+
 from meterial_inspection_tools.srv import IMUcontrol
 
 # MODULES_MATERIAL_INSPECTION_DATA = InterfaceWithType('/modules/meterial_inspection/data', stmsgs.String)
 
 # MODULES_MATERIAL_INSPECTION_SRV_CMD = InterfaceWithType('/modules/meterial_inspection/srv_cmd', bbsrvs.Command)
 
-LDLIDAR_DATA = InterfaceWithType('/ldlidar/data', ssmsgs.LaserScan)
+LDLIDAR_DATA = InterfaceWithType('/ldlidar/data', ssmsgs.LaserScan) # name & type used to instantiate
 LDLIDAR_SRV_CMD = InterfaceWithType('/ldlidar/srv_cmd', bbsrvs.Command)
 
 IMU_DATA = InterfaceWithType('/imu/data', ssmsgs.Imu)
 IMU_STATE = InterfaceWithType('/imu/state', stmsgs.String)
-IMU_INFO = InterfaceWithType('/imu/info',stmsgs.String)
+IMU_INFO = InterfaceWithType('/imu/info', stmsgs.String)
 IMU_SRV_CMD = InterfaceWithType('/imu/srv_cmd', IMUcontrol)
 
 
 msg_dict = {
     "ldlidar":{
-        "topic": LDLIDAR_DATA,
+        "topic_data": LDLIDAR_DATA,
         "srv": LDLIDAR_SRV_CMD
     },
     "imu":{
