@@ -170,6 +170,34 @@ async def img_ws(websocket: WebSocket):
     finally:
         websocket.close()
 
+# @app.websocket("/img_ws")
+# async def img_ws(websocket: WebSocket):
+#     logger.info("started.......")
+#     await websocket.accept()
+#     try:
+#         while True:
+#             # data = await websocket.receive_text()
+#             # logger.info(f"received: {int(data)}")
+#             # index = int(data)
+#             # image = get_image(volume, index)
+#             # logger.info("send imgs")
+#             # with open('static/'+str(img_id)+'.png', mode="rb") as image_file:
+#             #     encode_string = base64.b64encode(
+#             #         image_file.read()).decode("utf-8")
+#             # global long_img
+#             encode_string = app.long_img
+#             # encode_string = long_img.decode("utf-8")
+#             # encode_string = base64.b64encode(long_img).decode("utf-8")
+#             # logger.info("send long img")
+#             await websocket.send_bytes(encode_string)
+#             await asyncio.sleep(0.02)
+#             # img_id += 1
+#             # if img_id == 3:
+#             #     img_id = 0
+#     except Exception as e:
+#         logger.info(e)
+#     finally:
+#         websocket.close()
 
 # notes -------------------------------------------------------------------------------------------
 # subscribing to topics provided by the ROS

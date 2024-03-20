@@ -15,7 +15,12 @@ class MeterialInspection():
         logger.loginfo("init meterial inspection...")
         self.send_queue = []
         for sub_node_name, content in msg_dict.items():
-            content["topic_data"].Subscriber(self.data_cb, callback_args={"name": sub_node_name})
+            try:
+                content["topic_data"].Subscriber(self.data_cb, callback_args={"name": sub_node_name})
+                logger.loginfo("subscription should have succeded")
+            except Exception as e:
+                logger.loginfo("subscription failed")
+                logger.logerr(e)
 
     def data_cb(self, msg, cb_args):
         func = lambda a: a.replace("/","").replace("data","")
