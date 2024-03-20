@@ -8,6 +8,7 @@ project(meterial_inspection_tools)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+  message_generation
   roscpp
   rospy
   std_msgs
@@ -53,12 +54,11 @@ catkin_python_setup()
 #   Message2.msg
 # )
 
-## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
+ ## Generate services in the 'srv' folder
+ add_service_files(
+   FILES
+   IMUcontrol.srv
+ )
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -68,10 +68,10 @@ catkin_python_setup()
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs
-# )
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
