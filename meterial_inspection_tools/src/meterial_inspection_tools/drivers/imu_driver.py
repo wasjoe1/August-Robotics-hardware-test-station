@@ -173,12 +173,11 @@ class IMUCHECK(object):
     def srv_cb(self, srv):
         logger.loginfo("srv")
         self.button = srv.button
-        self.parameter1= ACC_SPEED[srv.parameter1]
-        self.parameter2 = GYRO_DEGREES[srv.parameter2]
-        self.parameter3 = BANDWIDTH_HZ[srv.parameter3] 
-        self.parameter4 = SENDBACK_RATE_HZ[srv.parameter4]
+        self.parameter1= ACC_SPEED[str(srv.parameter1)] # ACC_SPEED["2"] 
+        self.parameter2 = GYRO_DEGREES[str(srv.parameter2)]
+        self.parameter3 = BANDWIDTH_HZ[str(srv.parameter3)] 
+        self.parameter4 = SENDBACK_RATE_HZ[str(srv.parameter4)]
         response = CommandResponse()
-        response.success = True
         print("if response == 1 means success, if response == 0 means fail")
         print("response:")
         print(response)
