@@ -7,6 +7,7 @@ from meterial_inspection_tools.ros_interface import (
 )
 from rospy_message_converter.message_converter import convert_ros_message_to_dictionary
 from boothbot_msgs.srv import (Command, CommandRequest)
+from meterial_inspection_tools.srv import (IMUcontrolRequest,IMUcontrol)
 
 
 class MeterialInspection():
@@ -25,10 +26,14 @@ class MeterialInspection():
         srv_dict = json.loads(srv)
         logger.loginfo("send service {}".format(srv_dict))
         for sub_node_name, request in srv_dict.items(): # sub node name is "_step_"; request is the "cmd_string"
-            command = CommandRequest()
-            command.command = request
+            command = IMUcontrolRequest()
+            command.button = "1"
             logger.loginfo("request {} to {}".format(command, sub_node_name))        
-            msg_dict[sub_node_name]["srv"].service_call(command) # only 2 sub nodes name now => ldlidar & imu
+            logger.loginfo("call service to {}".format(msg_dict[sub_node_name]["srv"]))
+            try:
+                msg_dict[sub_node_name]["srv"].service_call(command) # only 2 sub nodes name now => ldlidar & imu
+            except Exception as e:
+                logger.logerr(e)
         pass
 
     def has_msg(self):

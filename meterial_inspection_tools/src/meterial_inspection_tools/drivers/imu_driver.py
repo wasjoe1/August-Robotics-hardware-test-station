@@ -174,6 +174,9 @@ class IMUCHECK(object):
         logger.logwarn("Running")
         pp = PrettyPrinter(indent=2)
         l = rospy.Rate(NODE_RATE)
+        while not rospy.is_shutdown():
+            rospy.loginfo_throttle(5, "imu checker running...")
+            l.sleep()
 
     
 if __name__ == "__main__":
@@ -182,3 +185,4 @@ if __name__ == "__main__":
     imu_checker = IMUCHECK()
     imu_checker.initialize()
     print("imu_check node is initialzed")
+    imu_checker.run()
