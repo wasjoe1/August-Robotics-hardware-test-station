@@ -16,7 +16,7 @@ from meterial_inspection_tools.srv import IMUcontrol
 # LDLIDAR_DATA = InterfaceWithType('/ldlidar/data', ssmsgs.LaserScan) # name & type used to instantiate
 # LDLIDAR_SRV_CMD = InterfaceWithType('/ldlidar/srv_cmd', bbsrvs.Command)
 
-IMU_DATA = InterfaceWithType('/imu/data', ssmsgs.Imu)
+IMU_DATA = InterfaceWithType('/imu/data', stmsgs.String)
 IMU_STATE = InterfaceWithType('/imu/state', stmsgs.String)
 IMU_INFO = InterfaceWithType('/imu/info', stmsgs.String)
 IMU_SRV_CMD = InterfaceWithType('/imu/srv_cmd', IMUcontrol)

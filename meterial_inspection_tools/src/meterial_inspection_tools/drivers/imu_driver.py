@@ -6,8 +6,6 @@ import time
 import math
 from pprint import PrettyPrinter
 import rospy
-#from smach import State, StateMachine
-#import smach_ros
 logger = rospy
 import binascii
 import os
@@ -24,8 +22,7 @@ from meterial_inspection_tools.ros_interface import (
 )
 
 from boothbot_msgs.srv import (Command, CommandRequest,CommandResponse)
-import json
-
+from geometry_msgs.msg import Quaternion, Vector3
 
 
 # Settings 
@@ -154,7 +151,7 @@ class IMUCHECK(object):
         self.port = "/dev/imu"
         self.baud = None
         # self.button = None
-        self.button = "CONNECT"
+        self.button = None
         # self.state = None
         self.state = "IDLE"
         self.parameter1=None
@@ -166,19 +163,21 @@ class IMUCHECK(object):
         self.imu_msg_info = IMU_INFO.get_new_msg()
         logger.loginfo(IMU_INFO.get_msg_type())
         logger.loginfo(IMU_DATA.get_msg_type())
+        logger.loginfo(IMU_INFO.get_msg_type())
         self.imu_puber = IMU_DATA.Publisher()
         self.imu_puber_string = IMU_STATE.Publisher()
-        # self.imu_puber_string = IMU_STATE.Publisher()
-
+        self.imu_puber_string_info = IMU_INFO.Publisher()
+        
         #service
         IMU_SRV_CMD.Services(self.srv_cb)
-
+     
+    
     def srv_cb(self, srv):
         logger.loginfo("srv")
         self.button = srv.button
-        self.parameter1= str(srv.parameter1) # ACC_SPEED["2"] 
-        self.parameter2 = str(srv.parameter2)
-        self.parameter3 = str(srv.parameter3) 
+        self.parameter1= str(srv.parameter1)
+        self.parameter2 =str(srv.parameter2)
+        self.parameter3 = str(srv.parameter3)
         self.parameter4 = str(srv.parameter4)
         response = CommandResponse()
         print("if response == 1 means success, if response == 0 means fail")
@@ -186,23 +185,8 @@ class IMUCHECK(object):
         print(response)
         logger.loginfo("Service call back was executed")
         return True
-        
+    
 
-        '''
-        for parameter, value in request: # json_dict { "button" : "CLOSED"}
-            response = CommandResponse()
-            logger.loginfo("response {} to {}".format(value,request))
-            if parameter == "ACC_SPEED":
-                self.parameter1 == value
-            elif  parameter == "GYRO DEGREES":
-                self.parameter2 == value
-            elif parameter == "BANDWIDTH_HZ":
-                self.parameter3 == value
-            else: 
-                self.parameter4 == value
-        '''
-    
-    
     def initialize(self):
         self.state = "IDLE"
 
@@ -210,7 +194,9 @@ class IMUCHECK(object):
     def run(self):
         logger.logwarn("Running")
         pp = PrettyPrinter(indent=2)
-        rate = rospy.Rate(5)
+        rate = rospy.Rate(600)
+        rate_quick = rospy.Rate(10)
+        rate_wait_for_refresh = rospy.Rate(50)
         timeout =1.0
 
         while not rospy.is_shutdown():    
@@ -219,6 +205,8 @@ class IMUCHECK(object):
             else:
                 logger.loginfo("USB device disconnected")
                 self.state = "DISCONNECTED"
+                self.imu_msg_state = "DISCONNECTED"
+                self.imu_puber_string.publish(self.imu_msg_state)
 
             #CONNECT 
             if self.button == "CONNECT" and (self.state == "IDLE"):
@@ -226,6 +214,8 @@ class IMUCHECK(object):
                 logger.logwarn("Trying to initialize....")
                 logger.loginfo("Detecting IMU...")
                 self.imu_msg_info = "CONNECTING"
+                self.imu_puber_string_info.publish(self.imu_msg_info)
+                logger.loginfo("Published CONNECTING INFO")
                 baud = FIXED_BAUDRATE
                 logger.loginfo("Checking baudrate {}".format(baud))
                 with Serial(port=self.port, baudrate=baud, timeout=1.0) as p:
@@ -245,100 +235,111 @@ class IMUCHECK(object):
 
                         #publish readings
                         for t in range(3):
+                            if len(imu_raw_data) != 44:
+                            # logger.logwarn("Got {} data".format(len(_imu_raw_data)))
+                                rate_quick.sleep()
+                                continue
                             frame_int = [int(x) for x in imu_raw_data]
                             frame_int = frame_int[-2:] + frame_int[:-2]
                             result = imu_feedback_parse(frame_int)
+                            #logger.loginfo(result)
+                            #print(str(result))
+                            logger.loginfo(type(str(result)))
                             logger.loginfo("Got: \n {}".format(pp.pformat(result)))
-                            self.imu_msg_data.data = ("Got: \n {}".format(pp.pformat(result)))
-                        self.imu_puber.publish(self.imu_msg_data)
+                            self.imu_msg_data = ("Got: {}".format(pp.pformat(result)))
+                        self.imu_puber.publish(str(self.imu_msg_data))
                         logger.loginfo("imu msg data is published")
-                        
+                        rate_wait_for_refresh.sleep()
                     else:
                         logger.logwarn ("ERROR, not at correct baudrate")
-                        self.imu_msg_state= "Wrong baudrate, press SCAN to set"
+                        self.imu_msg_info= "Wrong baudrate, press SCAN to set" #publish to info
+                        self.imu_puber_string_info.publish(self.imu_msg_info)
                         self.imu_msg_state="IDLE"
+                        self.imu_puber_string.publish(self.imu_msg_state) 
+
 
         
                                     
             #SCAN
-            elif self.button == "SCAN" and (self.state == 'CONNECTED' or self.state =="IDLE"):
-                
+            elif self.button == "SCAN" and (self.state =="IDLE"):
                 for baud in (115200,9600):
                     logger.loginfo("Checking baudrate {}".format(baud))
                     if self.baud is None:
                         logger.logwarn("No baudrate, please check")
-                        self.imu_msg_data ="No baudrate detected, please check"
+                        self.imu_msg_info ="No baudrate detected, please check"
+                        self.imu_puber_string_info.publish(self.imu_msg_info)
                     with Serial(port=self.port, baudrate=baud, timeout=1.0) as p:
                         timestart = rospy.Time.now().to_sec()
                         imu_raw_data = p.read_until(b"\x55\x51")
                         if rospy.Time.now().to_sec() - timestart < timeout: 
                             self.baud = baud
-                            logger.logwarn("Baudrate detected {}".format(self.baud))
+                            #logger.logwarn("Baudrate detected {}".format(self.baud))
                             self.imu_msg_info = "Baudrate at {}".format(self.baud)
-                            self.imu_msg_state= "CONNECTED"#publish readings
-                        for t in range(3):
-                            frame_int = [int(x) for x in imu_raw_data]
-                            frame_int = frame_int[-2:] + frame_int[:-2]
-                            result = imu_feedback_parse(frame_int)
-                            logger.loginfo("Got: \n {}".format(pp.pformat(result)))
-                            self.imu_msg_data = ("Got: \n {}".format(pp.pformat(result)))
-                            
-                            #SET ACC_SPEED[self.parameter1]
-                        p.write(WIT_IMU_CMD_UNLOCK)
-                        p.write(WIT_IMU_CMD_UNLOCK) 
-                        p.write(WIT_IMU_CMD_UNLOCK)
-                      
-                        logger.info("baudrate is set to {}".format(self.baud))    
-                        self.imu_msg_info="baudrate is set to {}".format(self.baud)
-                        p.write(WIT_IMU_CMD_SET_BAUDRATE)
-                        self.baud = 115200
+                            self.imu_puber_string_info.publish(self.imu_msg_info)
+                            self.imu_msg_state= "CONNECTED"
+                            self.state = "CONNECTED"
+                            self.imu_puber_string.publish(self.imu_msg_state) 
+                    
+                            p.write(WIT_IMU_CMD_UNLOCK)
+                            p.write(WIT_IMU_CMD_UNLOCK)
+                            p.write(WIT_IMU_CMD_UNLOCK) 
+                            p.write(WIT_IMU_CMD_UNLOCK)
                         
-                        logger.logwarn("Setting ACC scale to: 16g/s2!")
-                        self.imu_msg_info= ("Setting ACC scale to: 16g/s2!")
-                        p.write(self.parameter1) #WIT_IMU_CMD_SET_SCALE_ACC
-                        logger.logwarn("Setting gyro scale to: 2000deg/s!")
-                        self.imu_msg_info=("Setting gyro scale to: 2000deg/s!")
-                        p.write(self.parameter2) #WIT_IMU_CMD_SET_SCALE_GYRO
-              
-                        logger.logwarn("Setting bandwidth to: 250Hz!")
-                        self.imu_msg_info=("Setting bandwidth to: 250Hz!")
-                        p.write(self.parameter3) #WIT_IMU_CMD_SET_BANDWIDTH
-                  
-                        logger.logwarn("Setting feedback rate to: 200Hz!")
-                        self.imu_msg_info=("Setting feedback rate to: 200Hz!")
-                        p.write(self.parameter4) #WIT_IMU_CMD_SET_SENDBACK_RATE)
-           #publish readings
-                        for t in range(3):
-                            frame_int = [int(x) for x in imu_raw_data]
-                            frame_int = frame_int[-2:] + frame_int[:-2]
-                            result = imu_feedback_parse(frame_int)
-                            logger.loginfo("Got: \n {}".format(pp.pformat(result)))
-                            self.imu_msg_data = ("Got: \n {}".format(pp.pformat(result)))
-                        logger.logwarn(
-                        "Setting feedback content as:\n0x51->acc 0x52->w 0x53->angle 0x59->quaternion"
-                        )
-                        p.write(WIT_IMU_CMD_SET_SENDBACK_CONTENT)
-                        
-                        
-                        #publish readings
-                        for t in range(3):
-                            frame_int = [int(x) for x in imu_raw_data]
-                            frame_int = frame_int[-2:] + frame_int[:-2]
-                            result = imu_feedback_parse(frame_int)
-                            logger.loginfo("Got: \n {}".format(pp.pformat(result)))
-                            self.imu_msg_data=("Got: \n {}".format(pp.pformat(result)))
+
+                            p.write(WIT_IMU_CMD_SET_BAUDRATE)
+                            self.baud = 115200
+                            p.write(WIT_IMU_CMD_SAVE_CFG)
+                            logger.info("baudrate is set to {}".format(self.baud))    
+                            self.imu_puber_string_info="baudrate is set to {}".format(self.baud)
+            
+            elif self.button == "SET" and (self.state =="CONNECTED"):
+                p.write(WIT_IMU_CMD_UNLOCK)
+                p.write(WIT_IMU_CMD_UNLOCK)
+                p.write(WIT_IMU_CMD_UNLOCK) 
+                p.write(WIT_IMU_CMD_UNLOCK)
+                
+
+                logger.logwarn("Setting ACC scale to: 16g/s2!")
+                self.imu_puber_string_info= ("Setting ACC scale to: 16g/s2!")
+                p.write(ACC_SPEED[self.parameter1]) #WIT_IMU_CMD_SET_SCALE_ACC
+            
+                logger.logwarn("Setting gyro scale to: 2000deg/s!")
+                self.imu_puber_string_info=("Setting gyro scale to: 2000deg/s!")
+                p.write(GYRO_DEGREES[self.parameter2]) #WIT_IMU_CMD_SET_SCALE_GYRO
+    
+                logger.logwarn("Setting bandwidth to: 250Hz!")
+                self.imu_puber_string_info=("Setting bandwidth to: 250Hz!")
+                p.write(BANDWIDTH_HZ[self.parameter3]) #WIT_IMU_CMD_SET_BANDWIDTH
+        
+                logger.logwarn("Setting feedback rate to: 200Hz!")
+                self.imu_puber_string_info=("Setting feedback rate to: 200Hz!")
+                p.write(SENDBACK_RATE_HZ[self.parameter4]) #WIT_IMU_CMD_SET_SENDBACK_RATE)
+
+                logger.logwarn(
+                "Setting feedback content as:\n0x51->acc 0x52->w 0x53->angle 0x59->quaternion"
+                )
+                p.write(WIT_IMU_CMD_SET_SENDBACK_CONTENT)
+                
+                
+                #publish readings
+                for t in range(3):
+                    frame_int = [int(x) for x in imu_raw_data]
+                    frame_int = frame_int[-2:] + frame_int[:-2]
+                    result = imu_feedback_parse(frame_int)
+                    logger.loginfo("Got: \n {}".format(pp.pformat(result)))
+                    self.imu_msg_data=("Got: \n {}".format(pp.pformat(result)))
 
                 #SAVE
             elif (self.button =="SAVE") and (self.state == "CONNECTED"):
                         p.write(WIT_IMU_CMD_SAVE_CFG)
                         logger.logwarn("CFG saved!")
-                        self.imu_msg_info=("CFG saved!")
+                        self.imu_puber_string_info=("CFG saved!")
 
 
                 #CLOSE
             elif self.button == 'CLOSE' and self.state != "DISCONNECTED":
                 logger.logwarn("Exiting")
-                self.imu_msg_info=("Exiting")
+                self.imu_puber_string_info=("Exiting")
                 self.imu_msg_state=("DISCONNECTED")
                 self.state == "DISCONNECTED"
                 break
@@ -353,7 +354,7 @@ if __name__ == "__main__":
     imu_checker.initialize()
     logger.loginfo("testinit")
     imu_checker.run()
-    logger.loginfo("testrunu")
+    logger.loginfo("testrun")
 
 
     
