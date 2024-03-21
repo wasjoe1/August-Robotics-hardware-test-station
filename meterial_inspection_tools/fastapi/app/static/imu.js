@@ -15,7 +15,7 @@ function onClickBtn(element) {
 // Functions
 function parseStringToInt(str) {
     try {
-        parseInt(str)
+        return parseInt(str)
     } catch (e) {
         console.log("Parsing of String to Int failed")
         console.log(e)
