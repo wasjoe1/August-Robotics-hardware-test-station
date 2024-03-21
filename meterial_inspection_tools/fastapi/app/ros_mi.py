@@ -90,11 +90,12 @@ class MeterialInspection():
         logger.loginfo("send service {}".format(srv_dict))
         for sub_node_name, request in srv_dict.items(): # sub node name is "device_name"; request is the "req data"
             command = IMUcontrolRequest() # get the srv req object
-            command.button = "button" # put the parameters into the req obj
-            command.parameter1 = 0
-            command.parameter2 = 0
-            command.parameter3 = 0
-            command.parameter4 = 0
+            logger.loginfo("request in rosmi {}".format(request))
+            command.button = request["button"] # put the parameters into the req obj
+            command.parameter1 = request["parameter1"]
+            command.parameter2 = request["parameter2"]
+            command.parameter3 = request["parameter3"]
+            command.parameter4 = request["parameter4"]
             logger.loginfo("request {} to {}".format(command, sub_node_name))
             logger.loginfo("actual request data: {}".format(request))
             logger.loginfo("call service to {}".format(msg_dict[sub_node_name]["srv"])) # should print out the service name

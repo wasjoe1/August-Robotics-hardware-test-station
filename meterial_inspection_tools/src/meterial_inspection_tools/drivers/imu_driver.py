@@ -174,6 +174,7 @@ class IMUCHECK(object):
     
     def srv_cb(self, srv):
         logger.loginfo("srv")
+        logger.loginfo(srv)
         self.button = srv.button
         self.parameter1= str(srv.parameter1)
         self.parameter2 =str(srv.parameter2)

@@ -72,7 +72,7 @@ imu_data_socket.onmessage = function(evt) {
     console.log(`data from /imu_data socket: ${evt.data}`)
 
     // display the imu readings on the readings div
-    document.getElementById("response-data").textContent = evt.data
+    document.getElementById("responseData-data").textContent = evt.data
 
     // ws_json = eval('(' + evt.data + ')')
     // if ((current_step in ws_json)){
@@ -98,7 +98,7 @@ imu_state_socket.onmessage = function(evt) {
     console.log(`data from /imu_state socket: ${evt.data}`)
 
     // display the imu state on the state div
-    document.getElementById("response-info").textContent = evt.data
+    document.getElementById("responseData-state").textContent = evt.data
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -114,26 +114,26 @@ imu_info_socket.onmessage = function(evt) {
     console.log(`data from /imu_info socket: ${evt.data}`)
     
     // display the imu info on the user info div
-    document.getElementById("response-info").textContent = evt.data
+    document.getElementById("responseData-info").textContent = evt.data
 }
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
 // OTHERS XX NOT IN USED XX
-const long_img_socket = new WebSocket("ws://" + ip_addr + "/long_img_ws")
-long_img_socket.addEventListener('open', function(event) {
-    long_img_socket.send("Hello ws long_img_ws!");
-});
+// const long_img_socket = new WebSocket("ws://" + ip_addr + "/long_img_ws")
+// long_img_socket.addEventListener('open', function(event) {
+//     long_img_socket.send("Hello ws long_img_ws!");
+// });
 
-long_img_socket.onmessage = function(evt) {
-    // convert data to json
-    // console.log(evt.data)
-    if (evt.data !== "") {
-        ws_json = eval('(' + evt.data + ')')
-        get_id("img1").src = "data:image/jpeg;base64," + ws_json["data"];
-        get_id("long_camera_data").innerHTML = "long camera, time: " + time_vis(ws_json["time"]);
-    }
-}
+// long_img_socket.onmessage = function(evt) {
+//     // convert data to json
+//     // console.log(evt.data)
+//     if (evt.data !== "") {
+//         ws_json = eval('(' + evt.data + ')')
+//         get_id("img1").src = "data:image/jpeg;base64," + ws_json["data"];
+//         get_id("long_camera_data").innerHTML = "long camera, time: " + time_vis(ws_json["time"]);
+//     }
+// }
 
 // document.onkeydown=function(event){
 //     var e = event || window.event || arguments.callee.caller.arguments[0];

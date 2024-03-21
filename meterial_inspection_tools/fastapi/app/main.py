@@ -130,7 +130,7 @@ async def step(request: Request, step: str): # step is of string type; its from 
 async def command(request: Request, cmd: str):
     try:
         logger.warn("get command {}".format(cmd))
-        srv_call_formatted_data = formatKeyAndVal("imu", cmd) # for now put imu only; returns json string
+        srv_call_formatted_data = cmd # for now put imu only; returns json string
         # msg_dict[sub_node].service_call(cmd) => json string is passed to the node in the service call; might be the old way of making a service call
         # TODO service call using app.mi
         app.mi.send_srv(srv_call_formatted_data)
@@ -148,7 +148,7 @@ async def cb_imu_data(websocket: WebSocket): # web socket event handler
     # global data
     while True: # enter loop to continuously receive data
         await asyncio.sleep(0.2) # this is required as it pauses current coroutine to allow execution of other coroutinese
-        if app.mi.has_topic_data_msg:
+        if app.mi.has_topic_data_msg():
             qData = app.mi.topic_data_send_queue[0]
             logger.info("queue data: {}".format(qData))
             await websocket.send_text(f"{qData}") # always take the 1st message in the queue
@@ -163,7 +163,7 @@ async def cb_imu_state(websocket: WebSocket): # web socket event handler
     # global data
     while True: # enter loop to continuously receive data
         await asyncio.sleep(0.2) # this is required as it pauses current coroutine to allow execution of other coroutinese
-        if app.mi.has_topic_state_msg:
+        if app.mi.has_topic_state_msg():
             qData = app.mi.topic_state_send_queue[0]
             logger.info("queue data: {}".format(qData))
             await websocket.send_text(f"{qData}") # always take the 1st message in the queue
@@ -178,7 +178,7 @@ async def cb_imu_state(websocket: WebSocket): # web socket event handler
     # global data
     while True: # enter loop to continuously receive data
         await asyncio.sleep(0.2) # this is required as it pauses current coroutine to allow execution of other coroutinese
-        if app.mi.has_topic_info_msg:
+        if app.mi.has_topic_info_msg():
             qData = app.mi.topic_info_send_queue[0]
             logger.info("queue data: {}".format(qData))
             await websocket.send_text(f"{qData}") # always take the 1st message in the queue
@@ -186,20 +186,20 @@ async def cb_imu_state(websocket: WebSocket): # web socket event handler
 
 # notes -------------------------------------------------------------------------------------------
 # XX UNUSED XX
-@app.websocket("/img_ws")
-async def img_ws(websocket: WebSocket):
-    logger.info("started.......")
-    await websocket.accept()
-    try:
-        while True:
-            encode_string = app.long_img
-            await websocket.send_bytes(encode_string)
-            await asyncio.sleep(0.02)
+# @app.websocket("/img_ws")
+# async def img_ws(websocket: WebSocket):
+#     logger.info("started.......")
+#     await websocket.accept()
+#     try:
+#         while True:
+#             encode_string = app.long_img
+#             await websocket.send_bytes(encode_string)
+#             await asyncio.sleep(0.02)
 
-    except Exception as e:
-        logger.info(e)
-    finally:
-        websocket.close()
+#     except Exception as e:
+#         logger.info(e)
+#     finally:
+#         websocket.close()
 
 # @app.websocket("/img_ws")
 # async def img_ws(websocket: WebSocket):
