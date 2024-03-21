@@ -61,9 +61,9 @@ rospy.init_node("fastapi_ros") # initialize the ros node
 app.mi = MeterialInspection()
 
 responseData = {
-    "readings": "{random input 1: input 1, random input 2: input 2, random input 3: input 3}",
-    "status": "IDLE",
-    "popup_messages": {
+    "data": "{random input 1: input 1, random input 2: input 2, random input 3: input 3}",
+    "state": "IDLE",
+    "info": {
         "isExist": True,
         "message": "no error",
         "isError": False,
@@ -119,10 +119,10 @@ async def step(request: Request, step: str): # step is of string type; its from 
         logger.info("static/"+app.step+".txt")
         with open("static/"+app.step+".txt") as f:
             just_do = f.readlines() # read the lines of the txt file
+            logger.info(just_do)
 
-        logger.info(just_do)
-
-        return templates.TemplateResponse("sub_page.html", {"request": request, "just_do": just_do, "data": responseData}) # directory & context are the arguments
+        return templates.TemplateResponse("sub_page.html", {"request": request, "just_do": just_do, "responseData": responseData}) # directory & context are the arguments
+        # responseData is returned as first readings, but websocket data should come once sockets are opened
     else:
         return None
 
@@ -139,22 +139,53 @@ async def command(request: Request, cmd: str):
 
 # -------------------------------------------------------------------------------------------------
 # websockets
-
-@app.websocket("/data") # web socket decorators to define websocket end points
-async def data(websocket: WebSocket): # web socket event handler
-    logger.info("get websocket data from topic.")
+# /imu_data socket
+@app.websocket("/imu_data") # web socket decorators to define websocket end points
+async def cb_imu_data(websocket: WebSocket): # web socket event handler
+    logger.info("get websocket data from /imu_data topic.")
     #TODO
     await websocket.accept() # accept the web socket connection
     # global data
     while True: # enter loop to continuously receive data
         await asyncio.sleep(0.2) # this is required as it pauses current coroutine to allow execution of other coroutinese
-        if app.mi.has_msg:
-            qData = app.mi.send_queue[0]
+        if app.mi.has_topic_data_msg:
+            qData = app.mi.topic_data_send_queue[0]
             logger.info("queue data: {}".format(qData))
             await websocket.send_text(f"{qData}") # always take the 1st message in the queue
-            app.mi.pop_msg() # then pop it off once you are done returning it
+            app.mi.pop_topic_data_msg() # then pop it off once you are done returning it
 
+# /imu_state socket
+@app.websocket("/imu_state") # web socket decorators to define websocket end points
+async def cb_imu_state(websocket: WebSocket): # web socket event handler
+    logger.info("get websocket data from /imu_state topic.")
+    #TODO
+    await websocket.accept() # accept the web socket connection
+    # global data
+    while True: # enter loop to continuously receive data
+        await asyncio.sleep(0.2) # this is required as it pauses current coroutine to allow execution of other coroutinese
+        if app.mi.has_topic_state_msg:
+            qData = app.mi.topic_state_send_queue[0]
+            logger.info("queue data: {}".format(qData))
+            await websocket.send_text(f"{qData}") # always take the 1st message in the queue
+            app.mi.pop_topic_state_msg() # then pop it off once you are done returning it
 
+# /imu_info socket
+@app.websocket("/imu_info") # web socket decorators to define websocket end points
+async def cb_imu_state(websocket: WebSocket): # web socket event handler
+    logger.info("get websocket data from /imu_info topic.")
+    #TODO
+    await websocket.accept() # accept the web socket connection
+    # global data
+    while True: # enter loop to continuously receive data
+        await asyncio.sleep(0.2) # this is required as it pauses current coroutine to allow execution of other coroutinese
+        if app.mi.has_topic_info_msg:
+            qData = app.mi.topic_info_send_queue[0]
+            logger.info("queue data: {}".format(qData))
+            await websocket.send_text(f"{qData}") # always take the 1st message in the queue
+            app.mi.pop_topic_info_msg() # then pop it off once you are done returning it
+
+# notes -------------------------------------------------------------------------------------------
+# XX UNUSED XX
 @app.websocket("/img_ws")
 async def img_ws(websocket: WebSocket):
     logger.info("started.......")

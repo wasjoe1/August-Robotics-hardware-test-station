@@ -31,9 +31,9 @@
     <!-- left of body -->
     <div>
       <h4 id="readings">Readings</h4>
-      <div>{{ data["readings"] }}</div>
-      <h4 id="status">Status</h4>
-      <div>{{ data["status"] }}</div>
+      <div id="responseData-data">{{ responseData["data"] }}</div>
+      <h4 id="responseData-state">State</h4>
+      <div>{{ responseData["state"] }}</div>
     </div>
 
     <!-- right of body -->
@@ -60,11 +60,12 @@
               <label for="imuInput4">Feedback frequency:</label>
               <input type="text" id="imuInput4" name="imuInput4"/>
             </div>
+            <button class="btn btn-default" id="setBtn" onclick="onClickBtn(this)">Set 4 parameters</button>
             <button class="btn btn-default" id="saveBtn" onclick="onClickBtn(this)">Save</button>
           </div>
         </div>
       </div>
-      <div style="background-color: chocolate;">{{ data["popup_messages"]["message"] }}</div>
+      <div id="responseData-info" style="background-color: chocolate;">{{ responseData["info"]["message"] }}</div>
     </div>
   </div>
 </body>
