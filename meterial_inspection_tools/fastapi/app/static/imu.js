@@ -5,7 +5,8 @@ function onClickBtn(element) {
         "scanBtn": "SCAN",
         "saveBtn": "SAVE",
         "connectBtn": "CONNECT",
-        "closeBtn": "CLOSE"
+        "closeBtn": "CLOSE",
+        "setBtn": "SET",
     }
     executeCommand(createCmdData(buttonDict[element.id]))    
 }
@@ -13,8 +14,8 @@ function onClickBtn(element) {
 // ------------------------------------------------------------------------------------------------
 // Functions
 function createCmdData(buttonString) {
-    var inputArr = []
-    if (buttonString == "SAVE") { // if not saved, input arr inputs will be undefined
+    var inputArr = [0,0,0,0]
+    if (buttonString == "SET") { // if not saved, input arr inputs will be 0
         inputArr = [
             document.getElementById("imuInput1").value,
             document.getElementById("imuInput2").value,

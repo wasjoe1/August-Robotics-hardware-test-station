@@ -13,8 +13,8 @@ from meterial_inspection_tools.srv import IMUcontrol
 
 # MODULES_MATERIAL_INSPECTION_SRV_CMD = InterfaceWithType('/modules/meterial_inspection/srv_cmd', bbsrvs.Command)
 
-LDLIDAR_DATA = InterfaceWithType('/ldlidar/data', ssmsgs.LaserScan) # name & type used to instantiate
-LDLIDAR_SRV_CMD = InterfaceWithType('/ldlidar/srv_cmd', bbsrvs.Command)
+# LDLIDAR_DATA = InterfaceWithType('/ldlidar/data', ssmsgs.LaserScan) # name & type used to instantiate
+# LDLIDAR_SRV_CMD = InterfaceWithType('/ldlidar/srv_cmd', bbsrvs.Command)
 
 IMU_DATA = InterfaceWithType('/imu/data', stmsgs.String)
 IMU_STATE = InterfaceWithType('/imu/state', stmsgs.String)
@@ -23,10 +23,10 @@ IMU_SRV_CMD = InterfaceWithType('/imu/srv_cmd', IMUcontrol)
 
 
 msg_dict = {
-    "ldlidar":{
-        "topic_data": LDLIDAR_DATA,
-        "srv": LDLIDAR_SRV_CMD
-    },
+    # "ldlidar":{
+    #     "topic_data": LDLIDAR_DATA,
+    #     "srv": LDLIDAR_SRV_CMD
+    # },
     "imu":{
         "topic_data": IMU_DATA,
         "topic_state": IMU_STATE,
