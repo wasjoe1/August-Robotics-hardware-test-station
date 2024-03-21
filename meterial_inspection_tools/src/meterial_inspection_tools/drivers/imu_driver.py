@@ -153,30 +153,33 @@ class IMUCHECK(object):
         super(IMUCHECK,self).__init__()
         self.port = "/dev/imu"
         self.baud = None
-        self.button = None
-        self.state = None
+        # self.button = None
+        self.button = "CONNECT"
+        # self.state = None
+        self.state = "IDLE"
         self.parameter1=None
         self.parameter2=None
         self.parameter3=None
         self.parameter4=None
-        self.imu_msg_data = IMU_DATA.get_new_msg()
+        self.imu_msg_data = IMU_DATA.get_new_msg() # 0 0 0 0
         self.imu_msg_state = IMU_STATE.get_new_msg()
         self.imu_msg_info = IMU_INFO.get_new_msg()
-        #self.imu_msg_data = IMU_DATA.type
-        #self.imu_msg_state = IMU_STATE.type
-        #self.imu_msg_info = IMU_INFO.type
+        logger.loginfo(IMU_INFO.get_msg_type())
+        logger.loginfo(IMU_DATA.get_msg_type())
         self.imu_puber = IMU_DATA.Publisher()
-        self.imu_puber_string =IMU_STATE.Publisher()
+        self.imu_puber_string = IMU_STATE.Publisher()
+        # self.imu_puber_string = IMU_STATE.Publisher()
+
         #service
         IMU_SRV_CMD.Services(self.srv_cb)
 
     def srv_cb(self, srv):
         logger.loginfo("srv")
         self.button = srv.button
-        self.parameter1= ACC_SPEED[str(srv.parameter1)] # ACC_SPEED["2"] 
-        self.parameter2 = GYRO_DEGREES[str(srv.parameter2)]
-        self.parameter3 = BANDWIDTH_HZ[str(srv.parameter3)] 
-        self.parameter4 = SENDBACK_RATE_HZ[str(srv.parameter4)]
+        self.parameter1= str(srv.parameter1) # ACC_SPEED["2"] 
+        self.parameter2 = str(srv.parameter2)
+        self.parameter3 = str(srv.parameter3) 
+        self.parameter4 = str(srv.parameter4)
         response = CommandResponse()
         print("if response == 1 means success, if response == 0 means fail")
         print("response:")
@@ -210,11 +213,7 @@ class IMUCHECK(object):
         rate = rospy.Rate(5)
         timeout =1.0
 
-        while not rospy.is_shutdown():
-            self.imu_puber_string.publish(self.imu_msg_state) # Publisher(__)
-            self.imu_puber.publish(self.imu_msg_data)
-            self.imu_puber_string.publish(self.imu_msg_info)#Check for USB connection every loop
-            
+        while not rospy.is_shutdown():    
             if os.path.exists(self.port):
                 logger.loginfo("USB device connected")
             else:
@@ -223,6 +222,7 @@ class IMUCHECK(object):
 
             #CONNECT 
             if self.button == "CONNECT" and (self.state == "IDLE"):
+                logger.logwarn("Connect button executed")
                 logger.logwarn("Trying to initialize....")
                 logger.loginfo("Detecting IMU...")
                 self.imu_msg_info = "CONNECTING"
@@ -234,18 +234,25 @@ class IMUCHECK(object):
                     if rospy.Time.now().to_sec() - timestart < timeout: 
                         self.baud = baud
                         logger.logwarn("Baudrate detected {}".format(self.baud))
-                        self.imu_msg_info= "Baudrate at {}".format(self.baud)
-                        self.imu_msg_info= "Correct baudrate"
+                        self.imu_msg_info = "Baudrate at {}".format(self.baud)
+                        self.imu_puber_string.publish(self.imu_msg_info)
+                        logger.loginfo("imu msg info is published")
+                        self.imu_msg_info = "Correct baudrate"
+                        self.imu_puber_string.publish(self.imu_msg_info)
                         self.imu_msg_state= "CONNECTED"
-                        self.state = "CONNECTED"
+                        self.imu_puber_string.publish(self.imu_msg_state) # Publisher(__)
+                        logger.loginfo("imu msg info & state is published")
 
-                    #publish readings
+                        #publish readings
                         for t in range(3):
                             frame_int = [int(x) for x in imu_raw_data]
                             frame_int = frame_int[-2:] + frame_int[:-2]
                             result = imu_feedback_parse(frame_int)
                             logger.loginfo("Got: \n {}".format(pp.pformat(result)))
-                            self.imu_msg_data = ("Got: \n {}".format(pp.pformat(result)))
+                            self.imu_msg_data.data = ("Got: \n {}".format(pp.pformat(result)))
+                        self.imu_puber.publish(self.imu_msg_data)
+                        logger.loginfo("imu msg data is published")
+                        
                     else:
                         logger.logwarn ("ERROR, not at correct baudrate")
                         self.imu_msg_state= "Wrong baudrate, press SCAN to set"
@@ -268,10 +275,15 @@ class IMUCHECK(object):
                             self.baud = baud
                             logger.logwarn("Baudrate detected {}".format(self.baud))
                             self.imu_msg_info = "Baudrate at {}".format(self.baud)
-                            self.imu_msg_state= "CONNECTED"
-                            self.state = "CONNECTED"
-                    
-                        p.write(WIT_IMU_CMD_UNLOCK)
+                            self.imu_msg_state= "CONNECTED"#publish readings
+                        for t in range(3):
+                            frame_int = [int(x) for x in imu_raw_data]
+                            frame_int = frame_int[-2:] + frame_int[:-2]
+                            result = imu_feedback_parse(frame_int)
+                            logger.loginfo("Got: \n {}".format(pp.pformat(result)))
+                            self.imu_msg_data = ("Got: \n {}".format(pp.pformat(result)))
+                            
+                            #SET ACC_SPEED[self.parameter1]
                         p.write(WIT_IMU_CMD_UNLOCK)
                         p.write(WIT_IMU_CMD_UNLOCK) 
                         p.write(WIT_IMU_CMD_UNLOCK)
@@ -284,7 +296,6 @@ class IMUCHECK(object):
                         logger.logwarn("Setting ACC scale to: 16g/s2!")
                         self.imu_msg_info= ("Setting ACC scale to: 16g/s2!")
                         p.write(self.parameter1) #WIT_IMU_CMD_SET_SCALE_ACC
-                     
                         logger.logwarn("Setting gyro scale to: 2000deg/s!")
                         self.imu_msg_info=("Setting gyro scale to: 2000deg/s!")
                         p.write(self.parameter2) #WIT_IMU_CMD_SET_SCALE_GYRO
@@ -296,7 +307,13 @@ class IMUCHECK(object):
                         logger.logwarn("Setting feedback rate to: 200Hz!")
                         self.imu_msg_info=("Setting feedback rate to: 200Hz!")
                         p.write(self.parameter4) #WIT_IMU_CMD_SET_SENDBACK_RATE)
-           
+           #publish readings
+                        for t in range(3):
+                            frame_int = [int(x) for x in imu_raw_data]
+                            frame_int = frame_int[-2:] + frame_int[:-2]
+                            result = imu_feedback_parse(frame_int)
+                            logger.loginfo("Got: \n {}".format(pp.pformat(result)))
+                            self.imu_msg_data = ("Got: \n {}".format(pp.pformat(result)))
                         logger.logwarn(
                         "Setting feedback content as:\n0x51->acc 0x52->w 0x53->angle 0x59->quaternion"
                         )
