@@ -100,7 +100,7 @@ class MeterialInspection():
             logger.loginfo("actual request data: {}".format(request))
             logger.loginfo("call service to {}".format(msg_dict[sub_node_name]["srv"])) # should print out the service name
             try:
-                msg_dict[sub_node_name]["srv"].service_call(command) # only 2 sub nodes name now => ldlidar & imu
+                msg_dict[sub_node_name]["srv"].service_call(command) # only 1 sub node name now => imu
                 logger.loginfo("service call should have succedded")
             except Exception as e:
                 logger.logerr(e) # prints out the error if service call fails

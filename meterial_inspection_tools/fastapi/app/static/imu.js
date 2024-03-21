@@ -13,14 +13,24 @@ function onClickBtn(element) {
 
 // ------------------------------------------------------------------------------------------------
 // Functions
+function parseStringToInt(str) {
+    try {
+        parseInt(str)
+    } catch (e) {
+        console.log("Parsing of String to Int failed")
+        console.log(e)
+        throw e
+    }
+}
+
 function createCmdData(buttonString) {
     var inputArr = [0,0,0,0]
     if (buttonString == "SET") { // if not saved, input arr inputs will be 0
         inputArr = [
-            document.getElementById("imuInput1").value,
-            document.getElementById("imuInput2").value,
-            document.getElementById("imuInput3").value,
-            document.getElementById("imuInput4").value,
+            parseStringToInt(document.getElementById("imuInput1").value),
+            parseStringToInt(document.getElementById("imuInput2").value),
+            parseStringToInt(document.getElementById("imuInput3").value),
+            parseStringToInt(document.getElementById("imuInput4").value),
         ]
     }
 
