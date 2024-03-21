@@ -151,7 +151,7 @@ class IMUCHECK(object):
         self.port = "/dev/imu"
         self.baud = None
         # self.button = None
-        self.button = "CONNECT"
+        self.button = None
         # self.state = None
         self.state = "IDLE"
         self.parameter1=None
@@ -194,7 +194,9 @@ class IMUCHECK(object):
     def run(self):
         logger.logwarn("Running")
         pp = PrettyPrinter(indent=2)
-        rate = rospy.Rate(5)
+        rate = rospy.Rate(600)
+        rate_quick = rospy.Rate(10)
+        rate_wait_for_refresh = rospy.Rate(50)
         timeout =1.0
 
         while not rospy.is_shutdown():    
@@ -211,8 +213,9 @@ class IMUCHECK(object):
                 logger.logwarn("Connect button executed")
                 logger.logwarn("Trying to initialize....")
                 logger.loginfo("Detecting IMU...")
-                self.imu_puber_string = "CONNECTING"
-                self.imu_puber_string.publish(self.imu_msg_info)
+                self.imu_msg_info = "CONNECTING"
+                self.imu_puber_string_info.publish(self.imu_msg_info)
+                logger.loginfo("Published CONNECTING INFO")
                 baud = FIXED_BAUDRATE
                 logger.loginfo("Checking baudrate {}".format(baud))
                 with Serial(port=self.port, baudrate=baud, timeout=1.0) as p:
@@ -232,23 +235,24 @@ class IMUCHECK(object):
 
                         #publish readings
                         for t in range(3):
+                            if len(imu_raw_data) != 44:
+                            # logger.logwarn("Got {} data".format(len(_imu_raw_data)))
+                                rate_quick.sleep()
+                                continue
                             frame_int = [int(x) for x in imu_raw_data]
                             frame_int = frame_int[-2:] + frame_int[:-2]
                             result = imu_feedback_parse(frame_int)
+                            #logger.loginfo(result)
+                            #print(str(result))
+                            logger.loginfo(type(str(result)))
                             logger.loginfo("Got: \n {}".format(pp.pformat(result)))
-                            IMU_DATA.header.stamp = rospy.Time.now()
-                            IMU_DATA.orientation = Quaternion()
-                            IMU_DATA.orientation.x = result["quaternion"][0]
-                            IMU_DATA.orientation.y = result["quaternion"][1]
-                            IMU_DATA.orientation.z = result["quaternion"][2]
-                            IMU_DATA.orientation.w = result["quaternion"][3]
-                            #self.imu_msg_data = ("Got: \n {}".format(pp.pformat(result)))
-                        self.imu_puber.publish(self.imu_msg_data)
+                            self.imu_msg_data = ("Got: {}".format(pp.pformat(result)))
+                        self.imu_puber.publish(str(self.imu_msg_data))
                         logger.loginfo("imu msg data is published")
-                        
+                        rate_wait_for_refresh.sleep()
                     else:
                         logger.logwarn ("ERROR, not at correct baudrate")
-                        self.imu_msg_string_info= "Wrong baudrate, press SCAN to set" #publish to info
+                        self.imu_msg_info= "Wrong baudrate, press SCAN to set" #publish to info
                         self.imu_puber_string_info.publish(self.imu_msg_info)
                         self.imu_msg_state="IDLE"
                         self.imu_puber_string.publish(self.imu_msg_state) 
@@ -270,9 +274,11 @@ class IMUCHECK(object):
                         if rospy.Time.now().to_sec() - timestart < timeout: 
                             self.baud = baud
                             #logger.logwarn("Baudrate detected {}".format(self.baud))
-                            self.imu_puber_string_info = "Baudrate at {}".format(self.baud)
+                            self.imu_msg_info = "Baudrate at {}".format(self.baud)
+                            self.imu_puber_string_info.publish(self.imu_msg_info)
                             self.imu_msg_state= "CONNECTED"
                             self.state = "CONNECTED"
+                            self.imu_puber_string.publish(self.imu_msg_state) 
                     
                             p.write(WIT_IMU_CMD_UNLOCK)
                             p.write(WIT_IMU_CMD_UNLOCK)
