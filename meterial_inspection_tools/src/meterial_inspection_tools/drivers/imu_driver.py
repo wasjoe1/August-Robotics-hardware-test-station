@@ -22,7 +22,7 @@ from meterial_inspection_tools.ros_interface import (
 )
 
 from boothbot_msgs.srv import (Command, CommandRequest,CommandResponse)
-
+from geometry_msgs.msg import Quaternion, Vector3
 
 
 # Settings 
@@ -163,9 +163,11 @@ class IMUCHECK(object):
         self.imu_msg_info = IMU_INFO.get_new_msg()
         logger.loginfo(IMU_INFO.get_msg_type())
         logger.loginfo(IMU_DATA.get_msg_type())
+        logger.loginfo(IMU_INFO.get_msg_type())
         self.imu_puber = IMU_DATA.Publisher()
-        self.imu_puber_string =IMU_STATE.Publisher()
+        self.imu_puber_string = IMU_STATE.Publisher()
         self.imu_puber_string_info = IMU_INFO.Publisher()
+        
         #service
         IMU_SRV_CMD.Services(self.srv_cb)
      
@@ -183,6 +185,8 @@ class IMUCHECK(object):
         print(response)
         logger.loginfo("Service call back was executed")
         return True
+    
+
     def initialize(self):
         self.state = "IDLE"
 
@@ -207,8 +211,8 @@ class IMUCHECK(object):
                 logger.logwarn("Connect button executed")
                 logger.logwarn("Trying to initialize....")
                 logger.loginfo("Detecting IMU...")
-                self.imu_puber_string_info = "CONNECTING"
-                self.imu_puber_string_info.publish(self.imu_msg_info)
+                self.imu_puber_string = "CONNECTING"
+                self.imu_puber_string.publish(self.imu_msg_info)
                 baud = FIXED_BAUDRATE
                 logger.loginfo("Checking baudrate {}".format(baud))
                 with Serial(port=self.port, baudrate=baud, timeout=1.0) as p:
@@ -232,7 +236,13 @@ class IMUCHECK(object):
                             frame_int = frame_int[-2:] + frame_int[:-2]
                             result = imu_feedback_parse(frame_int)
                             logger.loginfo("Got: \n {}".format(pp.pformat(result)))
-                            self.imu_msg_data.data = ("Got: \n {}".format(pp.pformat(result)))
+                            IMU_DATA.header.stamp = rospy.Time.now()
+                            IMU_DATA.orientation = Quaternion()
+                            IMU_DATA.orientation.x = result["quaternion"][0]
+                            IMU_DATA.orientation.y = result["quaternion"][1]
+                            IMU_DATA.orientation.z = result["quaternion"][2]
+                            IMU_DATA.orientation.w = result["quaternion"][3]
+                            #self.imu_msg_data = ("Got: \n {}".format(pp.pformat(result)))
                         self.imu_puber.publish(self.imu_msg_data)
                         logger.loginfo("imu msg data is published")
                         
@@ -297,7 +307,7 @@ class IMUCHECK(object):
         
                 logger.logwarn("Setting feedback rate to: 200Hz!")
                 self.imu_puber_string_info=("Setting feedback rate to: 200Hz!")
-                p.write(self.parameter4) #WIT_IMU_CMD_SET_SENDBACK_RATE)
+                p.write(SENDBACK_RATE_HZ[self.parameter4]) #WIT_IMU_CMD_SET_SENDBACK_RATE)
 
                 logger.logwarn(
                 "Setting feedback content as:\n0x51->acc 0x52->w 0x53->angle 0x59->quaternion"
