@@ -150,18 +150,19 @@ class IMUCHECK(object):
         super(IMUCHECK,self).__init__()
         self.port = "/dev/imu"
         self.baud = None
-        self.button = None
-        self.state = None
+        # self.button = None
+        self.button = "CONNECT"
+        # self.state = None
+        self.state = "IDLE"
         self.parameter1=None
         self.parameter2=None
         self.parameter3=None
         self.parameter4=None
-        self.imu_msg_data = IMU_DATA.get_new_msg()
+        self.imu_msg_data = IMU_DATA.get_new_msg() # 0 0 0 0
         self.imu_msg_state = IMU_STATE.get_new_msg()
         self.imu_msg_info = IMU_INFO.get_new_msg()
-        #self.imu_msg_data = IMU_DATA.type
-        #self.imu_msg_state = IMU_STATE.type
-        #self.imu_msg_info = IMU_INFO.type
+        logger.loginfo(IMU_INFO.get_msg_type())
+        logger.loginfo(IMU_DATA.get_msg_type())
         self.imu_puber = IMU_DATA.Publisher()
         self.imu_puber_string =IMU_STATE.Publisher()
         self.imu_puber_string_info = IMU_INFO.Publisher()
@@ -192,12 +193,7 @@ class IMUCHECK(object):
         rate = rospy.Rate(5)
         timeout =1.0
 
-        while not rospy.is_shutdown():
-            #self.imu_puber_string.publish(self.imu_msg_state) # Publisher(__)
-            #self.imu_puber.publish(self.imu_msg_data)
-           #self.imu_puber_string_info.publish(self.imu_msg_info)
-            
-            #Check for USB connection every loop
+        while not rospy.is_shutdown():    
             if os.path.exists(self.port):
                 logger.loginfo("USB device connected")
             else:
@@ -208,6 +204,7 @@ class IMUCHECK(object):
 
             #CONNECT 
             if self.button == "CONNECT" and (self.state == "IDLE"):
+                logger.logwarn("Connect button executed")
                 logger.logwarn("Trying to initialize....")
                 logger.loginfo("Detecting IMU...")
                 self.imu_puber_string_info = "CONNECTING"
@@ -220,23 +217,25 @@ class IMUCHECK(object):
                     if rospy.Time.now().to_sec() - timestart < timeout: 
                         self.baud = baud
                         logger.logwarn("Baudrate detected {}".format(self.baud))
-                        self.imu_puber_string_info= "Baudrate at {}".format(self.baud)
-                        self.imu_puber_string_info.publish(self.imu_msg_info)
-                        self.imu_puber_string_info= "Correct baudrate"
-                        self.imu_puber_string_info.publish(self.imu_msg_info)
+                        self.imu_msg_info = "Baudrate at {}".format(self.baud)
+                        self.imu_puber_string.publish(self.imu_msg_info)
+                        logger.loginfo("imu msg info is published")
+                        self.imu_msg_info = "Correct baudrate"
+                        self.imu_puber_string.publish(self.imu_msg_info)
                         self.imu_msg_state= "CONNECTED"
-                        self.state = "CONNECTED"
-                        self.imu_puber_string.publish(self.imu_msg_state) 
+                        self.imu_puber_string.publish(self.imu_msg_state) # Publisher(__)
+                        logger.loginfo("imu msg info & state is published")
 
-
-                    #publish readings
+                        #publish readings
                         for t in range(3):
                             frame_int = [int(x) for x in imu_raw_data]
                             frame_int = frame_int[-2:] + frame_int[:-2]
                             result = imu_feedback_parse(frame_int)
                             logger.loginfo("Got: \n {}".format(pp.pformat(result)))
-                            self.imu_msg_data = ("Got: \n {}".format(pp.pformat(result)))
-                            self.imu_puber.publish(self.imu_msg_data)
+                            self.imu_msg_data.data = ("Got: \n {}".format(pp.pformat(result)))
+                        self.imu_puber.publish(self.imu_msg_data)
+                        logger.loginfo("imu msg data is published")
+                        
                     else:
                         logger.logwarn ("ERROR, not at correct baudrate")
                         self.imu_msg_string_info= "Wrong baudrate, press SCAN to set" #publish to info
