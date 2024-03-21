@@ -61,12 +61,16 @@ function command(cmd) {
 // open web socket connection for /data
 const data_socket = new WebSocket("ws://" + ip_addr + "/data")
 data_socket.addEventListener('open', function(event) {
+    console.log("/data socket was opended")
     data_socket.send('Hello ws data!');
 });
 
 data_socket.onmessage = function(evt) {
     // convert data to json
     // console.log(evt.data)
+    console.log("JS script receive message from backend from /data socket")
+    console.log(`data from /data socket: ${evt.data}`)
+
     ws_json = eval('(' + evt.data + ')')
     if ((current_step in ws_json)){
         // lidar display
