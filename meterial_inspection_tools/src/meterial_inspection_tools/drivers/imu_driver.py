@@ -196,9 +196,9 @@ class IMUCHECK(object):
     def run(self):
         logger.logwarn("Running")
         pp = PrettyPrinter(indent=2)
-        rate = rospy.Rate(5)
-        rate_quick = rospy.Rate(1)
-        rate_wait_for_refresh = rospy.Rate(3)
+        rate = rospy.Rate(600)  #5 for debug
+        rate_quick = rospy.Rate(10) #1 for debug
+        rate_wait_for_refresh = rospy.Rate(50) #3 for debug
         timeout =1.0
 
         while not rospy.is_shutdown():    
@@ -298,7 +298,7 @@ class IMUCHECK(object):
 
             
             elif self.button == "SET" and (self.state =="CONNECTED"):
-                with Serial(port=self.port, baudrate=self.baud, timeout=1.0) as p:
+                with Serial(port=self.port, baudrate=FIXED_BAUDRATE, timeout=1.0) as p:
                     p.write(WIT_IMU_CMD_UNLOCK)
                     p.write(WIT_IMU_CMD_UNLOCK)
                     p.write(WIT_IMU_CMD_UNLOCK) 
@@ -332,11 +332,13 @@ class IMUCHECK(object):
                     self.imu_msg_info = (
                     "Setting feedback content as:\n0x51->acc 0x52->w 0x53->angle 0x59->quaternion"
                     )
-                    self.imu_puber_string_info.publish(self.imu_msg_info)
                     p.write(WIT_IMU_CMD_SET_SENDBACK_CONTENT)
+                    self.imu_puber_string_info.publish(self.imu_msg_info)
+                   
                     
                     
                     #publish readings
+                    imu_raw_data = p.read_until(b"\x55\x51")
                     for t in range(3):
                         if len(imu_raw_data) != 44:
                         # logger.logwarn("Got {} data".format(len(_imu_raw_data)))
@@ -358,10 +360,13 @@ class IMUCHECK(object):
 
                 #SAVE
             elif (self.button =="SAVE") and (self.state == "CONNECTED"):
-                        p.write(WIT_IMU_CMD_SAVE_CFG)
-                        logger.logwarn("CFG saved!")
-                        self.imu_msg_info= ("CFG saved!")
-                        self.imu_puber_string_info.publish(self.imu_msg_info)
+                        with Serial(port=self.port, baudrate=FIXED_BAUDRATE, timeout=1.0) as p:
+                            p.write(WIT_IMU_CMD_SAVE_CFG)
+                            logger.logwarn("CFG saved!")
+                            self.imu_msg_info= ("CFG saved!")
+                            self.imu_puber_string_info.publish(self.imu_msg_info)
+  
+
 
 
                 #CLOSE
