@@ -235,7 +235,6 @@ class IMUCHECK(object):
                             logger.loginfo("Got: \n {}".format(pp.pformat(result)))
                             self.imu_msg_data = ("Got: {}".format(pp.pformat(result)))
                         self.imu_puber.publish(str(self.imu_msg_data))
-                        logger.loginfo("imu msg data is published")
                         rate_wait_for_refresh.sleep()
                     else:
                         logger.logwarn ("ERROR, not at correct baudrate")
