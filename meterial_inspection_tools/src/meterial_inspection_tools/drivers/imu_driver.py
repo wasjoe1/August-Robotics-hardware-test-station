@@ -148,7 +148,25 @@ class IMUCHECK(object):
     def publisher_state(self,message):
         self.imu_state_pub.publish(message)
 
+    def check_imu_model(self):
+         for baud in (115200,9600):
+            with Serial(port=self.port, baudrate=baud, timeout=1.0) as p:
+                p.write(WIT_IMU_CONSTANTS.WIT_IDENTIFIER.value)
+                rospy.sleep(0.1)
+                response = p.read(1)
+                if response == WIT_IMU_CONSTANTS.WIT_IDENTIFIER.value:
+                    logger.loginfo_throttle(2,"WIT_IMU_connected")
+                    return "WIT_IMU_connected"
+                p.write(RION_IMU_CONSTANTS.RION_IDENTIFIER.value)
+                rospy.sleep(0.1)
+                if response == RION_IMU_CONSTANTS.RION_IDENTIFIER.value:
+                    logger.loginfo_throttle(2,"RION_IMU_connected")
+                    return "RION_IMU_connected"
+                    
 
+
+         
+         
     def check_usb_connections(self):
         #check if USB is connected
         if os.path.exists(self.port):
@@ -288,7 +306,7 @@ class IMUCHECK(object):
         rospy.Rate(5)
         while not rospy.is_shutdown():
             self.check_usb_connections()
-            #self.check_IMU_type()
+            self.check_imu_model()
             rospy.Rate(5)
      
 
