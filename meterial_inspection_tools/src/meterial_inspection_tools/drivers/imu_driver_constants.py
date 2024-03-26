@@ -63,7 +63,7 @@ class WIT_IMU_CONSTANTS(Enum):
 
 class RION_IMU_CONSTANTS(Enum):
     RION_IDENTIFIER = b"\x68" 
-    RION_IMU_CMD_SET_BAUDRATE = b"\x68\x05\x00\x0b\x05\x13"
+    RION_IMU_CMD_SET_BAUDRATE = b"\x68\x05\x00\x0b\x05"
 
 
 class IMU_CONSTANTS(Enum):

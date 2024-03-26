@@ -100,6 +100,7 @@ class IMUCHECK(object):
         self.imu_data_pub = IMU_DATA.Publisher()
         self.imu_info_pub = IMU_INFO.Publisher()
         self.imu_state_pub = IMU_STATE.Publisher()
+        self.check_imu_model_once = False
 
 
     #process service
@@ -121,6 +122,7 @@ class IMUCHECK(object):
                 ("CLOSE", "CONNECTED") :IMUCHECK.close,
                 ("SAVE", "CONNECTED") : IMUCHECK.save,
                 ("SET", "CONNECTED") :IMUCHECK.set,
+                ("RSCAN", "IDLE"): IMUCHECK.RION_scan,
                 }
         
         #update state
@@ -161,11 +163,9 @@ class IMUCHECK(object):
                 rospy.sleep(0.1)
                 if response == RION_IMU_CONSTANTS.RION_IDENTIFIER.value:
                     logger.loginfo_throttle(2,"RION_IMU_connected")
-                    return "RION_IMU_connected"
+                    return "RION_IMU_connected, can only scan for baudrate"
+                break
                     
-
-
-         
          
     def check_usb_connections(self):
         #check if USB is connected
@@ -179,6 +179,29 @@ class IMUCHECK(object):
             self.publisher_state("DISCONNECTED")
          
 
+    def RION_scan(self):
+        baud = IMU_CONSTANTS.FIXED_BAUDRATE.value
+        for baud in (115200,9600):
+            logger.loginfo("Checking baudrate {}".format(baud))
+            with Serial(port=self.port, baudrate=baud, timeout=1.0) as p:
+                timestart = rospy.Time.now().to_sec()
+                rion_imu_baudrate= p.read_until(RION_IMU_CONSTANTS.RION_IMU_CMD_SET_BAUDRATE.value)
+                if rospy.Time.now().to_sec() - timestart < timeout: 
+                    self.baud = baud
+                    logger.loginfo("Baudrate detected {}".format(self.baud))
+                    self.publisher_info("Baudrate at {}".format(self.baud))
+                    if self.baud == IMU_CONSTANTS.FIXED_BAUDRATE.value: 
+                        self.publisher_state("CONNECTED")
+                        self.state_manager.change_state("CONNECTED") 
+                        logger.loginfo("CONNECTED")
+                    else:
+                        self.publisher_info("baudrate is set to {}".format(self.baud))
+                        self.publisher_state("CONNECTED")
+                        self.state_manager.change_state("CONNECTED") 
+                        logger.loginfo("CONNECTED")
+        
+
+    
 # buttons and functions
     def connect(self):
         baud = IMU_CONSTANTS.FIXED_BAUDRATE.value
@@ -305,8 +328,10 @@ class IMUCHECK(object):
         logger.loginfo("starting main loop")
         rospy.Rate(5)
         while not rospy.is_shutdown():
+            if not self.check_imu_model_once:
+                self.check_imu_model()
+                self.check_imu_model_once = True
             self.check_usb_connections()
-            self.check_imu_model()
             rospy.Rate(5)
      
 
