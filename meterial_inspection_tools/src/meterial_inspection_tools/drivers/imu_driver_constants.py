@@ -9,6 +9,11 @@ from serial import Serial
 
 
 class WIT_IMU_CONSTANTS(Enum):
+    CONNECT = "CONNECT"
+    SCAN = "SCAN"
+    CLOSE = "CLOSE"
+    SAVE = "SAVE"
+    SET = "SET"
     WIT_IDENTIFIER = b"\xff"
     WIT_IMU_CMD_CALI_ACC = b"\xff\xaa\x01\x01\x00" 
     WIT_IMU_CMD_SAVE_CFG = b"\xff\xaa\x00\x00\x00"
@@ -62,14 +67,24 @@ class WIT_IMU_CONSTANTS(Enum):
 
 
 class RION_IMU_CONSTANTS(Enum):
+    RSCAN = "RSCAN"
+    RCONNECT = "RCONNECT"
+    RSET = "RSET"
     RION_IDENTIFIER = b"\x68" 
     RION_IMU_CMD_SET_BAUDRATE = b"\x68\x05\x00\x0b\x05"
+
 
 
 class IMU_CONSTANTS(Enum):
     NODE_RATE = 10
     MOTOR_TOLERANCE = 0.0001
     FIXED_BAUDRATE = 115200
+    PORT = "/dev/imu"
+    STATE_IDLE = "IDLE"
+    STATE_CONNECTED = "CONNECTED"
+    STATE_DISCONNECTED = "DISCONNECTED"
+    MODEL_WIT = "WIT"
+    MODEL_RION = "RION"
 
 
 
