@@ -254,7 +254,8 @@ class RION(object):
                             imu_sensor.linear_acceleration.y = acc_y
                             imu_sensor.linear_acceleration.z = acc_z
                             seralized_imu_sensor = str(imu_sensor)
-                            imu.publisher_logging_data(seralized_imu_sensor)
+                            seralized_imu_sensor_json = json.dumps(seralized_imu_sensor)
+                            imu.publisher_logging_data(seralized_imu_sensor_json)
 
 
         else:
@@ -286,7 +287,8 @@ class RION(object):
                     imu_sensor.linear_acceleration.y = acc_y
                     imu_sensor.linear_acceleration.z = acc_z
                     seralized_imu_sensor = str(imu_sensor)
-                    imu.publisher_logging_data(seralized_imu_sensor)
+                    seralized_imu_sensor_json = json.dumps(seralized_imu_sensor)
+                    imu.publisher_logging_data(seralized_imu_sensor_json)
                     imu.publisher_logging_info("Baudrate at {}".format(baud))
                     imu.publisher_logging_state(IMU_CONSTANTS.STATE_CONNECTED.value)
                     state_manager.change_state(IMU_CONSTANTS.STATE_CONNECTED.value)
@@ -296,7 +298,7 @@ class RION(object):
             imu.publisher_logging_info(RION_IMU_CONSTANTS.ERROR_to_Rion.value)
             raise ValueError(RION_IMU_CONSTANTS.ERROR_to_Rion.value)
                     
-
+    @staticmethod
     def set():
         if imu.model ==IMU_CONSTANTS.MODEL_RION.value:
             baud_rate = RION.scan()
