@@ -18,7 +18,7 @@ from meterial_inspection_tools.ros_interface import (
     IMU_STATE,
     IMU_INFO
 )
-
+from sensor_msgs.msg import Imu
 from boothbot_msgs.srv import (Command, CommandRequest,CommandResponse)
 from imu_driver_constants import (
     IMU_CONSTANTS,
@@ -26,9 +26,56 @@ from imu_driver_constants import (
     RION_IMU_CONSTANTS
 )
 
+#RION sensor readings
+bps = 115200
+timex = 5
+
+G = 9.80665
+
+OFFSET  = 3
+
+ROLL = 4
+PITCH = 7
+YAW = 10
+ACC_X = 13
+ACC_Y = 16
+ACC_Z = 19
+GYRO_X = 22
+GYRO_Y = 25
+GYRO_Z = 28
+
+#RION sensor readings
+def byte_str(val):
+    # print("got val {}".format(val))
+    if len(str(hex(val)[2:])) == 1:
+        # print("length {}".format(len(str(hex(val)[2:]))))
+        return "0" + str(hex(val)[2:])
+    return str(hex(val)[2:])
+
+
+import numpy as np # Scientific computing library for Python
+ 
+def get_quaternion_from_euler(roll, pitch, yaw):
+    """
+    Convert an Euler angle to a quaternion.
+
+    Input
+    :param roll: The roll (rotation around x-axis) angle in radians.
+    :param pitch: The pitch (rotation around y-axis) angle in radians.
+    :param yaw: The yaw (rotation around z-axis) angle in radians.
+
+    Output
+    :return qx, qy, qz, qw: The orientation in quaternion [x,y,z,w] format
+    """
+    qx = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+    qy = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
+    qz = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
+    qw = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+
+    return [qx, qy, qz, qw]
+   
 
 timeout = 1.0
-
 # convert 8bit hex to signed int
 def c8h2sint(value):
     return -(value & 0x80) | (value & 0x7F)
@@ -97,9 +144,9 @@ class statemanager(object):
                 (WIT_IMU_CONSTANTS.CLOSE.value, IMU_CONSTANTS.STATE_CONNECTED.value) :WIT.close,
                 (WIT_IMU_CONSTANTS.SAVE.value, IMU_CONSTANTS.STATE_CONNECTED.value) : WIT.save,
                 (WIT_IMU_CONSTANTS.SET.value, IMU_CONSTANTS.STATE_CONNECTED.value) :WIT.set,
-                (RION_IMU_CONSTANTS.RSCAN.value, IMU_CONSTANTS.STATE_CONNECTED.value): RION.RION_scan,
-                (RION_IMU_CONSTANTS.RSET.value, IMU_CONSTANTS.STATE_CONNECTED.value):RION.RION_set,
-                (RION_IMU_CONSTANTS.RCONNECT.value,IMU_CONSTANTS.STATE_CONNECTED.value):RION.RION_connect,
+                (RION_IMU_CONSTANTS.RSCAN.value, IMU_CONSTANTS.STATE_IDLE.value): RION.scan,
+                (RION_IMU_CONSTANTS.RSET.value, IMU_CONSTANTS.STATE_CONNECTED.value):RION.set,
+                (RION_IMU_CONSTANTS.RCONNECT.value,IMU_CONSTANTS.STATE_IDLE.value):RION.connect,
                 }
         
         #update state    
@@ -116,69 +163,146 @@ class statemanager(object):
             else:
                 imu.publisher_logging_info("Invalid command and state")
 
+
 class RION(object):
 
     """
     used only when usb checks that it is RION model
     only SCAN button is available to set baudrate
     """
+        
+    def reflash(self):
+        self.s_data = None
+        Serial(IMU_CONSTANTS.PORT.value,IMU_CONSTANTS.FIXED_BAUDRATE.value,timeout=timeout).reset_input_buffer()
+        Serial(IMU_CONSTANTS.PORT.value,IMU_CONSTANTS.FIXED_BAUDRATE.value,timeout=timeout).reset_output_buffer()
+        self.s_data = Serial(IMU_CONSTANTS.PORT.value,IMU_CONSTANTS.FIXED_BAUDRATE.value,timeout=timeout).read(32)
+
+    def factor(self,s):
+        f = 1
+        if s[0] == "1":
+            f = f * -1
+        return f
+
+    def orien(self):
+        roll_ori = self.split_data(ROLL)
+        pitch_ori = self.split_data(PITCH)
+        yaw_ori = self.split_data(YAW)
+        roll = int(roll_ori[1:6])/100.0 * self.factor(roll_ori)
+        pitch = int(pitch_ori[1:6])/100.0 * self.factor(pitch_ori)
+        yaw = int(yaw_ori[1:6])/100.0 * self.factor(yaw_ori)
+        roll = math.radians(roll)
+        pitch = math.radians(pitch)
+        yaw = math.radians(yaw)
+        return (roll, pitch, yaw)
+
+    def acc(self):
+        acc_x_ori = self.split_data(ACC_X)
+        acc_y_ori = self.split_data(ACC_Y)
+        acc_z_ori = self.split_data(ACC_Z)
+        acc_x = int(acc_x_ori[1:6])/1000.0 * self.factor(acc_x_ori) * G
+        acc_y = int(acc_y_ori[1:6])/1000.0 * self.factor(acc_y_ori) * G
+        acc_z = int(acc_z_ori[1:6])/1000.0 * self.factor(acc_z_ori) * G
+        return (acc_x, acc_y, acc_z)
+
+    def gyro(self):
+        gyro_x_ori = self.split_data(GYRO_X)
+        gyro_y_ori = self.split_data(GYRO_Y)
+        gyro_z_ori = self.split_data(GYRO_Z)
+        gyro_x = int(gyro_x_ori[1:6])/100.0 * self.factor(gyro_x_ori)
+        gyro_y = int(gyro_y_ori[1:6])/100.0 * self.factor(gyro_y_ori)
+        gyro_z = int(gyro_z_ori[1:6])/100.0 * self.factor(gyro_z_ori)
+        gyro_x = math.radians(gyro_x)
+        gyro_y = math.radians(gyro_y)
+        gyro_z = math.radians(gyro_z)
+        return (gyro_x, gyro_y, gyro_z)
+
+    def split_data(self, start, offset=3):
+        s = ""
+        for i in range(0, offset):
+            s += byte_str(self.s_data[start+i])
+        # return byte_str(res[4]) + byte_str(res[5]) + byte_str(res[6])
+        return s
+
     @staticmethod
-    def RION_connect():
+    def connect():
         if imu.model == IMU_CONSTANTS.MODEL_RION.value:
-            detectedbaud = None
             baud = IMU_CONSTANTS.FIXED_BAUDRATE.value
             imu.publisher_logging_info("Checking baudrate {}".format(baud))
             with Serial(port=IMU_CONSTANTS.PORT.value, baudrate=baud, timeout=1.0) as p:
-                        timestart = rospy.Time.now().to_sec()
-                        rion_imu_baudrate= p.read_until(RION_IMU_CONSTANTS.RION_IMU_CMD_SET_BAUDRATE.value)
-                        if rospy.Time.now().to_sec() - timestart < timeout: 
-                            detectedbaud = baud
-                            imu.publisher_logging_info("Baudrate at {}".format(detectedbaud))
+                            rion_instance.reflash()
+                            imu.publisher_logging_info("Baudrate at {}".format(baud))
                             imu.publisher_logging_state(IMU_CONSTANTS.STATE_CONNECTED.value)
                             state_manager.change_state(IMU_CONSTANTS.STATE_CONNECTED.value) 
                             #publish readings
-                        else:
-                            imu.publisher_logging_info("Wrong baudrate, press SCAN")
+                            (roll,pitch,yaw) = rion_instance.orien()
+                            (acc_x, acc_y, acc_z) =rion_instance.acc()
+                            (gyro_x, gyro_y, gyro_z) = rion_instance.gyro()
+
+                            (x, y, z, w) = get_quaternion_from_euler(roll, pitch, yaw)
+
+                            imu_sensor.orientation.x = x
+                            imu_sensor.orientation.y = y
+                            imu_sensor.orientation.z = z
+                            imu_sensor.orientation.w = w
+                            imu_sensor.angular_velocity.x = gyro_x
+                            imu_sensor.angular_velocity.y = gyro_y
+                            imu_sensor.angular_velocity.z = gyro_z
+                            imu_sensor.linear_acceleration.x = acc_x
+                            imu_sensor.linear_acceleration.y = acc_y
+                            imu_sensor.linear_acceleration.z = acc_z
+                            seralized_imu_sensor = str(imu_sensor)
+                            imu.publisher_logging_data(seralized_imu_sensor)
+
+
         else:
             imu.publisher_logging_info("WIT IMU detected, switch to RION")
-            raise ValueError("Wrong IMU model")
+            raise ValueError(RION_IMU_CONSTANTS.ERROR_to_Rion.value)
+
 
     @staticmethod
-    def RION_scan():
+    def scan():
         if imu.model ==IMU_CONSTANTS.MODEL_RION.value:
-            detected_baud = None
-            baud = IMU_CONSTANTS.FIXED_BAUDRATE.value
-            for baud in (115200,9600):
-                imu.publisher_logging_info("Checking baudrate {}".format(baud))
-                with Serial(port=IMU_CONSTANTS.PORT.value, baudrate=baud, timeout=1.0) as p:
-                    timestart = rospy.Time.now().to_sec()
-                    rion_imu_baudrate= p.read_until(RION_IMU_CONSTANTS.RION_IMU_CMD_SET_BAUDRATE.value)
-                    if rospy.Time.now().to_sec() - timestart < timeout: 
-                        detected_baud= baud
-                        imu.publisher_logging_info("Baudrate at {}".format(detected_baud))
-                        if detected_baud == IMU_CONSTANTS.FIXED_BAUDRATE.value: 
-                            imu.publisher_logging_state(IMU_CONSTANTS.STATE_CONNECTED.value)
-                        else:
-                            p.write(RION_IMU_CONSTANTS.RION_IMU_CMD_SET_BAUDRATE.value)
-                            imu.publisher_logging_info("baudrate is set to {}".format(detected_baud))
-                            imu.publisher_logging_state(IMU_CONSTANTS.STATE_CONNECTED.value)
-                            statemanager.change_state(IMU_CONSTANTS.STATE_CONNECTED.value) 
-        
+            for baud in (9600,115200):
+                 with Serial(port=IMU_CONSTANTS.PORT.value, baudrate=baud, timeout=1.0) as p:
+                    rion_instance.reflash() 
+                    #publish readings
+                    (roll,pitch,yaw) = rion_instance.orien()
+                    (acc_x, acc_y, acc_z) =rion_instance.acc()
+                    (gyro_x, gyro_y, gyro_z) = rion_instance.gyro()
+
+                    (x, y, z, w) = get_quaternion_from_euler(roll, pitch, yaw)
+
+                    imu_sensor.orientation.x = x
+                    imu_sensor.orientation.y = y
+                    imu_sensor.orientation.z = z
+                    imu_sensor.orientation.w = w
+                    imu_sensor.angular_velocity.x = gyro_x
+                    imu_sensor.angular_velocity.y = gyro_y
+                    imu_sensor.angular_velocity.z = gyro_z
+                    imu_sensor.linear_acceleration.x = acc_x
+                    imu_sensor.linear_acceleration.y = acc_y
+                    imu_sensor.linear_acceleration.z = acc_z
+                    seralized_imu_sensor = str(imu_sensor)
+                    imu.publisher_logging_data(seralized_imu_sensor)
+                    imu.publisher_logging_info("Baudrate at {}".format(baud))
+                    imu.publisher_logging_state(IMU_CONSTANTS.STATE_CONNECTED.value)
+                    state_manager.change_state(IMU_CONSTANTS.STATE_CONNECTED.value)
+                    return baud
+                     
         else:
             imu.publisher_logging_info("WIT IMU detected, switch to RION")
-            raise ValueError("Wrong IMU model")
+            raise ValueError(RION_IMU_CONSTANTS.ERROR_to_Rion.value)
                     
 
-    def RION_set():
+    def set():
         if imu.model ==IMU_CONSTANTS.MODEL_RION.value:
-            with Serial(port=IMU_CONSTANTS.PORT.value, baudrate=baud, timeout=1.0) as p:
+            baud_rate = RION.scan()
+            with Serial(port=IMU_CONSTANTS.PORT.value, baudrate=baud_rate, timeout=1.0) as p:
                 p.write(RION_IMU_CONSTANTS.RION_IMU_CMD_SET_BAUDRATE.value)
                 imu.publisher_logging_info("baudrate is set to {}".format(IMU_CONSTANTS.FIXED_BAUDRATE.value))
-                imu.publisher_logging_state(IMU_CONSTANTS.STATE_CONNECTED.value)
-                statemanager.change_state(IMU_CONSTANTS.STATE_CONNECTED.value)
         else:
             imu.publisher_logging_info("WIT IMU detected, switch to RION")
-            raise ValueError("Wrong IMU model")
+            raise ValueError(RION_IMU_CONSTANTS.ERROR_to_Rion.value)
 
 
 
@@ -221,7 +345,8 @@ class WIT(object):
 
         else: 
             imu.publisher_logging_info("RION detected, switch to WIT")
-            raise ValueError("Wrong IMU model")
+            raise ValueError(WIT_IMU_CONSTANTS.ERROR_to_wit.value)
+            
 
     @staticmethod
     def scan():
@@ -236,28 +361,24 @@ class WIT(object):
                         detectedbaud = baud
                         imu.publisher_logging_info("Baudrate at {}".format(detectedbaud))
                         imu.publisher_logging_state(IMU_CONSTANTS.STATE_CONNECTED.value)
-                        state_manager.change_state(IMU_CONSTANTS.STATE_CONNECTED.value) 
+                        state_manager.change_state(IMU_CONSTANTS.STATE_CONNECTED.value)
+                        #publish readings
+                        for t in range(3):
+                            imu_raw_data = p.read_until(b"\x55\x51")
+                            if len(imu_raw_data) != 44:
+                                logger.loginfo("Got {} data".format(len(imu_raw_data)))
+                                rospy.Rate(5)
+                                continue
+                            frame_int = [int(x) for x in imu_raw_data]
+                            frame_int = frame_int[-2:] + frame_int[:-2]
+                            result = imu_feedback_parse(frame_int)
+                            result_json = json.dumps(result)
+                            imu.publisher_logging_data("Got: {}".format(result_json)) 
         else: 
             imu.publisher_logging_info("RION detected, switch to WIT")
-            raise ValueError("Wrong IMU model")
+            raise ValueError(WIT_IMU_CONSTANTS.ERROR_to_wit.value)
+            
 
-            '''
-            #to set baudrate
-            if detectedbaud== IMU_CONSTANTS.FIXED_BAUDRATE.value: 
-                imu.publisher_logging_state(IMU_CONSTANTS.STATE_CONNECTED.value)
-                state_manager.change_state(IMU_CONSTANTS.STATE_CONNECTED.value) 
-            else:
-                p.write(WIT_IMU_CONSTANTS.WIT_IMU_CMD_UNLOCK.value)
-                p.write(WIT_IMU_CONSTANTS.WIT_IMU_CMD_UNLOCK.value)
-                p.write(WIT_IMU_CONSTANTS.WIT_IMU_CMD_UNLOCK.value) 
-                p.write(WIT_IMU_CONSTANTS.WIT_IMU_CMD_UNLOCK.value)
-                p.write(WIT_IMU_CONSTANTS.WIT_IMU_CMD_SET_BAUDRATE.value)
-                detectedbaud = 115200
-                p.write(WIT_IMU_CONSTANTS.WIT_IMU_CMD_SAVE_CFG.value)   
-                imu.publisher_logging_info("baudrate is set to {}".format(detectedbaud))
-                imu.publisher_logging_state(IMU_CONSTANTS.STATE_CONNECTED.value)
-                state_manager.change_state(IMU_CONSTANTS.STATE_CONNECTED.value) 
-            '''
 
     @staticmethod
     def set():
@@ -305,7 +426,8 @@ class WIT(object):
 
         else: 
             imu.publisher_logging_info("RION detected, switch to WIT")
-            raise ValueError("Wrong IMU model")
+            raise ValueError(WIT_IMU_CONSTANTS.ERROR_to_wit.value)
+            
 
 
 
@@ -318,7 +440,8 @@ class WIT(object):
 
         else: 
             imu.publisher_logging_info("RION detected, switch to WIT")
-            raise ValueError("Wrong IMU model")
+            raise ValueError(WIT_IMU_CONSTANTS.ERROR_to_wit.value)
+    
       
 
     @staticmethod
@@ -394,29 +517,30 @@ class IMUCHECK(object):
         #check if USB is connected
         if os.path.exists(IMU_CONSTANTS.PORT.value):
             logger.loginfo_throttle(2, "USB device connected")
-            #self.state_manager.change_state("IDLE")
-            #IMUCHECK.publisher_logging_state(("IDLE")
+            #state_manager.change_state("IDLE")
+            self.publisher_logging_state(state_manager.current_state)
         else:
             logger.loginfo_throttle(2, "USB device disconnected")
-            state_manager.change_state("DISCONNECTED")
-            self.publisher_logging_state("DISCONNECTED")
+            state_manager.change_state(IMU_CONSTANTS.STATE_DISCONNECTED.value)
+            self.publisher_logging_state(IMU_CONSTANTS.STATE_DISCONNECTED.value)
 
-
+        
     def main_loop(self):
         logger.loginfo("starting main loop")
         rospy.Rate(5)
         while not rospy.is_shutdown():
             self.check_usb_connections()
-            self.check_imu_model()
+            if state_manager.current_state != IMU_CONSTANTS.STATE_DISCONNECTED.value:
+                self.check_imu_model()
             rospy.Rate(5)
      
-
-    
 
 if __name__ == "__main__":
     rospy.init_node("imu_check")
     imu = IMUCHECK()
     state_manager = statemanager()
+    imu_sensor = Imu()
+    rion_instance = RION()
     imu.main_loop()
 
 

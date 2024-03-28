@@ -15,6 +15,7 @@ class WIT_IMU_CONSTANTS(Enum):
     SAVE = "SAVE"
     SET = "SET"
     WIT_IDENTIFIER = b"\xff"
+    ERROR_to_wit = "Wrong IMU, change to WIT "
     WIT_IMU_CMD_CALI_ACC = b"\xff\xaa\x01\x01\x00" 
     WIT_IMU_CMD_SAVE_CFG = b"\xff\xaa\x00\x00\x00"
     WIT_IMU_CMD_UNLOCK = b"\xff\xaa\x69\x88\xb5"
@@ -71,7 +72,9 @@ class RION_IMU_CONSTANTS(Enum):
     RCONNECT = "RCONNECT"
     RSET = "RSET"
     RION_IDENTIFIER = b"\x68" 
-    RION_IMU_CMD_SET_BAUDRATE = b"\x68\x05\x00\x0b\x05"
+    RION_IMU_CMD_SET_BAUDRATE = b"\x68\x05\x00\x0b\x05\x13"
+    RION_IMU_READ = b"\x68\x05\x00\x0b"
+    ERROR_to_Rion = "Wrong IMU, change to RION"
 
 
 
