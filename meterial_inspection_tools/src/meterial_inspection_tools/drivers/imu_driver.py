@@ -168,7 +168,10 @@ class RION(object):
 
     """
     used only when usb checks that it is RION model
-    only SCAN button is available to set baudrate
+    CONNECT assumes baudrate of 115200 and reads current sensor values
+    SCAN is available to find baudrate and reads current sensor values
+    SET to set baudrate to 115200
+    CLOSE to disconnect usb
     """
         
     def reflash(self):
@@ -255,7 +258,7 @@ class RION(object):
 
 
         else:
-            imu.publisher_logging_info("WIT IMU detected, switch to RION")
+            imu.publisher_logging_info(RION_IMU_CONSTANTS.ERROR_to_Rion.value)
             raise ValueError(RION_IMU_CONSTANTS.ERROR_to_Rion.value)
 
 
@@ -290,7 +293,7 @@ class RION(object):
                     return baud
                      
         else:
-            imu.publisher_logging_info("WIT IMU detected, switch to RION")
+            imu.publisher_logging_info(RION_IMU_CONSTANTS.ERROR_to_Rion.value)
             raise ValueError(RION_IMU_CONSTANTS.ERROR_to_Rion.value)
                     
 
@@ -301,7 +304,7 @@ class RION(object):
                 p.write(RION_IMU_CONSTANTS.RION_IMU_CMD_SET_BAUDRATE.value)
                 imu.publisher_logging_info("baudrate is set to {}".format(IMU_CONSTANTS.FIXED_BAUDRATE.value))
         else:
-            imu.publisher_logging_info("WIT IMU detected, switch to RION")
+            imu.publisher_logging_info(RION_IMU_CONSTANTS.ERROR_to_Rion.value)
             raise ValueError(RION_IMU_CONSTANTS.ERROR_to_Rion.value)
 
 
@@ -310,8 +313,11 @@ class WIT(object):
 
     """
     used only when usb checks that it is WIT model
-    has CONNECT, SCAN, SAVE, CLOSE, SET button available
-    
+    CONNECT assumes baudrate of 115200 and reads current sensor values
+    SCAN is available to find baudrate and reads current sensor values
+    SET to set baudrate to 115200 and other keyed-in parameters
+    SAVE to save changes
+    CLOSE to disconnect usb
     """
 
     @staticmethod
@@ -344,7 +350,7 @@ class WIT(object):
                             imu.publisher_logging_info("Wrong baudrate, press SCAN to set") 
 
         else: 
-            imu.publisher_logging_info("RION detected, switch to WIT")
+            imu.publisher_logging_info(WIT_IMU_CONSTANTS.ERROR_to_wit.value)
             raise ValueError(WIT_IMU_CONSTANTS.ERROR_to_wit.value)
             
 
@@ -375,7 +381,7 @@ class WIT(object):
                             result_json = json.dumps(result)
                             imu.publisher_logging_data("Got: {}".format(result_json)) 
         else: 
-            imu.publisher_logging_info("RION detected, switch to WIT")
+            imu.publisher_logging_info(WIT_IMU_CONSTANTS.ERROR_to_wit.value)
             raise ValueError(WIT_IMU_CONSTANTS.ERROR_to_wit.value)
             
 
@@ -425,7 +431,7 @@ class WIT(object):
                             imu.publisher_logging_data("Got: {}".format(result_json))
 
         else: 
-            imu.publisher_logging_info("RION detected, switch to WIT")
+            imu.publisher_logging_info(WIT_IMU_CONSTANTS.ERROR_to_wit.value)
             raise ValueError(WIT_IMU_CONSTANTS.ERROR_to_wit.value)
             
 
@@ -439,7 +445,7 @@ class WIT(object):
                 imu.publisher_logging_info("CFG SAVED")
 
         else: 
-            imu.publisher_logging_info("RION detected, switch to WIT")
+            imu.publisher_logging_info(WIT_IMU_CONSTANTS.ERROR_to_wit.value)
             raise ValueError(WIT_IMU_CONSTANTS.ERROR_to_wit.value)
     
       
@@ -459,6 +465,7 @@ class IMUCHECK(object):
         """
         Checks IMU_model, checks USB connections
         Publisher instance, logger and publish methods, service method
+        main loop
         """
 
         super(IMUCHECK,self).__init__()
