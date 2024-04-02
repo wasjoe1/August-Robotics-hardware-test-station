@@ -9,18 +9,18 @@ from serial import Serial
 
 
 class WIT_IMU_CONSTANTS(Enum):
-    CONNECT = "CONNECT"
-    SCAN = "SCAN"
-    CLOSE = "CLOSE"
-    SAVE = "SAVE"
-    SET = "SET"
-    WIT_IDENTIFIER = b"\xff"
-    ERROR_to_wit = "RION detected, wrong IMU, change to WIT "
     WIT_IMU_CMD_CALI_ACC = b"\xff\xaa\x01\x01\x00" 
     WIT_IMU_CMD_SAVE_CFG = b"\xff\xaa\x00\x00\x00"
     WIT_IMU_CMD_UNLOCK = b"\xff\xaa\x69\x88\xb5"
     WIT_IMU_CMD_SET_BAUDRATE = b"\xff\xaa\x04\x06\x00"  # 115200
+    WIT_IMU_CMD_SET_SENDBACK_CONTENT = b"\xff\xaa\x02\x0e\x02"
+    WIT_IMU_CMD_RESET_YAW = b"\xff\xaa\x01\x04\x00"
+    WIT_IMU_CMD_SET_SCALE_ACC = b"\xff\xaa\x21\x03\x00"
+    WIT_IMU_CMD_SET_SCALE_GYRO = b"\xff\xaa\x20\x03\x00"
+    WIT_IMU_CMD_SET_BANDWIDTH = b"\xff\xaa\x1f\x00\x00"
+    WIT_IMU_CMD_SET_SENDBACK_RATE = b"\xff\xaa\x03\x0b\x00" 
 
+'''
     ACC_SPEED = {
         "2": b"\xff\xaa\x21\x00\x00", #2g
         "4": b"\xff\xaa\x21\x01\x00", #4g
@@ -62,32 +62,17 @@ class WIT_IMU_CONSTANTS(Enum):
         "11":b"\xff\xaa\x03\x0c\x00", #onces
         "0":b"\xff\xaa\x03\x0d\x00", #none
     }
+'''
 
-    WIT_IMU_CMD_SET_SENDBACK_CONTENT = b"\xff\xaa\x02\x0e\x02"
-    WIT_IMU_CMD_RESET_YAW = b"\xff\xaa\x01\x04\x00"
 
 
 class RION_IMU_CONSTANTS(Enum):
-    RSCAN = "RSCAN"
-    RCONNECT = "RCONNECT"
-    RSET = "RSET"
-    RION_IDENTIFIER = b"\x68" 
+
     RION_IMU_CMD_SET_BAUDRATE = b"\x68\x05\x00\x0b\x05\x13"
     RION_IMU_READ = b"\x68\x05\x00\x0b"
-    ERROR_to_Rion = "Wit detected, wrong IMU, change to RION"
 
 
 
-class IMU_CONSTANTS(Enum):
-    NODE_RATE = 10
-    MOTOR_TOLERANCE = 0.0001
-    FIXED_BAUDRATE = 115200
-    PORT = "/dev/imu"
-    STATE_IDLE = "IDLE"
-    STATE_CONNECTED = "CONNECTED"
-    STATE_DISCONNECTED = "DISCONNECTED"
-    MODEL_WIT = "WIT"
-    MODEL_RION = "RION"
 
 
 

@@ -1,9 +1,6 @@
 #Request
 string button
-int32 parameter1
-int32 parameter2
-int32 parameter3
-int32 parameter4
+string parameters
 ---
 #Response
 bool accepted
