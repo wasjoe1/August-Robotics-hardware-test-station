@@ -13,6 +13,7 @@ from meterial_inspection_tools.ros_interface import (
     IMU_DATA,
     IMU_INFO,
     IMU_STATE,
+    IMU_CONFIGS,
     IMU_SRV_CMD,
 )
 
@@ -65,11 +66,7 @@ class IMUOperations:
         """
         Return the latest frame of reading
         """
-        if IMUChecker.imu_model == IMURion.IMU_TYPE:
-            return Imu()
-        elif IMUChecker.imu_model == IMUWIT.IMU_TYPE:
-            pass 
-            
+        return Imu()
     
     @staticmethod
     def set_default_settings(serial_port):
@@ -77,15 +74,14 @@ class IMUOperations:
         return succeeded
     
     @staticmethod
-    def save_parameters(port):
+    def save_parameters(serial_port):
         return True
     
     @staticmethod
-    def close(port):
+    def close(serial_port):
         return True
         
-
-
+        
 class IMURion(IMUOperations):
     IMU_TYPE = "RION"
     G = 9.80665
@@ -101,7 +97,7 @@ class IMURion(IMUOperations):
     GYRO_Z = 28
 
 
-    @staticmethod
+
     def parse_reading(serial_port):
 
         def get_quaternion_from_euler(roll, pitch, yaw):
@@ -119,11 +115,13 @@ class IMURion(IMUOperations):
                 qw = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
                 return [qx, qy, qz, qw]
             
-        def reflash():
+        def reflash(serial_port):
             s_data = None
-            reset_input_buffer = Serial.reset_input_buffer()
-            reset_output_buffer = Serial.reset_output_buffer()
-            s_data = Serial.read(32)
+            if not serial_port.is_open:
+                serial_port.open()
+            reset_input_buffer = serial_port.reset_input_buffer()
+            reset_output_buffer = serial_port.reset_output_buffer()
+            s_data = serial_port.read(32)
             return s_data
 
         def byte_str(val):
@@ -139,11 +137,11 @@ class IMURion(IMUOperations):
                 f = f * -1
             return f
 
-        def orien():
-            roll_ori = split_data(IMURion.ROLL)
+        def orien(s_data):
+            roll_ori = split_data(s_data,IMURion.ROLL)
             print(roll_ori)
-            pitch_ori = split_data(IMURion.PITCH)
-            yaw_ori = split_data(IMURion.YAW)
+            pitch_ori = split_data(s_data,IMURion.PITCH)
+            yaw_ori = split_data(s_data,IMURion.YAW)
             roll = int(roll_ori[1:6])/100.0 * factor(roll_ori)
             pitch = int(pitch_ori[1:6])/100.0 * factor(pitch_ori)
             yaw = int(yaw_ori[1:6])/100.0 * factor(yaw_ori)
@@ -152,19 +150,26 @@ class IMURion(IMUOperations):
             yaw = math.radians(yaw)
             return (roll, pitch, yaw)
 
-        def acc():
-            acc_x_ori = split_data(IMURion.ACC_X)
-            acc_y_ori = split_data(IMURion.ACC_Y)
-            acc_z_ori = split_data(IMURion.ACC_Z)
+        def acc(s_data):
+            acc_x_ori = split_data(s_data,IMURion.ACC_X)
+            acc_y_ori = split_data(s_data,IMURion.ACC_Y)
+            acc_z_ori = split_data(s_data,IMURion.ACC_Z)
             acc_x = int(acc_x_ori[1:6])/1000.0 * factor(acc_x_ori) * IMURion.G
             acc_y = int(acc_y_ori[1:6])/1000.0 * factor(acc_y_ori) * IMURion.G
             acc_z = int(acc_z_ori[1:6])/1000.0 * factor(acc_z_ori) * IMURion.G
             return (acc_x, acc_y, acc_z)
 
-        def gyro():
-            gyro_x_ori = split_data(IMURion.GYRO_X)
-            gyro_y_ori = split_data(IMURion.GYRO_Y)
-            gyro_z_ori = split_data(IMURion.GYRO_Z)    
+        def gyro(s_data):
+            gyro_x_ori = split_data(s_data,IMURion.GYRO_X)
+            gyro_y_ori = split_data(s_data,IMURion.GYRO_Y)
+            gyro_z_ori = split_data(s_data,IMURion.GYRO_Z) 
+            gyro_x = int(gyro_x_ori[1:6])/100.0 * factor(gyro_x_ori)
+            gyro_y = int(gyro_y_ori[1:6])/100.0 * factor(gyro_y_ori)
+            gyro_z = int(gyro_z_ori[1:6])/100.0 * factor(gyro_z_ori)
+            gyro_x = math.radians(gyro_x)
+            gyro_y = math.radians(gyro_y)
+            gyro_z = math.radians(gyro_z)
+            return (gyro_x, gyro_y, gyro_z)   
         
         def split_data(s_data, start, offset=3):
             s = ""
@@ -174,45 +179,49 @@ class IMURion(IMUOperations):
             return s
 
 
-        reflash()
-        (roll,pitch,yaw) = orien()
-        (acc_x, acc_y, acc_z) = acc()
-        (gyro_x, gyro_y, gyro_z) = gyro()
+        s_data=reflash(serial_port)
+        (roll,pitch,yaw) = orien(s_data)
+        (acc_x, acc_y, acc_z) = acc(s_data)
+        (gyro_x, gyro_y, gyro_z) = gyro(s_data)
 
         (x, y, z, w) = get_quaternion_from_euler(roll, pitch, yaw)
 
-        Imu.orientation.x = x
-        Imu.orientation.y = y
-        Imu.orientation.z = z
-        Imu.orientation.w = w
-        Imu.angular_velocity.x = gyro_x
-        Imu.angular_velocity.y = gyro_y
-        Imu.angular_velocity.z = gyro_z
-        Imu.linear_acceleration.x = acc_x
-        Imu.linear_acceleration.y = acc_y
-        Imu.linear_acceleration.z = acc_z
-        return Imu()
+        imu = Imu()
+        imu.orientation.x = x
+        imu.orientation.y = y
+        imu.orientation.z = z
+        imu.orientation.w = w
+        imu.angular_velocity.x = gyro_x
+        imu.angular_velocity.y = gyro_y
+        imu.angular_velocity.z = gyro_z
+        imu.linear_acceleration.x = acc_x
+        imu.linear_acceleration.y = acc_y
+        imu.linear_acceleration.z = acc_z
+        return imu
+        
     
-    @staticmethod
-    def connect(port):
+    
+    def connect(self,port):
         serial_port: Serial = None
-        with Serial(port = port, baudrate=IMUOperations.DEFAULT_BAUDRATE, timeout=1.0) as p: 
-            timestart = 1.0
-            rion_imu_baudrate= p.read_until(RION_IMU_CONSTANTS.RION_IMU_CMD_SET_BAUDRATE.value)
-            if rospy.Time.now().to_sec - timestart < 1.0:
-                serial_port =p
+        with Serial(port = port, baudrate=self.DEFAULT_BAUDRATE, timeout=1.0) as p: 
+            rion_imu_baudrate= p.write(RION_IMU_CONSTANTS.RION_IDENTIFIER.value)
+            rospy.sleep(0.1)
+            response = p.read(1)
+            if response == RION_IMU_CONSTANTS.RION_IDENTIFIER.value:
+                serial_port = p
         return serial_port
-            
-            
     
-    @staticmethod
-    def scan (port):
+
+
+    
+    def scan (self,port):
         serial_port: Serial = None
-        for baud in IMUOperations.SCAN_BAUDRATES:
+        for baud in self.SCAN_BAUDRATES:
             with Serial(port = port, baudrate=baud, timeout=1.0) as p: 
-                timestart = 1.0
-                rion_imu_baudrate= p.read_until(RION_IMU_CONSTANTS.RION_IMU_CMD_SET_BAUDRATE.value)
-                if rospy.Time.now().to_sec - timestart < 1.0:
+                rion_imu_baudrate= p.write(RION_IMU_CONSTANTS.RION_IDENTIFIER.value)
+                rospy.sleep(0.1)
+                response = p.read(1)
+                if response == RION_IMU_CONSTANTS.RION_IDENTIFIER.value:
                     serial_port = p
         return serial_port
         
@@ -220,20 +229,16 @@ class IMURion(IMUOperations):
     @staticmethod
     def set_default_settings(serial_port):
         succeeded = False
-        try:
-            with Serial(port = serial_port, baudrate=IMUOperations.DEFAULT_BAUDRATE, timeout=1.0) as  p: 
-                p.write(RION_IMU_CONSTANTS.RION_IMU_CMD_SET_BAUDRATE.value)
-                succeeded = True
-        except Exception as e: 
-            pass
+        Serial(port=serial_port).write(RION_IMU_CONSTANTS.RION_IMU_CMD_SET_BAUDRATE.value)
+        succeeded = True
         return succeeded
 
     @staticmethod
-    def save_parameters(port):
+    def save_parameters(serial_port):
         return True
 
     @staticmethod
-    def close(port):
+    def close(serial_port):
         return True
 
 class IMUWIT(IMUOperations):
@@ -277,53 +282,50 @@ class IMUWIT(IMUOperations):
             q2 = float((c8h2sint(_Q2H) << 8) | _Q2L) / 32768
             q3 = float((c8h2sint(_Q3H) << 8) | _Q3L) / 32768
 
-            return {
-                "acceleration": [
-                    Ax,
-                    Ay,
-                    Az,
-                ],
-                "angle_speed": [
-                    wx,
-                    wy,
-                    wz,
-                ],
-                "radians": [
-                    roll,
-                    pitch,
-                    yaw,
-                ],
-                "quaternion": [q0, q1, q2, q3],
-            }
+            imu = Imu()
+            imu.orientation.x = q0
+            imu.orientation.y = q1
+            imu.orientation.z = q2
+            imu.orientation.w = q3
+            imu.angular_velocity.x = wx
+            imu.angular_velocity.y = wy
+            imu.angular_velocity.z = wz
+            imu.linear_acceleration.x = Ax
+            imu.linear_acceleration.y = Ay
+            imu.linear_acceleration.z = Az
+            
+            return  imu
            
-        with Serial(port=serial_port, baudrate= IMUOperations.DEFAULT_BAUDRATE, timeout=1.0) as p:
+        with serial_port:
                 for t in range(3):
-                    _imu_raw_data = p.read_until(b"\x55\x51")
+                    _imu_raw_data = serial_port.read_until(b"\x55\x51")
                     if len(_imu_raw_data) != 44:
-                        frame_int = [int(x) for x in _imu_raw_data]
-                        frame_int = frame_int[-2:] + frame_int[:-2]
-                        result = imu_feedback_parse(frame_int)
-                        result_json =json.dumps(result)
-    
-        return result_json
+                        rospy.Rate(2)
+                        continue
+                    frame_int = [int(x) for x in _imu_raw_data]
+                    frame_int = frame_int[-2:] + frame_int[:-2]
+                    
+                    result = imu_feedback_parse(frame_int)
+                #logger.loginfo(result)
+                return result
 
-    @staticmethod
-    def connect(port):
+    
+    def connect(self,port):
         serial_port: Serial = None
-        with Serial(port =port,baudrate=IMUOperations.DEFAULT_BAUDRATE,timeout=1.0) as p:
+        with Serial(port =port,baudrate=self.DEFAULT_BAUDRATE,timeout=1.0) as p:
             timestart = rospy.Time.now().to_sec()
             imu_raw_data = p.read_until(b"\x55\x51")
             if rospy.Time.now().to_sec() - timestart < 1.0:
                 serial_port = p
+                #logger.loginfo(type(serial_port))
         return serial_port
 
 
             
-    @staticmethod
-    def scan(port):
+    def scan(self,port):
         serial_port: Serial = None
-        for baud in IMUOperations.SCAN_BAUDRATES:
-            with Serial(port =port,baudrate=baud,timeout=1.0) as p:
+        for baud in self.SCAN_BAUDRATES:
+            with Serial(port = port,baudrate=baud,timeout=1.0) as p:
                 timestart = rospy.Time.now().to_sec()
                 imu_raw_data = p.read_until(b"\x55\x51")
                 if rospy.Time.now().to_sec() - timestart < 1.0:
@@ -333,30 +335,26 @@ class IMUWIT(IMUOperations):
     @staticmethod
     def set_default_settings(serial_port):
         succeeded = False
-        try: 
-            with Serial(port = serial_port, baudrate=IMUOperations.DEFAULT_BAUDRATE,timeout =1.0) as p:
-                        p.write(WIT_IMU_CONSTANTS.WIT_IMU_CMD_UNLOCK.value)
-                        p.write(WIT_IMU_CONSTANTS.WIT_IMU_CMD_UNLOCK.value)
-                        p.write(WIT_IMU_CONSTANTS.WIT_IMU_CMD_UNLOCK.value) 
-                        p.write(WIT_IMU_CONSTANTS.WIT_IMU_CMD_UNLOCK.value)
-                        p.write(WIT_IMU_CONSTANTS.WIT_IMU_CMD_SET_SCALE_ACC) #WIT_IMU_CMD_SET_SCALE_ACC
-                        p.write(WIT_IMU_CONSTANTS.WIT_IMU_CMD_SET_SCALE_GYRO) #WIT_IMU_CMD_SET_SCALE_GYRO
-                        p.write(WIT_IMU_CONSTANTS.WIT_IMU_CMD_SET_BANDWIDTH) #WIT_IMU_CMD_SET_BANDWIDTH
-                        p.write(WIT_IMU_CONSTANTS.WIT_IMU_CMD_SET_SENDBACK_RATE) #WIT_IMU_CMD_SET_SENDBACK_RATE)
-                        p.write(WIT_IMU_CONSTANTS.WIT_IMU_CMD_SET_SENDBACK_CONTENT.value)
-                        succeeded = True
-        except Exception as e:
-            pass
+        logger.loginfo(serial_port)
+        Serial(port=serial_port).write(WIT_IMU_CONSTANTS.WIT_IMU_CMD_UNLOCK.value)
+        Serial(port=serial_port).write(WIT_IMU_CONSTANTS.WIT_IMU_CMD_UNLOCK.value)
+        Serial(port=serial_port).write(WIT_IMU_CONSTANTS.WIT_IMU_CMD_UNLOCK.value) 
+        Serial(port=serial_port).write(WIT_IMU_CONSTANTS.WIT_IMU_CMD_UNLOCK.value)
+        Serial(port=serial_port).write(WIT_IMU_CONSTANTS.WIT_IMU_CMD_SET_SCALE_ACC.value) #WIT_IMU_CMD_SET_SCALE_ACC
+        Serial(port=serial_port).write(WIT_IMU_CONSTANTS.WIT_IMU_CMD_SET_SCALE_GYRO.value) #WIT_IMU_CMD_SET_SCALE_GYRO
+        Serial(port=serial_port).write(WIT_IMU_CONSTANTS.WIT_IMU_CMD_SET_BANDWIDTH.value) #WIT_IMU_CMD_SET_BANDWIDTH
+        Serial(port=serial_port).write(WIT_IMU_CONSTANTS.WIT_IMU_CMD_SET_SENDBACK_RATE.value) #WIT_IMU_CMD_SET_SENDBACK_RATE)
+        Serial(port=serial_port).write(WIT_IMU_CONSTANTS.WIT_IMU_CMD_SET_SENDBACK_CONTENT.value)
+        succeeded = True
         return succeeded
     
     @staticmethod
-    def save_parameters(port):
-        with Serial(port =port,baudrate=IMUOperations.DEFAULT_BAUDRATE,timeout=1.0) as p:
-            p.write(WIT_IMU_CONSTANTS.WIT_IMU_CMD_SAVE_CFG.value)
-            return True
+    def save_parameters(serial_port):
+        Serial(port=serial_port).write(WIT_IMU_CONSTANTS.WIT_IMU_CMD_SAVE_CFG.value)
+        return True
     
     @staticmethod
-    def close(port):
+    def close(serial_port):
         return True
     
 
@@ -377,6 +375,11 @@ class IMUChecker:
         self.command = "NONE"
         self.cmd_params = ""
         self.state = IMUCheckerStates.INIT
+        self.pub_state = IMU_STATE.Publisher()
+        self.pub_info = IMU_INFO.Publisher()
+        self.pub_reading = IMU_DATA.Publisher()
+        self.pub_configs = IMU_CONFIGS.Publisher()
+        IMU_SRV_CMD.Services(self.srv_cb)
 
         self.__STATES_METHODS = {
             (IMUCommands.NONE, IMUCheckerStates.INIT): self.initialize, # to IDLE
@@ -389,20 +392,10 @@ class IMUChecker:
             (IMUCommands.SAVE, IMUCheckerStates.CONNECTED): self.save_parameters, # stay
         }
 
-        #self.pub_state = rospy.Publisher()
-        self.pub_state = IMU_STATE.Publisher()
-        #self.pub_info = rospy.Publisher()
-        self.pub_info = IMU_INFO.Publisher()
-        #self.pub_reading = rospy.Publisher()
-        self.pub_reading = IMU_DATA.Publisher()
-        self.pub_configs = rospy.Publisher()
-        #rospy.Service(handler=self._srv_command_handler)
-        IMU_SRV_CMD.Services(self.srv_cb)
-
 
     def srv_cb(self, srv):
-        self.command = srv.command
-        self.cmd_params = srv.parameters
+        self.command = srv.button
+        self.cmd_params = srv.parameter
         
 
 
@@ -426,6 +419,7 @@ class IMUChecker:
         if self._state != value:
             self._state = value
             logger.logwarn(f"State changed to: {self._state.name}")
+            self.pub_state = IMU_STATE.Publisher()
             self.pub_state.publish(self.state.name)
 
     def log_with_frontend(self, log):
@@ -460,7 +454,7 @@ class IMUChecker:
     def connect(self):
         self.state = IMUCheckerStates.CONNECTING
         if self._determine_imu_type():
-            self.serial_port = self.imu_model.connect(self.PORT)
+            self.serial_port = self.imu_model.connect(self = IMUOperations,port=self.PORT)
             if self.serial_port:
                 self.log_with_frontend(f"Connected IMU on baudrate: {self.serial_port.baudrate}")
                 self.state = IMUCheckerStates.CONNECTED
@@ -473,7 +467,7 @@ class IMUChecker:
     def scan(self):
         self.state = IMUCheckerStates.SCANNING
         if self._determine_imu_type():
-            self.serial_port = self.imu_model.scan(self.PORT)
+            self.serial_port = self.imu_model.scan(self = IMUOperations,port=self.PORT)
             if self.serial_port:
                 self.log_with_frontend(f"Scanned IMU on baudrate: {self.serial_port.baudrate}")
                 self.state = IMUCheckerStates.CONNECTED
@@ -486,7 +480,7 @@ class IMUChecker:
     def auto_detect(self):
         self.state = IMUCheckerStates.SCANNING
         for imu_model in self.IMU_MODEL_TABLE.values():
-            serial_port: Serial = imu_model.scan(self.PORT)
+            serial_port: Serial = imu_model.scan(self = IMUOperations,port = self.PORT)
             if serial_port:
                 self.log_with_frontend(f"Found IMU model: {imu_model.IMU_TYPE} with baudrate: {serial_port.baudrate}!!")
                 self.imu_model = imu_model
@@ -498,32 +492,26 @@ class IMUChecker:
         return False
 
     def disconnect(self):
-        if self._determine_imu_type():
-            self.serial_port: Serial = self.imu_model.close(self.PORT) 
-            if self.serial_port: 
-                self.serial_port.close()
-                self.serial_port = None
-                self.imu_model = None
-                self.state = IMUCheckerStates.IDLE
-                return True
+        self.serial_port.close()
+        self.serial_port = None
+        self.imu_model = None
+        self.state = IMUCheckerStates.IDLE
+        return True
 
     def parse_reading(self):
         imu_msg = self.imu_model.parse_reading(self.serial_port)
-        self.pub_reading.publish(imu_msg)
+        self.pub_reading.publish(str(imu_msg))
         return True
 
     def set_default_settings(self):
-        if self._determine_imu_type():
-            self.serial_port: Serial = self.imu_model.set_default_settings(self.PORT)
-            if self.serial_port:
-                return self.parse_reading()
+        if self.imu_model.set_default_settings(self.PORT):
+            logger.loginfo(self.serial_port)
+            return True
 
     def save_parameters(self):
-        if self._determine_imu_type():
-            self.serial_port: Serial = self.imu_model.save_parameters(self.PORT)
-            if self.serial_port:
-                self.log_with_frontend("CFG SAVED")
-                return True
+        if self.imu_model.save_parameters(self.PORT):
+            self.log_with_frontend("CFG SAVED")
+            return True
 
 if __name__ == "__main__":
     rospy.init_node("imu_checker_node")

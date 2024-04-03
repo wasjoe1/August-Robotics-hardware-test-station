@@ -8,7 +8,6 @@ import boothbot_msgs.srv as bbsrvs
 import boothbot_grpc.msg as bgmsgs
 
 from meterial_inspection_tools.srv import IMUcontrol
-
 # MODULES_MATERIAL_INSPECTION_DATA = InterfaceWithType('/modules/meterial_inspection/data', stmsgs.String)
 
 # MODULES_MATERIAL_INSPECTION_SRV_CMD = InterfaceWithType('/modules/meterial_inspection/srv_cmd', bbsrvs.Command)
@@ -20,6 +19,7 @@ IMU_DATA = InterfaceWithType('/imu/data', stmsgs.String)
 IMU_STATE = InterfaceWithType('/imu/state', stmsgs.String)
 IMU_INFO = InterfaceWithType('/imu/info', stmsgs.String)
 IMU_SRV_CMD = InterfaceWithType('/imu/srv_cmd', IMUcontrol)
+IMU_CONFIGS = InterfaceWithType('/imu/configs',stmsgs.String)
 
 
 msg_dict = {
@@ -31,6 +31,7 @@ msg_dict = {
         "topic_data": IMU_DATA,
         "topic_state": IMU_STATE,
         "topic_info": IMU_INFO,
+        "topic_configs": IMU_CONFIGS,
         "srv": IMU_SRV_CMD
     },
 }
