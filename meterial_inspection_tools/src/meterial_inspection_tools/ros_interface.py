@@ -8,6 +8,7 @@ import boothbot_msgs.srv as bbsrvs
 import boothbot_grpc.msg as bgmsgs
 
 from meterial_inspection_tools.srv import IMUcontrol
+from meterial_inspection_tools.srv import Inclin
 # MODULES_MATERIAL_INSPECTION_DATA = InterfaceWithType('/modules/meterial_inspection/data', stmsgs.String)
 
 # MODULES_MATERIAL_INSPECTION_SRV_CMD = InterfaceWithType('/modules/meterial_inspection/srv_cmd', bbsrvs.Command)
@@ -21,6 +22,11 @@ IMU_INFO = InterfaceWithType('/imu/info', stmsgs.String)
 IMU_SRV_CMD = InterfaceWithType('/imu/srv_cmd', IMUcontrol)
 IMU_CONFIGS = InterfaceWithType('/imu/configs',stmsgs.String)
 
+INCLINOMETER_DATA = InterfaceWithType('/inclinometer/data', stmsgs.String)
+INCLINOMETER_STATE = InterfaceWithType('/inclinometer/state',stmsgs.String)
+INCLINOMETER_INFO = InterfaceWithType('/inclinometer/info',stmsgs.String)
+INCLINOMETER_CONFIGS = InterfaceWithType('/inclinometer/configs',stmsgs.String)
+INCLINOMETER_SRV_CMD = InterfaceWithType('/inclinometer/srv_cmd',Inclin)
 
 msg_dict = {
     # "ldlidar":{
@@ -34,4 +40,10 @@ msg_dict = {
         "topic_configs": IMU_CONFIGS,
         "srv": IMU_SRV_CMD
     },
+    "inclin": {
+        "srv" : INCLINOMETER_SRV_CMD,
+        "topic_state": INCLINOMETER_STATE,
+        "topic_info": INCLINOMETER_INFO,
+        "topic_configs": INCLINOMETER_CONFIGS,
+    }
 }

@@ -58,6 +58,7 @@ catkin_python_setup()
 add_service_files(
   FILES
   IMUcontrol.srv
+  Inclin.srv
 )
 
 ## Generate actions in the 'action' folder
