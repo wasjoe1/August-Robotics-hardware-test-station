@@ -300,7 +300,7 @@ class InclinChecker:
     def parse_reading(self):
         incline_msg = self.inclinometer_model.parse_reading(self.modbus_client,self.unit_id) 
         logger.loginfo(incline_msg)
-        self.pub_data.publish(str(incline_msg))
+        self.pub_data.publish(json.dumps(incline_msg))
         return True
     
     def set_default_settings(self):

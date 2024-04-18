@@ -363,7 +363,7 @@ class CBChecker:
     
     def parse_reading(self):
         cb_msg = self.cb_model.parse_reading(self=self.cb_model,modbus_client = self.modbus_client)
-        self.pub_reading.publish(str(cb_msg))
+        self.pub_reading.publish(json.dumps(cb_msg))
         return True
     
     def set_default_settings(self):
