@@ -1,0 +1,6 @@
+#Request
+string button
+string parameter
+---
+#Response
+bool accepted

@@ -1,6 +1,12 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
+
+"""
+INSTRUCTIONS: 
+parameters is not required to be keyed in 
+"""
+
 import rospy
 import struct
 logger = rospy
@@ -11,6 +17,7 @@ from meterial_inspection_tools.ros_interface import (
    INCLINOMETER_STATE,
    INCLINOMETER_INFO,
    INCLINOMETER_CONFIGS,
+   INCLINOMETER_DATA,
    INCLINOMETER_SRV_CMD,
 )
 import pymodbus
@@ -187,6 +194,7 @@ class InclinChecker:
         self.pub_state = INCLINOMETER_STATE.Publisher()
         self.pub_info = INCLINOMETER_INFO.Publisher()
         self.pub_configs =INCLINOMETER_CONFIGS.Publisher()
+        self.pub_data = INCLINOMETER_DATA.Publisher()
         INCLINOMETER_SRV_CMD.Services(self.srv_cb)
 
         self.__STATES_METHODS = {
@@ -291,7 +299,8 @@ class InclinChecker:
     
     def parse_reading(self):
         incline_msg = self.inclinometer_model.parse_reading(self.modbus_client,self.unit_id) 
-        self.log_with_frontend(incline_msg)
+        logger.loginfo(incline_msg)
+        self.pub_data.publish(str(incline_msg))
         return True
     
     def set_default_settings(self):
