@@ -28,30 +28,20 @@ from ros_mi import MeterialInspection
 # -------------------------------------------------------------------------------------------------
 # init
 
-logger = logging.getLogger() # retrieves the root logger
-logger.setLevel(logging.INFO) #sets logging level to INFO, only msgs with severity level of INFO or higher will be handled by this logger
-# without additional config, destination of log msgs is not yet specified 
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 ch = logging.StreamHandler() # creates a stream handler object => sends log msgs to a stream (usually for python its the console)
 logger.addHandler(ch) # adds the stream handler to the logger object
 
-
 logger.info(os.getcwd()) # os.getcwd() gets current working directory from which the python script is being executed
-# os.getcwd() could also be the directory set by os.chdir()
-# directory string is logged to the logging system
 
 app = FastAPI()
-app.long_img = None # represents a long image => no long image yet
-app.long_camera_time = None # represents timestamp associated with the long img => no specific timestamp yet
-app.short_img = None # represents a short image => no short image yet
-app.short_camera_time = None # represents timestamp associated with the short img => no specific timestamp yet
-app.data = None # represents additional data associated to the images
+app.data = None
 app.lang = 0 # represent language settings => 0 might be default/ arbitrary choice
-app.step = None # may represent a step or stage in a process within the app
-# not common props, chat says might be related to requirements for the app having to handle images??
+app.mode = None # may represent a step or stage in a process within the app
 
 app.mount("/static", StaticFiles(directory="static"), name="static") # this line configures the API to serve static files from the "static" directory
-
-templates = Jinja2Templates(directory="templates") # templates directory is used to store the html 
+templates = Jinja2Templates(directory="templates") # templates directory is used to store the html
 
 h_name = socket.gethostname()
 IP_addres = socket.gethostbyname(h_name)
@@ -106,22 +96,27 @@ async def startup_event():
 # middleware
 @app.get("/", response_class=HTMLResponse)
 async def get_html(request: Request): # request is the 1st arg
-    app.step = None
+    app.mode = None
     return templates.TemplateResponse("index.html", {"request": request})
 
-@app.get("/step/{step}", response_class=HTMLResponse) # indicates its a html response
-async def step(request: Request, step: str): # step is of string type; its from clicking the page btn
-    logger.info("get step {}".format(step))
+@app.get("/step/{mode}", response_class=HTMLResponse) # indicates its a html response
+async def step(request: Request, mode: str): # mode is of string type; its from clicking the page btn
+    logger.info("get step {}".format(mode))
 
-    app.step = step
+    app.mode = mode
 
-    if app.step is not None:
-        logger.info("static/"+app.step+".txt")
-        with open("static/"+app.step+".txt") as f:
+    ret = distribute_data(request)
+    if ret is not None:
+        return ret
+    
+    # different from here
+    if app.mode is not None:
+        logger.info("static/"+app.mode+".txt")
+        with open("static/"+str(app.lang)+"_"+app.mode+".txt") as f:
             just_do = f.readlines() # read the lines of the txt file
             logger.info(just_do)
 
-        return templates.TemplateResponse("sub_page.html", {"request": request, "just_do": just_do, "responseData": responseData}) # directory & context are the arguments
+        return templates.TemplateResponse("index.html", {"request": request, "just_do": just_do}) # directory & context are the arguments
         # responseData is returned as first readings, but websocket data should come once sockets are opened
     else:
         return None
@@ -184,58 +179,3 @@ async def cb_imu_state(websocket: WebSocket): # web socket event handler
             await websocket.send_text(f"{qData}") # always take the 1st message in the queue
             app.mi.pop_topic_info_msg() # then pop it off once you are done returning it
 
-# notes -------------------------------------------------------------------------------------------
-# XX UNUSED XX
-# @app.websocket("/img_ws")
-# async def img_ws(websocket: WebSocket):
-#     logger.info("started.......")
-#     await websocket.accept()
-#     try:
-#         while True:
-#             encode_string = app.long_img
-#             await websocket.send_bytes(encode_string)
-#             await asyncio.sleep(0.02)
-
-#     except Exception as e:
-#         logger.info(e)
-#     finally:
-#         websocket.close()
-
-# @app.websocket("/img_ws")
-# async def img_ws(websocket: WebSocket):
-#     logger.info("started.......")
-#     await websocket.accept()
-#     try:
-#         while True:
-#             # data = await websocket.receive_text()
-#             # logger.info(f"received: {int(data)}")
-#             # index = int(data)
-#             # image = get_image(volume, index)
-#             # logger.info("send imgs")
-#             # with open('static/'+str(img_id)+'.png', mode="rb") as image_file:
-#             #     encode_string = base64.b64encode(
-#             #         image_file.read()).decode("utf-8")
-#             # global long_img
-#             encode_string = app.long_img
-#             # encode_string = long_img.decode("utf-8")
-#             # encode_string = base64.b64encode(long_img).decode("utf-8")
-#             # logger.info("send long img")
-#             await websocket.send_bytes(encode_string)
-#             await asyncio.sleep(0.02)
-#             # img_id += 1
-#             # if img_id == 3:
-#             #     img_id = 0
-#     except Exception as e:
-#         logger.info(e)
-#     finally:
-#         websocket.close()
-
-# notes -------------------------------------------------------------------------------------------
-# subscribing to topics provided by the ROS
-# receive 
-# ros nodes will make service calls upon action()
-# no need for external json file, directly send it through service calls
-        
-# JSON.render(response.data) # take in json string & returns python objects
-# data.status
-# data.title # => "hello"
