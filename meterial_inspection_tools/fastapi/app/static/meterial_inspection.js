@@ -18,17 +18,18 @@ console.log("current step: ", current_step)
 
 // ------------------------------------------------------------------------------------------------
 // Functions
-function get_ws(ip, route, data) {
-    const ws = new WebSocket("ws://" + ip_addr + "/" + route)
+function get_ws(ip_addr, route, elementId) {
+    const ws = new WebSocket("ws://" + ip_addr + route) // route == /imu_smt
     ws.addEventListener('open', function(event) {
+        console.log(`${route} socket was opended`)
         ws.send('Hello ws data!');
     });
     ws.onmessage = function(evt) {
-        console.log(evt.data)
-        ws_json = eval('(' + evt.data + ')')
-        console.log(ws_json)
-        data = ws_json
-        return data
+        console.log(`JS script receive message from backend from ${route} socket`)
+        console.log(`data from ${route} socket: ${evt.data}`)
+    
+        document.getElementById(elementId).textContent = evt.data 
+        return evt.data
     }
 }
 
@@ -58,64 +59,17 @@ function get_id(id) {
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-// Socket configs
-
+// SOCKET CONFIGS
 // open web socket connection for /data (imu data) => for the imu readings
-const imu_data_socket = new WebSocket("ws://" + ip_addr + "/imu_data")
-imu_data_socket.addEventListener('open', function(event) {
-    console.log("/imu_data socket was opended")
-    imu_data_socket.send('Hello ws data!');
-});
-
-imu_data_socket.onmessage = function(evt) {
-    console.log("JS script receive message from backend from /imu_data socket")
-    console.log(`data from /imu_data socket: ${evt.data}`)
-
-    // display the imu readings on the readings div
-    document.getElementById("responseData-data").textContent = evt.data
-
-    // ws_json = eval('(' + evt.data + ')')
-    // if ((current_step in ws_json)){
-    //     // imu display
-    //     ws_json = ws_json[current_step]
-    //     convert_data_to_pointcloud(ws_json["angle_increment"], ws_json["ranges"])
-    //     find_element()
-    //     drawLidar(lidar_data)
-    //     lidar_data = []
-    // }
-}
+get_ws(ip_addr, "/imu_data", "responseData-data")
 
 // ------------------------------------------------------------------------------------------------
 // open web socket connection for /state => for the current state
-const imu_state_socket = new WebSocket("ws://" + ip_addr + "/imu_state")
-imu_state_socket.addEventListener('open', function(event) {
-    console.log("/imu_state socket was opended")
-    imu_state_socket.send('Hello ws data!');
-});
-
-imu_state_socket.onmessage = function(evt) {
-    console.log("JS script receive message from backend from /imu_state socket")
-    console.log(`data from /imu_state socket: ${evt.data}`)
-
-    // display the imu state on the state div
-    document.getElementById("responseData-state").textContent = evt.data
-}
+get_ws(ip_addr, "/imu_state", "responseData-state")
 
 // ------------------------------------------------------------------------------------------------
 // open web socket connection for /info => for user status
-const imu_info_socket = new WebSocket("ws://" + ip_addr + "/imu_info")
-imu_info_socket.addEventListener('open', function(event) {
-    console.log("/imu_info socket was opended")
-    imu_info_socket.send('Hello ws data!');
-});
-
-imu_info_socket.onmessage = function(evt) {
-    console.log("JS script receive message from backend from /imu_info socket")
-    console.log(`data from /imu_info socket: ${evt.data}`)
-    
-    // display the imu info on the user info div
-    document.getElementById("responseData-info").textContent = evt.data
-}
+get_ws(ip_addr, "/imu_info", "responseData-info")
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
@@ -159,3 +113,13 @@ imu_info_socket.onmessage = function(evt) {
 //         command('USE_LONG_CAMERA')
 //     }
 // }; 
+
+// ws_json = eval('(' + evt.data + ')')
+// if ((current_step in ws_json)){
+//     // imu display
+//     ws_json = ws_json[current_step]
+//     convert_data_to_pointcloud(ws_json["angle_increment"], ws_json["ranges"])
+//     find_element()
+//     drawLidar(lidar_data)
+//     lidar_data = []
+// }
