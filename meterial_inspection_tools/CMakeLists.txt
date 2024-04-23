@@ -60,6 +60,7 @@ add_service_files(
   IMUcontrol.srv
   Inclin.srv
   CBcontrol.srv
+  Sonarcontrol.srv
 )
 
 ## Generate actions in the 'action' folder

@@ -2,4 +2,5 @@
 	<node name="imu_node" pkg="meterial_inspection_tools" type="imu_driver.py" output="screen" respawn="true"/>
 	<node name="inclinometer_node" pkg="meterial_inspection_tools" type="inclin_driver.py" output="screen" respawn="true"/>
 	<node name="CB_node" pkg="meterial_inspection_tools" type="CB_driver.py" output="screen" respawn="true"/>
+	<node name="sonar_node" pkg="meterial_inspection_tools" type="sonar_driver.py" output="screen" respawn="true"/>
 </launch>
