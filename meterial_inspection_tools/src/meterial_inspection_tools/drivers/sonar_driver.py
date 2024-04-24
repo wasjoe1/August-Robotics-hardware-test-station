@@ -9,7 +9,9 @@ INSTRUCTIONS:
 3. sonars ID do not have to be set beforehand
 3. SAVE and CLOSE buttons are not required, but for user experience
 """
-
+import os
+import datetime
+import csv
 import threading
 from pymodbus.client.sync import ModbusSerialClient as ModbusClient
 import rospy 
@@ -76,12 +78,7 @@ class DYP_SONAR():
                 |_{}__|                             |_{}|
                 |     |                             |     |
                 |     |                             |     |
-                |_____|_____ _____ _____ _____ _____|_____|
-                |     |  7  |     |  6  |     |  5  |     |
-                |     |{} |      |{} |     |{} |     |
-                |_____|{}__|_____|_{}_|____|_{}_|___|
-
-                
+                |_____|_____ _____ _____ ___________|_____|
 
     """.format(
         format(dis[0]),format(dis[1]),format(dis[2]), 
@@ -101,6 +98,7 @@ class DYP_SONAR():
         def loop_distance(self,modbus_client):
             dis = [None]*10
             unit_box = [None]*10
+            paired_values = []
             for i,unit in enumerate(self.UNIT_CHECKER):
                 response = modbus_client.read_holding_registers(0x0101, 1, unit = unit)
                 if not response.isError():
@@ -111,11 +109,24 @@ class DYP_SONAR():
                     else: 
                         dis[i] = None
                         unit_box[i] = None
+                    paired_values.append({"distance":dis[i],"unit" : unit_box[i]})
                 if response.isError():
                     pass
-            return dis,unit_box
+            return dis,unit_box,paired_values
 
-        dis_input,unit_box = loop_distance(self=DYP_SONAR,modbus_client=modbus_client)
+        dis_input,unit_box,paired_values = loop_distance(self=DYP_SONAR,modbus_client=modbus_client)
+        #distance_image = print_distance(dis_input,unit_box)
+        timestamp = datetime.datetime.now()
+        header = ["timestamp", "distance", "unit"]
+        file_path = "sonar_data.csv"
+        with open(file_path, 'a', newline='') as csv_file:
+            file_empty = os.stat(file_path).st_size == 0
+            writer = csv.writer(csv_file)
+            if file_empty:
+                writer.writerow(header)
+
+            for entry in paired_values:
+                writer.writerow([timestamp, entry["distance"], entry["unit"]])
         return print_distance(dis_input,unit_box)
     
 
@@ -124,22 +135,29 @@ class DYP_SONAR():
         temp_client = ModbusClient(**configs)
         logger.loginfo(temp_client)
         sonar_connected_count = 0
-        for default_unit in self.UNIT_DICT_CHECKER_DEFAULT:
-            respond_default = temp_client.read_holding_registers(0x200, 1,unit= default_unit)
-            if not respond_default.isError(): 
-                modbus_client = temp_client
-                sonar_connected_count += 1
-                self.UNIT_CHECKER.append(default_unit)
-                logger.loginfo("Sonar connected on default unit 0xFF " + str(sonar_connected_count))
+        respond = temp_client.read_holding_registers(0x201, 1,unit= 0xcc)
+        if not respond.isError():
+            modbus_client = temp_client
+            sonar_connected_count += 1
+            self.UNIT_CHECKER.append(0xff)
+            logger.loginfo("Sonar connected " + str(sonar_connected_count))
         for unit in self.UNIT_DICT_CHECKER:
-            respond = temp_client.read_holding_registers(0x200, 1,unit= unit)
+            respond = temp_client.read_holding_registers(0x201, 1,unit= unit)
             if not respond.isError():
                 modbus_client = temp_client
                 sonar_connected_count += 1
                 self.UNIT_CHECKER.append(unit)
                 logger.loginfo("Sonar connected " + str(sonar_connected_count))
             if respond.isError():
-                logger.loginfo(("SONAR WITH CORRESPONDING UNIT ID: ") + str(unit) + (" NOT FOUND, CHECK IF SONAR IS CONNECTED"))
+                logger.loginfo(("SONAR WITH CORRESPONDING UNIT ID: ") + str(hex(unit)) + (" NOT FOUND, CHECK IF SONAR IS CONNECTED"))
+        if sonar_connected_count >1 :
+            for default_unit in self.UNIT_DICT_CHECKER_DEFAULT:
+                respond_default = temp_client.read_holding_registers(0x201, 1,unit= default_unit)
+                if not respond_default.isError(): 
+                    modbus_client = temp_client
+                    sonar_connected_count += 1
+                    self.UNIT_CHECKER.append(default_unit)
+                    logger.loginfo("Sonar connected on default unit 0xFF " + str(sonar_connected_count))
         return modbus_client
 
 
@@ -158,15 +176,16 @@ class DYP_SONAR():
                     sonar_connected_count += 1
                     self.UNIT_CHECKER.append(default_unit)
                     logger.loginfo("Sonar connected on default unit 0xFF " + str(sonar_connected_count))
-            for unit in self.UNIT_DICT_CHECKER:
-                respond = temp_client.read_holding_registers(0x200, 1,unit= unit)
-                if not respond.isError():
-                    modbus_client = temp_client
-                    sonar_connected_count += 1
-                    self.UNIT_CHECKER.append(unit)
-                    logger.loginfo("Sonar connected " + str(sonar_connected_count))
-                if respond.isError():
-                    logger.loginfo(("SONAR WITH CORRESPONDING UNIT ID: ") + str(unit) + (" NOT FOUND, CHECK MODBUS CONFIGS"))
+            if sonar_connected_count >1 :
+                for unit in self.UNIT_DICT_CHECKER:
+                    respond = temp_client.read_holding_registers(0x200, 1,unit= unit)
+                    if not respond.isError():
+                        modbus_client = temp_client
+                        sonar_connected_count += 1
+                        self.UNIT_CHECKER.append(unit)
+                        logger.loginfo("Sonar connected " + str(sonar_connected_count))
+                    if respond.isError():
+                        logger.loginfo(("SONAR WITH CORRESPONDING UNIT ID: ") + str(unit) + (" NOT FOUND, CHECK MODBUS CONFIGS"))
         return modbus_client
 
     def set_default_settings(self,modbus_client):
@@ -322,6 +341,7 @@ class SonarChecker:
             return False
         def parse_target():
             cb_msg = self.sonar_model.parse_reading(self=self.sonar_model,modbus_client = self.modbus_client)
+            rospy.sleep(0.001) # same as sonar reading code on lionel
             self.pub_reading.publish(json.dumps(cb_msg))
         self.parse_thread = threading.Thread(target=parse_target)
         self.parse_thread.start()

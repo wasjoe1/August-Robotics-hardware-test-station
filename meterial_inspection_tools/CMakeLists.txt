@@ -61,6 +61,7 @@ add_service_files(
   Inclin.srv
   CBcontrol.srv
   Sonarcontrol.srv
+  DepthCameracontrol.srv
 )
 
 ## Generate actions in the 'action' folder
