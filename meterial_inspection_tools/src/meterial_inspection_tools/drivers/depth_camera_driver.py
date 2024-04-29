@@ -1,21 +1,31 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+from sensor_msgs.msg import Image
+import rospy
+#import message_filters
+#import cv2
+#import numpy as np
+#from cv_bridge import CvBridge
+#from tf2_ros import TransformListener,Buffer
+#import math
+#import tf2_ros
+#from geometry_msgs.msg import PointStamped
+#from tf2_geometry_msgs import do_transform_point
+from sensor_msgs.msg import PointCloud2
+import os
+
 import rospy
 logger = rospy
 from enum import Enum,auto
 import json
-from sensor_msgs import point_cloud2
-from sensor_msgs.msg import Image
-from meterial_inspection_tools import (
+from meterial_inspection_tools.ros_interface import (
     DEPTH_SRV_CMD,
     DEPTH_DATA,
-    DEPTH_CONFIGS,
     DEPTH_INFO,
-    DEPTH_STATE, 
+    DEPTH_DATA,
+    DEPTH_STATE
 )
-
-
 
 class DEPTHCommands(Enum):
     NONE = auto()
@@ -36,30 +46,19 @@ class DepthCheckerStates(Enum):
     ERROR = auto()
 
 class ASTRA_CAMERA():
-    
-    def parse_reading(configs):
-        pass
+    # DATA publish value is in pointcloud2 format
 
-    def connect(configs):
-        pass
-
-    def scan(configs):
-        pass
-    
-    def set_default_settings(configs):
-        succeeded = False
-        succeeded = True
-        return succeeded
-    
-    @staticmethod
-    def save_parameters(configs):
-        return True
-    
-    @staticmethod
-    def close(configs):
-        return True
+    def connect(port):
+        flag:bool = None
+        flag = os.path.exists(port)
+        if flag == True:
+            logger.loginfo("Connected")
+        elif flag == False: 
+            logger.loginfo("problem connecting")
+        return flag
 
 class DepthChecker:
+    port = '/dev/astrauvc'
     NODE_RATE = 5.0
     depthcamera_model = ASTRA_CAMERA
     _command = None
@@ -72,17 +71,14 @@ class DepthChecker:
         self.pub_state = DEPTH_STATE.Publisher()
         self.pub_info = DEPTH_INFO.Publisher()
         self.pub_reading = DEPTH_DATA.Publisher()
-        self.pub_configs = DEPTH_CONFIGS.Publisher()
         DEPTH_SRV_CMD.Services(self.srv_cb)
+        self.subscriber = rospy.Subscriber('/camera/depth_registered/points', PointCloud2, self.get_data_subscriber)
 
         self.__STATES_METHODS = {
         (DEPTHCommands.NONE, DepthCheckerStates.INIT): self.initialize, # to IDLE
-        (DEPTHCommands.SCAN, DepthCheckerStates.IDLE): self.scan, # to CONNECTED or stay
         (DEPTHCommands.CONNECT, DepthCheckerStates.IDLE): self.connect, # to CONNECTED or stay
         (DEPTHCommands.DISCONNECT, DepthCheckerStates.CONNECTED): self.disconnect, # to IDLE
         (DEPTHCommands.NONE, DepthCheckerStates.CONNECTED): self.parse_reading, # stay
-        (DEPTHCommands.SET_DEFAULT, DepthCheckerStates.CONNECTED): self.set_default_settings, # stay
-        (DEPTHCommands.SAVE, DepthCheckerStates.CONNECTED): self.save_parameters, # stay
     }   
         
     
@@ -128,9 +124,35 @@ class DepthChecker:
     def initialize(self):
         self.state = DepthCheckerStates.IDLE
 
+    def connect(self):
+        self.state = DepthCheckerStates.CONNECTING
+        connected = self.depthcamera_model.connect(self.port)
+        if connected:
+            self.log_with_frontend("Connected to astra camera")
+            self.state = DepthCheckerStates.CONNECTED
+            return True
+        self.log_with_frontend(f"Failed to connect to astra camera!")
+        self.state = DepthCheckerStates.IDLE
+        return False
 
-    def _get_current_DEPTH_settings(self):
-        return {
-            "baudrate": self.modbus_configs["baudrate"],
-            }
+    def disconnect(self):
+        self.log_with_frontend("DISCONNECTING")
+        self.state = DepthCheckerStates.IDLE
+        return True
     
+    def get_data_subscriber(self,data):
+        global data_global
+        data_global = data
+        return data
+    
+    def parse_reading(self):
+        #logger.loginfo(data_global)
+        #logger.loginfo(type(data_global))
+        self.pub_reading.publish(data_global)
+        return True
+    
+        
+if __name__ == "__main__":
+    rospy.init_node("depth_camera_driver_node")
+    depth_driver_checker = DepthChecker()
+    depth_driver_checker.start()

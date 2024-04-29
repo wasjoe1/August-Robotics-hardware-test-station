@@ -13,6 +13,8 @@ from meterial_inspection_tools.srv import CBcontrol
 from meterial_inspection_tools.srv import Sonarcontrol
 from meterial_inspection_tools.srv import DepthCameracontrol
 
+
+
 # MODULES_MATERIAL_INSPECTION_DATA = InterfaceWithType('/modules/meterial_inspection/data', stmsgs.String)
 
 # MODULES_MATERIAL_INSPECTION_SRV_CMD = InterfaceWithType('/modules/meterial_inspection/srv_cmd', bbsrvs.Command)
@@ -44,7 +46,7 @@ SONAR_INFO = InterfaceWithType('/sonar/info',stmsgs.String)
 SONAR_CONFIGS = InterfaceWithType('/sonar/configs',stmsgs.String)
 SONAR_SRV_CMD = InterfaceWithType('/sonar/srv_cmd',Sonarcontrol)
 
-DEPTH_DATA = InterfaceWithType('/depth/data',stmsgs.String)
+DEPTH_DATA = InterfaceWithType('/depth/data', ssmsgs.PointCloud2)
 DEPTH_STATE = InterfaceWithType('/depth/state',stmsgs.String) 
 DEPTH_INFO = InterfaceWithType('/depth/info',stmsgs.String)
 DEPTH_CONFIGS = InterfaceWithType('/depth/configs',stmsgs.String)
