@@ -10,6 +10,11 @@ import boothbot_grpc.msg as bgmsgs
 from meterial_inspection_tools.srv import IMUcontrol
 from meterial_inspection_tools.srv import Inclin
 from meterial_inspection_tools.srv import CBcontrol
+from meterial_inspection_tools.srv import Sonarcontrol
+from meterial_inspection_tools.srv import DepthCameracontrol
+
+
+
 # MODULES_MATERIAL_INSPECTION_DATA = InterfaceWithType('/modules/meterial_inspection/data', stmsgs.String)
 
 # MODULES_MATERIAL_INSPECTION_SRV_CMD = InterfaceWithType('/modules/meterial_inspection/srv_cmd', bbsrvs.Command)
@@ -34,6 +39,20 @@ CB_STATE = InterfaceWithType('/cb/state',stmsgs.String)
 CB_INFO =  InterfaceWithType('/cb/info',stmsgs.String)
 CB_CONFIGS = InterfaceWithType('/cb/configs',stmsgs.String)
 CB_SRV_CMD = InterfaceWithType('/cb/srv_cmd',CBcontrol)
+
+SONAR_DATA = InterfaceWithType('/sonar/data',stmsgs.String)
+SONAR_STATE = InterfaceWithType('/sonar/state',stmsgs.String) 
+SONAR_INFO = InterfaceWithType('/sonar/info',stmsgs.String)
+SONAR_CONFIGS = InterfaceWithType('/sonar/configs',stmsgs.String)
+SONAR_SRV_CMD = InterfaceWithType('/sonar/srv_cmd',Sonarcontrol)
+
+DEPTH_DATA = InterfaceWithType('/depth/data', ssmsgs.PointCloud2)
+DEPTH_IMAGE = InterfaceWithType('/depth/formatted_image', ssmsgs.Image)
+DEPTH_STATE = InterfaceWithType('/depth/state',stmsgs.String) 
+DEPTH_INFO = InterfaceWithType('/depth/info',stmsgs.String)
+DEPTH_CONFIGS = InterfaceWithType('/depth/configs',stmsgs.String)
+DEPTH_SRV_CMD = InterfaceWithType('/depth/srv_cmd',DepthCameracontrol)
+
 msg_dict = {
     # "ldlidar":{
     #     "topic_data": LDLIDAR_DATA,
@@ -61,5 +80,23 @@ msg_dict = {
         "topic_state": CB_STATE,
         "topic_info": CB_INFO,
         "topic_configs": CB_CONFIGS,
+        "topic_data":CB_DATA,
+    },
+
+    "Sonar":{
+        "topic_data": SONAR_DATA,
+        "topic_state": SONAR_STATE,
+        "topic_info": SONAR_INFO,
+        "topic_configs": SONAR_CONFIGS,
+        "srv": SONAR_SRV_CMD,
+    },
+
+    "Depth_Camera":{
+        "topic_data": DEPTH_DATA,
+        "topic_state": DEPTH_STATE,
+        "topic_info": DEPTH_INFO,
+        "topic_configs": DEPTH_CONFIGS,
+        "topic_image": DEPTH_IMAGE,
+        "srv": DEPTH_SRV_CMD,
     }
 }

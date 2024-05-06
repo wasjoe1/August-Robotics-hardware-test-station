@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  sensor_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -60,6 +61,8 @@ add_service_files(
   IMUcontrol.srv
   Inclin.srv
   CBcontrol.srv
+  Sonarcontrol.srv
+  DepthCameracontrol.srv
 )
 
 ## Generate actions in the 'action' folder
@@ -72,7 +75,8 @@ add_service_files(
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
   DEPENDENCIES
-  std_msgs
+  std_msgs sensor_msgs
+  
 )
 
 ################################################
@@ -105,8 +109,9 @@ generate_messages(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES meterial_inspection_tools
+  #INCLUDE_DIRS include
+  #LIBRARIES meterial_inspection_tools
+  CATKIN_DEPENDS sensor_msgs
 #  CATKIN_DEPENDS roscpp rospy std_msgs
 #  DEPENDS system_lib
 )

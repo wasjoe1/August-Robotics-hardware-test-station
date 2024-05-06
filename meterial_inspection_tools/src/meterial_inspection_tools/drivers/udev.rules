@@ -5,3 +5,11 @@ KERNEL=="ttyUSB*", ATTRS{idVendor}=="1a86", SYMLINK+="skd100d"    TEST=="power/c
 big laser:
 1a86:7523
 SUBSYSTEM=="usb", ATTRS{idVendor}=="1a86", MODE="0666" SYMLINK+="skd100d"
+
+
+
+KERNEL=="tty*"    KERNELS=="1-2.1" MODE:="0666" GROUP:="dialout" SYMLINK+="imu"       TEST=="power/control" ATTR{power/control}="on"
+KERNEL=="tty*"    KERNELS=="1-2.2" MODE:="0666" GROUP:="dialout" SYMLINK+="inclinometer" TEST=="power/control" ATTR{power/control}= "on"
+KERNEL=="tty*"    KERNELS=="1-2.1" MODE:="0666" GROUP:="dialout" SYMLINK+="CB" TEST=="power/control" ATTR{power/control}= "on"
+KERNEL=="tty*"    KERNELS=="1-2.2" MODE:="0666" GROUP:="dialout" SYMLINK+="sonar" TEST=="power/control" ATTR{power/control}= "on"
+KERNEL=="tty*"    KERNELS=="1-2.3" MODE:="0666" GROUP:="dialout" SYMLINK+="depthcamera" TEST=="power/control" ATTR{power/control}= "on"

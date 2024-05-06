@@ -111,7 +111,7 @@ class InclinSVT626T (InclinOperations):
             return x, y
     
         return get_inclinometer_data_xy_deg(modbus_client,unit_id)
-   
+
     def connect(self,configs):
         modbus_client: ModbusClient = None
         unit_id_constant = None
@@ -122,6 +122,7 @@ class InclinSVT626T (InclinOperations):
                 modbus_client = temp_client
                 unit_id_constant = unit_id
         return modbus_client,unit_id_constant
+
     
     def scan(self,configs):
         modbus_client: ModbusClient = None
@@ -171,7 +172,7 @@ class InclinChecker:
     _command = None
     _state = None
     modbus_client: ModbusClient = None
-    unit_id = None
+    unit_id = 1
 
     #Set as None if more than 1 inclinometer model and add in model in inclinometer_model_table
     inclinometer_model:InclinOperations = InclinSVT626T
@@ -256,16 +257,6 @@ class InclinChecker:
         return {
             "baudrate": self.modbus_configs["baudrate"]
             }
-    
-    '''
-    def _determine_incline_type(self):
-    self.inclinometer_model = self.INCLINOMETER_MODEL_TABLE.get(self.cmd_params.upper())
-    if self.inclinnometer_model:
-        self.log_with_frontend(f"Inclinometer model: {self.inclinometer_model.INCLINOMETER_TYPE}")
-        return True
-    self.log_with_frontend(f"Inclinometer model: {self.cmd_params} not supported")
-    return False
-    '''
 
     def connect(self):
         self.state = InclinCheckerStates.CONNECTING
@@ -299,7 +290,6 @@ class InclinChecker:
     
     def parse_reading(self):
         incline_msg = self.inclinometer_model.parse_reading(self.modbus_client,self.unit_id) 
-        logger.loginfo(incline_msg)
         self.pub_data.publish(json.dumps(incline_msg))
         return True
     
