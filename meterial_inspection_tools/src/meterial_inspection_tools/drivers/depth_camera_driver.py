@@ -1,40 +1,52 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+"""
+Instructions: 
+These are the steps to take 
+1. Connect
+2. Get pointcloud
+3. Get image
+4. Disconnect
+*pointcloud is only saved when camera is running
+"""
+
 from sensor_msgs.msg import Image
 import rospy
-#import message_filters
-#import cv2
-#import numpy as np
-#from cv_bridge import CvBridge
-#from tf2_ros import TransformListener,Buffer
-#import math
-#import tf2_ros
-#from geometry_msgs.msg import PointStamped
-#from tf2_geometry_msgs import do_transform_point
-from sensor_msgs.msg import PointCloud2
+import open3d as o3d
+import cv2
+import numpy as np
+from cv_bridge import CvBridge
+from geometry_msgs.msg import PointStamped
+from sensor_msgs.msg import PointCloud2, PointField #defines pointcloud2 message type 
+import sensor_msgs.point_cloud2 as pc2 # prodvides functions and utilities for working with pointcloud 
 import os
-
 import rospy
 logger = rospy
 from enum import Enum,auto
 import json
+#from open3d import io
 from meterial_inspection_tools.ros_interface import (
     DEPTH_SRV_CMD,
     DEPTH_DATA,
     DEPTH_INFO,
     DEPTH_DATA,
-    DEPTH_STATE
+    DEPTH_STATE,
+    DEPTH_IMAGE,
 )
+from std_srvs.srv import Empty
 
 class DEPTHCommands(Enum):
     NONE = auto()
     RESET = auto()
-    SCAN = auto()
+    #SCAN = auto()
     CONNECT = auto()
     DISCONNECT = auto()
-    SET_DEFAULT = auto()
-    SAVE = auto()
+    #SET_DEFAULT = auto()
+    #SAVE = auto()
+    GET_POINTCLOUD = auto()
+    GET_IMAGE = auto()
+
 
 
 class DepthCheckerStates(Enum): 
@@ -47,7 +59,79 @@ class DepthCheckerStates(Enum):
 
 class ASTRA_CAMERA():
     # DATA publish value is in pointcloud2 format
+    
+    def pointcloud_to_2D():
+        point_cloud = o3d.io.read_point_cloud('.ros/point_cloud/points_xyz_rgb_20240430_075142.ply') # include path & file name here
+        #image_width = 640 
+        #image_height = 480 
 
+        #create image planes for x,y,z
+        #image_x = np.zeros((image_height, image_width), dtype=np.uint8)
+        #image_y = np.zeros((image_height, image_width), dtype=np.uint8)
+        #image_z = np.zeros((image_height, image_width), dtype=np.uint8)
+        
+        points_x_frame = []
+        points_y_frame = [] 
+        points_z_frame = [] 
+        colour_frame = []
+        #project points onto 2D planes:
+        for colour in point_cloud.colors:
+            converting_to_rgb = colour*255
+            colour_frame.append(converting_to_rgb)
+
+        for point in point_cloud.points:
+            x,y,z = point
+            x = point[0]
+            y = point[1]
+            z = point[2]            
+
+            # for x plane image
+            points_x_frame.append((0,y,z))         
+            # for y plane image
+            points_y_frame.append((x,0,z)) 
+            #for z plane image
+            points_z_frame.append((x,y,0)) 
+
+        colour_frame_np = np.array(colour_frame)
+        points_x_frame_np = np.array(points_x_frame)
+        points_y_frame_np = np.array(points_y_frame)
+        points_z_frame_np = np.array(points_z_frame)
+        #logger.loginfo(points_x_frame_np)
+        #logger.loginfo(type(points_x_frame_np))
+        #logger.loginfo(points_y_frame_np)
+        
+        point_cloud_x = o3d.geometry.PointCloud()
+        point_cloud_y = o3d.geometry.PointCloud()
+        point_cloud_z = o3d.geometry.PointCloud()
+        point_cloud_x.points = o3d.utility.Vector3dVector(points_x_frame_np) # expects tuple
+        point_cloud_y.points = o3d.utility.Vector3dVector(points_y_frame_np)
+        point_cloud_z.points = o3d.utility.Vector3dVector(points_z_frame_np)
+        point_cloud_x.colors = o3d.utility.Vector3dVector(colour_frame_np)
+        point_cloud_y.colors = o3d.utility.Vector3dVector(colour_frame_np)
+        point_cloud_z.colors = o3d.utility.Vector3dVector(colour_frame_np)
+
+        #logger.loginfo(point_cloud_x)
+        #logger.loginfo(type(point_cloud_x))
+        return point_cloud_x,point_cloud_y,point_cloud_z
+
+
+
+    def get_pointcloud():
+        succeeded = False
+         
+        rospy.wait_for_service('/camera/save_point_cloud_xyz_rgb')
+        try:
+            save_pointcloud = rospy.ServiceProxy('/camera/save_point_cloud_xyz_rgb', Empty)
+            response = save_pointcloud()
+            return response
+        except rospy.ServiceException as e:
+            logger.loginfo("error in service",e)
+        
+        #o3d.io.write_point_cloud("point_cloud.ply",data_global)
+        #logger.loginfo('done saving pointcloud')
+        succeeded = True
+        return succeeded
+    
     def connect(port):
         flag:bool = None
         flag = os.path.exists(port)
@@ -71,14 +155,16 @@ class DepthChecker:
         self.pub_state = DEPTH_STATE.Publisher()
         self.pub_info = DEPTH_INFO.Publisher()
         self.pub_reading = DEPTH_DATA.Publisher()
+        self.pub_image = DEPTH_IMAGE.Publisher()
         DEPTH_SRV_CMD.Services(self.srv_cb)
         self.subscriber = rospy.Subscriber('/camera/depth_registered/points', PointCloud2, self.get_data_subscriber)
-
         self.__STATES_METHODS = {
         (DEPTHCommands.NONE, DepthCheckerStates.INIT): self.initialize, # to IDLE
         (DEPTHCommands.CONNECT, DepthCheckerStates.IDLE): self.connect, # to CONNECTED or stay
         (DEPTHCommands.DISCONNECT, DepthCheckerStates.CONNECTED): self.disconnect, # to IDLE
-        (DEPTHCommands.NONE, DepthCheckerStates.CONNECTED): self.parse_reading, # stay
+        #(DEPTHCommands.NONE, DepthCheckerStates.CONNECTED): self.parse_reading, # stay
+        (DEPTHCommands.GET_POINTCLOUD, DepthCheckerStates.CONNECTED): self.get_pointcloud_ply, # get image and send 3 images
+        (DEPTHCommands.GET_IMAGE,DepthCheckerStates.CONNECTED): self.get_image,
     }   
         
     
@@ -135,6 +221,15 @@ class DepthChecker:
         self.state = DepthCheckerStates.IDLE
         return False
 
+    def get_image(self):
+        point_cloud_image_to_2D = self.depthcamera_model.pointcloud_to_2D()
+        logger.loginfo(point_cloud_image_to_2D)
+        return point_cloud_image_to_2D
+
+    def get_pointcloud_ply(self):
+        point_cloud_image = self.depthcamera_model.get_pointcloud()
+        return point_cloud_image
+
     def disconnect(self):
         self.log_with_frontend("DISCONNECTING")
         self.state = DepthCheckerStates.IDLE
@@ -144,13 +239,13 @@ class DepthChecker:
         global data_global
         data_global = data
         return data
-    
+
+"""
     def parse_reading(self):
-        #logger.loginfo(data_global)
-        #logger.loginfo(type(data_global))
-        self.pub_reading.publish(data_global)
+        self.pub_reading.publish(xyz_plane_images)
+        logger.loginfo(xyz_plane_images)
         return True
-    
+"""
         
 if __name__ == "__main__":
     rospy.init_node("depth_camera_driver_node")

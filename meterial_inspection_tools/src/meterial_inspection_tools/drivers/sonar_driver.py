@@ -50,9 +50,21 @@ class DYP_SONAR():
     UNIT_DICT_CHECKER = [0xe6 ,0xe8 ,0xd0,0xfa,0xfe,0xea,0xe4,0xe2,0xd2,0xec] #for ID that has already been set
     UNIT_DICT_CHECKER_DEFAULT = [0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF] # for default ID 
     DEFAULT_BAUDRATE = 3 #9600
+    UNIT_DICT_SETTER = {
+            "0": 0xe6,
+            "1": 0xe8,
+            "2": 0xd0,
+            "3": 0xfa,
+            "4": 0xfe,
+            "5": 0xea,
+            "6": 0xe4,
+            "7": 0xe2,
+            "8": 0xd2,
+            "9": 0xec,
+        }
     BAUDRATE_CHECKLIST = [115200,57600, 9600]
     UNIT_CHECKER = []
-
+    sonar_counter = 0
 
     def parse_reading(self, modbus_client):
     
@@ -146,6 +158,7 @@ class DYP_SONAR():
             if not respond.isError():
                 modbus_client = temp_client
                 sonar_connected_count += 1
+                self.sonar_counter = sonar_connected_count
                 self.UNIT_CHECKER.append(unit)
                 logger.loginfo("Sonar connected " + str(sonar_connected_count))
             if respond.isError():
@@ -169,45 +182,47 @@ class DYP_SONAR():
             logger.loginfo(baudrate)
             temp_client = ModbusClient(**configs)
             logger.loginfo(temp_client)
-            for default_unit in self.UNIT_DICT_CHECKER_DEFAULT:
-                respond_default = temp_client.read_holding_registers(0x200, 1,unit= default_unit)
-                if not respond_default.isError(): 
+            for unit in self.UNIT_DICT_CHECKER:
+                respond = temp_client.read_holding_registers(0x200, 1,unit= unit)
+                if not respond.isError():
                     modbus_client = temp_client
                     sonar_connected_count += 1
-                    self.UNIT_CHECKER.append(default_unit)
-                    logger.loginfo("Sonar connected on default unit 0xFF " + str(sonar_connected_count))
+                    self.sonar_counter = sonar_connected_count
+                    self.UNIT_CHECKER.append(unit)
+                    logger.loginfo("Sonar connected " + str(sonar_connected_count))
+                if respond.isError():
+                    logger.loginfo(("SONAR WITH CORRESPONDING UNIT ID: ") + str(unit) + (" NOT FOUND, CHECK MODBUS CONFIGS"))
             if sonar_connected_count >1 :
-                for unit in self.UNIT_DICT_CHECKER:
-                    respond = temp_client.read_holding_registers(0x200, 1,unit= unit)
-                    if not respond.isError():
+                for default_unit in self.UNIT_DICT_CHECKER_DEFAULT:
+                    respond_default = temp_client.read_holding_registers(0x200, 1,unit= default_unit)
+                    if not respond_default.isError(): 
                         modbus_client = temp_client
                         sonar_connected_count += 1
-                        self.UNIT_CHECKER.append(unit)
-                        logger.loginfo("Sonar connected " + str(sonar_connected_count))
-                    if respond.isError():
-                        logger.loginfo(("SONAR WITH CORRESPONDING UNIT ID: ") + str(unit) + (" NOT FOUND, CHECK MODBUS CONFIGS"))
+                        self.UNIT_CHECKER.append(default_unit)
+                        logger.loginfo("Sonar connected on default unit 0xFF " + str(sonar_connected_count))
         return modbus_client
 
     def set_default_settings(self,modbus_client):
         succeeded = False
-        for unit_default in self.UNIT_DICT_CHECKER_DEFAULT:
-            rwr_baudrate = modbus_client.write_register(0x201,self.DEFAULT_BAUDRATE,unit=unit_default) #set baudrate to 9600
-            if not rwr_baudrate.isError():
-                logger.loginfo("Set baudrate to 9600")
-                for num in range(0,10):
-                    num_str = str(num)
-                    UNIT = self.UNIT_DICT_SETTER[num_str]
-                    rwr_unit = modbus_client.write_register(0x200,UNIT, unit=unit_default) #set unit
-                    if not rwr_unit.isError(): 
-                        logger.loginfo("Set unit ID to " + str(unit))
-                    if rwr_unit.isError():
-                        pass
+        address_counter = 0
         for unit in self.UNIT_DICT_CHECKER:
             rwr_baudrate = modbus_client.write_register(0x201,self.DEFAULT_BAUDRATE,unit=unit) #set baudrate to 9600
             if not rwr_baudrate.isError():
                  logger.loginfo("Set baudrate to 9600, unit ID has been set previously")
             if rwr_baudrate.isError():
-                pass
+                logger.loginfo("PROBLEM SETTING BAUDRATE, check if sonar is connected")
+        if self.sonar_counter >1:
+            for unit_default in self.UNIT_DICT_CHECKER_DEFAULT:
+                rwr_baudrate = modbus_client.write_register(0x201,self.DEFAULT_BAUDRATE,unit=unit_default) #set baudrate to 9600
+                if not rwr_baudrate.isError():
+                    logger.loginfo("Set baudrate to 9600")
+                    UNIT = self.UNIT_DICT_SETTER[str(address_counter)]
+                    rwr_unit = modbus_client.write_register(0x200,UNIT, unit=unit_default) #set unit
+                    if not rwr_unit.isError(): 
+                        logger.loginfo("Set unit ID to " + str(hex(UNIT)))
+                        address_counter += 1
+                    if rwr_unit.isError():
+                        pass
         logger.loginfo("HERE")
         succeeded = True
         return succeeded

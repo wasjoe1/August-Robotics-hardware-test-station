@@ -47,6 +47,7 @@ SONAR_CONFIGS = InterfaceWithType('/sonar/configs',stmsgs.String)
 SONAR_SRV_CMD = InterfaceWithType('/sonar/srv_cmd',Sonarcontrol)
 
 DEPTH_DATA = InterfaceWithType('/depth/data', ssmsgs.PointCloud2)
+DEPTH_IMAGE = InterfaceWithType('/depth/formatted_image', ssmsgs.Image)
 DEPTH_STATE = InterfaceWithType('/depth/state',stmsgs.String) 
 DEPTH_INFO = InterfaceWithType('/depth/info',stmsgs.String)
 DEPTH_CONFIGS = InterfaceWithType('/depth/configs',stmsgs.String)
@@ -94,6 +95,7 @@ msg_dict = {
         "topic_state": DEPTH_STATE,
         "topic_info": DEPTH_INFO,
         "topic_configs": DEPTH_CONFIGS,
+        "topic_image": DEPTH_IMAGE,
         "srv": DEPTH_SRV_CMD,
     }
 }
