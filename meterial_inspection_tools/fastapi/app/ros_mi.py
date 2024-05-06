@@ -36,43 +36,42 @@ class MeterialInspection():
 
         for sub_node_name, content in msg_dict.items():
             try:
-                content["topic_data"].Subscriber(self.topic_data_outer(sub_node_name), callback_args={"name": sub_node_name})
+                content["topic_configs"].Subscriber(self.topic_configs_cb, callback_args={"name": sub_node_name}) # will be used for the cb_args in the def below
+                logger.loginfo(f"Sub-ed to {sub_node_name}'s topic_configs have succeded")
+            except Exception as e:
+                logger.loginfo(f"Subscription to {sub_node_name}'s topic_configs failed")
+                logger.logerr(e)
+
+            try:
+                content["topic_data"].Subscriber(self.topic_data_cb, callback_args={"name": sub_node_name})
                 logger.loginfo(f"Sub-ed to {sub_node_name}'s topic_data have succeded")
             except Exception as e:
                 logger.loginfo(f"Subscription to {sub_node_name}'s topic_data failed")
                 logger.logerr(e)
             
             try:
-                content["topic_state"].Subscriber(self.topic_state_outer(sub_node_name), callback_args={"name": sub_node_name})
-                logger.loginfo(f"Sub-ed to {sub_node_name}'s topic_state have succeded")
-            except Exception as e:
-                logger.loginfo(f"Subscription to {sub_node_name}'s topic_state failed")
-                logger.logerr(e)
-
-            try:
-                content["topic_info"].Subscriber(self.topic_info_outer(sub_node_name), callback_args={"name": sub_node_name}) # will be used for the cb_args in the def below
+                content["topic_info"].Subscriber(self.topic_info_cb, callback_args={"name": sub_node_name}) # will be used for the cb_args in the def below
                 logger.loginfo(f"Sub-ed to {sub_node_name}'s topic_info have succeded")
             except Exception as e:
                 logger.loginfo(f"Subscription to {sub_node_name}'s topic_info failed")
                 logger.logerr(e)
             
             try:
-                content["topic_configs"].Subscriber(self.topic_configs_outer(sub_node_name), callback_args={"name": sub_node_name}) # will be used for the cb_args in the def below
-                logger.loginfo(f"Sub-ed to {sub_node_name}'s topic_configs have succeded")
+                content["topic_state"].Subscriber(self.topic_state_cb, callback_args={"name": sub_node_name})
+                logger.loginfo(f"Sub-ed to {sub_node_name}'s topic_state have succeded")
             except Exception as e:
-                logger.loginfo(f"Subscription to {sub_node_name}'s topic_configs failed")
+                logger.loginfo(f"Subscription to {sub_node_name}'s topic_state failed")
                 logger.logerr(e)
 
     # -------------------------------------------------------------------------------------------------
     # Subscriber call back functions & msg functions
     # CONFIGS TOPIC
-    def topic_configs_outer(self, sub_node_name):
-        def topic_configs_cb(self, msg, cb_args):
-            func = lambda a: a.replace("/","").replace("data","")
-            # func(cb_args["name"]) => returns "imu", msg is wtv data there is in the topic
-            data_to_send = json.dumps({func(cb_args["name"]): convert_ros_message_to_dictionary(msg)})
-            self.topic_configs_send_queue[sub_node_name].append(data_to_send)
-        return topic_configs_cb
+    
+    def topic_configs_cb(self, msg, cb_args):
+        func = lambda a: a.replace("/","").replace("data","")
+        # func(cb_args["name"]) => returns "imu", msg is wtv data there is in the topic
+        data_to_send = json.dumps({func(cb_args["name"]): convert_ros_message_to_dictionary(msg)})
+        self.topic_configs_send_queue["imu"].append(data_to_send)
     
     def has_topic_configs_msg(self, component):
         return len(self.topic_configs_send_queue[component]) > 0
@@ -85,13 +84,13 @@ class MeterialInspection():
         return self.topic_configs_send_queue[component][0]
 
     # DATA TOPIC
-    def topic_data_outer(self, sub_node_name):
-        def topic_data_cb(self, msg, cb_args):
-            func = lambda a: a.replace("/","").replace("data","")
-            # func(cb_args["name"]) => returns "imu", msg is wtv data there is in the topic
-            data_to_send = json.dumps({func(cb_args["name"]): convert_ros_message_to_dictionary(msg)})
-            self.topic_data_send_queue[sub_node_name].append(data_to_send)
-        return topic_data_cb
+    
+    def topic_data_cb(self, msg, cb_args):
+        func = lambda a: a.replace("/","").replace("data","")
+        # func(cb_args["name"]) => returns "imu", msg is wtv data there is in the topic
+        data_to_send = json.dumps({func(cb_args["name"]): convert_ros_message_to_dictionary(msg)})
+        self.topic_data_send_queue["imu"].append(data_to_send)
+        
 
     def has_topic_data_msg(self, component):
         return len(self.topic_data_send_queue[component]) > 0
@@ -104,13 +103,11 @@ class MeterialInspection():
             del self.topic_data_send_queue[component][0]
     
     # INFO TOPIC
-    def topic_info_outer(self, sub_node_name):
-        def topic_info_cb(self, msg, cb_args):
-            func = lambda a: a.replace("/","").replace("data","")
-            # func(cb_args["name"]) => returns "imu", msg is wtv data there is in the topic
-            data_to_send = json.dumps({func(cb_args["name"]): convert_ros_message_to_dictionary(msg)})
-            self.topic_info_send_queue[sub_node_name].append(data_to_send)
-        return topic_info_cb
+    def topic_info_cb(self, msg, cb_args):
+        func = lambda a: a.replace("/","").replace("data","")
+        # func(cb_args["name"]) => returns "imu", msg is wtv data there is in the topic
+        data_to_send = json.dumps({func(cb_args["name"]): convert_ros_message_to_dictionary(msg)})
+        self.topic_info_send_queue["imu"].append(data_to_send)
 
     def get_topic_info_msg(self, component):
         return self.topic_info_send_queue[component][0]
@@ -123,13 +120,12 @@ class MeterialInspection():
             del self.topic_info_send_queue[component][0]
 
     # STATE TOPIC
-    def topic_state_outer(self, sub_node_name):
-        def topic_state_cb(self, msg, cb_args):
-            func = lambda a: a.replace("/","").replace("data","")
-            # func(cb_args["name"]) => returns "imu", msg is wtv data there is in the topic
-            data_to_send = json.dumps({func(cb_args["name"]): convert_ros_message_to_dictionary(msg)})
-            self.topic_state_send_queue[sub_node_name].append(data_to_send)
-        return topic_state_cb
+    
+    def topic_state_cb(self, msg, cb_args):
+        func = lambda a: a.replace("/","").replace("data","")
+        # func(cb_args["name"]) => returns "imu", msg is wtv data there is in the topic
+        data_to_send = json.dumps({func(cb_args["name"]): convert_ros_message_to_dictionary(msg)})
+        self.topic_state_send_queue["imu"].append(data_to_send)
 
     def get_topic_state_msg(self, component):
         return self.topic_state_send_queue[component][0]
@@ -150,12 +146,13 @@ class MeterialInspection():
             command = IMUcontrolRequest() # get the srv req object
             command.button = request["button"] # put the parameters into the req obj
             command.parameter = request["parameter"]
-            logger.loginfo("request {command} to {sub_node_name}")
-            logger.loginfo("actual request data: {request}")
+            logger.loginfo(f"request {command} to {sub_node_name}")
+            logger.loginfo(f"actual request data: {request}")
             logger.loginfo(f"call service to {msg_dict[sub_node_name]['srv']}") # should print out the service name
             try:
                 msg_dict[sub_node_name]["srv"].service_call(command) # only 1 sub node name now => imu
                 logger.loginfo("service call should have succedded")
             except Exception as e:
+                logger.error("hi error is actually detected in the service call")
                 logger.logerr(e) # prints out the error if service call fails
         pass

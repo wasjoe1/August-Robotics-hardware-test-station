@@ -26,6 +26,8 @@ const buttonDict = {
     "saveBtn": "SAVE",
 }
 
+console.log("hi")
+
 // ------------------------------------------------------------------------------------------------
 // Functions
 function parseStringToInt(str) {
