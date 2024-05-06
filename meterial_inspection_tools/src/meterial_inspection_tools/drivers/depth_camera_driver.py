@@ -10,7 +10,7 @@ These are the steps to take
 4. Disconnect
 *pointcloud is only saved when camera is running
 """
-
+import datetime
 from sensor_msgs.msg import Image
 import rospy
 import open3d as o3d
@@ -60,15 +60,9 @@ class DepthCheckerStates(Enum):
 class ASTRA_CAMERA():
     # DATA publish value is in pointcloud2 format
     
-    def pointcloud_to_2D():
-        point_cloud = o3d.io.read_point_cloud('.ros/point_cloud/points_xyz_rgb_20240430_075142.ply') # include path & file name here
-        #image_width = 640 
-        #image_height = 480 
-
-        #create image planes for x,y,z
-        #image_x = np.zeros((image_height, image_width), dtype=np.uint8)
-        #image_y = np.zeros((image_height, image_width), dtype=np.uint8)
-        #image_z = np.zeros((image_height, image_width), dtype=np.uint8)
+    def pointcloud_to_2D(filename):
+        #point_cloud = o3d.io.read_point_cloud('.ros/point_cloud/points_xyz_rgb_20240430_075142.ply') # include path & file name here
+        point_cloud = o3d.io.read_point_cloud(filename)
         
         points_x_frame = []
         points_y_frame = [] 
@@ -123,7 +117,11 @@ class ASTRA_CAMERA():
         try:
             save_pointcloud = rospy.ServiceProxy('/camera/save_point_cloud_xyz_rgb', Empty)
             response = save_pointcloud()
-            return response
+            #added to test if it is possible to retreive file
+            time_now = datetime.datetime.now()
+            timestamp_str = time_now.strftime("%Y%m%d_%H%M%S")
+            filename = os.path.join(".ros/point_cloud/points_xyz_rgb" + timestamp_str + ".ply")
+            return response,filename
         except rospy.ServiceException as e:
             logger.loginfo("error in service",e)
         
@@ -222,13 +220,14 @@ class DepthChecker:
         return False
 
     def get_image(self):
-        point_cloud_image_to_2D = self.depthcamera_model.pointcloud_to_2D()
+        point_cloud_image,filename = self.depthcamera_model.get_pointcloud()
+        point_cloud_image_to_2D = self.depthcamera_model.pointcloud_to_2D(point_cloud_image,filename)
         logger.loginfo(point_cloud_image_to_2D)
         return point_cloud_image_to_2D
 
     def get_pointcloud_ply(self):
-        point_cloud_image = self.depthcamera_model.get_pointcloud()
-        return point_cloud_image
+        point_cloud_image,filename = self.depthcamera_model.get_pointcloud()
+        return point_cloud_image,filename
 
     def disconnect(self):
         self.log_with_frontend("DISCONNECTING")
