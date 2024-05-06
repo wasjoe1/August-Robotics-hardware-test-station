@@ -101,81 +101,92 @@ async def get_html(request: Request): # request is the 1st arg
 
 @app.get("/step/{mode}", response_class=HTMLResponse) # indicates its a html response
 async def step(request: Request, mode: str): # mode is of string type; its from clicking the page btn
-    logger.info("get step {}".format(mode))
+    logger.info(f"get step {mode}")
 
     app.mode = mode
-
-    ret = distribute_data(request)
-    if ret is not None:
-        return ret
     
-    # different from here
     if app.mode is not None:
+
         logger.info("static/"+app.mode+".txt")
         with open("static/"+str(app.lang)+"_"+app.mode+".txt") as f:
             just_do = f.readlines() # read the lines of the txt file
             logger.info(just_do)
 
-        return templates.TemplateResponse("index.html", {"request": request, "just_do": just_do}) # directory & context are the arguments
-        # responseData is returned as first readings, but websocket data should come once sockets are opened
+        return templates.TemplateResponse(app.mode+".html", {"request": request, "just_do": just_do})
     else:
         return None
 
 @app.get("/command/{cmd}", response_class=HTMLResponse)
 async def command(request: Request, cmd: str):
     try:
-        logger.warn("get command {}".format(cmd))
+        logger.info(f"get command {cmd}")
         srv_call_formatted_data = cmd # for now put imu only; returns json string
         # msg_dict[sub_node].service_call(cmd) => json string is passed to the node in the service call; might be the old way of making a service call
-        # TODO service call using app.mi
         app.mi.send_srv(srv_call_formatted_data)
     except Exception as e:
-        print(e)
+        logger.error(e)
 
 # -------------------------------------------------------------------------------------------------
-# websockets
+# WEBSOCKETS (for frontend to connect to)
+# IMU
+# /imu_configs socket
+@app.websocket("/imu_configs")
+async def cb_imu_data(websocket: WebSocket):
+    logger.info("get websocket data from /imu_configs topic.")
+    #TODO
+    await websocket.accept()
+    # global data
+    while True:
+        await asyncio.sleep(0.2)
+        if app.mi.has_topic_configs_msg("imu"): # TODO: CHANGE 
+            qData = app.mi.get_topic_configs_msg("imu") # TODO: CHANGE 
+            logger.info("queue data: {qData}")
+            await websocket.send_text(f"{qData}")
+            app.mi.pop_topic_configs_msg("imu") # TODO: CHANGE 
+
 # /imu_data socket
-@app.websocket("/imu_data") # web socket decorators to define websocket end points
-async def cb_imu_data(websocket: WebSocket): # web socket event handler
+@app.websocket("/imu_data")
+async def cb_imu_data(websocket: WebSocket):
     logger.info("get websocket data from /imu_data topic.")
     #TODO
-    await websocket.accept() # accept the web socket connection
+    await websocket.accept()
     # global data
-    while True: # enter loop to continuously receive data
-        await asyncio.sleep(0.2) # this is required as it pauses current coroutine to allow execution of other coroutinese
-        if app.mi.has_topic_data_msg():
-            qData = app.mi.topic_data_send_queue[0]
-            logger.info("queue data: {}".format(qData))
+    while True:
+        await asyncio.sleep(0.2)
+        if app.mi.has_topic_data_msg("imu"):
+            qData = app.mi.get_topic_data_msg("imu")
+            logger.info(f"queue data: {qData}")
             await websocket.send_text(f"{qData}") # always take the 1st message in the queue
-            app.mi.pop_topic_data_msg() # then pop it off once you are done returning it
-
-# /imu_state socket
-@app.websocket("/imu_state") # web socket decorators to define websocket end points
-async def cb_imu_state(websocket: WebSocket): # web socket event handler
-    logger.info("get websocket data from /imu_state topic.")
-    #TODO
-    await websocket.accept() # accept the web socket connection
-    # global data
-    while True: # enter loop to continuously receive data
-        await asyncio.sleep(0.2) # this is required as it pauses current coroutine to allow execution of other coroutinese
-        if app.mi.has_topic_state_msg():
-            qData = app.mi.topic_state_send_queue[0]
-            logger.info("queue data: {}".format(qData))
-            await websocket.send_text(f"{qData}") # always take the 1st message in the queue
-            app.mi.pop_topic_state_msg() # then pop it off once you are done returning it
+            app.mi.pop_topic_data_msg("imu")
 
 # /imu_info socket
-@app.websocket("/imu_info") # web socket decorators to define websocket end points
-async def cb_imu_state(websocket: WebSocket): # web socket event handler
+@app.websocket("/imu_info")
+async def cb_imu_state(websocket: WebSocket):
     logger.info("get websocket data from /imu_info topic.")
     #TODO
-    await websocket.accept() # accept the web socket connection
+    await websocket.accept()
     # global data
-    while True: # enter loop to continuously receive data
-        await asyncio.sleep(0.2) # this is required as it pauses current coroutine to allow execution of other coroutinese
-        if app.mi.has_topic_info_msg():
-            qData = app.mi.topic_info_send_queue[0]
-            logger.info("queue data: {}".format(qData))
-            await websocket.send_text(f"{qData}") # always take the 1st message in the queue
-            app.mi.pop_topic_info_msg() # then pop it off once you are done returning it
+    while True:
+        await asyncio.sleep(0.2)
+        if app.mi.has_topic_info_msg("imu"):
+            qData = app.mi.get_topic_info_msg("imu")
+            logger.info(f"queue data: {qData}")
+            await websocket.send_text(f"{qData}")
+            app.mi.pop_topic_info_msg("imu")
 
+# /imu_state socket
+@app.websocket("/imu_state")
+async def cb_imu_state(websocket: WebSocket):
+    logger.info("get websocket data from /imu_state topic.")
+    #TODO
+    await websocket.accept()
+    # global data
+    while True:
+        await asyncio.sleep(0.2)
+        if app.mi.has_topic_state_msg("imu"):
+            qData = app.mi.get_topic_state_msg("imu")
+            logger.info(f"queue data: {qData}")
+            await websocket.send_text(f"{qData}")
+            app.mi.pop_topic_state_msg("imu")
+
+# TODO add inclinometer & cb

@@ -2,83 +2,24 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>澳谷一站式检测工具</title>
-    <link rel="stylesheet" href="../static/bootstrap.min.css">
-    <script src="../static/jquery.min.js"></script>
-    <script src="../static/bootstrap.min.js"></script>
-    <link rel="stylesheet" href="../static/hr.css">
-    <script src="../static/meterial_inspection.js"></script>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>澳谷一站式检测工具</title>
+  <link rel="stylesheet" href="../static/bootstrap.min.css">
+  <script src="../static/jquery.min.js"></script>
+  <script src="../static/bootstrap.min.js"></script>
+  
+  <link rel="stylesheet" href="../static/hr.css">
 </head>
 
 <body onload="">
-  <!-- Header portion -->
-  <div style="height:3%;width:100%;">
-    <h3 id="title"> 澳谷一站式检测工具 </h3>
-    <button hidden="hidden" type="button" class="btn btn-default" onclick="location.href='/'">主页</button>
-    <button hidden="hidden" type="button" class="btn btn-default" onclick="location.href='/step/sonar'">超声波</button>
-    <button hidden="hidden" type="button" class="btn btn-default" onclick="location.href='/step/ldlidar'">LD雷达</button>
-    <button hidden="hidden" type="button" class="btn btn-default" onclick="location.href='/step/imu'">IMU</button>
-    <hr />
-  </div>
-  
-  <!-- Body portion -->
-  <div class="flex-container" style="justify-content: space-between;">
-    <!-- left of body -->
-    <div>
-      <h4 id="readings">Readings</h4>
-      <div id="responseData-data">{{ responseData["data"] }}</div>
-      <h4>State</h4>
-      <div id="responseData-state">{{ responseData["state"] }}</div>
-    </div>
-
-    <!-- right of body -->
-    <div style="background-color: darksalmon;">
-      <div style="display: flex; justify-content: space-between;">
-        <!-- connect side -->
-        <div>
-          <button class="btn btn-default" id="connectBtn" onclick="onClickBtn(this)">Connect</button>
-          <br>
-          <button class="btn btn-default" id="closeBtn" onclick="onClickBtn(this)">Close</button>
-        </div>
-
-        <!-- scan side -->
-        <div>
-          <button class="btn btn-default" id="scanBtn" onclick="onClickBtn(this)">Scan</button>
-          <div> <!-- hide this if scan is not complete-->
-            <div display:>
-              <label for="imuInput1">Acceleration Scale:</label>
-              <input type="text" id="imuInput1" name="imuInput1"/>
-              <label for="imuInput2">Gyro scle:</label>
-              <input type="text" id="imuInput2" name="imuInput2"/>
-              <label for="imuInput3">Bandwidth:</label>
-              <input type="text" id="imuInput3" name="imuInput3"/>
-              <label for="imuInput4">Feedback frequency:</label>
-              <input type="text" id="imuInput4" name="imuInput4"/>
-            </div>
-            <button class="btn btn-default" id="setBtn" onclick="onClickBtn(this)">Set parameters</button>
-            <button class="btn btn-default" id="saveBtn" onclick="onClickBtn(this)">Save</button>
-          </div>
-        </div>
-      </div>
-      <div>
-        <h4>Response information</h4>
-        <div id="responseData-info" style="background-color: chocolate;">{{ responseData["info"]["message"] }}</div>
-      </div>
-    </div>
-  </div>
-</body>
-
-</html>
-
-<!-- OLD CODE -->
-<!-- <body onload="">
     <div style="height:3%;width:100%;float:left;">
         <h3 id="title"> 澳谷一站式检测工具 </h3>
-        <button hidden="hidden" type="button" class="btn btn-default" onclick="location.href='/step/sonar'">超声波</button>
-        <button hidden="hidden" type="button" class="btn btn-default" onclick="location.href='/step/ldlidar'">LD雷达</button>
-        <button hidden="hidden"  type="button" class="btn btn-default" onclick="location.href='/step/imu'">IMU</button>
+        <button type="button" class="btn btn-default" onclick="location.href='/'">主页</button>
+        <button type="button" class="btn btn-default" onclick="location.href='/step/imu'">IMU</button>
+        <button type="button" class="btn btn-default" onclick="location.href='/step/inclinometer'">Inclinometer</button>
+        <button type="button" class="btn btn-default" onclick="location.href='/step/encoder'">Encoder & motor driver</button>
+        <button type="button" class="btn btn-default" onclick="location.href='/step/sonar'">超声波</button>
     </div>
-</body> -->
+</body>

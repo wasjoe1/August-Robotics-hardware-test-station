@@ -40,14 +40,14 @@ msg_dict = {
     #     "srv": LDLIDAR_SRV_CMD
     # },
     "imu":{
+        "srv": IMU_SRV_CMD,
         "topic_data": IMU_DATA,
         "topic_state": IMU_STATE,
         "topic_info": IMU_INFO,
         "topic_configs": IMU_CONFIGS,
-        "srv": IMU_SRV_CMD
     },
     
-    "inclin": {
+    "inclinometer": {
         "srv" : INCLINOMETER_SRV_CMD,
         "topic_data": INCLINOMETER_DATA,
         "topic_state": INCLINOMETER_STATE,
@@ -55,8 +55,9 @@ msg_dict = {
         "topic_configs": INCLINOMETER_CONFIGS,
     },
 
-    "CB":{
+    "cb":{
         "srv" : CB_SRV_CMD,
+        "topic_data": CB_DATA,
         "topic_state": CB_STATE,
         "topic_info": CB_INFO,
         "topic_configs": CB_CONFIGS,
