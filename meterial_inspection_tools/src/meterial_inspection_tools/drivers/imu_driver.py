@@ -461,7 +461,6 @@ class IMUChecker:
                 self.pub_configs.publish(json.dumps(self._get_current_imu_settings()))
                 return True
         self.log_with_frontend(f"Failed to connect IMU!")
-        self.state = IMUCheckerStates.IDLE
         return False
 
     def scan(self):
@@ -474,7 +473,6 @@ class IMUChecker:
                 self.pub_configs.publish(json.dumps(self._get_current_imu_settings()))
                 return True
         self.log_with_frontend(f"Cannot found the IMU!")
-        self.state = IMUCheckerStates.IDLE
         return False
 
     def auto_detect(self):
