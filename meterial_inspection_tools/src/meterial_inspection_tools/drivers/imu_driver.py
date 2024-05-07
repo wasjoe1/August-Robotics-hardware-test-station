@@ -498,7 +498,7 @@ class IMUChecker:
 
     def parse_reading(self):
         imu_msg = self.imu_model.parse_reading(self.serial_port)
-        self.pub_reading.publish(str(imu_msg))
+        self.pub_reading.publish(str(imu_msg)) #change to json dumps
         return True
 
     def set_default_settings(self):
