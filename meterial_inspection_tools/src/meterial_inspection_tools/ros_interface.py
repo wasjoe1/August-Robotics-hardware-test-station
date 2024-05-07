@@ -8,10 +8,10 @@ import boothbot_msgs.srv as bbsrvs
 import boothbot_grpc.msg as bgmsgs
 
 from meterial_inspection_tools.srv import IMUcontrol
-from meterial_inspection_tools.srv import Inclin
-from meterial_inspection_tools.srv import CBcontrol
-from meterial_inspection_tools.srv import Sonarcontrol
-from meterial_inspection_tools.srv import DepthCameracontrol
+from meterial_inspection_tools.srv import Inclin  # InclinometerControl
+from meterial_inspection_tools.srv import CBcontrol # CBControl
+from meterial_inspection_tools.srv import Sonarcontrol # SonarControl
+from meterial_inspection_tools.srv import DepthCameracontrol # DepthCameraControl
 
 
 
@@ -83,12 +83,12 @@ msg_dict = {
         "topic_data":CB_DATA,
     },
 
-    "Sonar":{
+    "sonar":{
+        "srv": SONAR_SRV_CMD,
         "topic_data": SONAR_DATA,
         "topic_state": SONAR_STATE,
-        "topic_info": SONAR_INFO,
         "topic_configs": SONAR_CONFIGS,
-        "srv": SONAR_SRV_CMD,
+        "topic_info": SONAR_INFO,
     },
 
     "Depth_Camera":{

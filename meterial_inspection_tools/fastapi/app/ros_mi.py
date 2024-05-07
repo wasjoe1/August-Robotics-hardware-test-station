@@ -17,21 +17,25 @@ class MeterialInspection():
             "imu": [],
             "inclinometer": [],
             "cb": [],
+            "sonar": [],
         }
         self.topic_data_send_queue = {
             "imu": [],
             "inclinometer": [],
             "cb": [],
+            "sonar": [],
         }
         self.topic_info_send_queue = {
             "imu": [],
             "inclinometer": [],
             "cb": [],
+            "sonar": [],
         }
         self.topic_state_send_queue = {
             "imu": [],
             "inclinometer": [],
             "cb": [],
+            "sonar": [],
         }
 
         for sub_node_name, content in msg_dict.items():
@@ -149,11 +153,19 @@ class MeterialInspection():
         srv_dict = json.loads(srv)
         logger.loginfo(f"send service {srv_dict}")
         for sub_node_name, request in srv_dict.items(): # sub node name is "device_name"; request is the "req data"
+            logger.loginfo(f"test 0")
+            logger.loginfo(f"subnode name is {sub_node_name}")
             command = IMUcontrolRequest() # get the srv req object
+            logger.loginfo(f"{command}")
+            logger.loginfo(f"test 1")
             command.button = request["button"] # put the parameters into the req obj
-            command.parameter = request["parameter"]
-            logger.loginfo(f"request {command} to {sub_node_name}")
-            logger.loginfo(f"actual request data: {request}")
+            logger.loginfo(f"test 2")
+            if request.get("parameter"):
+                logger.loginfo(f"test 3")
+                # command.parameter = request["parameter"]
+            logger.loginfo(f"test 4")
+            logger.loginfo(f"request data: {request}")
+            logger.loginfo(f"command {command} to {sub_node_name}")
             logger.loginfo(f"call service to {msg_dict[sub_node_name]['srv']}") # should print out the service name
             try:
                 msg_dict[sub_node_name]["srv"].service_call(command) # only 1 sub node name now => imu
@@ -161,4 +173,4 @@ class MeterialInspection():
             except Exception as e:
                 logger.error("hi error is actually detected in the service call")
                 logger.logerr(e) # prints out the error if service call fails
-        pass
+        
