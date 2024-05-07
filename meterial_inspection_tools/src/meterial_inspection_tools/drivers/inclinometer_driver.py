@@ -305,7 +305,7 @@ class InclinChecker:
             return True
 
 if __name__ == "__main__":
-    rospy.init_node("incline_checker_node")
+    rospy.init_node("inclinometer_driver_node")
     incline_checker = InclinChecker()
     incline_checker.start()
 
