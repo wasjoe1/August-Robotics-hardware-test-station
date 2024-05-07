@@ -80,23 +80,22 @@ msg_dict = {
         "topic_state": CB_STATE,
         "topic_info": CB_INFO,
         "topic_configs": CB_CONFIGS,
-        "topic_data":CB_DATA,
     },
 
     "sonar":{
         "srv": SONAR_SRV_CMD,
         "topic_data": SONAR_DATA,
         "topic_state": SONAR_STATE,
-        "topic_configs": SONAR_CONFIGS,
         "topic_info": SONAR_INFO,
+        "topic_configs": SONAR_CONFIGS,
     },
 
-    "Depth_Camera":{
+    "depth_camera":{
+        "srv": DEPTH_SRV_CMD,
         "topic_data": DEPTH_DATA,
         "topic_state": DEPTH_STATE,
         "topic_info": DEPTH_INFO,
         "topic_configs": DEPTH_CONFIGS,
         "topic_image": DEPTH_IMAGE,
-        "srv": DEPTH_SRV_CMD,
     }
 }

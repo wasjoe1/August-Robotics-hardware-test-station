@@ -7,8 +7,13 @@ from meterial_inspection_tools.ros_interface import (
 )
 from rospy_message_converter.message_converter import convert_ros_message_to_dictionary
 from boothbot_msgs.srv import (Command, CommandRequest)
-from meterial_inspection_tools.srv import (IMUcontrolRequest,IMUcontrol)
+from meterial_inspection_tools.srv import (IMUcontrol, IMUcontrolRequest)
+from meterial_inspection_tools.srv import (Sonarcontrol, SonarcontrolRequest)
 
+ServiceRequestTypes = {
+    "imu": IMUcontrolRequest,
+    "sonar": SonarcontrolRequest,
+}
 
 class MeterialInspection():
     def __init__(self) -> None:
@@ -152,25 +157,21 @@ class MeterialInspection():
     def send_srv(self, srv):
         srv_dict = json.loads(srv)
         logger.loginfo(f"send service {srv_dict}")
-        for sub_node_name, request in srv_dict.items(): # sub node name is "device_name"; request is the "req data"
-            logger.loginfo(f"test 0")
-            logger.loginfo(f"subnode name is {sub_node_name}")
-            command = IMUcontrolRequest() # get the srv req object
-            logger.loginfo(f"{command}")
-            logger.loginfo(f"test 1")
+        for device_name, request in srv_dict.items(): # sub node name is "device_name"; request is the "req data"
+            logger.loginfo(f"component name is {device_name}")
+            
+            command = ServiceRequestTypes[device_name]() # get the srv req object
             command.button = request["button"] # put the parameters into the req obj
-            logger.loginfo(f"test 2")
             if request.get("parameter"):
-                logger.loginfo(f"test 3")
-                # command.parameter = request["parameter"]
-            logger.loginfo(f"test 4")
+                command.parameter = request["parameter"]
+            
+            logger.loginfo(f"command data: {command}")
             logger.loginfo(f"request data: {request}")
-            logger.loginfo(f"command {command} to {sub_node_name}")
-            logger.loginfo(f"call service to {msg_dict[sub_node_name]['srv']}") # should print out the service name
+            logger.loginfo(f"Service call to {msg_dict[device_name]['srv']}...") # should print out the service name
             try:
-                msg_dict[sub_node_name]["srv"].service_call(command) # only 1 sub node name now => imu
-                logger.loginfo("service call should have succedded")
+                msg_dict[device_name]["srv"].service_call(command) # only 1 sub node name now => imu
+                logger.loginfo("Service call succedded")
             except Exception as e:
-                logger.error("hi error is actually detected in the service call")
+                logger.error("Error detected in service call")
                 logger.logerr(e) # prints out the error if service call fails
         
