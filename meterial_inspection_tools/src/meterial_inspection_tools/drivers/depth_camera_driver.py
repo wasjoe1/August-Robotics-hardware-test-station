@@ -4,11 +4,8 @@
 """
 Instructions: 
 These are the steps to take 
-1. Connect
-2. Get pointcloud
-3. Get image
-4. Disconnect
-*pointcloud is only saved when camera is running
+1. Connect to astra(check if camera is plugged in)
+2. 
 """
 import datetime
 from sensor_msgs.msg import Image
@@ -39,11 +36,8 @@ from std_srvs.srv import Empty
 class DEPTHCommands(Enum):
     NONE = auto()
     RESET = auto()
-    #SCAN = auto()
     CONNECT = auto()
     DISCONNECT = auto()
-    #SET_DEFAULT = auto()
-    #SAVE = auto()
     GET_POINTCLOUD = auto()
     GET_IMAGE = auto()
 
@@ -176,14 +170,7 @@ class DepthChecker:
     def command(self, value: str):
         try:
             self._command = DEPTHCommands[value.upper()]
-            logger.loginfo(f"Command set as: {self._command}")
-        except Exception as e:
-            self.log_with_frontend(f"Received wrong command: {value}!!")
-            self._command = DEPTHCommands.NONE
-
-    @property
-    def state(self):
-        return self._state
+            logger.loginfo(f"Command set as: {self._command}")driver
     @state.setter
     def state(self, value: DepthCheckerStates):
         if self._state != value:
@@ -206,12 +193,7 @@ class DepthChecker:
             l.sleep()
 
     def initialize(self):
-        self.state = DepthCheckerStates.IDLE
-
-    def connect(self):
-        self.state = DepthCheckerStates.CONNECTING
-        connected = self.depthcamera_model.connect(self.port)
-        if connected:
+        self.state = DepthCheckerStates.IDLEdriver
             self.log_with_frontend("Connected to astra camera")
             self.state = DepthCheckerStates.CONNECTED
             return True
@@ -232,12 +214,7 @@ class DepthChecker:
     def disconnect(self):
         self.log_with_frontend("DISCONNECTING")
         self.state = DepthCheckerStates.IDLE
-        return True
-    
-    def get_data_subscriber(self,data):
-        global data_global
-        data_global = data
-        return data
+        return Truedriver
 
 """
     def parse_reading(self):

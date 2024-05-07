@@ -87,7 +87,7 @@ class CBOperations:
     def close(modbus_client):
         return True
 
-class CB_VSMD114(CBOperations):
+class CB_VSMD114(CBOperations): #UNIT ID 2,4
     CB_TYPE = "VSMD"
 
     def parse_reading(self,modbus_client):
@@ -134,6 +134,7 @@ class CB_VSMD114(CBOperations):
         succeeded = False
         logger.loginfo("Setting baudrate")
         baudrate = 57600
+        counter_VDSM_set_number = 0
         for unit_id in self.UNIT_ID_CHECKLIST_VDSM:
             rwr = modbus_client.write_registers(0x20,baudrate,unit= unit_id)
             if not rwr.isError():
@@ -141,7 +142,19 @@ class CB_VSMD114(CBOperations):
                 logger.loginfo("Set baudrate to 57600")
             if rwr.isError():
                 logger.loginfo("ERROR in setting baudrate")
-            succeeded = True
+            # additional for iteration cycle 1
+                """
+            if (unit_id != 2) and (unit_id != 4) and (counter_VDSM_set_number == 0):  
+                    rwr_unit_ID2 = modbus_client.write_registers(0x1f,2, unit=unit_id)
+                    if not rwr_unit_ID2.isError():
+                        logger.loginfo("UNIT ID 2 SET")
+                        counter_VDSM_set_number +=1
+            elif (unit_id != 2) and (unit_id != 4) and (counter_VDSM_set_number ==1):
+                rwr_unit_ID4 = modbus_client.write_registers(0x1f,4, unit=unit_id)
+                if not rwr_unit_ID4.isError():
+                    logger.loginfo("UNIT ID 4 SET")
+            """
+            succeeded = True 
         return succeeded
 
     @staticmethod
@@ -152,7 +165,7 @@ class CB_VSMD114(CBOperations):
     def close(modbus_client):
         return True
     
-class CB_BRITER(CBOperations):
+class CB_BRITER(CBOperations): #UNIT ID 1,3
     CB_TYPE = "BRITER"
    
     def parse_reading(self,modbus_client):
@@ -214,7 +227,8 @@ class CB_BRITER(CBOperations):
         succeeded = False
         logger.loginfo("Setting baudrate")
         data_baudrate = 0x03
-        for unit_id in self.UNIT_ID_CHECKLIST_BRITER :
+        counter_BRITER_set_number = 0
+        for unit_id in self.UNIT_ID_CHECKLIST_BRITER:
             rwr = modbus_client.write_register(0x0005,data_baudrate, unit = unit_id) 
             if not rwr.isError():
                 logger.loginfo("Set baudrate to 57600 on ID: " + str(unit_id))
@@ -222,6 +236,11 @@ class CB_BRITER(CBOperations):
                 logger.loginfo("Error in setting baudrate")
                 logger.loginfo("ERROR ID" + str(unit_id))
             rospy.sleep(0.5)
+            #iteration 1
+            """
+            if (unit_id != 1) and (unit_id != 3) and (counter_BRITER_set_number == 0):
+                rwr_unit_ID1 = modbus_client.write_registers(,1,unit=unit_id) 
+            """
         succeeded = True
         return succeeded
 

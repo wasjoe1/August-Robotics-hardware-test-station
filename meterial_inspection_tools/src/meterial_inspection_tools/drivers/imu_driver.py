@@ -512,6 +512,6 @@ class IMUChecker:
             return True
 
 if __name__ == "__main__":
-    rospy.init_node("imu_checker_node")
+    rospy.init_node("imu_driver_node")
     imu_checker = IMUChecker()
     imu_checker.start()
