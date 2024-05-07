@@ -1,6 +1,3 @@
-// import { lang } from './lang.js'
-// import { refresh_page_once_list } from './refresh_once.js'
-
 var ws_json
 var hostname
 var ip_addr = document.location.hostname
@@ -14,9 +11,6 @@ const found = url.match(regex)
 current_step = found[2]
 console.log("current step: ", current_step)
 
-gParam = undefined
-gSelectedComponentElement = undefined
-
 const buttonDict = {
     "scanBtn": "SCAN",
     "connectBtn": "CONNECT",
@@ -26,7 +20,7 @@ const buttonDict = {
     "saveBtn": "SAVE",
 }
 
-console.log("imu")
+console.log("sonar")
 
 // ------------------------------------------------------------------------------------------------
 // Functions
@@ -40,10 +34,9 @@ function parseStringToInt(str) {
     }
 }
 
-function createCmdData(buttonString, param) {
+function createCmdData(buttonString) {
     return {
         button: buttonString,
-        parameter: param,
     }
 }
 
@@ -74,7 +67,7 @@ function executeCommand(cmd) {
 
     var cmd_dict = {}
     cmd_dict[current_step] = cmd
-    cmd_str = JSON.stringify(cmd_dict) // i.e. {imu: {button:__, parameter:__}}
+    cmd_str = JSON.stringify(cmd_dict) // i.e. {imu: {button:__}}
     console.log("send cmd: " + cmd_str)
     var url = "http://" + ip_addr + "/command/" + cmd_str
     var request = new XMLHttpRequest()
@@ -86,17 +79,7 @@ function executeCommand(cmd) {
 // ------------------------------------------------------------------------------------------------
 // onClickEvents
 function onClickCommandBtn(element) {
-    executeCommand(createCmdData(buttonDict[element.id], gParam))    
-}
-
-function onClickSetParamBtn(element) {
-    gParam = element.getAttribute("parameter")
-    console.log(gParam)
-    if (gSelectedComponentElement) {
-        gSelectedComponentElement.classList.remove("selected")
-    }
-    element.classList.add("selected")
-    gSelectedComponentElement = element
+    executeCommand(createCmdData(buttonDict[element.id]))    
 }
 
 // TODO: create an event s.t. when page changes, clear all web sockets
@@ -105,16 +88,16 @@ function onClickSetParamBtn(element) {
 // ------------------------------------------------------------------------------------------------
 // SOCKET CONFIGS
 // open web socket connection for /data (imu data) => for the imu readings
-create_ws(ip_addr, "/imu_data", "responseData-data")
+create_ws(ip_addr, "/sonar_data", "responseData-data")
 
 // ------------------------------------------------------------------------------------------------
 // open web socket connection for /state => for the current state
-create_ws(ip_addr, "/imu_state", "responseData-state")
+create_ws(ip_addr, "/sonar_state", "responseData-state")
 
 // ------------------------------------------------------------------------------------------------
 // open web socket connection for /info => for user status
-create_ws(ip_addr, "/imu_info", "responseData-info")
+create_ws(ip_addr, "/sonar_info", "responseData-info")
 
 // ------------------------------------------------------------------------------------------------
 // open web socket connection for /configs => for user status
-create_ws(ip_addr, "/imu_configs", "responseData-configs")
+create_ws(ip_addr, "/sonar_configs", "responseData-configs")

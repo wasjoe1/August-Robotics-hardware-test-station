@@ -189,4 +189,64 @@ async def cb_imu_state(websocket: WebSocket):
             await websocket.send_text(f"{qData}")
             app.mi.pop_topic_state_msg("imu")
 
-# TODO add inclinometer & cb
+# TODO add inclinometer, cb, sonar, depth sensor
+# SONAR
+# /sonar_configs socket
+@app.websocket("/sonar_configs")
+async def cb_sonar_data(websocket: WebSocket):
+    logger.info("get websocket data from /sonar_configs topic.")
+    #TODO
+    await websocket.accept()
+    # global data
+    while True:
+        await asyncio.sleep(0.2)
+        if app.mi.has_topic_configs_msg("sonar"): # TODO: CHANGE 
+            qData = app.mi.get_topic_configs_msg("sonar") # TODO: CHANGE 
+            logger.info("queue data: {qData}")
+            await websocket.send_text(f"{qData}")
+            app.mi.pop_topic_configs_msg("sonar") # TODO: CHANGE 
+
+# /sonar_data socket
+@app.websocket("/sonar_data")
+async def cb_sonar_data(websocket: WebSocket):
+    logger.info("get websocket data from /sonar_data topic.")
+    #TODO
+    await websocket.accept()
+    # global data
+    while True:
+        await asyncio.sleep(0.2)
+        if app.mi.has_topic_data_msg("sonar"):
+            qData = app.mi.get_topic_data_msg("sonar")
+            logger.info(f"queue data: {qData}")
+            await websocket.send_text(f"{qData}") # always take the 1st message in the queue
+            app.mi.pop_topic_data_msg("sonar")
+
+# /sonar_info socket
+@app.websocket("/sonar_info")
+async def cb_sonar_state(websocket: WebSocket):
+    logger.info("get websocket data from /sonar_info topic.")
+    #TODO
+    await websocket.accept()
+    # global data
+    while True:
+        await asyncio.sleep(0.2)
+        if app.mi.has_topic_info_msg("sonar"):
+            qData = app.mi.get_topic_info_msg("sonar")
+            logger.info(f"queue data: {qData}")
+            await websocket.send_text(f"{qData}")
+            app.mi.pop_topic_info_msg("sonar")
+
+# /sonar_state socket
+@app.websocket("/sonar_state")
+async def cb_sonar_state(websocket: WebSocket):
+    logger.info("get websocket data from /sonar_state topic.")
+    #TODO
+    await websocket.accept()
+    # global data
+    while True:
+        await asyncio.sleep(0.2)
+        if app.mi.has_topic_state_msg("sonar"):
+            qData = app.mi.get_topic_state_msg("sonar")
+            logger.info(f"queue data: {qData}")
+            await websocket.send_text(f"{qData}")
+            app.mi.pop_topic_state_msg("sonar")

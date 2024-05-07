@@ -11,7 +11,7 @@
   <script src="../static/bootstrap.min.js"></script>
 
   <link rel="stylesheet" href="../static/hr.css">
-  <script src="../static/imu.js"></script>
+  <script src="../static/sonar.js"></script>
 </head>
 
 <body onload="">
@@ -36,13 +36,6 @@
       <div id="responseData-data" class="display-content-div">{{ responseData["data"] }}</div>
       <h4 class="display-content-header">Response information</h4>
       <div id="responseData-info" class="display-content-div">{{ responseData["info"]["message"] }}</div>
-    </div>
-
-    <!-- middle of body -->
-    <div style="display: flex; flex-direction: column; background-color: darksalmon;">
-      <!-- buttons -->
-      <button class="btn btn-default" id="RIONBtn" parameter="RION" onclick="onClickSetParamBtn(this)">RION</button>
-      <button class="btn btn-default" id="WITBtn" parameter="WIT" onclick="onClickSetParamBtn(this)">WIT</button>
     </div>
 
     <!-- right of body -->

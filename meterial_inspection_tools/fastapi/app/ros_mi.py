@@ -66,13 +66,6 @@ class MeterialInspection():
     # -------------------------------------------------------------------------------------------------
     # Subscriber call back functions & msg functions
     # CONFIGS TOPIC
-    
-    def topic_configs_cb(self, msg, cb_args):
-        func = lambda a: a.replace("/","").replace("data","")
-        # func(cb_args["name"]) => returns "imu", msg is wtv data there is in the topic
-        data_to_send = json.dumps({func(cb_args["name"]): convert_ros_message_to_dictionary(msg)})
-        self.topic_configs_send_queue["imu"].append(data_to_send)
-    
     def has_topic_configs_msg(self, component):
         return len(self.topic_configs_send_queue[component]) > 0
     
@@ -84,14 +77,6 @@ class MeterialInspection():
         return self.topic_configs_send_queue[component][0]
 
     # DATA TOPIC
-    
-    def topic_data_cb(self, msg, cb_args):
-        func = lambda a: a.replace("/","").replace("data","")
-        # func(cb_args["name"]) => returns "imu", msg is wtv data there is in the topic
-        data_to_send = json.dumps({func(cb_args["name"]): convert_ros_message_to_dictionary(msg)})
-        self.topic_data_send_queue["imu"].append(data_to_send)
-        
-
     def has_topic_data_msg(self, component):
         return len(self.topic_data_send_queue[component]) > 0
     
@@ -103,12 +88,6 @@ class MeterialInspection():
             del self.topic_data_send_queue[component][0]
     
     # INFO TOPIC
-    def topic_info_cb(self, msg, cb_args):
-        func = lambda a: a.replace("/","").replace("data","")
-        # func(cb_args["name"]) => returns "imu", msg is wtv data there is in the topic
-        data_to_send = json.dumps({func(cb_args["name"]): convert_ros_message_to_dictionary(msg)})
-        self.topic_info_send_queue["imu"].append(data_to_send)
-
     def get_topic_info_msg(self, component):
         return self.topic_info_send_queue[component][0]
 
@@ -120,13 +99,6 @@ class MeterialInspection():
             del self.topic_info_send_queue[component][0]
 
     # STATE TOPIC
-    
-    def topic_state_cb(self, msg, cb_args):
-        func = lambda a: a.replace("/","").replace("data","")
-        # func(cb_args["name"]) => returns "imu", msg is wtv data there is in the topic
-        data_to_send = json.dumps({func(cb_args["name"]): convert_ros_message_to_dictionary(msg)})
-        self.topic_state_send_queue["imu"].append(data_to_send)
-
     def get_topic_state_msg(self, component):
         return self.topic_state_send_queue[component][0]
 
@@ -136,6 +108,40 @@ class MeterialInspection():
     def pop_topic_state_msg(self, component):
         if len(self.topic_state_send_queue[component]) > 0:
             del self.topic_state_send_queue[component][0]
+            
+    # -------------------------------------------------------------------------------------------------
+    # CALLBACKS
+    def topic_configs_cb(self, msg, cb_args):
+        func = lambda a: a.replace("/","").replace("data","")
+        print("call back args in topics", cb_args["name"])
+        print("call back args filtered in topics", func(cb_args["name"]))
+        # func(cb_args["name"]) => returns "imu", msg is wtv data there is in the topic
+        data_to_send = json.dumps({func(cb_args["name"]): convert_ros_message_to_dictionary(msg)})
+        self.topic_configs_send_queue[func(cb_args["name"])].append(data_to_send)
+
+    def topic_data_cb(self, msg, cb_args):
+        func = lambda a: a.replace("/","").replace("data","")
+        print("call back args in topics", cb_args["name"])
+        print("call back args filtered in topics", func(cb_args["name"]))
+        # func(cb_args["name"]) => returns "imu", msg is wtv data there is in the topic
+        data_to_send = json.dumps({func(cb_args["name"]): convert_ros_message_to_dictionary(msg)})
+        self.topic_data_send_queue[func(cb_args["name"])].append(data_to_send)
+    
+    def topic_info_cb(self, msg, cb_args):
+        func = lambda a: a.replace("/","").replace("data","")
+        print("call back args in topics", cb_args["name"])
+        print("call back args filtered in topics", func(cb_args["name"]))
+        # func(cb_args["name"]) => returns "imu", msg is wtv data there is in the topic
+        data_to_send = json.dumps({func(cb_args["name"]): convert_ros_message_to_dictionary(msg)})
+        self.topic_info_send_queue[func(cb_args["name"])].append(data_to_send)
+    
+    def topic_state_cb(self, msg, cb_args):
+        func = lambda a: a.replace("/","").replace("data","")
+        print("call back args in topics", cb_args["name"])
+        print("call back args filtered in topics", func(cb_args["name"]))
+        # func(cb_args["name"]) => returns "imu", msg is wtv data there is in the topic
+        data_to_send = json.dumps({func(cb_args["name"]): convert_ros_message_to_dictionary(msg)})
+        self.topic_state_send_queue[func(cb_args["name"])].append(data_to_send)
 
     # -------------------------------------------------------------------------------------------------
     # service calls
