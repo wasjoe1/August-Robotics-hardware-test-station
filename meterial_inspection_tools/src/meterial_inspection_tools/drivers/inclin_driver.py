@@ -105,6 +105,7 @@ class InclinSVT626T (InclinOperations):
                 logger.loginfo("CLIENT NOT CONNECTED")
             rhr = modbus_client.read_holding_registers(0x01,4,slave=unit_id)
             if rhr.isError():
+                logger.loginfo(rhr)
                 return None, None
             x = reg2f(*rhr.registers[0:2])
             y = reg2f(*rhr.registers[2:4])
@@ -118,6 +119,7 @@ class InclinSVT626T (InclinOperations):
         for unit_id in self.UNIT_ID_CHECKLIST: 
             temp_client = ModbusClient(**configs)
             x,y = self.parse_reading(temp_client,unit_id)
+            logger.loginfo(unit_id)
             if x is not None:
                 modbus_client = temp_client
                 unit_id_constant = unit_id
@@ -142,7 +144,7 @@ class InclinSVT626T (InclinOperations):
         succeeded = False
         data_zero_point = 0x01
         logger.loginfo("Setting relative zero point")
-        rwr = modbus_client.write_register(0x0B, data_zero_point, slave=unit_id)
+        rwr = modbus_client.write_register(0x0B, data_zero_point, unit=unit_id)
         if not rwr.isError():
             logger.loginfo(
                 "Set {} zero point".format(["Relative" if data_zero_point else "Absolute"])
@@ -151,7 +153,7 @@ class InclinSVT626T (InclinOperations):
         rwr = modbus_client.write_register(0x0C, baudrate_set, slave=unit_id)
         if not rwr.isError():
             logger.loginfo("Set baudrate to: {}".format(InclinSVT626T.BAUDRATE_TABLE[baudrate_set]))
-        rwr = modbus_client.write_register(0x0D,3, slave=unit_id)
+        rwr = modbus_client.write_register(0x0D,3, unit=unit_id)
         logger.loginfo("Set unit_id to: {}".format(3))
         succeeded = True
         return succeeded
@@ -160,7 +162,7 @@ class InclinSVT626T (InclinOperations):
     @staticmethod
     def save_parameters(modbus_client,unit_id):
         data = 0x00
-        rwr = modbus_client.write_register(0x0F, data, slave=unit_id)
+        rwr = modbus_client.write_register(0x0F, data, unit=unit_id)
         return True
     
     @staticmethod

@@ -223,7 +223,6 @@ class DYP_SONAR():
                         address_counter += 1
                     if rwr_unit.isError():
                         pass
-        logger.loginfo("HERE")
         succeeded = True
         return succeeded
         
