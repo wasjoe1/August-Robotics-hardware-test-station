@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 
 import asyncio # allows your program to run async functions/codes
-import socket # 
+import socket 
 
 from fastapi import Request
 from fastapi import WebSocket
@@ -15,9 +15,7 @@ from fastapi.templating import Jinja2Templates
 
 import os # allows programmer to perform OS dependent operations i.e. reading & writing to files
 
-import grpc
 import _thread
-import time
 from concurrent import futures
 
 
@@ -128,125 +126,61 @@ async def command(request: Request, cmd: str):
 
 # -------------------------------------------------------------------------------------------------
 # WEBSOCKETS (for frontend to connect to)
+
+async def listen_to_websocket(websocket, topic, component):
+    logger.info(f"get websocket data from /{component}_{topic} topic.")
+    #TODO
+    await websocket.accept()
+    while True:
+        await asyncio.sleep(0.2)
+        if app.mi.has_topic_msg(topic, component):
+            qData = app.mi.get_topic_msg(topic, component)
+            logger.info(f"queue data: {qData}")
+            await websocket.send_text(f"{qData}")
+            app.mi.pop_topic_msg(topic, component)
+
 # IMU
 # /imu_configs socket
-@app.websocket("/imu_configs")
+@app.websocket("/imu/configs")
 async def cb_imu_data(websocket: WebSocket):
-    logger.info("get websocket data from /imu_configs topic.")
-    #TODO
-    await websocket.accept()
-    # global data
-    while True:
-        await asyncio.sleep(0.2)
-        if app.mi.has_topic_configs_msg("imu"): # TODO: CHANGE 
-            qData = app.mi.get_topic_configs_msg("imu") # TODO: CHANGE 
-            logger.info("queue data: {qData}")
-            await websocket.send_text(f"{qData}")
-            app.mi.pop_topic_configs_msg("imu") # TODO: CHANGE 
+    await listen_to_websocket(websocket, "configs", "imu")
 
 # /imu_data socket
-@app.websocket("/imu_data")
+@app.websocket("/imu/data")
 async def cb_imu_data(websocket: WebSocket):
-    logger.info("get websocket data from /imu_data topic.")
-    #TODO
-    await websocket.accept()
-    # global data
-    while True:
-        await asyncio.sleep(0.2)
-        if app.mi.has_topic_data_msg("imu"):
-            qData = app.mi.get_topic_data_msg("imu")
-            logger.info(f"queue data: {qData}")
-            await websocket.send_text(f"{qData}") # always take the 1st message in the queue
-            app.mi.pop_topic_data_msg("imu")
+    await listen_to_websocket(websocket, "data", "imu")
 
 # /imu_info socket
-@app.websocket("/imu_info")
+@app.websocket("/imu/info")
 async def cb_imu_state(websocket: WebSocket):
-    logger.info("get websocket data from /imu_info topic.")
-    #TODO
-    await websocket.accept()
-    # global data
-    while True:
-        await asyncio.sleep(0.2)
-        if app.mi.has_topic_info_msg("imu"):
-            qData = app.mi.get_topic_info_msg("imu")
-            logger.info(f"queue data: {qData}")
-            await websocket.send_text(f"{qData}")
-            app.mi.pop_topic_info_msg("imu")
+    await listen_to_websocket(websocket, "info", "imu")
 
 # /imu_state socket
-@app.websocket("/imu_state")
+@app.websocket("/imu/state")
 async def cb_imu_state(websocket: WebSocket):
-    logger.info("get websocket data from /imu_state topic.")
-    #TODO
-    await websocket.accept()
-    # global data
-    while True:
-        await asyncio.sleep(0.2)
-        if app.mi.has_topic_state_msg("imu"):
-            qData = app.mi.get_topic_state_msg("imu")
-            logger.info(f"queue data: {qData}")
-            await websocket.send_text(f"{qData}")
-            app.mi.pop_topic_state_msg("imu")
+    await listen_to_websocket(websocket, "state", "imu")
 
-# TODO add inclinometer, cb, sonar, depth sensor
+
 # SONAR
 # /sonar_configs socket
-@app.websocket("/sonar_configs")
+@app.websocket("/sonar/configs")
 async def cb_sonar_data(websocket: WebSocket):
-    logger.info("get websocket data from /sonar_configs topic.")
-    #TODO
-    await websocket.accept()
-    # global data
-    while True:
-        await asyncio.sleep(0.2)
-        if app.mi.has_topic_configs_msg("sonar"): # TODO: CHANGE 
-            qData = app.mi.get_topic_configs_msg("sonar") # TODO: CHANGE 
-            logger.info("queue data: {qData}")
-            await websocket.send_text(f"{qData}")
-            app.mi.pop_topic_configs_msg("sonar") # TODO: CHANGE 
+    await listen_to_websocket(websocket, "configs", "sonar")
 
 # /sonar_data socket
-@app.websocket("/sonar_data")
+@app.websocket("/sonar/data")
 async def cb_sonar_data(websocket: WebSocket):
-    logger.info("get websocket data from /sonar_data topic.")
-    #TODO
-    await websocket.accept()
-    # global data
-    while True:
-        await asyncio.sleep(0.2)
-        if app.mi.has_topic_data_msg("sonar"):
-            qData = app.mi.get_topic_data_msg("sonar")
-            logger.info(f"queue data: {qData}")
-            await websocket.send_text(f"{qData}") # always take the 1st message in the queue
-            app.mi.pop_topic_data_msg("sonar")
+    await listen_to_websocket(websocket, "data", "sonar")
 
 # /sonar_info socket
-@app.websocket("/sonar_info")
+@app.websocket("/sonar/info")
 async def cb_sonar_state(websocket: WebSocket):
-    logger.info("get websocket data from /sonar_info topic.")
-    #TODO
-    await websocket.accept()
-    # global data
-    while True:
-        await asyncio.sleep(0.2)
-        if app.mi.has_topic_info_msg("sonar"):
-            qData = app.mi.get_topic_info_msg("sonar")
-            logger.info(f"queue data: {qData}")
-            await websocket.send_text(f"{qData}")
-            app.mi.pop_topic_info_msg("sonar")
+    await listen_to_websocket(websocket, "info", "sonar")
 
 # /sonar_state socket
-@app.websocket("/sonar_state")
+@app.websocket("/sonar/state")
 async def cb_sonar_state(websocket: WebSocket):
-    logger.info("get websocket data from /sonar_state topic.")
-    #TODO
-    await websocket.accept()
-    # global data
-    while True:
-        await asyncio.sleep(0.2)
-        if app.mi.has_topic_state_msg("sonar"):
-            qData = app.mi.get_topic_state_msg("sonar")
-            logger.info(f"queue data: {qData}")
-            await websocket.send_text(f"{qData}")
-            app.mi.pop_topic_state_msg("sonar")
+    await listen_to_websocket(websocket, "state", "sonar")
+
+
+# TODO add inclinometer, cb, sonar, depth sensor

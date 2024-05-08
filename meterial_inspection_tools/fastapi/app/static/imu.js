@@ -105,16 +105,16 @@ function onClickSetParamBtn(element) {
 // ------------------------------------------------------------------------------------------------
 // SOCKET CONFIGS
 // open web socket connection for /data (imu data) => for the imu readings
-create_ws(ip_addr, "/imu_data", "responseData-data")
+create_ws(ip_addr, "/imu/data", "responseData-data")
 
 // ------------------------------------------------------------------------------------------------
 // open web socket connection for /state => for the current state
-create_ws(ip_addr, "/imu_state", "responseData-state")
+create_ws(ip_addr, "/imu/state", "responseData-state")
 
 // ------------------------------------------------------------------------------------------------
 // open web socket connection for /info => for user status
-create_ws(ip_addr, "/imu_info", "responseData-info")
+create_ws(ip_addr, "/imu/info", "responseData-info")
 
 // ------------------------------------------------------------------------------------------------
 // open web socket connection for /configs => for user status
-create_ws(ip_addr, "/imu_configs", "responseData-configs")
+create_ws(ip_addr, "/imu/configs", "responseData-configs")

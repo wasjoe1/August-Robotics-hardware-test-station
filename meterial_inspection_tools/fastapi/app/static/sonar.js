@@ -22,15 +22,16 @@ const buttonDict = {
 
 function formatSonarDataReadings(data) {
     if (!data) { return data }
-    console.log(data)
+    // console.log(data)
     data = JSON.parse(data)["sonar"]["data"]
+    console.log(data)
     data = data.split("\\n")
     data.pop() // remove the " at the end
     data.shift() // remove the " at the start
     
     var container = document.createElement("div")
     for (var i = 0; i < data.length; i++) {
-        var div = document.createElement("div")
+        var div = document.createElement("pre")
         div.textContent = data[i]
         container.appendChild(div)
     }
@@ -38,10 +39,10 @@ function formatSonarDataReadings(data) {
 }
 
 const route_data_formatters = {
-    "/sonar_state": (data) => JSON.parse(data)["sonar"]["data"],
-    "/sonar_configs": (data) => JSON.parse(data)["sonar"]["data"],
-    "/sonar_data": formatSonarDataReadings,
-    "/sonar_info": (data) => JSON.parse(data)["sonar"]["data"],
+    "/sonar/state": (data) => JSON.parse(data)["sonar"]["data"],
+    "/sonar/configs": (data) => JSON.parse(data)["sonar"]["data"],
+    "/sonar/data": formatSonarDataReadings,
+    "/sonar/info": (data) => JSON.parse(data)["sonar"]["data"],
 }
 
 
@@ -75,7 +76,7 @@ function create_ws(ip_addr, route, elementId) {
         ws.send('Hello ws data!');
     });
     ws.onmessage = function(evt) {
-        if (route == "/sonar_data") {
+        if (route == "/sonar/data") {
             document.getElementById(elementId).replaceChildren(route_data_formatters[route](evt.data))
         } else {
             document.getElementById(elementId).textContent = route_data_formatters[route](evt.data)
@@ -117,17 +118,17 @@ function onClickCommandBtn(element) {
 // ------------------------------------------------------------------------------------------------
 // SOCKET CONFIGS
 // open web socket connection for /data (imu data) => for the imu readings
-create_ws(ip_addr, "/sonar_data", "responseData-data")
+create_ws(ip_addr, "/sonar/data", "responseData-data")
 
 // ------------------------------------------------------------------------------------------------
 // open web socket connection for /state => for the current state
-create_ws(ip_addr, "/sonar_state", "responseData-state")
+create_ws(ip_addr, "/sonar/state", "responseData-state")
 
 // ------------------------------------------------------------------------------------------------
 // open web socket connection for /info => for user status
-create_ws(ip_addr, "/sonar_info", "responseData-info")
+create_ws(ip_addr, "/sonar/info", "responseData-info")
 
 // ------------------------------------------------------------------------------------------------
 // open web socket connection for /configs => for user status
-create_ws(ip_addr, "/sonar_configs", "responseData-configs")
+create_ws(ip_addr, "/sonar/configs", "responseData-configs")
 
