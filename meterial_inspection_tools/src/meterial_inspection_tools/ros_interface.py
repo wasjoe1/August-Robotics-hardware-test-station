@@ -59,14 +59,14 @@ msg_dict = {
     #     "srv": LDLIDAR_SRV_CMD
     # },
     "imu":{
+        "srv": IMU_SRV_CMD,
         "topic_data": IMU_DATA,
         "topic_state": IMU_STATE,
         "topic_info": IMU_INFO,
         "topic_configs": IMU_CONFIGS,
-        "srv": IMU_SRV_CMD
     },
     
-    "inclin": {
+    "inclinometer": {
         "srv" : INCLINOMETER_SRV_CMD,
         "topic_data": INCLINOMETER_DATA,
         "topic_state": INCLINOMETER_STATE,
@@ -74,28 +74,28 @@ msg_dict = {
         "topic_configs": INCLINOMETER_CONFIGS,
     },
 
-    "CB":{
+    "cb":{
         "srv" : CB_SRV_CMD,
+        "topic_data": CB_DATA,
         "topic_state": CB_STATE,
         "topic_info": CB_INFO,
         "topic_configs": CB_CONFIGS,
-        "topic_data":CB_DATA,
     },
 
-    "Sonar":{
+    "sonar":{
+        "srv": SONAR_SRV_CMD,
         "topic_data": SONAR_DATA,
         "topic_state": SONAR_STATE,
         "topic_info": SONAR_INFO,
         "topic_configs": SONAR_CONFIGS,
-        "srv": SONAR_SRV_CMD,
     },
 
-    "Depth_Camera":{
+    "depth_camera":{
+        "srv": DEPTH_SRV_CMD,
         "topic_data": DEPTH_DATA,
         "topic_state": DEPTH_STATE,
         "topic_info": DEPTH_INFO,
         "topic_configs": DEPTH_CONFIGS,
         "topic_image": DEPTH_IMAGE,
-        "srv": DEPTH_SRV_CMD,
     }
 }

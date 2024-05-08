@@ -10,19 +10,18 @@
   <script src="../static/jquery.min.js"></script>
   <script src="../static/bootstrap.min.js"></script>
   <link rel="stylesheet" href="../static/hr.css">
-  <script src="../static/draw_lidar.js"></script>
   <script src="../static/meterial_inspection.js"></script>
-  <script src="../static/imu.js"></script>
 </head>
 
 <body onload="">
   <!-- Header portion -->
   <div style="height:3%;width:100%;">
     <h3 id="title"> 澳谷一站式检测工具 </h3>
-    <button hidden="hidden"  type="button" class="btn btn-default" onclick="location.href='/'">主页</button>
-    <button hidden="hidden"  type="button" class="btn btn-default" onclick="location.href='/step/sonar'">超声波</button>
-    <button hidden="hidden" type="button" class="btn btn-default" onclick="location.href='/step/ldlidar'">LD雷达</button>
-    <button hidden="hidden"  type="button" class="btn btn-default" onclick="location.href='/step/imu'">IMU</button>
+    <button type="button" class="btn btn-default" onclick="location.href='/'">主页</button>
+    <button type="button" class="btn btn-default" onclick="location.href='/step/imu'">IMU</button>
+    <button type="button" class="btn btn-default" onclick="location.href='/step/inclinometer'">Inclinometer</button>
+    <button type="button" class="btn btn-default" onclick="location.href='/step/encoder'">Encoder & motor driver</button>
+    <button type="button" class="btn btn-default" onclick="location.href='/step/sonar'">超声波</button>
     <hr />
   </div>
   
@@ -30,8 +29,8 @@
   <div class="flex-container" style="justify-content: space-between;">
     <!-- left of body -->
     <div>
-      <h4 id="readings">Readings</h4>
-      <div id="responseData-data">{{ responseData["data"] }}</div>
+      <h4 id="instructions-container">Instructions</h4>
+      <div id="responseData-data">{{ responseData["instrcutions"] }}</div>
       <h4>State</h4>
       <div id="responseData-state">{{ responseData["state"] }}</div>
     </div>

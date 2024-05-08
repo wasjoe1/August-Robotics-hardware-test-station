@@ -1,0 +1,17 @@
+{
+    "buttons": [
+        {"id": "SCAN", "content": "SCAN"},
+        {"id": "CONNECT", "content": "CONNECT"},
+        {"id": "DISCONNECT", "content": "DISCONNECT"},
+        {"id": "DISCONNECT", "content": "DISCONNECT"},
+        {"id": "SET_DEFAULT", "content": "SET DEFAULT"},
+        {"id": "SAVE", "content": "SAVE"}
+    ],
+    "topics": [
+        {"topic": "/imu/state", "topic_header": "State"},
+        {"topic": "/imu/configs", "topic_header": "Configurations"},
+        {"topic": "/imu/data", "topic_header": "Data"},
+        {"topic": "/imu/info", "topic_header": "Information"}
+    ],
+    "service": "/imu/src_cmd"
+}

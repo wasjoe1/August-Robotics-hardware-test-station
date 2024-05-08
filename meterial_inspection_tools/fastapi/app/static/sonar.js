@@ -1,6 +1,3 @@
-// import { lang } from './lang.js'
-// import { refresh_page_once_list } from './refresh_once.js'
-
 var ws_json
 var hostname
 var ip_addr = document.location.hostname
@@ -14,9 +11,6 @@ const found = url.match(regex)
 current_step = found[2]
 console.log("current step: ", current_step)
 
-gParam = undefined
-gSelectedComponentElement = undefined
-
 const buttonDict = {
     "scanBtn": "SCAN",
     "connectBtn": "CONNECT",
@@ -26,7 +20,32 @@ const buttonDict = {
     "saveBtn": "SAVE",
 }
 
-console.log("imu")
+function formatSonarDataReadings(data) {
+    if (!data) { return data }
+    console.log(data)
+    data = JSON.parse(data)["sonar"]["data"]
+    data = data.split("\\n")
+    data.pop() // remove the " at the end
+    data.shift() // remove the " at the start
+    
+    var container = document.createElement("div")
+    for (var i = 0; i < data.length; i++) {
+        var div = document.createElement("div")
+        div.textContent = data[i]
+        container.appendChild(div)
+    }
+    return container
+}
+
+const route_data_formatters = {
+    "/sonar_state": (data) => JSON.parse(data)["sonar"]["data"],
+    "/sonar_configs": (data) => JSON.parse(data)["sonar"]["data"],
+    "/sonar_data": formatSonarDataReadings,
+    "/sonar_info": (data) => JSON.parse(data)["sonar"]["data"],
+}
+
+
+console.log("sonar")
 
 // ------------------------------------------------------------------------------------------------
 // Functions
@@ -40,10 +59,9 @@ function parseStringToInt(str) {
     }
 }
 
-function createCmdData(buttonString, param) {
+function createCmdData(buttonString) {
     return {
         button: buttonString,
-        parameter: param,
     }
 }
 
@@ -51,13 +69,17 @@ function createCmdData(buttonString, param) {
 var gAll_ws_connections = []
 
 function create_ws(ip_addr, route, elementId) {
-    const ws = new WebSocket("ws://" + ip_addr + route) // route == /imu_smt
+    const ws = new WebSocket("ws://" + ip_addr + route) // route == /imu_smt != topics -> /imu/configs
     ws.addEventListener('open', function(event) {
         console.log(`${route} socket was opended`)
         ws.send('Hello ws data!');
     });
-    ws.onmessage = function(evt) {    
-        document.getElementById(elementId).textContent = evt.data 
+    ws.onmessage = function(evt) {
+        if (route == "/sonar_data") {
+            document.getElementById(elementId).replaceChildren(route_data_formatters[route](evt.data))
+        } else {
+            document.getElementById(elementId).textContent = route_data_formatters[route](evt.data)
+        }
         return evt.data
     }
     gAll_ws_connections.push(ws)
@@ -74,7 +96,7 @@ function executeCommand(cmd) {
 
     var cmd_dict = {}
     cmd_dict[current_step] = cmd
-    cmd_str = JSON.stringify(cmd_dict) // i.e. {imu: {button:__, parameter:__}}
+    cmd_str = JSON.stringify(cmd_dict) // i.e. {imu: {button:__}}
     console.log("send cmd: " + cmd_str)
     var url = "http://" + ip_addr + "/command/" + cmd_str
     var request = new XMLHttpRequest()
@@ -86,17 +108,7 @@ function executeCommand(cmd) {
 // ------------------------------------------------------------------------------------------------
 // onClickEvents
 function onClickCommandBtn(element) {
-    executeCommand(createCmdData(buttonDict[element.id], gParam))    
-}
-
-function onClickSetParamBtn(element) {
-    gParam = element.getAttribute("parameter")
-    console.log(gParam)
-    if (gSelectedComponentElement) {
-        gSelectedComponentElement.classList.remove("selected")
-    }
-    element.classList.add("selected")
-    gSelectedComponentElement = element
+    executeCommand(createCmdData(buttonDict[element.id]))    
 }
 
 // TODO: create an event s.t. when page changes, clear all web sockets
@@ -105,16 +117,17 @@ function onClickSetParamBtn(element) {
 // ------------------------------------------------------------------------------------------------
 // SOCKET CONFIGS
 // open web socket connection for /data (imu data) => for the imu readings
-create_ws(ip_addr, "/imu_data", "responseData-data")
+create_ws(ip_addr, "/sonar_data", "responseData-data")
 
 // ------------------------------------------------------------------------------------------------
 // open web socket connection for /state => for the current state
-create_ws(ip_addr, "/imu_state", "responseData-state")
+create_ws(ip_addr, "/sonar_state", "responseData-state")
 
 // ------------------------------------------------------------------------------------------------
 // open web socket connection for /info => for user status
-create_ws(ip_addr, "/imu_info", "responseData-info")
+create_ws(ip_addr, "/sonar_info", "responseData-info")
 
 // ------------------------------------------------------------------------------------------------
 // open web socket connection for /configs => for user status
-create_ws(ip_addr, "/imu_configs", "responseData-configs")
+create_ws(ip_addr, "/sonar_configs", "responseData-configs")
+

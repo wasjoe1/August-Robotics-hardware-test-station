@@ -25,10 +25,46 @@ hr {
 
 .flex-container {
     display: flex;
-    background-color: DodgerBlue;
+    background-color: #cccccc;
 }
 
 div label,
 div input {
     display: block; /* Make labels and inputs behave like block-level elements */
+}
+
+/* Displaying content */
+.display-content-header {
+    background-color: #f5f5f5;
+}
+
+.display-content-div {
+    background-color: darksalmon;
+}
+
+/* Buttons */
+button {
+    border: none;
+    cursor: pointer;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+  }
+  
+/* Default button color */
+button {
+    background-color: #4CAF50; /* Green */
+    color: white;
+}
+
+/* Hover effect */
+button:hover {
+    background-color: #45a049; /* Darker green */
+}
+
+/* Active/focus effect */
+button:active {
+    background-color: #3e8e41; /* Dark green */
 }
