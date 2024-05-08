@@ -214,6 +214,7 @@ class InclinChecker:
     def srv_cb(self,srv): 
         self.command = srv.button
         self.cmd_params = srv.parameter
+        return True
 
     @property
     def command(self):
@@ -297,6 +298,7 @@ class InclinChecker:
     
     def set_default_settings(self):
         if self.inclinometer_model.set_default_settings(self.modbus_client,self.unit_id):
+            self.log_with_frontend("SETTING SET")
             return True
     
     def save_parameters(self): 
