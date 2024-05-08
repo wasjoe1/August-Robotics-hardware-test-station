@@ -481,6 +481,7 @@ class IMUChecker:
             serial_port: Serial = imu_model.scan(self = IMUOperations,port = self.PORT)
             if serial_port:
                 self.log_with_frontend(f"Found IMU model: {imu_model.IMU_TYPE} with baudrate: {serial_port.baudrate}!!")
+                self.pub_configs.publish(json.dumps(imu_model.IMU_TYPE))
                 self.imu_model = imu_model
                 self.serial_port = serial_port
                 self.state = IMUCheckerStates.CONNECTED
@@ -504,6 +505,7 @@ class IMUChecker:
     def set_default_settings(self):
         if self.imu_model.set_default_settings(self.PORT):
             logger.loginfo(self.serial_port)
+            self.log_with_frontend("SETTING SET")
             return True
 
     def save_parameters(self):

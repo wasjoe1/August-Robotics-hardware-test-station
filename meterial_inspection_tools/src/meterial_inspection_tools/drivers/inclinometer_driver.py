@@ -297,6 +297,7 @@ class InclinChecker:
     
     def set_default_settings(self):
         if self.inclinometer_model.set_default_settings(self.modbus_client,self.unit_id):
+            self.log_with_frontend("SETTING SET")
             return True
     
     def save_parameters(self): 

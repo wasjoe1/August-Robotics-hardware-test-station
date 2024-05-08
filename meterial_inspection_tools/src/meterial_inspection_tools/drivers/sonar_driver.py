@@ -364,7 +364,7 @@ class SonarChecker:
         if self.parse_thread and self.parse_thread.is_alive():
             self.parse_thread.join()
         if self.sonar_model.set_default_settings(self= self.sonar_model,modbus_client=self.modbus_client):
-            self.log_with_frontend("Set default settings")
+            self.log_with_frontend("SETTING SET")
             return True
     
     def save_parameters(self): 

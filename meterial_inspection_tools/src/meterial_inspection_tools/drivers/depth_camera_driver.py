@@ -22,7 +22,6 @@ import rospy
 logger = rospy
 from enum import Enum,auto
 import json
-#from open3d import io
 from meterial_inspection_tools.ros_interface import (
     DEPTH_SRV_CMD,
     DEPTH_DATA,
@@ -36,6 +35,7 @@ from std_srvs.srv import Empty
 class DEPTHCommands(Enum):
     NONE = auto()
     RESET = auto()
+    #SCAN = auto()
     CONNECT = auto()
     DISCONNECT = auto()
     GET_POINTCLOUD = auto()
@@ -170,7 +170,14 @@ class DepthChecker:
     def command(self, value: str):
         try:
             self._command = DEPTHCommands[value.upper()]
-            logger.loginfo(f"Command set as: {self._command}")driver
+            logger.loginfo(f"Command set as: {self._command}")
+        except Exception as e:
+            self.log_with_frontend(f"Received wrong command: {value}!!")
+            self._command = DEPTHCommands.NONE
+
+    @property
+    def state(self):
+        return self._state
     @state.setter
     def state(self, value: DepthCheckerStates):
         if self._state != value:
@@ -193,7 +200,12 @@ class DepthChecker:
             l.sleep()
 
     def initialize(self):
-        self.state = DepthCheckerStates.IDLEdriver
+        self.state = DepthCheckerStates.IDLE
+
+    def connect(self):
+        self.state = DepthCheckerStates.CONNECTING
+        connected = self.depthcamera_model.connect(self.port)
+        if connected:
             self.log_with_frontend("Connected to astra camera")
             self.state = DepthCheckerStates.CONNECTED
             return True
@@ -214,7 +226,12 @@ class DepthChecker:
     def disconnect(self):
         self.log_with_frontend("DISCONNECTING")
         self.state = DepthCheckerStates.IDLE
-        return Truedriver
+        return True
+    
+    def get_data_subscriber(self,data):
+        global data_global
+        data_global = data
+        return data
 
 """
     def parse_reading(self):
