@@ -91,6 +91,9 @@ class DYP_SONAR():
                 |     |                             |     |
                 |     |                             |     |
                 |_____|_____ _____ _____ ___________|_____|
+                |     |  7  |     |  6  |     |  5  |     |
+                |     | {} |     |{} |     |{} |     |
+                |_____|_{}___|_____|_{}___|_____|_{}__|_____|
 
     """.format(
         format(dis[0]),format(dis[1]),format(dis[2]), 
@@ -218,10 +221,7 @@ class DYP_SONAR():
                     logger.loginfo("Set baudrate to 9600")
                     UNIT = self.UNIT_DICT_SETTER[str(address_counter)]
                     rwr_unit = modbus_client.write_register(0x200,UNIT, unit=unit_default) #set unit
-                    if not rwr_unit.isError(): 
-                        logger.loginfo("Set unit ID to " + str(hex(UNIT)))
-                        address_counter += 1
-                    if rwr_unit.isError():
+                    if not rwr_unit.isEconfigsr():
                         pass
         succeeded = True
         return succeeded
@@ -274,6 +274,7 @@ class SonarChecker:
 
     def srv_cb(self, srv):
         self.command = srv.button
+        return True
 
     @property
     def command(self):

@@ -1,10 +1,16 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
+"""
+
+INSTRUCTIONS: 
+1. This script prase reading and sets baudrate for WIT and RION IMUs
+"""
 
 import rospy
 from sensor_msgs.msg import Imu
 logger = rospy
 from enum import Enum, auto
+import serial
 from serial import Serial
 import json
 import numpy as np
@@ -390,13 +396,14 @@ class IMUChecker:
             (IMUCommands.NONE, IMUCheckerStates.CONNECTED): self.parse_reading, # stay
             (IMUCommands.SET_DEFAULT, IMUCheckerStates.CONNECTED): self.set_default_settings, # stay
             (IMUCommands.SAVE, IMUCheckerStates.CONNECTED): self.save_parameters, # stay
+            (IMUCommands.NONE,IMUCheckerStates.IDLE): self.check_connection
         }
 
 
     def srv_cb(self, srv):
         self.command = srv.button
         self.cmd_params = srv.parameter
-        
+        return True
 
 
     @property
@@ -498,8 +505,15 @@ class IMUChecker:
         return True
 
     def parse_reading(self):
-        imu_msg = self.imu_model.parse_reading(self.serial_port)
-        self.pub_reading.publish(str(imu_msg)) #change to json dumps
+        try:
+            with serial.Serial(port=self.PORT) as ser:
+                imu_msg = self.imu_model.parse_reading(self.serial_port)
+                self.pub_reading.publish(str(imu_msg)) #change to json dumps
+                return True
+        except serial.SerialException:
+            self.state = IMUCheckerStates.IDLE
+            return False
+        
         return True
 
     def set_default_settings(self):
@@ -512,6 +526,16 @@ class IMUChecker:
         if self.imu_model.save_parameters(self.PORT):
             self.log_with_frontend("CFG SAVED")
             return True
+
+    def check_connection(self):
+        try:
+            with serial.Serial(port=self.PORT) as ser:
+                logger.loginfo("no problem detecting port")
+                return True
+        except serial.SerialException:
+            logger.loginfo("problem detecting port")
+            return False
+        
 
 if __name__ == "__main__":
     rospy.init_node("imu_driver_node")

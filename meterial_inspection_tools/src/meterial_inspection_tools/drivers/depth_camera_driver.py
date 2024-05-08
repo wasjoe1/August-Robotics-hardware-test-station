@@ -162,6 +162,7 @@ class DepthChecker:
     
     def srv_cb(self, srv):
         self.command = srv.button
+        return True
 
     @property
     def command(self):

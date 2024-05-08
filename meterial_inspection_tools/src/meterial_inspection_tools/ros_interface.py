@@ -7,11 +7,11 @@ import boothbot_msgs.msg as bbmsgs
 import boothbot_msgs.srv as bbsrvs
 import boothbot_grpc.msg as bgmsgs
 
-from meterial_inspection_tools.srv import IMUcontrol
-from meterial_inspection_tools.srv import Inclin
-from meterial_inspection_tools.srv import CBcontrol
-from meterial_inspection_tools.srv import Sonarcontrol
-from meterial_inspection_tools.srv import DepthCameracontrol
+from meterial_inspection_tools.srv import IMUControl #IMUcontrol
+from meterial_inspection_tools.srv import InclinometerControl #Inclin
+from meterial_inspection_tools.srv import CBControl #CBcontrol
+from meterial_inspection_tools.srv import SonarControl #Sonarcontrol
+from meterial_inspection_tools.srv import DepthCameraControl #DepthCameracontrol
 
 
 
@@ -25,33 +25,33 @@ from meterial_inspection_tools.srv import DepthCameracontrol
 IMU_DATA = InterfaceWithType('/imu/data', stmsgs.String)
 IMU_STATE = InterfaceWithType('/imu/state', stmsgs.String)
 IMU_INFO = InterfaceWithType('/imu/info', stmsgs.String)
-IMU_SRV_CMD = InterfaceWithType('/imu/srv_cmd', IMUcontrol)
+IMU_SRV_CMD = InterfaceWithType('/imu/srv_cmd', IMUControl) #IMUcontrol
 IMU_CONFIGS = InterfaceWithType('/imu/configs',stmsgs.String)
 
 INCLINOMETER_STATE = InterfaceWithType('/inclinometer/state',stmsgs.String)
 INCLINOMETER_INFO = InterfaceWithType('/inclinometer/info',stmsgs.String)
 INCLINOMETER_CONFIGS = InterfaceWithType('/inclinometer/configs',stmsgs.String)
 INCLINOMETER_DATA = InterfaceWithType('/inclinometer/data',stmsgs.String)
-INCLINOMETER_SRV_CMD = InterfaceWithType('/inclinometer/srv_cmd',Inclin)
+INCLINOMETER_SRV_CMD = InterfaceWithType('/inclinometer/srv_cmd', InclinometerControl) #Inclin
 
 CB_DATA = InterfaceWithType('/cb/data',stmsgs.String)
 CB_STATE = InterfaceWithType('/cb/state',stmsgs.String)
 CB_INFO =  InterfaceWithType('/cb/info',stmsgs.String)
 CB_CONFIGS = InterfaceWithType('/cb/configs',stmsgs.String)
-CB_SRV_CMD = InterfaceWithType('/cb/srv_cmd',CBcontrol)
+CB_SRV_CMD = InterfaceWithType('/cb/srv_cmd', CBControl) #CBcontrol
 
 SONAR_DATA = InterfaceWithType('/sonar/data',stmsgs.String)
 SONAR_STATE = InterfaceWithType('/sonar/state',stmsgs.String) 
 SONAR_INFO = InterfaceWithType('/sonar/info',stmsgs.String)
 SONAR_CONFIGS = InterfaceWithType('/sonar/configs',stmsgs.String)
-SONAR_SRV_CMD = InterfaceWithType('/sonar/srv_cmd',Sonarcontrol)
+SONAR_SRV_CMD = InterfaceWithType('/sonar/srv_cmd',SonarControl) #Sonarcontrol
 
 DEPTH_DATA = InterfaceWithType('/depth/data', ssmsgs.PointCloud2)
 DEPTH_IMAGE = InterfaceWithType('/depth/formatted_image', ssmsgs.Image)
 DEPTH_STATE = InterfaceWithType('/depth/state',stmsgs.String) 
 DEPTH_INFO = InterfaceWithType('/depth/info',stmsgs.String)
 DEPTH_CONFIGS = InterfaceWithType('/depth/configs',stmsgs.String)
-DEPTH_SRV_CMD = InterfaceWithType('/depth/srv_cmd',DepthCameracontrol)
+DEPTH_SRV_CMD = InterfaceWithType('/depth/srv_cmd',DepthCameraControl) #DepthCameraControl
 
 msg_dict = {
     # "ldlidar":{

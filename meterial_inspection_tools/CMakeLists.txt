@@ -58,11 +58,11 @@ catkin_python_setup()
 ## Generate services in the 'srv' folder
 add_service_files(
   FILES
-  IMUcontrol.srv
-  Inclin.srv
-  CBcontrol.srv
-  Sonarcontrol.srv
-  DepthCameracontrol.srv
+  IMUControl.srv
+  InclinometerControl.srv
+  CBControl.srv
+  SonarControl.srv
+  DepthCameraControl.srv
 )
 
 ## Generate actions in the 'action' folder

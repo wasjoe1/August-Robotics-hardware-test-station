@@ -302,6 +302,7 @@ class CBChecker:
     def srv_cb(self, srv):
         self.command = srv.button
         self.cmd_params = srv.parameter
+        return True
 
     @property
     def command(self):
