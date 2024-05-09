@@ -70,20 +70,21 @@ function createCmdData(buttonString) {
 var gAll_ws_connections = []
 
 function create_ws(ip_addr, route, elementId) {
-    const ws = new WebSocket("ws://" + ip_addr + route) // route == /imu_smt != topics -> /imu/configs
-    ws.addEventListener('open', function(event) {
-        console.log(`${route} socket was opended`)
-        ws.send('Hello ws data!');
-    });
-    ws.onmessage = function(evt) {
-        if (route == "/sonar/data") {
-            document.getElementById(elementId).replaceChildren(route_data_formatters[route](evt.data))
-        } else {
-            document.getElementById(elementId).textContent = route_data_formatters[route](evt.data)
+    try {
+        const ws = new WebSocket("ws://" + ip_addr + route) // route == /imu_smt
+        ws.addEventListener('open', function(event) {
+            console.log(`${route} socket was opended`)
+            ws.send('Hello ws data!');
+        });
+        ws.onmessage = function(evt) {    
+            document.getElementById(elementId).textContent = evt.data 
+            return evt.data
         }
-        return evt.data
+        gAll_ws_connections.push(ws)
+    } catch (e) {
+        console.log(`Failed to create web socket for ${route}`)
+        console.error(e)
     }
-    gAll_ws_connections.push(ws)
 }
 
 function clear_all_ws() {
