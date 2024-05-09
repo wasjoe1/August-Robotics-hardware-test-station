@@ -396,7 +396,7 @@ class IMUChecker:
             (IMUCommands.NONE, IMUCheckerStates.CONNECTED): self.parse_reading, # stay
             (IMUCommands.SET_DEFAULT, IMUCheckerStates.CONNECTED): self.set_default_settings, # stay
             (IMUCommands.SAVE, IMUCheckerStates.CONNECTED): self.save_parameters, # stay
-            (IMUCommands.NONE,IMUCheckerStates.IDLE): self.check_connection
+            #(IMUCommands.NONE,IMUCheckerStates.IDLE): self.check_connection #check if USB is connected
         }
 
 
@@ -466,6 +466,8 @@ class IMUChecker:
                 self.log_with_frontend(f"Connected IMU on baudrate: {self.serial_port.baudrate}")
                 self.state = IMUCheckerStates.CONNECTED
                 self.pub_configs.publish(json.dumps(self._get_current_imu_settings()))
+                #self.pub_configs.publish(str(self._get_current_imu_settings()))
+                logger.loginfo(json.dumps(self._get_current_imu_settings()))
                 return True
         self.log_with_frontend(f"Failed to connect IMU!")
         return False
@@ -488,7 +490,8 @@ class IMUChecker:
             serial_port: Serial = imu_model.scan(self = IMUOperations,port = self.PORT)
             if serial_port:
                 self.log_with_frontend(f"Found IMU model: {imu_model.IMU_TYPE} with baudrate: {serial_port.baudrate}!!")
-                self.pub_configs.publish(json.dumps(imu_model.IMU_TYPE))
+                #self.pub_configs.publish(json.dumps(imu_model.IMU_TYPE))
+                self.pub_configs.publish(str(imu_model.IMU_TYPE))
                 self.imu_model = imu_model
                 self.serial_port = serial_port
                 self.state = IMUCheckerStates.CONNECTED
@@ -505,16 +508,17 @@ class IMUChecker:
         return True
 
     def parse_reading(self):
-        try:
-            with serial.Serial(port=self.PORT) as ser:
-                imu_msg = self.imu_model.parse_reading(self.serial_port)
-                self.pub_reading.publish(str(imu_msg)) #change to json dumps
-                return True
-        except serial.SerialException:
-            self.state = IMUCheckerStates.IDLE
-            return False
-        
+        #try:
+            #with serial.Serial(port=self.PORT) as ser:
+        imu_msg = self.imu_model.parse_reading(self.serial_port)
+        #self.pub_reading.publish(json.dumps(imu_msg))
+        self.pub_reading.publish(str(imu_msg)) #change to json dumps
         return True
+        #except serial.SerialException:
+        #    self.state = IMUCheckerStates.IDLE
+        #    return False
+        
+        #return True
 
     def set_default_settings(self):
         if self.imu_model.set_default_settings(self.PORT):
@@ -526,16 +530,16 @@ class IMUChecker:
         if self.imu_model.save_parameters(self.PORT):
             self.log_with_frontend("CFG SAVED")
             return True
-
+    """
     def check_connection(self):
         try:
             with serial.Serial(port=self.PORT) as ser:
-                logger.loginfo("no problem detecting port")
                 return True
         except serial.SerialException:
             logger.loginfo("problem detecting port")
+            self.log_with_frontend("IMU_USB NOT CONNECTED")
             return False
-        
+    """    
 
 if __name__ == "__main__":
     rospy.init_node("imu_driver_node")

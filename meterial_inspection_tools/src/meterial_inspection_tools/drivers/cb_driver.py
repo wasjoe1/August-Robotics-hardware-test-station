@@ -13,6 +13,7 @@ from __future__ import print_function, division
 import sys
 import time
 import struct
+import serial
 from pymodbus.client.sync import ModbusSerialClient as ModbusClient
 
 import rospy 
@@ -297,6 +298,7 @@ class CBChecker:
         (CBCommands.NONE, CBCheckerStates.CONNECTED): self.parse_reading, # stay
         (CBCommands.SET_DEFAULT, CBCheckerStates.CONNECTED): self.set_default_settings, # stay
         (CBCommands.SAVE, CBCheckerStates.CONNECTED): self.save_parameters, # stay
+        #(CBCommands.NONE,CBCheckerStates.IDLE):self.check_connection #check if USB connection is connected
     }
         
     def srv_cb(self, srv):
@@ -387,9 +389,14 @@ class CBChecker:
         return True
     
     def parse_reading(self):
+        #try:
+        #    with serial.Serial(port=self.modbus_configs["port"]) as ser:  
         cb_msg = self.cb_model.parse_reading(self=self.cb_model,modbus_client = self.modbus_client)
         self.pub_reading.publish(json.dumps(cb_msg))
         return True
+        #except serial.SerialException:
+        #    self.state = CBCheckerStates.IDLE
+        #    return False
     
     def set_default_settings(self):
         if self.cb_model.set_default_settings(self= self.cb_model,modbus_client=self.modbus_client):
@@ -401,6 +408,17 @@ class CBChecker:
             self.log_with_frontend("CFG saved")
             return True
         
+    """
+    def check_connection(self):
+        try:
+            with serial.Serial(port=self.modbus_configs["port"]) as ser:
+                return True
+        except serial.SerialException:
+            logger.loginfo("problem detecting port")
+            self.log_with_frontend("CB_USB NOT CONNECTED")
+            return False
+    """    
+
 if __name__ == "__main__":
     rospy.init_node("cb_driver_node")
     cb_driver_checker = CBChecker()

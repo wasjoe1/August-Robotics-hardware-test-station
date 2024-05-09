@@ -7,6 +7,7 @@ INSTRUCTIONS:
 parameters is not required to be keyed in 
 """
 
+import serial
 import rospy
 import struct
 logger = rospy
@@ -208,6 +209,7 @@ class InclinChecker:
             (InclinCommands.NONE, InclinCheckerStates.CONNECTED): self.parse_reading, # stay
             (InclinCommands.SET_DEFAULT, InclinCheckerStates.CONNECTED): self.set_default_settings, # stay
             (InclinCommands.SAVE, InclinCheckerStates.CONNECTED): self.save_parameters, # stay
+            #(InclinCommands.NONE, InclinCheckerStates.IDLE):self.check_connection
         }
 
     
@@ -292,9 +294,15 @@ class InclinChecker:
         return True
     
     def parse_reading(self):
+        #try:
+            #with serial.Serial(port=self.modbus_configs["port"]) as ser:   
         incline_msg = self.inclinometer_model.parse_reading(self.modbus_client,self.unit_id) 
         self.pub_data.publish(json.dumps(incline_msg))
         return True
+        #except serial.SerialException:
+            #self.state = InclinCheckerStates.IDLE
+            #return False
+       
     
     def set_default_settings(self):
         if self.inclinometer_model.set_default_settings(self.modbus_client,self.unit_id):
@@ -305,6 +313,18 @@ class InclinChecker:
         if self.inclinometer_model.save_parameters(self.modbus_client,self.unit_id):
             self.log_with_frontend("CFG saved")
             return True
+    
+    """
+    def check_connection(self):
+        try:
+            with serial.Serial(port=self.modbus_configs["port"]) as ser:
+                logger.loginfo("no problem detecting port")
+                return True
+        except serial.SerialException:
+            logger.loginfo("problem detecting port")
+            self.log_with_frontend("INCLINOMETER_USB NOT CONNECTED")
+            return False
+    """
 
 if __name__ == "__main__":
     rospy.init_node("inclinometer_driver_node")

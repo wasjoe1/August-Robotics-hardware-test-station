@@ -5,15 +5,32 @@
 Instructions: 
 These are the steps to take 
 1. Connect to astra(check if camera is plugged in)
-2. 
+3. get image --> grabs the pointcloud and then formats it automatically --> desired endgoal
+
+
+Previous version: 
+1. connect to astra
+2. Get pointcloud --> saves pointcloud
+3. Get images --> formats the pointcloud 
+4. disconnect
+
+1. doublecheck that this is the correct version #checked
+2. add in code but comment out --> code for finding path version 
+3. test 1 &2 
+
+
+
+1. assuming i can interact using o3d pop up window --> what i need is a stream of subscriber 
+--> format into o3d --> pass
+2.  assuming cannot interact using o3d pop up window --> what i need is a stream of subscriber --> format into o3d
+--> separate colours and points and resize to 2D --> pass 
 """
+
 import datetime
 from sensor_msgs.msg import Image
 import rospy
 import open3d as o3d
-import cv2
 import numpy as np
-from cv_bridge import CvBridge
 from geometry_msgs.msg import PointStamped
 from sensor_msgs.msg import PointCloud2, PointField #defines pointcloud2 message type 
 import sensor_msgs.point_cloud2 as pc2 # prodvides functions and utilities for working with pointcloud 
@@ -35,7 +52,6 @@ from std_srvs.srv import Empty
 class DEPTHCommands(Enum):
     NONE = auto()
     RESET = auto()
-    #SCAN = auto()
     CONNECT = auto()
     DISCONNECT = auto()
     GET_POINTCLOUD = auto()
@@ -53,11 +69,72 @@ class DepthCheckerStates(Enum):
 
 class ASTRA_CAMERA():
     # DATA publish value is in pointcloud2 format
-    
-    def pointcloud_to_2D(filename):
-        #point_cloud = o3d.io.read_point_cloud('.ros/point_cloud/points_xyz_rgb_20240430_075142.ply') # include path & file name here
-        point_cloud = o3d.io.read_point_cloud(filename)
-        
+    """
+    def retrieve_latest_pointcloud_ply(directory):
+        last_modified_time = 0
+        last_modified_file = None
+        # Recursively traverse the directory tree
+        for root, _, files in os.walk(directory):
+            for file in files:
+                # Get the full path of the file
+                file_path = os.path.join(root, file)
+                # Get the modification time of the file
+                modified_time = os.path.getmtime(file_path)
+                # Check if the current file has a more recent modification time
+                if modified_time > last_modified_time:
+                    last_modified_time = modified_time
+                    last_modified_file = file_path
+                    
+        return last_modified_file
+    """
+
+    def formatPointCloud(point_cloud):
+        # Convert Open3D PointCloud to NumPy array
+        points_array = np.asarray(point_cloud.points)
+        colors_array = np.asarray(point_cloud.colors)
+
+        # Create a sensor_msgs/PointCloud2 message
+        msg = PointCloud2()
+        msg.header.stamp = rospy.Time.now()
+        msg.header.frame_id = "your_frame_id"  # Replace with your desired frame ID
+        msg.height = 1
+        msg.width = len(points_array)
+        msg.fields.append(PointField(
+            name="x",
+            offset=0,
+            datatype=PointField.FLOAT32,
+            count=1
+        ))
+        msg.fields.append(PointField(
+            name="y",
+            offset=4,
+            datatype=PointField.FLOAT32,
+            count=1
+        ))
+        msg.fields.append(PointField(
+            name="z",
+            offset=8,
+            datatype=PointField.FLOAT32,
+            count=1
+        ))
+        msg.fields.append(PointField(
+            name="rgb",
+            offset=12,
+            datatype=PointField.FLOAT32,
+            count=1
+        ))
+        msg.is_bigendian = False
+        msg.point_step = 16  # 4 bytes per float (x, y, z, rgb)
+        msg.row_step = msg.point_step * msg.width
+        msg.is_dense = True
+        msg.data = np.column_stack((points_array, colors_array)).astype(np.float32).tobytes()
+        logger.loginfo(msg)
+        return msg
+
+    #def pointcloud_to_2D(file):
+        #point_cloud = o3d.io.read_point_cloud(file)
+    def pointcloud_to_2D():
+        point_cloud = o3d.io.read_point_cloud('.ros/point_cloud/points_xyz_rgb_20240430_075055.ply') # include path & file name here
         points_x_frame = []
         points_y_frame = [] 
         points_z_frame = [] 
@@ -85,6 +162,7 @@ class ASTRA_CAMERA():
         points_y_frame_np = np.array(points_y_frame)
         points_z_frame_np = np.array(points_z_frame)
         #logger.loginfo(points_x_frame_np)
+       
         #logger.loginfo(type(points_x_frame_np))
         #logger.loginfo(points_y_frame_np)
         
@@ -98,33 +176,23 @@ class ASTRA_CAMERA():
         point_cloud_y.colors = o3d.utility.Vector3dVector(colour_frame_np)
         point_cloud_z.colors = o3d.utility.Vector3dVector(colour_frame_np)
 
-        #logger.loginfo(point_cloud_x)
+        logger.loginfo(point_cloud_x)
         #logger.loginfo(type(point_cloud_x))
         return point_cloud_x,point_cloud_y,point_cloud_z
 
-
-
     def get_pointcloud():
         succeeded = False
-         
         rospy.wait_for_service('/camera/save_point_cloud_xyz_rgb')
         try:
             save_pointcloud = rospy.ServiceProxy('/camera/save_point_cloud_xyz_rgb', Empty)
             response = save_pointcloud()
-            #added to test if it is possible to retreive file
-            time_now = datetime.datetime.now()
-            timestamp_str = time_now.strftime("%Y%m%d_%H%M%S")
-            filename = os.path.join(".ros/point_cloud/points_xyz_rgb" + timestamp_str + ".ply")
-            return response,filename
+            return response
         except rospy.ServiceException as e:
             logger.loginfo("error in service",e)
-        
-        #o3d.io.write_point_cloud("point_cloud.ply",data_global)
-        #logger.loginfo('done saving pointcloud')
         succeeded = True
         return succeeded
     
-    def connect(port):
+    def connect(port): # port only exists when depth cam is plugged in
         flag:bool = None
         flag = os.path.exists(port)
         if flag == True:
@@ -147,14 +215,13 @@ class DepthChecker:
         self.pub_state = DEPTH_STATE.Publisher()
         self.pub_info = DEPTH_INFO.Publisher()
         self.pub_reading = DEPTH_DATA.Publisher()
-        self.pub_image = DEPTH_IMAGE.Publisher()
+        #self.pub_image = DEPTH_IMAGE.Publisher()
         DEPTH_SRV_CMD.Services(self.srv_cb)
         self.subscriber = rospy.Subscriber('/camera/depth_registered/points', PointCloud2, self.get_data_subscriber)
         self.__STATES_METHODS = {
         (DEPTHCommands.NONE, DepthCheckerStates.INIT): self.initialize, # to IDLE
         (DEPTHCommands.CONNECT, DepthCheckerStates.IDLE): self.connect, # to CONNECTED or stay
         (DEPTHCommands.DISCONNECT, DepthCheckerStates.CONNECTED): self.disconnect, # to IDLE
-        #(DEPTHCommands.NONE, DepthCheckerStates.CONNECTED): self.parse_reading, # stay
         (DEPTHCommands.GET_POINTCLOUD, DepthCheckerStates.CONNECTED): self.get_pointcloud_ply, # get image and send 3 images
         (DEPTHCommands.GET_IMAGE,DepthCheckerStates.CONNECTED): self.get_image,
     }   
@@ -215,14 +282,28 @@ class DepthChecker:
         return False
 
     def get_image(self):
-        point_cloud_image,filename = self.depthcamera_model.get_pointcloud()
-        point_cloud_image_to_2D = self.depthcamera_model.pointcloud_to_2D(point_cloud_image,filename)
-        logger.loginfo(point_cloud_image_to_2D)
-        return point_cloud_image_to_2D
+        #pointcloud_directory = os.path.join(os.path.expanduser("~"), "point_cloud")
+        #last_modified_file = self.depthcamera_model.retrieve_latest_pointcloud_ply(pointcloud_directory)
+        #point_cloud_image,filename = self.depthcamera_model.get_pointcloud()
+        #point_cloud_image_to_2D = self.depthcamera_model.pointcloud_to_2D(last_modified_file)
+        point_cloud_x,point_cloud_y,point_cloud_z = self.depthcamera_model.pointcloud_to_2D()
+        msg_x = self.depthcamera_model.formatPointCloud(point_cloud_x)
+        msg_y = self.depthcamera_model.formatPointCloud(point_cloud_y)
+        msg_z = self.depthcamera_model.formatPointCloud(point_cloud_z)
+        #o3d.visualization.draw_geometries([point_cloud_image_to_2D])
+        self.pub_reading.publish(msg_x)
+        rospy.sleep(0.5)
+        self.pub_reading.publish(msg_y)
+        rospy.sleep(0.5)
+        self.pub_reading.publish(msg_z)
+        #return point_cloud_image_to_2D
 
-    def get_pointcloud_ply(self):
-        point_cloud_image,filename = self.depthcamera_model.get_pointcloud()
-        return point_cloud_image,filename
+    def get_pointcloud_ply(self): 
+        point_cloud_image = self.depthcamera_model.get_pointcloud()
+        logger.loginfo("This is the point_cloud_image under get_pointcloud_ply")
+        logger.loginfo(point_cloud_image)
+        logger.loginfo(type(point_cloud_image))
+        return point_cloud_image
 
     def disconnect(self):
         self.log_with_frontend("DISCONNECTING")
