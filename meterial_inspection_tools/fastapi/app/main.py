@@ -227,4 +227,25 @@ async def cb_cb_state(websocket: WebSocket):
     await listen_to_websocket(websocket, "state", "cb")
 
 
-# TODO add depth sensor, lidar
+# DEPTH SENSOR
+# /depth_configs socket
+@app.websocket("/depth/configs")
+async def cb_depth_data(websocket: WebSocket):
+    await listen_to_websocket(websocket, "configs", "depth")
+
+# /depth_data socket
+@app.websocket("/depth/data")
+async def cb_depth_data(websocket: WebSocket):
+    await listen_to_websocket(websocket, "data", "depth")
+
+# /depth_info socket
+@app.websocket("/depth/info")
+async def cb_depth_state(websocket: WebSocket):
+    await listen_to_websocket(websocket, "info", "depth")
+
+# /depth_state socket
+@app.websocket("/depth/state")
+async def cb_depth_state(websocket: WebSocket):
+    await listen_to_websocket(websocket, "state", "depth")
+
+# TODO add lidar
