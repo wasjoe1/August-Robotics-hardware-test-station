@@ -10,11 +10,13 @@ from boothbot_msgs.srv import (Command, CommandRequest)
 from meterial_inspection_tools.srv import (IMUControl, IMUControlRequest)
 from meterial_inspection_tools.srv import (SonarControl, SonarControlRequest)
 from meterial_inspection_tools.srv import (InclinometerControl, InclinometerControlRequest)
+from meterial_inspection_tools.srv import (CBControl, CBControlRequest)
 
 ServiceRequestTypes = {
     "imu": IMUControlRequest,
     "sonar": SonarControlRequest,
     "inclinometer": InclinometerControlRequest,
+    "cb": CBControlRequest,
 }
 
 class MeterialInspection():

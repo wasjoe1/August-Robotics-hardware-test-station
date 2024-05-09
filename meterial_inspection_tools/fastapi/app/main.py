@@ -205,4 +205,26 @@ async def cb_inclinometer_state(websocket: WebSocket):
     await listen_to_websocket(websocket, "state", "inclinometer")
 
 
-# TODO add cb, sonar, depth sensor
+# CB
+# /cb_configs socket
+@app.websocket("/cb/configs")
+async def cb_cb_data(websocket: WebSocket):
+    await listen_to_websocket(websocket, "configs", "cb")
+
+# /cb_data socket
+@app.websocket("/cb/data")
+async def cb_cb_data(websocket: WebSocket):
+    await listen_to_websocket(websocket, "data", "cb")
+
+# /cb_info socket
+@app.websocket("/cb/info")
+async def cb_cb_state(websocket: WebSocket):
+    await listen_to_websocket(websocket, "info", "cb")
+
+# /cb_state socket
+@app.websocket("/cb/state")
+async def cb_cb_state(websocket: WebSocket):
+    await listen_to_websocket(websocket, "state", "cb")
+
+
+# TODO add depth sensor, lidar
