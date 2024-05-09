@@ -90,7 +90,7 @@ msg_dict = {
         "topic_configs": SONAR_CONFIGS,
     },
 
-    "depth_camera":{
+    "depth":{
         "srv": DEPTH_SRV_CMD,
         "topic_data": DEPTH_DATA,
         "topic_state": DEPTH_STATE,
