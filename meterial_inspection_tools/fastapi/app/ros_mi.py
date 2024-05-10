@@ -112,7 +112,9 @@ class MeterialInspection():
 
     def topic_data_cb(self, msg, cb_args):
         func = lambda a: a.replace("/","").replace("data","")
-        print("data topic component: ", cb_args["name"])
+        logger.loginfo("data topic component: ", cb_args["name"])
+        logger.loginfo(convert_ros_message_to_dictionary(msg))
+        logger.loginfo(json.dumps(convert_ros_message_to_dictionary(msg)))
         # func(cb_args["name"]) => returns "imu", msg is wtv data there is in the topic
         data_to_send = json.dumps({func(cb_args["name"]): convert_ros_message_to_dictionary(msg)})
         self.send_queue["data"][func(cb_args["name"])].append(data_to_send)
