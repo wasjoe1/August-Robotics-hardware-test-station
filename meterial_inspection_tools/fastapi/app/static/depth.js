@@ -20,7 +20,6 @@ gSelectedComponentElement = undefined
 const buttonDict = {
     "scanBtn": "SCAN",
     "connectBtn": "CONNECT",
-    // "autoDetectBtn": "AUTO DETECT",
     "disconnectBtn": "DISCONNECT",
     "setDefaultBtn": "SET_DEFAULT",
     "saveBtn": "SAVE",
