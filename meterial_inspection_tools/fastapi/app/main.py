@@ -20,7 +20,7 @@ from concurrent import futures
 
 
 import rospy
-import rospy as logger
+import rospy as rospylogger
 from ros_mi import MeterialInspection
 
 # -------------------------------------------------------------------------------------------------
@@ -128,14 +128,14 @@ async def command(request: Request, cmd: str):
 # WEBSOCKETS (for frontend to connect to)
 
 async def listen_to_websocket(websocket, topic, component):
-    logger.info(f"get websocket data from /{component}_{topic} topic.")
+    rospylogger.loginfo(f"get websocket data from /{component}_{topic} topic.")
     #TODO
     await websocket.accept()
     while True:
         await asyncio.sleep(0.2)
         if app.mi.has_topic_msg(topic, component):
             qData = app.mi.get_topic_msg(topic, component)
-            logger.info(f"queue data: {qData}")
+            rospylogger.loginfo(f"queue data: {qData}")
             await websocket.send_text(f"{qData}")
             app.mi.pop_topic_msg(topic, component)
 

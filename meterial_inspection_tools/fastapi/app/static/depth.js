@@ -55,7 +55,13 @@ function create_ws(ip_addr, route, elementId) {
             console.log(`${route} socket was opended`)
             ws.send('Hello ws data!');
         });
-        ws.onmessage = function(evt) {    
+        ws.onmessage = function(evt) {
+            // TEST
+            if (route == "/depth/data") {
+                console.log(typeof(evt.data))
+                console.log(evt.data)
+            }
+
             document.getElementById(elementId).textContent = evt.data 
             return evt.data
         }
