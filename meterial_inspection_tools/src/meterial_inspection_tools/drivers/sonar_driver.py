@@ -127,7 +127,8 @@ class DYP_SONAR():
                         unit_box[i] = None
                     paired_values.append({"distance":dis[i],"unit" : unit_box[i]})
                 if response.isError():
-                    pass
+                    logger.loginfo("error")
+                    logger.loginfo(response)
             return dis,unit_box,paired_values
 
         dis_input,unit_box,paired_values = loop_distance(self=DYP_SONAR,modbus_client=modbus_client)
