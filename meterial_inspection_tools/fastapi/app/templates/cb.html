@@ -11,7 +11,7 @@
   <script src="../static/bootstrap.min.js"></script>
 
   <link rel="stylesheet" href="../static/hr.css">
-  <script src="../static/sonar.js"></script>
+  <script src="../static/cb.js"></script>
 </head>
 
 <body onload="">
@@ -38,6 +38,13 @@
       <div id="responseData-data" class="display-content-div"></div>
       <h4 class="display-content-header">Response information</h4>
       <div id="responseData-info" class="display-content-div"></div>
+    </div>
+
+    <!-- middle of body -->
+    <div style="display: flex; flex-direction: column; background-color: darksalmon;">
+      <!-- buttons -->
+      <button class="btn btn-default" id="VSMDBtn" parameter="VSMD" onclick="onClickSetParamBtn(this)">VSMD</button>
+      <button class="btn btn-default" id="BRITERBtn" parameter="BRITER" onclick="onClickSetParamBtn(this)">BRITER</button>
     </div>
 
     <!-- right of body -->

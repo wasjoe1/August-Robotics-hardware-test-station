@@ -7,40 +7,46 @@ from meterial_inspection_tools.ros_interface import (
 )
 from rospy_message_converter.message_converter import convert_ros_message_to_dictionary
 from boothbot_msgs.srv import (Command, CommandRequest)
-from meterial_inspection_tools.srv import (IMUcontrol, IMUcontrolRequest)
-from meterial_inspection_tools.srv import (Sonarcontrol, SonarcontrolRequest)
+from meterial_inspection_tools.srv import (IMUControl, IMUControlRequest)
+from meterial_inspection_tools.srv import (SonarControl, SonarControlRequest)
+from meterial_inspection_tools.srv import (InclinometerControl, InclinometerControlRequest)
+from meterial_inspection_tools.srv import (CBControl, CBControlRequest)
 
 ServiceRequestTypes = {
-    "imu": IMUcontrolRequest,
-    "sonar": SonarcontrolRequest,
+    "imu": IMUControlRequest,
+    "sonar": SonarControlRequest,
+    "inclinometer": InclinometerControlRequest,
+    "cb": CBControlRequest,
 }
 
 class MeterialInspection():
     def __init__(self) -> None:
         logger.loginfo("init meterial inspection...")
-        self.topic_configs_send_queue = {
-            "imu": [],
-            "inclinometer": [],
-            "cb": [],
-            "sonar": [],
-        }
-        self.topic_data_send_queue = {
-            "imu": [],
-            "inclinometer": [],
-            "cb": [],
-            "sonar": [],
-        }
-        self.topic_info_send_queue = {
-            "imu": [],
-            "inclinometer": [],
-            "cb": [],
-            "sonar": [],
-        }
-        self.topic_state_send_queue = {
-            "imu": [],
-            "inclinometer": [],
-            "cb": [],
-            "sonar": [],
+        self.send_queue = {
+            "configs": {
+                "imu": [],
+                "inclinometer": [],
+                "cb": [],
+                "sonar": [],
+            },
+            "data": {
+                "imu": [],
+                "inclinometer": [],
+                "cb": [],
+                "sonar": [],
+            },
+            "info": {
+                "imu": [],
+                "inclinometer": [],
+                "cb": [],
+                "sonar": [],
+            },
+            "state": {
+                "imu": [],
+                "inclinometer": [],
+                "cb": [],
+                "sonar": [],
+            },
         }
 
         for sub_node_name, content in msg_dict.items():
@@ -74,50 +80,21 @@ class MeterialInspection():
 
     # -------------------------------------------------------------------------------------------------
     # Subscriber call back functions & msg functions
-    # CONFIGS TOPIC
-    def has_topic_configs_msg(self, component):
-        return len(self.topic_configs_send_queue[component]) > 0
     
-    def pop_topic_configs_msg(self, component):
-        if len(self.topic_configs_send_queue[component]) > 0:
-            del self.topic_configs_send_queue[component][0]
-    
-    def get_topic_configs_msg(self, component):
-        return self.topic_configs_send_queue[component][0]
+    # want to get, pop, and check has msg
+    # depends on the component & topic
+    # components => imu, sonar, inclinometer, cb
+    # topics are state, info, data, configs
+    def get_topic_msg(self, topic, component):
+        return self.send_queue[topic][component][0]
 
-    # DATA TOPIC
-    def has_topic_data_msg(self, component):
-        return len(self.topic_data_send_queue[component]) > 0
-    
-    def get_topic_data_msg(self, component):
-        return self.topic_data_send_queue[component][0]
+    def has_topic_msg(self, topic, component):
+        return len(self.send_queue[topic][component]) > 0
 
-    def pop_topic_data_msg(self, component):
-        if len(self.topic_data_send_queue[component]) > 0:
-            del self.topic_data_send_queue[component][0]
-    
-    # INFO TOPIC
-    def get_topic_info_msg(self, component):
-        return self.topic_info_send_queue[component][0]
+    def pop_topic_msg(self, topic, component):
+        if len(self.send_queue[topic][component]) > 0:
+            del self.send_queue[topic][component][0]
 
-    def has_topic_info_msg(self, component):
-        return len(self.topic_info_send_queue[component]) > 0
-    
-    def pop_topic_info_msg(self, component):
-        if len(self.topic_info_send_queue[component]) > 0:
-            del self.topic_info_send_queue[component][0]
-
-    # STATE TOPIC
-    def get_topic_state_msg(self, component):
-        return self.topic_state_send_queue[component][0]
-
-    def has_topic_state_msg(self, component):
-        return len(self.topic_state_send_queue[component]) > 0
-
-    def pop_topic_state_msg(self, component):
-        if len(self.topic_state_send_queue[component]) > 0:
-            del self.topic_state_send_queue[component][0]
-            
     # -------------------------------------------------------------------------------------------------
     # CALLBACKS
     def topic_configs_cb(self, msg, cb_args):
@@ -126,7 +103,7 @@ class MeterialInspection():
         print("call back args filtered in topics", func(cb_args["name"]))
         # func(cb_args["name"]) => returns "imu", msg is wtv data there is in the topic
         data_to_send = json.dumps({func(cb_args["name"]): convert_ros_message_to_dictionary(msg)})
-        self.topic_configs_send_queue[func(cb_args["name"])].append(data_to_send)
+        self.send_queue["configs"][func(cb_args["name"])].append(data_to_send)
 
     def topic_data_cb(self, msg, cb_args):
         func = lambda a: a.replace("/","").replace("data","")
@@ -134,7 +111,7 @@ class MeterialInspection():
         print("call back args filtered in topics", func(cb_args["name"]))
         # func(cb_args["name"]) => returns "imu", msg is wtv data there is in the topic
         data_to_send = json.dumps({func(cb_args["name"]): convert_ros_message_to_dictionary(msg)})
-        self.topic_data_send_queue[func(cb_args["name"])].append(data_to_send)
+        self.send_queue["data"][func(cb_args["name"])].append(data_to_send)
     
     def topic_info_cb(self, msg, cb_args):
         func = lambda a: a.replace("/","").replace("data","")
@@ -142,7 +119,7 @@ class MeterialInspection():
         print("call back args filtered in topics", func(cb_args["name"]))
         # func(cb_args["name"]) => returns "imu", msg is wtv data there is in the topic
         data_to_send = json.dumps({func(cb_args["name"]): convert_ros_message_to_dictionary(msg)})
-        self.topic_info_send_queue[func(cb_args["name"])].append(data_to_send)
+        self.send_queue["info"][func(cb_args["name"])].append(data_to_send)
     
     def topic_state_cb(self, msg, cb_args):
         func = lambda a: a.replace("/","").replace("data","")
@@ -150,7 +127,7 @@ class MeterialInspection():
         print("call back args filtered in topics", func(cb_args["name"]))
         # func(cb_args["name"]) => returns "imu", msg is wtv data there is in the topic
         data_to_send = json.dumps({func(cb_args["name"]): convert_ros_message_to_dictionary(msg)})
-        self.topic_state_send_queue[func(cb_args["name"])].append(data_to_send)
+        self.send_queue["state"][func(cb_args["name"])].append(data_to_send)
 
     # -------------------------------------------------------------------------------------------------
     # service calls
@@ -159,19 +136,20 @@ class MeterialInspection():
         logger.loginfo(f"send service {srv_dict}")
         for device_name, request in srv_dict.items(): # sub node name is "device_name"; request is the "req data"
             logger.loginfo(f"component name is {device_name}")
-            
-            command = ServiceRequestTypes[device_name]() # get the srv req object
-            command.button = request["button"] # put the parameters into the req obj
-            if request.get("parameter"):
-                command.parameter = request["parameter"]
-            
-            logger.loginfo(f"command data: {command}")
             logger.loginfo(f"request data: {request}")
-            logger.loginfo(f"Service call to {msg_dict[device_name]['srv']}...") # should print out the service name
+            
             try:
-                msg_dict[device_name]["srv"].service_call(command) # only 1 sub node name now => imu
+                command = ServiceRequestTypes[device_name]() # get the srv req object
+                command.button = request["button"] # put the parameters into the req obj
+                if request.get("parameter"):
+                    command.parameter = request["parameter"]
+                logger.loginfo(f"command data: {command}")
+                
+                logger.loginfo(f"Service call to {msg_dict[device_name]['srv']}...")                
+                msg_dict[device_name]["srv"].service_call(command)
                 logger.loginfo("Service call succedded")
             except Exception as e:
-                logger.error("Error detected in service call")
-                logger.logerr(e) # prints out the error if service call fails
+                logger.logerr("Service call failed")
+                logger.logerr(e)
+                raise rospy.ServiceException("Service call failed")
         

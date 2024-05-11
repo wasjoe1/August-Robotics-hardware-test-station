@@ -20,13 +20,12 @@ gSelectedComponentElement = undefined
 const buttonDict = {
     "scanBtn": "SCAN",
     "connectBtn": "CONNECT",
-    // "autoDetectBtn": "AUTO DETECT",
     "disconnectBtn": "DISCONNECT",
     "setDefaultBtn": "SET_DEFAULT",
     "saveBtn": "SAVE",
 }
 
-console.log("imu")
+console.log("inclinometer")
 
 // ------------------------------------------------------------------------------------------------
 // Functions
@@ -43,7 +42,7 @@ function parseStringToInt(str) {
 function createCmdData(buttonString, param) {
     return {
         button: buttonString,
-        parameter: param,
+        parameter: "", // TODO: might need param in the future
     }
 }
 
@@ -52,7 +51,7 @@ var gAll_ws_connections = []
 
 function create_ws(ip_addr, route, elementId) {
     try {
-        const ws = new WebSocket("ws://" + ip_addr + route) // route == /imu_smt
+        const ws = new WebSocket("ws://" + ip_addr + route) // route == /inclinometer_smt
         ws.addEventListener('open', function(event) {
             console.log(`${route} socket was opended`)
             ws.send('Hello ws data!');
@@ -79,7 +78,7 @@ function executeCommand(cmd) {
 
     var cmd_dict = {}
     cmd_dict[current_step] = cmd
-    cmd_str = JSON.stringify(cmd_dict) // i.e. {imu: {button:__, parameter:__}}
+    cmd_str = JSON.stringify(cmd_dict) // i.e. {inclinometer: {button:__, parameter:__}}
     console.log("send cmd: " + cmd_str)
     var url = "http://" + ip_addr + "/command/" + cmd_str
     var request = new XMLHttpRequest()
@@ -91,17 +90,7 @@ function executeCommand(cmd) {
 // ------------------------------------------------------------------------------------------------
 // onClickEvents
 function onClickCommandBtn(element) {
-    executeCommand(createCmdData(buttonDict[element.id], gParam))    
-}
-
-function onClickSetParamBtn(element) {
-    gParam = element.getAttribute("parameter")
-    console.log(gParam)
-    if (gSelectedComponentElement) {
-        gSelectedComponentElement.classList.remove("selected")
-    }
-    element.classList.add("selected")
-    gSelectedComponentElement = element
+    executeCommand(createCmdData(buttonDict[element.id]))    
 }
 
 // TODO: create an event s.t. when page changes, clear all web sockets
@@ -109,17 +98,17 @@ function onClickSetParamBtn(element) {
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
 // SOCKET CONFIGS
-// open web socket connection for /data (imu data) => for the imu readings
-create_ws(ip_addr, "/imu/data", "responseData-data")
+// open web socket connection for /data (inclinometer data) => for the inclinometer readings
+create_ws(ip_addr, "/inclinometer/data", "responseData-data")
 
 // ------------------------------------------------------------------------------------------------
 // open web socket connection for /state => for the current state
-create_ws(ip_addr, "/imu/state", "responseData-state")
+create_ws(ip_addr, "/inclinometer/state", "responseData-state")
 
 // ------------------------------------------------------------------------------------------------
 // open web socket connection for /info => for user status
-create_ws(ip_addr, "/imu/info", "responseData-info")
+create_ws(ip_addr, "/inclinometer/info", "responseData-info")
 
 // ------------------------------------------------------------------------------------------------
 // open web socket connection for /configs => for user status
-create_ws(ip_addr, "/imu/configs", "responseData-configs")
+create_ws(ip_addr, "/inclinometer/configs", "responseData-configs")

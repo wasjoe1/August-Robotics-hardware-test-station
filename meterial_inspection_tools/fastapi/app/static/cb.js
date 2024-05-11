@@ -20,13 +20,12 @@ gSelectedComponentElement = undefined
 const buttonDict = {
     "scanBtn": "SCAN",
     "connectBtn": "CONNECT",
-    // "autoDetectBtn": "AUTO DETECT",
     "disconnectBtn": "DISCONNECT",
     "setDefaultBtn": "SET_DEFAULT",
     "saveBtn": "SAVE",
 }
 
-console.log("imu")
+console.log("cb")
 
 // ------------------------------------------------------------------------------------------------
 // Functions
@@ -52,7 +51,7 @@ var gAll_ws_connections = []
 
 function create_ws(ip_addr, route, elementId) {
     try {
-        const ws = new WebSocket("ws://" + ip_addr + route) // route == /imu_smt
+        const ws = new WebSocket("ws://" + ip_addr + route) // route == /cb_smt
         ws.addEventListener('open', function(event) {
             console.log(`${route} socket was opended`)
             ws.send('Hello ws data!');
@@ -79,7 +78,7 @@ function executeCommand(cmd) {
 
     var cmd_dict = {}
     cmd_dict[current_step] = cmd
-    cmd_str = JSON.stringify(cmd_dict) // i.e. {imu: {button:__, parameter:__}}
+    cmd_str = JSON.stringify(cmd_dict) // i.e. {cb: {button:__, parameter:__}}
     console.log("send cmd: " + cmd_str)
     var url = "http://" + ip_addr + "/command/" + cmd_str
     var request = new XMLHttpRequest()
@@ -109,17 +108,17 @@ function onClickSetParamBtn(element) {
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
 // SOCKET CONFIGS
-// open web socket connection for /data (imu data) => for the imu readings
-create_ws(ip_addr, "/imu/data", "responseData-data")
+// open web socket connection for /data (cb data) => for the cb readings
+create_ws(ip_addr, "/cb/data", "responseData-data")
 
 // ------------------------------------------------------------------------------------------------
 // open web socket connection for /state => for the current state
-create_ws(ip_addr, "/imu/state", "responseData-state")
+create_ws(ip_addr, "/cb/state", "responseData-state")
 
 // ------------------------------------------------------------------------------------------------
 // open web socket connection for /info => for user status
-create_ws(ip_addr, "/imu/info", "responseData-info")
+create_ws(ip_addr, "/cb/info", "responseData-info")
 
 // ------------------------------------------------------------------------------------------------
 // open web socket connection for /configs => for user status
-create_ws(ip_addr, "/imu/configs", "responseData-configs")
+create_ws(ip_addr, "/cb/configs", "responseData-configs")
