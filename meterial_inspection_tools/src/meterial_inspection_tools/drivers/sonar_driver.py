@@ -119,7 +119,9 @@ class DYP_SONAR():
                 response = modbus_client.read_holding_registers(0x0101, 1, unit = unit)
                 if not response.isError():
                     distance  = response.registers[0]
+                    logger.loginfo(i)
                     if distance is not None:
+                        logger.loginfo(len(dis))
                         dis[i] = format(distance/1000.,'.2f')
                         unit_box[i] = format(hex(unit))
                     else: 
