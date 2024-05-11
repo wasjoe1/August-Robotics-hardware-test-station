@@ -76,8 +76,12 @@ function create_ws(ip_addr, route, elementId) {
             console.log(`${route} socket was opended`)
             ws.send('Hello ws data!');
         });
-        ws.onmessage = function(evt) {    
-            document.getElementById(elementId).textContent = evt.data 
+        ws.onmessage = function(evt) {
+            if (route == "/sonar/data") {
+                document.getElementById(elementId).replaceChildren(route_data_formatters[route](evt.data))
+            } else {
+                document.getElementById(elementId).textContent = route_data_formatters[route](evt.data)
+            }
             return evt.data
         }
         gAll_ws_connections.push(ws)
