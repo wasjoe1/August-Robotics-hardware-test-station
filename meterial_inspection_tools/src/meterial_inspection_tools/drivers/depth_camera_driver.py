@@ -147,7 +147,7 @@ class DepthChecker:
     
     def parse_reading(self):
         #logger.loginfo(data_global)
-        #logger.loginfo(type(data_global))
+        logger.loginfo(type(data_global))
         self.pub_reading.publish(data_global)
         return True
     
