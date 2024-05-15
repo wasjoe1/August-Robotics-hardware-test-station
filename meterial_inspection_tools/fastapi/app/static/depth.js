@@ -1,6 +1,8 @@
 // import { lang } from './lang.js'
 // import { refresh_page_once_list } from './refresh_once.js'
 
+// import * as THREE from 'three' // this is to import threejs if we use npm
+
 var ws_json
 var hostname
 var ip_addr = document.location.hostname
@@ -26,6 +28,7 @@ const buttonDict = {
 }
 
 console.log("depth")
+console.log("test")
 
 // ------------------------------------------------------------------------------------------------
 // Functions
@@ -58,11 +61,24 @@ function create_ws(ip_addr, route, elementId) {
         ws.onmessage = function(evt) {
             // TEST
             if (route == "/depth/data") {
-                console.log(typeof(evt.data))
-                console.log(evt.data)
+                // Assuming fieldValue is a UTF-8 encoded string containing the Base64-encoded data
+                // console.log("evt:", evt) // is a MessageEvent object
+                var utf8String = evt.data; // returns the pointcloud data in string form "{"depth": {"header": {"seq": 35...."
+                var pointCloud2Data = JSON.parse(evt.data)
+                console.log(pointCloud2Data)
+                console.log(pointCloud2Data.depth.data)
+                // Decode the Base64-encoded string back to the original bytes
+                var decodedString = atob(pointCloud2Data.depth.data);
+                // Convert the decoded string to a byte array
+                var byteArray = new Uint8Array(decodedString.length);
+                for (var i = 0; i < decodedString.length; i++) {
+                    byteArray[i] = decodedString.charCodeAt(i);
+                }
+                console.log(typeof(byteArray))
+                console.log(byteArray)
             }
 
-            document.getElementById(elementId).textContent = evt.data 
+            // document.getElementById(elementId).textContent = evt.data
             return evt.data
         }
         gAll_ws_connections.push(ws)
@@ -71,7 +87,6 @@ function create_ws(ip_addr, route, elementId) {
         console.error(e)
     }
 }
-
 function clear_all_ws() {
     for (const ws in gAll_ws_connections) {
         ws.close()
@@ -79,8 +94,6 @@ function clear_all_ws() {
 }
 
 function executeCommand(cmd) {
-    console.log(cmd)
-
     var cmd_dict = {}
     cmd_dict[current_step] = cmd
     cmd_str = JSON.stringify(cmd_dict) // i.e. {depth: {button:__, parameter:__}}

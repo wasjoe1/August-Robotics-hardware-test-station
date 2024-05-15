@@ -135,7 +135,6 @@ async def listen_to_websocket(websocket, topic, component):
         await asyncio.sleep(0.2)
         if app.mi.has_topic_msg(topic, component):
             qData = app.mi.get_topic_msg(topic, component)
-            rospylogger.loginfo(f"queue data: {qData}")
             await websocket.send_text(f"{qData}")
             app.mi.pop_topic_msg(topic, component)
 
