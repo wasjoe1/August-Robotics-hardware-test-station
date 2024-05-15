@@ -1,24 +1,27 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from sensor_msgs.msg import Image
-import rospy
+# from sensor_msgs.msg import Image
 #import message_filters
 #import cv2
-#import numpy as np
 #from cv_bridge import CvBridge
 #from tf2_ros import TransformListener,Buffer
 #import math
 #import tf2_ros
 #from geometry_msgs.msg import PointStamped
 #from tf2_geometry_msgs import do_transform_point
-from sensor_msgs.msg import PointCloud2
-import os
 
+import os
 import rospy
 logger = rospy
 from enum import Enum,auto
-import json
+
+import numpy as np
+from ctypes import * # convert float to uint32
+from sensor_msgs.msg import PointCloud2
+import sensor_msgs.point_cloud2 as pc2
+
+
 from meterial_inspection_tools.ros_interface import (
     DEPTH_SRV_CMD,
     DEPTH_DATA,
@@ -56,6 +59,52 @@ class ASTRA_CAMERA():
         elif flag == False: 
             logger.loginfo("problem connecting")
         return flag
+
+convert_rgbUint32_to_tuple = lambda rgb_uint32: (
+    (rgb_uint32 & 0x00ff0000)>>16, (rgb_uint32 & 0x0000ff00)>>8, (rgb_uint32 & 0x000000ff) # each rgb number is represented by 8 bits (2 x 4 bits)
+)
+
+convert_rgbFloat_to_tuple = lambda rgb_float: convert_rgbUint32_to_tuple(
+    int(cast(pointer(c_float(rgb_float)), POINTER(c_uint32)).contents.value) # TODO: not exactly sure
+)
+
+def convertCloudFromRosToOpen3d(ros_cloud):
+    
+    # Get cloud data from ros_cloud
+    field_names=[field.name for field in ros_cloud.fields]
+    cloud_data = list(pc2.read_points(ros_cloud, skip_nans=True, field_names = field_names))
+
+    # Check empty
+    # open3d_cloud = open3d.PointCloud()
+    if len(cloud_data)==0:
+        print("Converting an empty cloud")
+        return None
+
+    # Set open3d_cloud
+    if "rgb" in field_names:
+        IDX_RGB_IN_FIELD=3 # x, y, z, rgb
+        
+        # Get xyz
+        xyz = [(x,y,z) for x,y,z,rgb in cloud_data ] # [(x,y,z), (x,y,z), (x,y,z) ...]
+
+        # Get rgb
+        # Check whether int or float
+        if type(cloud_data[0][IDX_RGB_IN_FIELD])==float: # if float (from pcl::toROSMsg)
+            rgb = [convert_rgbFloat_to_tuple(rgb) for x,y,z,rgb in cloud_data ]
+        else:
+            rgb = [convert_rgbUint32_to_tuple(rgb) for x,y,z,rgb in cloud_data ]
+
+        # combine
+        # open3d_cloud.points = open3d.Vector3dVector(np.array(xyz))
+        # open3d_cloud.colors = open3d.Vector3dVector(np.array(rgb)/255.0)
+    else:
+        xyz = [(x,y,z) for x,y,z in cloud_data ] # get xyz
+        # np.array(xyz) # [[x,y,z], [x,y,z], [x,y,z] ...]
+        # open3d_cloud.points = open3d.Vector3dVector(np.array(xyz))
+
+    # return
+    return { "coords": xyz, "colors": rgb }
+
 
 class DepthChecker:
     port = '/dev/astrauvc'
@@ -140,17 +189,19 @@ class DepthChecker:
         self.state = DepthCheckerStates.IDLE
         return True
     
-    def get_data_subscriber(self,data):
+    def get_data_subscriber(self, data):
         global data_global
         data_global = data
+        # field_names=[field.name for field in data.fields]
+        # data_global = list(pc2.read_points(data, skip_nans=True, field_names = field_names))
         return data
     
     def parse_reading(self):
         #logger.loginfo(data_global)
         logger.loginfo(type(data_global))
+        logger.loginfo(convertCloudFromRosToOpen3d(data_global))
         self.pub_reading.publish(data_global)
         return True
-    
         
 if __name__ == "__main__":
     rospy.init_node("depth_camera_driver_node")

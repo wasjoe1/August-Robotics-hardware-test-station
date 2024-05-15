@@ -1,7 +1,9 @@
 // import { lang } from './lang.js'
 // import { refresh_page_once_list } from './refresh_once.js'
 
-// import * as THREE from 'three' // this is to import threejs if we use npm
+// import * as THREE from 'three'; // this is to import threejs if we use npm
+// const THREE = require('three');
+import * as THREE from './node_modules/three/build/three.module.js';
 
 var ws_json
 var hostname
@@ -29,6 +31,37 @@ const buttonDict = {
 
 console.log("depth")
 console.log("test")
+
+// ------------------------------------------------------------------------------------------------
+// 3D Rendering
+
+// scene set up
+const canvas = document.querySelector("#product-demo");
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x000000);
+
+const sizes = {
+  width: window.innerWidth,
+  height: window.innerHeight,
+};
+
+// camera
+const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 1000);
+camera.position.set(0, 0, 5); // fix angle of our initial pov (remove to show difference)
+scene.add(camera);
+
+// lights
+const ambientLight = new THREE.AmbientLight(0xffffff, 15);
+ambientLight.position.set(0, 0, 0);
+scene.add(ambientLight);
+
+const directionalLight = new THREE.DirectionalLight(
+  0xffffff,
+  0.8
+);
+directionalLight.position.set(4, 0, 3);
+scene.add(directionalLight);
+
 
 // ------------------------------------------------------------------------------------------------
 // Functions
@@ -61,21 +94,35 @@ function create_ws(ip_addr, route, elementId) {
         ws.onmessage = function(evt) {
             // TEST
             if (route == "/depth/data") {
-                // Assuming fieldValue is a UTF-8 encoded string containing the Base64-encoded data
-                // console.log("evt:", evt) // is a MessageEvent object
-                var utf8String = evt.data; // returns the pointcloud data in string form "{"depth": {"header": {"seq": 35...."
+                // var pointCloud2Data = JSON.parse(evt.data) // evt is websocket message event, {depth: {header: {seq: 35....
+                // var decodedString = atob(pointCloud2Data.depth.data); // '\x00\x00\x7F...
+                // var byteArray = new Uint8Array(decodedString.length);
+                // for (var i = 0; i < decodedString.length; i++) {
+                //     byteArray[i] = decodedString.charCodeAt(i);
+                // }
+
                 var pointCloud2Data = JSON.parse(evt.data)
-                console.log(pointCloud2Data)
-                console.log(pointCloud2Data.depth.data)
-                // Decode the Base64-encoded string back to the original bytes
-                var decodedString = atob(pointCloud2Data.depth.data);
-                // Convert the decoded string to a byte array
-                var byteArray = new Uint8Array(decodedString.length);
-                for (var i = 0; i < decodedString.length; i++) {
-                    byteArray[i] = decodedString.charCodeAt(i);
+                const vertices = [] // not sure how many points this will have
+                const colors = []
+                for (let i = 0; i < pointCloud2Data.coords.length; i++) {
+                    var point = pointCloud2Data.coords[i]
+                    var color = pointCloud2Data.colors[i]
+                    const x = point[0]
+                    const y = point[1]
+                    const z = point[2]
+                    vertices.push(x, y, z)
+                    const r = color[0]
+                    const g = color[1]
+                    const b = color[2]
+                    colors.push(r, g, b)
                 }
-                console.log(typeof(byteArray))
-                console.log(byteArray)
+                const geometry = new THREE.BufferGeometry();
+                geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3))
+                geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3))
+                const material = new THREE.PointsMaterial( {vertexColors: true} )
+                const points = new THREE.Points( geometry, material )
+                screen.add( points )
+
             }
 
             // document.getElementById(elementId).textContent = evt.data
