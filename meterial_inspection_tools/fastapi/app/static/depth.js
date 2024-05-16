@@ -1,7 +1,10 @@
 // import { lang } from './lang.js'
 // import { refresh_page_once_list } from './refresh_once.js'
 
-import * as THREE from '../static/three.module.js';
+import * as THREE from 'three'
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+import Stats from 'three/addons/libs/stats.module.js'
+
 
 var ws_json
 var hostname
@@ -33,53 +36,50 @@ console.log("test")
 // ------------------------------------------------------------------------------------------------
 // 3D Rendering
 
-// scene set up
-const canvas = document.querySelector("#product-demo");
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x000000);
+const scene = new THREE.Scene()
 
-const sizes = {
-  width: window.innerWidth,
-  height: window.innerHeight,
-};
+const gridHelper = new THREE.GridHelper()
+gridHelper.position.y = -0.5
+scene.add(gridHelper)
 
-// camera
-const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 1000);
-camera.position.set(0, 0, 5); // fix angle of our initial pov (remove to show difference)
-scene.add(camera);
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100)
+camera.position.z = 2
 
-// lights
-const ambientLight = new THREE.AmbientLight(0xffffff, 15);
-ambientLight.position.set(0, 0, 0);
-scene.add(ambientLight);
+const renderer = new THREE.WebGLRenderer()
+renderer.setSize(window.innerWidth, window.innerHeight)
+document.body.appendChild(renderer.domElement)
 
-const directionalLight = new THREE.DirectionalLight(
-  0xffffff,
-  0.8
-);
-directionalLight.position.set(4, 0, 3);
-scene.add(directionalLight);
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight
+  camera.updateProjectionMatrix()
+  renderer.setSize(window.innerWidth, window.innerHeight)
+})
 
-// renderer
-const renderer = new THREE.WebGLRenderer({
-    canvas: canvas,
-});
-renderer.setSize(sizes.width, sizes.height); // 适应屏幕
-renderer.setPixelRatio(window.devicePixelRatio, 2); // 适应具有不同像素密度的设备
-renderer.render(scene, camera);
+const info = document.createElement('div')
+info.style.cssText = 'position:absolute;bottom:10px;left:10px;color:white;font-family:monospace;font-size: 17px;filter: drop-shadow(1px 1px 1px #000000);'
+document.body.appendChild(info)
 
+const controls = new OrbitControls(camera, renderer.domElement)
 
-window.addEventListener("resize", () => {
-  console.log("window is being resized");
+const stats = new Stats()
+document.body.appendChild(stats.dom)
 
-  sizes.width = window.innerWidth;
-  sizes.height = window.innerHeight;
+function animate() {
+  requestAnimationFrame(animate)
 
-  camera.aspect = sizes.width / sizes.height;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.width, window.height);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-});
+  controls.update()
+
+  info.innerText =
+    'Polar Angle : ' +
+    ((controls.getPolarAngle() / -Math.PI) * 180 + 90).toFixed(2) +
+    '°\nAzimuth Angle : ' +
+    ((controls.getAzimuthalAngle() / Math.PI) * 180).toFixed(2) +
+    '°'
+
+  renderer.render(scene, camera)
+
+  stats.update()
+}
 
 // ------------------------------------------------------------------------------------------------
 // Functions
@@ -103,6 +103,7 @@ function create_ws(ip_addr, route, elementId) {
         ws.onmessage = function(evt) {
             // TEST
             if (route == "/depth/data") {
+                console.log("getting data from /depth/data ...")
                 // var pointCloud2Data = JSON.parse(evt.data) // evt is websocket message event, {depth: {header: {seq: 35....
                 // var decodedString = atob(pointCloud2Data.depth.data); // '\x00\x00\x7F...
                 // var byteArray = new Uint8Array(decodedString.length);
@@ -117,6 +118,7 @@ function create_ws(ip_addr, route, elementId) {
                 console.log(pointCloud2Data.coords)
                 const vertices = [] // not sure how many points this will have
                 const colors = []
+                console.log("configuring points...")
                 for (let i = 0; i < pointCloud2Data.coords.length; i++) {
                     var point = pointCloud2Data.coords[i]
                     var color = pointCloud2Data.colors[i]
@@ -129,13 +131,17 @@ function create_ws(ip_addr, route, elementId) {
                     const b = color[2]
                     colors.push(r, g, b)
                 }
+                console.log("points configured")
+
+                console.log("creating points model...")
                 const geometry = new THREE.BufferGeometry();
                 geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3))
                 geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3))
                 const material = new THREE.PointsMaterial( {vertexColors: true} )
                 const points = new THREE.Points( geometry, material )
                 scene.add( points )
-
+                animate()
+                console.log("points model ready")
             }
 
             // document.getElementById(elementId).textContent = evt.data

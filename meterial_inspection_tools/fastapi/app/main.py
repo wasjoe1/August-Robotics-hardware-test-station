@@ -39,6 +39,8 @@ app.lang = 0 # represent language settings => 0 might be default/ arbitrary choi
 app.mode = None # may represent a step or stage in a process within the app
 
 app.mount("/static", StaticFiles(directory="static"), name="static") # this line configures the API to serve static files from the "static" directory
+# app.mount("/node_modules", StaticFiles(directory="node_modules"), name="node_modules") # the first string is to provide a custom url path to access the files
+app.mount("/trial", StaticFiles(directory="trial"), name="trial")
 templates = Jinja2Templates(directory="templates") # templates directory is used to store the html
 
 h_name = socket.gethostname()
