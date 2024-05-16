@@ -1,9 +1,7 @@
 // import { lang } from './lang.js'
 // import { refresh_page_once_list } from './refresh_once.js'
 
-// import * as THREE from 'three'; // this is to import threejs if we use npm
-// const THREE = require('three');
-import * as THREE from './node_modules/three/build/three.module.js';
+import * as THREE from '../static/three.module.js';
 
 var ws_json
 var hostname
@@ -15,11 +13,11 @@ var is_gs
 var url = window.location.href
 const regex = "http://(.*)/step/(.*)"
 const found = url.match(regex)
-current_step = found[2]
+var current_step = found[2]
 console.log("current step: ", current_step)
 
-gParam = undefined
-gSelectedComponentElement = undefined
+var gParam = undefined
+var gSelectedComponentElement = undefined
 
 const buttonDict = {
     "scanBtn": "SCAN",
@@ -62,18 +60,29 @@ const directionalLight = new THREE.DirectionalLight(
 directionalLight.position.set(4, 0, 3);
 scene.add(directionalLight);
 
+// renderer
+const renderer = new THREE.WebGLRenderer({
+    canvas: canvas,
+});
+renderer.setSize(sizes.width, sizes.height); // 适应屏幕
+renderer.setPixelRatio(window.devicePixelRatio, 2); // 适应具有不同像素密度的设备
+renderer.render(scene, camera);
+
+
+window.addEventListener("resize", () => {
+  console.log("window is being resized");
+
+  sizes.width = window.innerWidth;
+  sizes.height = window.innerHeight;
+
+  camera.aspect = sizes.width / sizes.height;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.width, window.height);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+});
 
 // ------------------------------------------------------------------------------------------------
 // Functions
-function parseStringToInt(str) {
-    try {
-        return parseInt(str)
-    } catch (e) {
-        console.log("Parsing of String to Int failed")
-        console.log(e)
-        throw e
-    }
-}
 
 function createCmdData(buttonString) {
     return {
@@ -100,8 +109,12 @@ function create_ws(ip_addr, route, elementId) {
                 // for (var i = 0; i < decodedString.length; i++) {
                 //     byteArray[i] = decodedString.charCodeAt(i);
                 // }
-
-                var pointCloud2Data = JSON.parse(evt.data)
+                
+                // console.log(evt.data)
+                var eventData = JSON.parse(evt.data)
+                console.log(eventData.depth.data)
+                var pointCloud2Data = JSON.parse(eventData.depth.data)
+                console.log(pointCloud2Data.coords)
                 const vertices = [] // not sure how many points this will have
                 const colors = []
                 for (let i = 0; i < pointCloud2Data.coords.length; i++) {
@@ -121,7 +134,7 @@ function create_ws(ip_addr, route, elementId) {
                 geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3))
                 const material = new THREE.PointsMaterial( {vertexColors: true} )
                 const points = new THREE.Points( geometry, material )
-                screen.add( points )
+                scene.add( points )
 
             }
 
@@ -143,7 +156,7 @@ function clear_all_ws() {
 function executeCommand(cmd) {
     var cmd_dict = {}
     cmd_dict[current_step] = cmd
-    cmd_str = JSON.stringify(cmd_dict) // i.e. {depth: {button:__, parameter:__}}
+    var cmd_str = JSON.stringify(cmd_dict) // i.e. {depth: {button:__, parameter:__}}
     console.log("send cmd: " + cmd_str)
     var url = "http://" + ip_addr + "/command/" + cmd_str
     var request = new XMLHttpRequest()
@@ -187,3 +200,5 @@ create_ws(ip_addr, "/depth/info", "responseData-info")
 // ------------------------------------------------------------------------------------------------
 // open web socket connection for /configs => for user status
 create_ws(ip_addr, "/depth/configs", "responseData-configs")
+
+window.onClickCommandBtn = onClickCommandBtn;

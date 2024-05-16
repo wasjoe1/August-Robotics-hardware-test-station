@@ -19,6 +19,7 @@ from enum import Enum,auto
 import numpy as np
 from ctypes import * # convert float to uint32
 from sensor_msgs.msg import PointCloud2
+import json
 import sensor_msgs.point_cloud2 as pc2
 
 
@@ -68,7 +69,7 @@ convert_rgbFloat_to_tuple = lambda rgb_float: convert_rgbUint32_to_tuple(
     int(cast(pointer(c_float(rgb_float)), POINTER(c_uint32)).contents.value) # TODO: not exactly sure
 )
 
-def convertCloudFromRosToOpen3d(ros_cloud):
+def convertCloudFromRosToPoints(ros_cloud):
     
     # Get cloud data from ros_cloud
     field_names=[field.name for field in ros_cloud.fields]
@@ -85,7 +86,7 @@ def convertCloudFromRosToOpen3d(ros_cloud):
         IDX_RGB_IN_FIELD=3 # x, y, z, rgb
         
         # Get xyz
-        xyz = [(x,y,z) for x,y,z,rgb in cloud_data ] # [(x,y,z), (x,y,z), (x,y,z) ...]
+        xyz = [[x,y,z] for x,y,z,rgb in cloud_data ] # [(x,y,z), (x,y,z), (x,y,z) ...]
 
         # Get rgb
         # Check whether int or float
@@ -93,17 +94,23 @@ def convertCloudFromRosToOpen3d(ros_cloud):
             rgb = [convert_rgbFloat_to_tuple(rgb) for x,y,z,rgb in cloud_data ]
         else:
             rgb = [convert_rgbUint32_to_tuple(rgb) for x,y,z,rgb in cloud_data ]
-
+        
+        rgb = [list(ele) for ele in rgb]
         # combine
         # open3d_cloud.points = open3d.Vector3dVector(np.array(xyz))
         # open3d_cloud.colors = open3d.Vector3dVector(np.array(rgb)/255.0)
     else:
-        xyz = [(x,y,z) for x,y,z in cloud_data ] # get xyz
+        xyz = [[x,y,z] for x,y,z in cloud_data ] # get xyz
         # np.array(xyz) # [[x,y,z], [x,y,z], [x,y,z] ...]
         # open3d_cloud.points = open3d.Vector3dVector(np.array(xyz))
 
     # return
-    return { "coords": xyz, "colors": rgb }
+    # xyz = np.array(xyz)
+    # rgb = np.array(rgb) # array dont work, they just make the string have an extra array string
+    dataToReturn = { "coords": xyz, "colors": rgb } # TEST check if this still adds \ to " => yes it still does
+    # dataToReturn = { "coords": "xyz", "colors": "rgb" }
+    # return str(dataToReturn)
+    return json.dumps(dataToReturn)
 
 
 class DepthChecker:
@@ -198,9 +205,9 @@ class DepthChecker:
     
     def parse_reading(self):
         #logger.loginfo(data_global)
-        logger.loginfo(type(data_global))
-        logger.loginfo(convertCloudFromRosToOpen3d(data_global))
-        self.pub_reading.publish(data_global)
+        # logger.loginfo(type(data_global))
+        # logger.loginfo(convertCloudFromRosToPoints(data_global))
+        self.pub_reading.publish(convertCloudFromRosToPoints(data_global))
         return True
         
 if __name__ == "__main__":
