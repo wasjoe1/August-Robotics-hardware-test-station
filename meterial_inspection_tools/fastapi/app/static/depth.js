@@ -32,6 +32,7 @@ const buttonDict = {
 
 console.log("depth")
 console.log("test")
+var count = 0 // TEST
 
 // ------------------------------------------------------------------------------------------------
 // 3D Rendering
@@ -107,7 +108,7 @@ function create_ws(ip_addr, route, elementId) {
         });
         ws.onmessage = function(evt) {
             // TEST
-            if (route == "/depth/data") {
+            if (route == "/depth/data" && count == 0) { // TEST
                 
                 console.log("getting data from /depth/data ...") // TEST
                 var eventData = JSON.parse(evt.data)
@@ -141,6 +142,8 @@ function create_ws(ip_addr, route, elementId) {
                 scene.add( points )
                 animate()
                 console.log("points model ready") // TEST
+                
+                count++ // TEST
             }
             return evt.data
         }
