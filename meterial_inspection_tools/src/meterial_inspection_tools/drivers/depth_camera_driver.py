@@ -1,27 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# from sensor_msgs.msg import Image
-#import message_filters
-#import cv2
-#from cv_bridge import CvBridge
-#from tf2_ros import TransformListener,Buffer
-#import math
-#import tf2_ros
-#from geometry_msgs.msg import PointStamped
-#from tf2_geometry_msgs import do_transform_point
-
 import os
-import rospy
-logger = rospy
-from enum import Enum,auto
-
-import numpy as np
-from ctypes import * # convert float to uint32
-from sensor_msgs.msg import PointCloud2
 import json
+import rospy
+from enum import Enum,auto
+from ctypes import * # convert float to uint32
+
+from sensor_msgs.msg import PointCloud2
 import sensor_msgs.point_cloud2 as pc2
 
+logger = rospy
 
 from meterial_inspection_tools.ros_interface import (
     DEPTH_SRV_CMD,
@@ -70,47 +59,35 @@ convert_rgbFloat_to_tuple = lambda rgb_float: convert_rgbUint32_to_tuple(
 )
 
 def convertCloudFromRosToPoints(ros_cloud):
-    
     # Get cloud data from ros_cloud
     field_names=[field.name for field in ros_cloud.fields]
     cloud_data = list(pc2.read_points(ros_cloud, skip_nans=True, field_names = field_names))
 
     # Check empty
-    # open3d_cloud = open3d.PointCloud()
     if len(cloud_data)==0:
         print("Converting an empty cloud")
         return None
 
-    # Set open3d_cloud
+    # Set Points
     if "rgb" in field_names:
         IDX_RGB_IN_FIELD=3 # x, y, z, rgb
         
-        # Get xyz
-        xyz = [[x,y,z] for x,y,z,rgb in cloud_data ] # [(x,y,z), (x,y,z), (x,y,z) ...]
-
         # Get rgb
         # Check whether int or float
-        if type(cloud_data[0][IDX_RGB_IN_FIELD])==float: # if float (from pcl::toROSMsg)
+        if type(cloud_data[0][IDX_RGB_IN_FIELD]) == float:
             rgb = [convert_rgbFloat_to_tuple(rgb) for x,y,z,rgb in cloud_data ]
         else:
             rgb = [convert_rgbUint32_to_tuple(rgb) for x,y,z,rgb in cloud_data ]
-        
         rgb = [list(ele) for ele in rgb]
-        # combine
-        # open3d_cloud.points = open3d.Vector3dVector(np.array(xyz))
-        # open3d_cloud.colors = open3d.Vector3dVector(np.array(rgb)/255.0)
-    else:
-        xyz = [[x,y,z] for x,y,z in cloud_data ] # get xyz
-        # np.array(xyz) # [[x,y,z], [x,y,z], [x,y,z] ...]
-        # open3d_cloud.points = open3d.Vector3dVector(np.array(xyz))
 
-    # return
-    # xyz = np.array(xyz)
-    # rgb = np.array(rgb) # array dont work, they just make the string have an extra array string
-    dataToReturn = { "coords": xyz, "colors": rgb } # TEST check if this still adds \ to " => yes it still does
-    # dataToReturn = { "coords": "xyz", "colors": "rgb" }
-    # return str(dataToReturn)
-    return json.dumps(dataToReturn)
+        # Get xyz
+        xyz = [[x,y,z] for x,y,z,rgb in cloud_data ] # [(x,y,z), (x,y,z), (x,y,z) ...]
+
+    else:
+        # Get xyz
+        xyz = [[x,y,z] for x,y,z in cloud_data ]
+
+    return json.dumps({ "coords": xyz, "colors": rgb })
 
 
 class DepthChecker:
@@ -199,14 +176,9 @@ class DepthChecker:
     def get_data_subscriber(self, data):
         global data_global
         data_global = data
-        # field_names=[field.name for field in data.fields]
-        # data_global = list(pc2.read_points(data, skip_nans=True, field_names = field_names))
         return data
     
     def parse_reading(self):
-        #logger.loginfo(data_global)
-        # logger.loginfo(type(data_global))
-        # logger.loginfo(convertCloudFromRosToPoints(data_global))
         self.pub_reading.publish(convertCloudFromRosToPoints(data_global))
         return True
         

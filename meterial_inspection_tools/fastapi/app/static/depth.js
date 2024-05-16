@@ -92,6 +92,11 @@ function createCmdData(buttonString) {
 
 // TODO: create a web socket manager class to hide all these under the hood implementation (connections, create, get, clear)
 var gAll_ws_connections = []
+function clear_all_ws() {
+    for (const ws in gAll_ws_connections) {
+        ws.close()
+    }
+}
 
 function create_ws(ip_addr, route, elementId) {
     try {
@@ -103,22 +108,16 @@ function create_ws(ip_addr, route, elementId) {
         ws.onmessage = function(evt) {
             // TEST
             if (route == "/depth/data") {
-                console.log("getting data from /depth/data ...")
-                // var pointCloud2Data = JSON.parse(evt.data) // evt is websocket message event, {depth: {header: {seq: 35....
-                // var decodedString = atob(pointCloud2Data.depth.data); // '\x00\x00\x7F...
-                // var byteArray = new Uint8Array(decodedString.length);
-                // for (var i = 0; i < decodedString.length; i++) {
-                //     byteArray[i] = decodedString.charCodeAt(i);
-                // }
                 
-                // console.log(evt.data)
+                console.log("getting data from /depth/data ...") // TEST
                 var eventData = JSON.parse(evt.data)
                 console.log(eventData.depth.data)
                 var pointCloud2Data = JSON.parse(eventData.depth.data)
                 console.log(pointCloud2Data.coords)
-                const vertices = [] // not sure how many points this will have
+                const vertices = [] // ~200k points
                 const colors = []
-                console.log("configuring points...")
+                
+                console.log("configuring points...") // TEST
                 for (let i = 0; i < pointCloud2Data.coords.length; i++) {
                     var point = pointCloud2Data.coords[i]
                     var color = pointCloud2Data.colors[i]
@@ -131,9 +130,9 @@ function create_ws(ip_addr, route, elementId) {
                     const b = color[2]
                     colors.push(r, g, b)
                 }
-                console.log("points configured")
+                console.log("points configured") // TEST
 
-                console.log("creating points model...")
+                console.log("creating points model...") // TEST
                 const geometry = new THREE.BufferGeometry();
                 geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3))
                 geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3))
@@ -141,21 +140,14 @@ function create_ws(ip_addr, route, elementId) {
                 const points = new THREE.Points( geometry, material )
                 scene.add( points )
                 animate()
-                console.log("points model ready")
+                console.log("points model ready") // TEST
             }
-
-            // document.getElementById(elementId).textContent = evt.data
             return evt.data
         }
         gAll_ws_connections.push(ws)
     } catch (e) {
         console.log(`Failed to create web socket for ${route}`)
         console.error(e)
-    }
-}
-function clear_all_ws() {
-    for (const ws in gAll_ws_connections) {
-        ws.close()
     }
 }
 
