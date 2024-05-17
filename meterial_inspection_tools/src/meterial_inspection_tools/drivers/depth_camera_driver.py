@@ -62,6 +62,8 @@ def convertCloudFromRosToPoints(ros_cloud):
     # Get cloud data from ros_cloud
     field_names=[field.name for field in ros_cloud.fields]
     cloud_data = list(pc2.read_points(ros_cloud, skip_nans=True, field_names = field_names))
+    logger.loginfo(f"cloud data number of points: {len(cloud_data)}")
+
 
     # Check empty
     if len(cloud_data)==0:

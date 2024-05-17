@@ -82,6 +82,9 @@ function animate() {
   stats.update()
 }
 
+const vertices = [] // ~200k points
+const colors = []
+
 // ------------------------------------------------------------------------------------------------
 // Functions
 
@@ -108,15 +111,14 @@ function create_ws(ip_addr, route, elementId) {
         });
         ws.onmessage = function(evt) {
             // TEST
-            if (route == "/depth/data" && count == 0) { // TEST
+            if (route == "/depth/data" && count < 3) { // TEST
                 
                 console.log("getting data from /depth/data ...") // TEST
                 var eventData = JSON.parse(evt.data)
                 console.log(eventData.depth.data)
                 var pointCloud2Data = JSON.parse(eventData.depth.data)
                 console.log(pointCloud2Data.coords)
-                const vertices = [] // ~200k points
-                const colors = []
+                console.log(pointCloud2Data.colors)
                 
                 console.log("configuring points...") // TEST
                 for (let i = 0; i < pointCloud2Data.coords.length; i++) {
@@ -126,22 +128,24 @@ function create_ws(ip_addr, route, elementId) {
                     const y = point[1]
                     const z = point[2]
                     vertices.push(x, y, z)
-                    const r = color[0]
-                    const g = color[1]
-                    const b = color[2]
+                    const r = color[0] / 255
+                    const g = color[1] / 255
+                    const b = color[2] / 255
                     colors.push(r, g, b)
                 }
                 console.log("points configured") // TEST
-
-                console.log("creating points model...") // TEST
-                const geometry = new THREE.BufferGeometry();
-                geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3))
-                geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3))
-                const material = new THREE.PointsMaterial( {vertexColors: true} )
-                const points = new THREE.Points( geometry, material )
-                scene.add( points )
-                animate()
-                console.log("points model ready") // TEST
+                
+                if (count == 2) { // TEST
+                    console.log("creating points model...") // TEST
+                    const geometry = new THREE.BufferGeometry();
+                    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3))
+                    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3))
+                    const material = new THREE.PointsMaterial( {size: 0.1, vertexColors: true} )
+                    const points = new THREE.Points( geometry, material )
+                    scene.add( points )
+                    animate()
+                    console.log("points model ready") // TEST
+                }
                 
                 count++ // TEST
             }
