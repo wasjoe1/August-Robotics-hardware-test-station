@@ -290,6 +290,8 @@ class InclinChecker:
 
     def disconnect(self):
         self.modbus_client  = None
+        self.log_with_frontend("DISCONNECTING")
+        self.log_with_frontend("DISCONNECTED")
         self.state = InclinCheckerStates.IDLE
         return True
     
