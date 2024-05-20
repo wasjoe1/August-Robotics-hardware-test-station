@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+
 """
-for testing: 
+for testing:  (done)
 1. get rid of all get_laserscan (one instance) & pointcloud conversion
 2. add in laserscan(one instance)
 3. add in pointcloud conversion
+
+for testing_round2: 
+1. tidy up code
+2. check for glTF format
 """
 
 """
@@ -16,6 +21,7 @@ INSTRUCTIONS:
 3. get pointcloud
 """
 
+from ctypes import *
 from sensor_msgs.msg import LaserScan, PointCloud2
 from laser_geometry import LaserProjection
 import os
@@ -23,7 +29,7 @@ import rospy
 logger = rospy
 from enum import Enum,auto
 import json
-
+import sensor_msgs.point_cloud2 as pc2
 from meterial_inspection_tools.ros_interface import (
     LIDAR_SRV_CMD,
     LIDAR_STATE,
@@ -52,9 +58,11 @@ class YdlidarCheckerStates(Enum):
     ERROR = auto()
 
 class YDLIAROperations: 
+
     """
     Interface class
     """
+
     YDLIDAR_TYPE = None
 
     def connect(port):
@@ -68,7 +76,8 @@ class YDLIAROperations:
     def get_pointcloud(): 
         return pointcloud_one_instance_data
 
-
+    def formatting_pointcloud(ros_cloud):
+        return convertCloudFromRosToPoints(ros_cloud)
 
 class YDLIDAR_G2(YDLIAROperations): 
     YDLIDAR_TYPE = "G2"
@@ -85,9 +94,8 @@ class YDLIDAR_G2(YDLIAROperations):
     
     def get_laserscan():
         laser_scan_one_instance_data = rospy.wait_for_message('/scan',LaserScan,timeout=None)
-        global laser_scan_data_test
-        laser_scan_data_test = laser_scan_one_instance_data
-        logger.loginfo(laser_scan_one_instance_data)
+        global laserscan_data_debugging
+        laserscan_data_debugging = laser_scan_one_instance_data
         return laser_scan_one_instance_data
     
     
@@ -96,6 +104,34 @@ class YDLIDAR_G2(YDLIAROperations):
         pointcloud_one_instance_data =laserProj.projectLaser(data)
         return pointcloud_one_instance_data
     
+    
+    def formatting_pointcloud(ros_cloud):
+
+        #for formatting if required by frontend
+        def format_data(data):
+            pass
+
+        def convertCloudFromRosToPoints(ros_cloud):
+
+            # Get cloud data from ros_cloud
+            field_names=[field.name for field in ros_cloud.fields]
+            logger.loginfo(field_names)
+            cloud_data = list(pc2.read_points(ros_cloud, skip_nans=True, field_names = field_names))
+            logger.loginfo(cloud_data)
+
+            # Check empty
+            if len(cloud_data)==0:
+                print("Converting an empty cloud")
+                return None
+            
+            # Get xyz
+            xyz = [[x,y,z] for x,y,z, _, _ in cloud_data ]
+            intensity = [[intensity]for _,_,_, intensity,_ in cloud_data] 
+            index = [[index]for _,_,_,_,index in cloud_data] 
+
+            return json.dumps({ "coords": xyz, "intensity": intensity, "index": index})
+
+        return convertCloudFromRosToPoints(ros_cloud)
 
 class YdlidarChecker:
     port = '/dev/ydlidar'
@@ -125,8 +161,6 @@ class YdlidarChecker:
         (YDLIDARCommands.DISCONNECT, YdlidarCheckerStates.CONNECTED): self.disconnect, # to IDLE
         (YDLIDARCommands.GET_POINTCLOUD, YdlidarCheckerStates.CONNECTED): self.get_pointcloud,  #get one instance of pointcloud msg
         (YDLIDARCommands.GET_LASERSCAN,YdlidarCheckerStates.CONNECTED): self.get_laserscan, #get one instance of laserscan msg
-        #(YDLIDARCommands.NONE, YdlidarCheckerStates.CONNECTED): self.parse_reading, # stay and stream laserscan
-
    } 
         
     def srv_cb(self,srv):
@@ -212,22 +246,18 @@ class YdlidarChecker:
     def get_pointcloud(self):
         laserscan_one_message_data = self.ydliar_model.get_laserscan()
         formatted_pointcloud = self.ydliar_model.get_pointcloud(laserscan_one_message_data)
-        logger.loginfo(formatted_pointcloud)
-        logger.loginfo(type(formatted_pointcloud))
-        self.pub_reading_pointcloud.publish(formatted_pointcloud)
+        frontend_formatted_pointcloud = self.ydliar_model.formatting_pointcloud(formatted_pointcloud)
+        logger.loginfo(frontend_formatted_pointcloud) 
+        self.pub_reading_pointcloud.publish(frontend_formatted_pointcloud)
         return formatted_pointcloud
     
 
     def get_laserscan_subscriber(self,data):
         global laserScan_data_global
         laserScan_data_global = data
-        #logger.loginfo(laserScan_data_global)
-        #self.pub_reading_laserscan.publish(laserScan_data_global)
         return data
     
 
-
-    
 if __name__ == "__main__":
     rospy.init_node("lidar_driver_node")
     lidar_driver_checker = YdlidarChecker()
