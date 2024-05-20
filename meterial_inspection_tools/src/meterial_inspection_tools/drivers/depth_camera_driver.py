@@ -307,6 +307,7 @@ class DepthChecker:
 
     def disconnect(self):
         self.log_with_frontend("DISCONNECTING")
+        self.log_with_frontend("DISCONNECTED")
         self.state = DepthCheckerStates.IDLE
         return True
     

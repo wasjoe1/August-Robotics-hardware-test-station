@@ -55,7 +55,7 @@ DEPTH_INFO = InterfaceWithType('/depth/info',stmsgs.String)
 DEPTH_CONFIGS = InterfaceWithType('/depth/configs',stmsgs.String)
 DEPTH_SRV_CMD = InterfaceWithType('/depth/srv_cmd',DepthCameraControl) #DepthCameraControl
 
-LIDAR_DATA_LASERSCAN = InterfaceWithType('/lidar/data_scan',ssmsgs.LaserScan)
+LIDAR_DATA_LASERSCAN = InterfaceWithType('/lidar/data_laserscan',ssmsgs.LaserScan)
 LIDAR_DATA_POINTCLOUD = InterfaceWithType('lidar/data_pointcloud',ssmsgs.PointCloud2)
 LIDAR_STATE = InterfaceWithType('lidar/state',stmsgs.String)
 LIDAR_INFO = InterfaceWithType('lidar/info',stmsgs.String)

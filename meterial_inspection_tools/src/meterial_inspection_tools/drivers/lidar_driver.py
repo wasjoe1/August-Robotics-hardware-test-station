@@ -1,30 +1,34 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-
+"""
+for testing: 
+1. get rid of all get_laserscan (one instance) & pointcloud conversion
+2. add in laserscan(one instance)
+3. add in pointcloud conversion
 """
 
+"""
 INSTRUCTIONS: 
+** need send in model +
 1. connect to ylidar
 2. get laser scan
 3. get pointcloud
-4. format (?)
-
 """
 
 from sensor_msgs.msg import LaserScan, PointCloud2
+from laser_geometry import LaserProjection
 import os
 import rospy
 logger = rospy
 from enum import Enum,auto
-
 import json
 
 from meterial_inspection_tools.ros_interface import (
     LIDAR_SRV_CMD,
     LIDAR_STATE,
     LIDAR_DATA_LASERSCAN,
-    #LIDAR_DATA_POINTCLOUD,
+    LIDAR_DATA_POINTCLOUD,
     LIDAR_INFO
 
 )
@@ -47,9 +51,29 @@ class YdlidarCheckerStates(Enum):
     CONNECTED = auto()
     ERROR = auto()
 
+class YDLIAROperations: 
+    """
+    Interface class
+    """
+    YDLIDAR_TYPE = None
 
-class YDLIDAR_G2(): 
-    def connect(port): # port only exists when depth cam is plugged in
+    def connect(port):
+        flag:bool = None
+        return flag
+    
+    def get_laserscan():
+        return laserscan_one_instance_data
+
+
+    def get_pointcloud(): 
+        return pointcloud_one_instance_data
+
+
+
+class YDLIDAR_G2(YDLIAROperations): 
+    YDLIDAR_TYPE = "G2"
+
+    def connect(port): # port only exists when lidar is plugged in
         flag:bool = None
         flag = os.path.exists(port)
         if flag == True:
@@ -57,39 +81,57 @@ class YDLIDAR_G2():
         elif flag == False: 
             logger.loginfo("problem connecting")
         return flag
-    pass
+    
+    
+    def get_laserscan():
+        laser_scan_one_instance_data = rospy.wait_for_message('/scan',LaserScan,timeout=None)
+        global laser_scan_data_test
+        laser_scan_data_test = laser_scan_one_instance_data
+        logger.loginfo(laser_scan_one_instance_data)
+        return laser_scan_one_instance_data
+    
+    
+    def get_pointcloud(data):
+        laserProj = LaserProjection()
+        pointcloud_one_instance_data =laserProj.projectLaser(data)
+        return pointcloud_one_instance_data
+    
 
 class YdlidarChecker:
-    port = '/dev/ydliar'
+    port = '/dev/ydlidar'
     NODE_RATE = 5.0
     ydliar_model = None
     _command = None
     _state = None
 
+    YDLIAR_MODEL_TABLE = {
+        YDLIDAR_G2.YDLIDAR_TYPE: YDLIDAR_G2,
+    }
+
     def __init__(self) -> None:
         self.command = "NONE"
+        self.cmd_params = ""
         self.state = YdlidarCheckerStates.INIT
         self.pub_state = LIDAR_STATE.Publisher()
         self.pub_info = LIDAR_INFO.Publisher()
         self.pub_reading_laserscan = LIDAR_DATA_LASERSCAN.Publisher()
-        #self.pub_reading_pointcloud = LIDAR_DATA_POINTCLOUD.Publisher()
+        self.pub_reading_pointcloud = LIDAR_DATA_POINTCLOUD.Publisher()
         LIDAR_SRV_CMD.Services(self.srv_cb)
-        #self.subscriber_pointcloud = rospy.Subscriber('/point_cloud', PointCloud2, self.get_pointcloud_subscriber)
         self.subscriber_laserscan = rospy.Subscriber('/scan', LaserScan, self.get_laserscan_subscriber)
 
         self.__STATES_METHODS = {
         (YDLIDARCommands.NONE, YdlidarCheckerStates.INIT): self.initialize, # to IDLE
         (YDLIDARCommands.CONNECT, YdlidarCheckerStates.IDLE): self.connect, # to CONNECTED or stay
         (YDLIDARCommands.DISCONNECT, YdlidarCheckerStates.CONNECTED): self.disconnect, # to IDLE
-        #(YDLIDARCommands.GET_POINTCLOUD, YdlidarCheckerStates.CONNECTED): self.get_pointcloud,  #get one instance of pointcloud msg
+        (YDLIDARCommands.GET_POINTCLOUD, YdlidarCheckerStates.CONNECTED): self.get_pointcloud,  #get one instance of pointcloud msg
         (YDLIDARCommands.GET_LASERSCAN,YdlidarCheckerStates.CONNECTED): self.get_laserscan, #get one instance of laserscan msg
-        (YDLIDARCommands.NONE, YdlidarCheckerStates.CONNECTED): self.parse_reading, # stay and stream laserscan + pointcloud readings continuously
+        #(YDLIDARCommands.NONE, YdlidarCheckerStates.CONNECTED): self.parse_reading, # stay and stream laserscan
 
    } 
         
     def srv_cb(self,srv):
         self.command = srv.button
-        self.parameters = srv.parameter
+        self.cmd_params = srv.parameter
         return True
     
 
@@ -120,6 +162,13 @@ class YdlidarChecker:
     def log_with_frontend(self, log):
         self.pub_info.publish(log)
 
+    def _determine_ylidar_type(self): 
+        self.ydliar_model = self.YDLIAR_MODEL_TABLE.get(self.cmd_params.upper())
+        if self.ydliar_model:
+            self.log_with_frontend(f"YDLIDAR model: {self.ydliar_model.YDLIDAR_TYPE}")
+            return True
+        self.log_with_frontend(f"LIDAR model: {self.cmd_params} not supported")
+        return False
 
     def start(self):
         l = rospy.Rate(self.NODE_RATE)
@@ -135,21 +184,23 @@ class YdlidarChecker:
 
     def connect(self):
         self.state = YdlidarCheckerStates.CONNECTING
-        connected = self.ydliar_model.connect(self.port)
-        if connected:
-            self.log_with_frontend("Connected to LIDAR")
-            self.state = YdlidarCheckerStates.CONNECTED
-            return True
+        if self._determine_ylidar_type():
+            connected = self.ydliar_model.connect(self.port)
+            if connected:
+                self.log_with_frontend("Connected to LIDAR")
+                self.state = YdlidarCheckerStates.CONNECTED
+                return True
         self.log_with_frontend(f"Failed to connect!")
         self.state = YdlidarCheckerStates.IDLE
         return False
     
-    def get_pointcloud(self):
-        pass
 
 
     def get_laserscan(self):
-        pass
+        laserscan_one_message_data = self.ydliar_model.get_laserscan()
+        self.log_with_frontend("one frame of laserscan data captured")
+        self.pub_reading_laserscan.publish(laserscan_one_message_data)
+        return True
 
     def disconnect(self):
         self.log_with_frontend("DISCONNECTING")
@@ -158,21 +209,24 @@ class YdlidarChecker:
         return True
     
 
-    def get_pointcloud_subscriber(self,data):
-        global pointcloud_data_global
-        pointcloud_data_global = data
-        return data
+    def get_pointcloud(self):
+        laserscan_one_message_data = self.ydliar_model.get_laserscan()
+        formatted_pointcloud = self.ydliar_model.get_pointcloud(laserscan_one_message_data)
+        logger.loginfo(formatted_pointcloud)
+        logger.loginfo(type(formatted_pointcloud))
+        self.pub_reading_pointcloud.publish(formatted_pointcloud)
+        return formatted_pointcloud
     
 
     def get_laserscan_subscriber(self,data):
         global laserScan_data_global
         laserScan_data_global = data
+        #logger.loginfo(laserScan_data_global)
+        #self.pub_reading_laserscan.publish(laserScan_data_global)
         return data
     
-    def parse_reading(self):
-        self.pub_reading_laserscan.publish(laserScan_data_global)
-        #self.pub_reading_pointcloud.publish(pointcloud_data_global)
-        return True
+
+
     
 if __name__ == "__main__":
     rospy.init_node("lidar_driver_node")

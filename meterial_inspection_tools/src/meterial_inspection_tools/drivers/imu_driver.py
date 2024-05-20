@@ -504,6 +504,8 @@ class IMUChecker:
         self.serial_port.close()
         self.serial_port = None
         self.imu_model = None
+        self.log_with_frontend("DISCONNECTING")
+        self.log_with_frontend("DISCONNECTED")
         self.state = IMUCheckerStates.IDLE
         return True
 

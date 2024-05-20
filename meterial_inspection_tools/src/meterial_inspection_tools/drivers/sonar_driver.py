@@ -351,6 +351,7 @@ class SonarChecker:
             self.parse_thread.join()
         self.modbus_client  = None
         self.log_with_frontend("DISCONNECTING")
+        self.log_with_frontend("DISCONNECTED")
         self.sonar_model.UNIT_CHECKER = []
         self.state = SonarCheckerStates.IDLE
         return True
