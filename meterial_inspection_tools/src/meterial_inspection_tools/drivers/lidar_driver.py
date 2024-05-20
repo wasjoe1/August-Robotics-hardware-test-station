@@ -1,18 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-
-"""
-for testing:  (done)
-1. get rid of all get_laserscan (one instance) & pointcloud conversion
-2. add in laserscan(one instance)
-3. add in pointcloud conversion
-
-for testing_round2: 
-1. tidy up code
-2. check for glTF format
-"""
-
 """
 INSTRUCTIONS: 
 ** need send in model +
