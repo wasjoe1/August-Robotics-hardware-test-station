@@ -3,9 +3,9 @@
 
 """
 INSTRUCTIONS: 
-** need send in model +
+** need commands and model_ type in parameters
 1. connect to ylidar
-2. get laser scan
+2. get laser scan (optional)
 3. get pointcloud
 """
 
