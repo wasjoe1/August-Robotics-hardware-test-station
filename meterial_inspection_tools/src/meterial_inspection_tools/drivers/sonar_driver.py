@@ -343,6 +343,7 @@ class SonarChecker:
             self.state = SonarCheckerStates.CONNECTED
             self.pub_configs.publish(json.dumps(self._get_current_SONAR_settings()))
             return True
+        self.log_with_frontend(f"Failed to connect sonar driver!")
         self.state = SonarCheckerStates.IDLE
         return False
 

@@ -1,0 +1,6 @@
+#Request
+string button
+string baudrate
+---
+#Response
+bool accepted

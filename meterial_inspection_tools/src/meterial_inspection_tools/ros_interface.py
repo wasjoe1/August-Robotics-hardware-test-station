@@ -11,7 +11,10 @@ from meterial_inspection_tools.srv import IMUControl #IMUcontrol
 from meterial_inspection_tools.srv import InclinometerControl #Inclin
 from meterial_inspection_tools.srv import CBControl #CBcontrol
 from meterial_inspection_tools.srv import SonarControl #Sonarcontrol
-from meterial_inspection_tools.srv import DepthCameraControl #DepthCameracontrol
+#from meterial_inspection_tools.srv import DepthCameraControl #DepthCameracontrol
+from meterial_inspection_tools.srv import GetButton
+from meterial_inspection_tools.srv import GetButtonBaudrate
+
 
 
 
@@ -27,14 +30,18 @@ from meterial_inspection_tools.srv import DepthCameraControl #DepthCameracontrol
 IMU_DATA = InterfaceWithType('/imu/data', stmsgs.String)
 IMU_STATE = InterfaceWithType('/imu/state', stmsgs.String)
 IMU_INFO = InterfaceWithType('/imu/info', stmsgs.String)
-IMU_SRV_CMD = InterfaceWithType('/imu/srv_cmd', IMUControl) 
 IMU_CONFIGS = InterfaceWithType('/imu/configs',stmsgs.String)
+IMU_SRV_CMD = InterfaceWithType('/imu/srv_cmd', IMUControl) 
+IMU_DATA_CHECK = InterfaceWithType('/imu/reading_checker', stmsgs.String)
 
+
+
+INCLINOMETER_DATA = InterfaceWithType('/inclinometer/data',stmsgs.String)
 INCLINOMETER_STATE = InterfaceWithType('/inclinometer/state',stmsgs.String)
 INCLINOMETER_INFO = InterfaceWithType('/inclinometer/info',stmsgs.String)
-#INCLINOMETER_CONFIGS = InterfaceWithType('/inclinometer/configs',stmsgs.String)
-INCLINOMETER_DATA = InterfaceWithType('/inclinometer/data',stmsgs.String)
-INCLINOMETER_SRV_CMD = InterfaceWithType('/inclinometer/srv_cmd', DepthCameraControl) 
+INCLINOMETER_CONFIGS = InterfaceWithType('/inclinometer/configs',stmsgs.String)
+INCLINOMETER_SRV_CMD = InterfaceWithType('/inclinometer/srv_cmd', GetButtonBaudrate) 
+INCLINOMETER_DATA_CHECK = InterfaceWithType('/inclinometer/reading_checker', stmsgs.String)
 
 CB_DATA = InterfaceWithType('/cb/data',stmsgs.String)
 CB_STATE = InterfaceWithType('/cb/state',stmsgs.String)
@@ -49,11 +56,10 @@ SONAR_CONFIGS = InterfaceWithType('/sonar/configs',stmsgs.String)
 SONAR_SRV_CMD = InterfaceWithType('/sonar/srv_cmd',SonarControl) 
 
 DEPTH_DATA = InterfaceWithType('/depth/data', ssmsgs.PointCloud2)
-DEPTH_IMAGE = InterfaceWithType('/depth/formatted_image', ssmsgs.Image)
 DEPTH_STATE = InterfaceWithType('/depth/state',stmsgs.String) 
 DEPTH_INFO = InterfaceWithType('/depth/info',stmsgs.String)
 DEPTH_CONFIGS = InterfaceWithType('/depth/configs',stmsgs.String)
-DEPTH_SRV_CMD = InterfaceWithType('/depth/srv_cmd',DepthCameraControl)
+DEPTH_SRV_CMD = InterfaceWithType('/depth/srv_cmd',GetButton)
 
 LIDAR_DATA_LASERSCAN = InterfaceWithType('/lidar/data_laserscan',ssmsgs.LaserScan)
 #LIDAR_DATA_POINTCLOUD = InterfaceWithType('lidar/data_pointcloud',ssmsgs.PointCloud2)
@@ -83,6 +89,7 @@ msg_dict = {
         "topic_state": INCLINOMETER_STATE,
         "topic_info": INCLINOMETER_INFO,
         "topic_configs": INCLINOMETER_CONFIGS,
+        "topic_data_checker": INCLINOMETER_DATA_CHECK,
     },
 
     "cb":{
@@ -107,7 +114,6 @@ msg_dict = {
         "topic_state": DEPTH_STATE,
         "topic_info": DEPTH_INFO,
         "topic_configs": DEPTH_CONFIGS,
-        "topic_image": DEPTH_IMAGE,
     },
 
    "lidar": {

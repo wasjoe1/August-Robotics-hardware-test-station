@@ -369,6 +369,9 @@ class CBChecker:
             self.log_with_frontend(f"Failed to connect CB driver!")
             self.state = CBCheckerStates.IDLE
             return False
+        self.log_with_frontend(f"Failed to connect CB driver, check if CB type has been inputted!")
+        self.state = CBCheckerStates.IDLE
+        return False
     
     def scan(self):
         self.state = CBCheckerStates.SCANNING

@@ -62,7 +62,8 @@ add_service_files(
   InclinometerControl.srv
   CBControl.srv
   SonarControl.srv
-  DepthCameraControl.srv
+  GetButton.srv
+  GetButtonBaudrate.srv
 )
 
 ## Generate actions in the 'action' folder

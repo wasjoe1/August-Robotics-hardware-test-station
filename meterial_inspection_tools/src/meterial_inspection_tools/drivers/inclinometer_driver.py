@@ -6,9 +6,10 @@
 INSTRUCTIONS: 
 parameters is not required to be keyed in 
 
-1. press the big webpage imu button --> == send connect command --> ROS system automatically connect + set + save
+1. press the big webpage imu button --> == send connect command --> ROS system automatically auto_detect + connect
+2. select baudrate
 2. will check if data is NG or G 
-3. press disconnect/just pull to unplug
+3. just pull to unplug
 
 """
 
@@ -24,6 +25,8 @@ from meterial_inspection_tools.ros_interface import (
    INCLINOMETER_STATE,
    INCLINOMETER_INFO,
    INCLINOMETER_DATA,
+   INCLINOMETER_CONFIGS,
+   INCLINOMETER_DATA_CHECK,
    INCLINOMETER_SRV_CMD,
 )
 import pymodbus
@@ -33,11 +36,9 @@ print(pymodbus.__version__)
 class InclinCommands(Enum):
     NONE = auto()
     RESET = auto()
-    #SCAN = auto()
     CONNECT = auto()
-    DISCONNECT = auto()
-    #SET_DEFAULT = auto()
-    #SAVE = auto()
+    SET_DEFAULT = auto()
+
 
 class InclinCheckerStates(Enum):
     INIT = auto()
@@ -78,7 +79,7 @@ class InclinOperations:
         return get_inclinometer_data_xy_deg(modbus_client,unit_id)
     
     @staticmethod
-    def set_default_settings(modbus_client,unit_id):
+    def set_default_settings(modbus_client,unit_id,command_params):
         succeeded = False
         return succeeded,modbus_client.unit_id
     
@@ -88,6 +89,9 @@ class InclinOperations:
     
     @staticmethod
     def close(modbus_client):
+        return True
+    
+    def check_reading(x_y_reading):
         return True
     
 class InclinSVT626T (InclinOperations):
@@ -100,6 +104,9 @@ class InclinSVT626T (InclinOperations):
     0x0002: 9600,
     0x0003: 19200,
     0x0004: 115200,
+    0x0005: 14400,
+    0x0006: 38400,
+    0x0007: 57600
     }
 
     def parse_reading(modbus_client,unit_id):
@@ -145,8 +152,8 @@ class InclinSVT626T (InclinOperations):
                     unit_id_constant = unit_id
         return modbus_client,unit_id_constant
     
-    @staticmethod
-    def set_default_settings(modbus_client,unit_id):
+
+    def set_default_settings(self,modbus_client,unit_id,command_params):
         succeeded = False
         data_zero_point = 0x01
         logger.loginfo("Setting relative zero point")
@@ -155,12 +162,20 @@ class InclinSVT626T (InclinOperations):
             logger.loginfo(
                 "Set {} zero point".format(["Relative" if data_zero_point else "Absolute"])
             )
-        baudrate_set = 0x0004
+        baudrate_set = int(command_params)
         rwr = modbus_client.write_register(0x0C, baudrate_set, slave=unit_id)
         if not rwr.isError():
             logger.loginfo("Set baudrate to: {}".format(InclinSVT626T.BAUDRATE_TABLE[baudrate_set]))
         rwr = modbus_client.write_register(0x0D,3, unit=unit_id)
         logger.loginfo("Set unit_id to: {}".format(3))
+
+        #update modbus_client with set baudrate
+        baudrate = self.BAUDRATE_TABLE.get(baudrate_set)
+        modbus_client.baudrate = baudrate
+
+        #save
+        data = 0x00
+        rwr = modbus_client.write_register(0x0F, data, unit=3)
         succeeded = True
         return succeeded
 
@@ -175,6 +190,12 @@ class InclinSVT626T (InclinOperations):
     def close(modbus_client):
         return True
     
+    def check_reading(x_y_reading):
+        x, y = x_y_reading
+        if x == 0 and y == 0: 
+            return True
+        return False
+
 class InclinChecker:
     NODE_RATE = 5.0
     _command = None
@@ -202,26 +223,22 @@ class InclinChecker:
         self.state = InclinCheckerStates.INIT
         self.pub_state = INCLINOMETER_STATE.Publisher()
         self.pub_info = INCLINOMETER_INFO.Publisher()
-        #self.pub_configs =INCLINOMETER_CONFIGS.Publisher()
+        self.pub_configs =INCLINOMETER_CONFIGS.Publisher()
         self.pub_data = INCLINOMETER_DATA.Publisher()
+        self.pub_data_check = INCLINOMETER_DATA_CHECK.Publisher()
         INCLINOMETER_SRV_CMD.Services(self.srv_cb)
 
         self.__STATES_METHODS = {
             (InclinCommands.NONE, InclinCheckerStates.INIT): self.initialize, # to IDLE
-            #(InclinCommands.SCAN, InclinCheckerStates.IDLE): self.scan, # to CONNECTED or stay
-            #(InclinCommands.CONNECT, InclinCheckerStates.IDLE): self.connect, # to CONNECTED or stay
-            #(InclinCommands.DISCONNECT, InclinCheckerStates.CONNECTED): self.disconnect, # to IDLE
             (InclinCommands.NONE, InclinCheckerStates.CONNECTED): self.parse_reading, # stay
-            #(InclinCommands.SET_DEFAULT, InclinCheckerStates.CONNECTED): self.set_default_settings, # stay
-            #(InclinCommands.SAVE, InclinCheckerStates.CONNECTED): self.save_parameters, # stay
-            #(InclinCommands.NONE, InclinCheckerStates.IDLE):self.check_connection
-            (InclinCommands.CONNECT, InclinCheckerStates.IDLE): self.connect_set_save, #all in one step --> iteration 1
+            (InclinCommands.CONNECT, InclinCheckerStates.IDLE): self.connect_scan,
+            (InclinCommands.SET_DEFAULT, InclinCheckerStates.CONNECTED): self.set_default_settings
         }
 
     
     def srv_cb(self,srv): 
         self.command = srv.button
-        #self.cmd_params = srv.parameter
+        self.cmd_params = srv.baudrate
         return True
 
     @property
@@ -266,98 +283,48 @@ class InclinChecker:
 
     def _get_current_inclin_settings(self):
         return {
-            "baudrate": self.modbus_configs["baudrate"]
+            "current baudrate": self.modbus_configs["baudrate"],
+            "current Unit_id": self.unit_id,
             }
-    
-    """
-    def connect(self):
-        self.state = InclinCheckerStates.CONNECTING
-        self. modbus_client,self.unit_id = self.inclinometer_model.connect(self=self.inclinometer_model,configs=self.modbus_configs)
-        if self.modbus_client:
-            self.log_with_frontend(f"Connected on baudrate: 115200")
-            self.state = InclinCheckerStates.CONNECTED
-            self.log_with_frontend(json.dumps(self._get_current_inclin_settings()))
-            return True
-        self.log_with_frontend(f"Failed to connect Inclinometer!")
-        self.state = InclinCheckerStates.IDLE
-        return False
-    
-    def scan(self):
-        self.state = InclinCheckerStates.SCANNING
-        self. modbus_client,self.unit_id= self.inclinometer_model.scan(self=self.inclinometer_model,configs = self.modbus_configs)
-        if self.modbus_client:
-            self.log_with_frontend(f'Scanned Inclinometer on baudrate: {self.modbus_configs["baudrate"]}')
-            self.state = InclinCheckerStates.CONNECTED
-            self.log_with_frontend(json.dumps(self._get_current_inclin_settings()))
-            return True
-        self.log_with_frontend(f"Cannot found the Inclinometer!")
-        self.state = InclinCheckerStates.IDLE
-        return False
-    """
-
-    def disconnect(self):
-        self.modbus_client  = None
-        self.log_with_frontend("DISCONNECTING")
-        self.log_with_frontend("DISCONNECTED")
-        self.state = InclinCheckerStates.IDLE
-        return True
     
     def parse_reading(self):
         try:
             with serial.Serial(port=self.modbus_configs["port"]) as ser:   
                 incline_msg = self.inclinometer_model.parse_reading(self.modbus_client,self.unit_id) 
                 self.pub_data.publish(json.dumps(incline_msg))
+                check_NG_or_G = self.inclinometer_model.check_reading(incline_msg)
+                if check_NG_or_G == True:
+                    self.pub_data_check.publish(json.dumps("OK"))
+                elif check_NG_or_G == False:
+                    self.pub_data_check.publish(json.dumps("NOT OK"))
                 return True
-        except serial.SerialException:
+        except (serial.SerialException, BrokenPipeError) as e:
             self.log_with_frontend("Inclinometer unplugged! Check connection")
             self.state = InclinCheckerStates.IDLE
             return False
        
-    """
-    def set_default_settings(self):
-        if self.inclinometer_model.set_default_settings(self.modbus_client,self.unit_id):
-            self.log_with_frontend("SETTING SET")
-            return True
     
-    def save_parameters(self): 
-        if self.inclinometer_model.save_parameters(self.modbus_client,self.unit_id):
-            self.log_with_frontend("CFG saved")
-            return True
-    """
+    def set_default_settings(self):
+        if self.inclinometer_model.set_default_settings(self = self.inclinometer_model,modbus_client=self.modbus_client,unit_id=self.unit_id, command_params=self.cmd_params):
+            self.log_with_frontend("SETTING SET")
 
-    def connect_set_save(self):
-        #scan
+             #save set settings
+            if self.inclinometer_model.save_parameters(self.modbus_client,self.unit_id):
+                self.log_with_frontend("CFG saved")
+                return True
+
+    def connect_scan(self):
+        #connect and scan merged
         self.state = InclinCheckerStates.SCANNING
         self. modbus_client,self.unit_id= self.inclinometer_model.scan(self=self.inclinometer_model,configs = self.modbus_configs)
         if self.modbus_client:
             self.log_with_frontend(f'Scanned Inclinometer on baudrate: {self.modbus_configs["baudrate"]}')
             self.state = InclinCheckerStates.CONNECTED
-            self.log_with_frontend(json.dumps(self._get_current_inclin_settings()))
-
-            #set 
-            if self.inclinometer_model.set_default_settings(self.modbus_client,self.unit_id):
-                self.log_with_frontend("SETTING SET")
-
-            #save
-            if self.inclinometer_model.save_parameters(self.modbus_client,self.unit_id):
-                self.log_with_frontend("CFG saved")
-            
+            self.pub_configs.publish(json.dumps(self._get_current_inclin_settings()))
             return True
         self.log_with_frontend(f"Cannot found the Inclinometer!")
         self.state = InclinCheckerStates.IDLE
         return False
-
-    """
-    def check_connection(self):
-        try:
-            with serial.Serial(port=self.modbus_configs["port"]) as ser:
-                logger.loginfo("no problem detecting port")
-                return True
-        except serial.SerialException:
-            logger.loginfo("problem detecting port")
-            self.log_with_frontend("INCLINOMETER_USB NOT CONNECTED")
-            return False
-    """
 
 
 if __name__ == "__main__":
