@@ -20,6 +20,14 @@ class WIT_IMU_CONSTANTS(Enum):
     WIT_IMU_CMD_SET_BANDWIDTH = b"\xff\xaa\x1f\x00\x00"
     WIT_IMU_CMD_SET_SENDBACK_RATE = b"\xff\xaa\x03\x0b\x00" 
 
+
+    BAUDRATE_TABLE = {
+        "9600" : b"\xff\xaa\x04\x02\x00",
+        "19200": b"\xff\xaa\x04\x03\x00",
+        "57600": b"\xff\xaa\x04\x05\x00",
+        "115200":b"\xff\xaa\x04\x06\x00",
+    }
+
 '''
     ACC_SPEED = {
         "2": b"\xff\xaa\x21\x00\x00", #2g
@@ -71,6 +79,12 @@ class RION_IMU_CONSTANTS(Enum):
     RION_IMU_CMD_SET_BAUDRATE = b"\x68\x05\x00\x0b\x05\x13"
     RION_IMU_READ = b"\x65\x05\x00\x8c\x00\x91"
     RION_IDENTIFIER = b"\x68"
+
+    BAUDRATE_TABLE = {
+        "9600" : b"\x68\x05\x00\x0b\x02\x13",
+        "19200": b"\x68\x05\x00\x0b\x03\x13",
+        "115200":b"\x68\x05\x00\x0b\x05\x13",
+    }
 
 
 
