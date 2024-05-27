@@ -47,6 +47,12 @@ class MeterialInspection():
                 "cb": [],
                 "sonar": [],
             },
+            "reading_checker": {
+                "imu": [],
+                "inclinometer": [],
+                "cb": [],
+                "sonar": [],
+            },
         }
 
         for sub_node_name, content in msg_dict.items():

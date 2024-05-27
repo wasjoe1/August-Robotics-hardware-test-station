@@ -160,6 +160,10 @@ async def cb_imu_state(websocket: WebSocket):
 async def cb_imu_state(websocket: WebSocket):
     await listen_to_websocket(websocket, "state", "imu")
 
+@app.websocket("/imu/reading_checker")
+async def cb_imu_state(websocket: WebSocket):
+    await listen_to_websocket(websocket, "state", "imu")
+
 
 # SONAR
 # /sonar_configs socket
