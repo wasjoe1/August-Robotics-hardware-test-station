@@ -1,11 +1,11 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-"""
 
+"""
 INSTRUCTIONS: 
 1. This script prase reading and sets baudrate for WIT and RION IMUs
 """
-
+import threading
 import rospy
 from sensor_msgs.msg import Imu
 logger = rospy
@@ -204,7 +204,7 @@ class IMURion(IMUOperations):
         return imu
         
 
-    def check_reading(serial_port, imu_msg_data):
+    def check_reading(imu_msg_data):
         q0 = imu_msg_data.orientation.x
         if q0 ==0: 
             return True
@@ -228,7 +228,7 @@ class IMURion(IMUOperations):
         succeeded = False
         if baudrate_params == "57600":
             return succeeded
-        baudrate = RION_IMU_CONSTANTS.BAUDRATE_TABLE.get(baudrate_params)
+        baudrate = RION_IMU_CONSTANTS.BAUDRATE_TABLE.value.get(baudrate_params)
         Serial(port=serial_port).write(baudrate) #RION_IMU_CMD_SET_BANDWIDTH
         succeeded = True
         return succeeded
@@ -331,11 +331,15 @@ class IMUWIT(IMUOperations):
         Serial(port=serial_port).write(WIT_IMU_CONSTANTS.WIT_IMU_CMD_UNLOCK.value) 
         Serial(port=serial_port).write(WIT_IMU_CONSTANTS.WIT_IMU_CMD_UNLOCK.value)
         Serial(port=serial_port).write(WIT_IMU_CONSTANTS.WIT_IMU_CMD_SET_SCALE_ACC.value) #WIT_IMU_CMD_SET_SCALE_ACC
+        logger.loginfo("set Acc value")
         Serial(port=serial_port).write(WIT_IMU_CONSTANTS.WIT_IMU_CMD_SET_SCALE_GYRO.value) #WIT_IMU_CMD_SET_SCALE_GYRO
-        baudrate = WIT_IMU_CONSTANTS.BAUDRATE_TABLE.get(baudrate_params)
-        Serial(port=serial_port).write(baudrate) #WIT_IMU_CMD_SET_BANDWIDTH 
+        baudrate = WIT_IMU_CONSTANTS.BAUDRATE_TABLE.value.get(baudrate_params)
+        logger.loginfo("set baudrate")
+        Serial(port=serial_port).write(baudrate) #WIT_IMU_CMD_SET_BANDWIDTH
         Serial(port=serial_port).write(WIT_IMU_CONSTANTS.WIT_IMU_CMD_SET_SENDBACK_RATE.value) #WIT_IMU_CMD_SET_SENDBACK_RATE)
+        logger.loginfo("set sendback rate")
         Serial(port=serial_port).write(WIT_IMU_CONSTANTS.WIT_IMU_CMD_SET_SENDBACK_CONTENT.value)
+        logger.loginfo("set sendback content")
         succeeded = True
         return succeeded
     
@@ -377,13 +381,13 @@ class IMUChecker:
         self.pub_configs_chinese = IMU_CONFIGS_CHINESE.Publisher()
         self.pub_data_check = IMU_DATA_CHECK.Publisher()
         IMU_SRV_CMD.Services(self.srv_cb)
+        self.parse_thread = None
 
         self.__STATES_METHODS = {
             (IMUCommands.NONE, IMUCheckerStates.INIT): self.initialize, # to IDLE
             (IMUCommands.AUTO_DETECT, IMUCheckerStates.IDLE): self.auto_detect, # to CONNECTED or stay
             (IMUCommands.NONE, IMUCheckerStates.CONNECTED): self.parse_reading, # stay
             (IMUCommands.SET_DEFAULT, IMUCheckerStates.CONNECTED): self.set_default_settings, # stay
-           
         }
 
 
@@ -420,7 +424,7 @@ class IMUChecker:
         logger.loginfo(log)
         logger.loginfo(log_chinese)
         self.pub_info.publish(log)
-        self.pub_info_chinese(log_chinese)
+        self.pub_info_chinese.publish(log_chinese)
 
 
 
@@ -447,22 +451,6 @@ class IMUChecker:
             "波特率": self.serial_port.baudrate
         }
     
-    """
-    def scan(self):
-        self.state = IMUCheckerStates.SCANNING
-        if self._determine_imu_type():
-            self.serial_port = self.imu_model.scan(self = IMUOperations,port=self.PORT)
-            if self.serial_port:
-                self.log_with_frontend(f"Scanned IMU on baudrate: {self.serial_port.baudrate}")
-                self.log_with_frontend_chinese(f"当前波特率：{self.serial_port.baudrate}")
-                self.state = IMUCheckerStates.CONNECTED
-                self.pub_configs.publish(json.dumps(self._get_current_imu_settings()))
-                return True
-        self.log_with_frontend(f"Cannot found the IMU!")
-        self.log_with_frontend_chinese("找不到IMU")
-        return False
-    """
-
     def auto_detect(self):
         self.state = IMUCheckerStates.SCANNING
         for imu_model in self.IMU_MODEL_TABLE.values():
@@ -481,25 +469,31 @@ class IMUChecker:
         return False
 
     def parse_reading(self):
-        try:
-            with serial.Serial(port=self.PORT) as ser:
-                imu_msg = self.imu_model.parse_reading(self.serial_port)
-                self.pub_reading.publish(json.dumps(imu_msg))
-                #self.pub_reading.publish(str(imu_msg)) #change to json dumps
-                check_NG_or_G = self.imu_model.check_reading(imu_msg)
-                if check_NG_or_G == True:
-                    self.pub_data_check.publish(json.dumps("OK"))
-                elif check_NG_or_G == False: 
-                    self.pub_data_check.publish(json.dumps("NOT OK"))
-                return True
-        except (serial.SerialException, BrokenPipeError) as e:
-            self.log_with_frontend("IMU unplugged! Check connection","无法连接IMU，请确保电源再连接")
-            self.state = IMUCheckerStates.IDLE
+        if self.parse_thread and self.parse_thread.is_alive():
             return False
+        def parse_target():
+            try:
+                with serial.Serial(port=self.PORT) as ser:
+                    imu_msg = self.imu_model.parse_reading(self.serial_port)
+                    self.pub_reading.publish(json.dumps(str(imu_msg)))
+                    #self.pub_reading.publish(str(imu_msg)) #change to json dumps
+                    check_NG_or_G = self.imu_model.check_reading(imu_msg)
+                    if check_NG_or_G == True:
+                        self.pub_data_check.publish(json.dumps("OK"))
+                    elif check_NG_or_G == False: 
+                        self.pub_data_check.publish(json.dumps("NOT OK"))
+                   
+            except (serial.SerialException, BrokenPipeError) as e:
+                self.log_with_frontend("IMU unplugged! Check connection","无法连接IMU，请确保电源再连接")
+                self.state = IMUCheckerStates.IDLE
+        
+        self.parse_thread = threading.Thread(target=parse_target)
+        self.parse_thread.start()
         
 
     def set_default_settings(self):
-        if self.imu_model.set_default_settings(self.serial_port,self.cmd_params):
+        logger.loginfo("called set_default")
+        if self.imu_model.set_default_settings(self.PORT,self.cmd_params):
             logger.loginfo(self.serial_port)
             self.log_with_frontend("SETTING SET","设置成功")
         #save settings
