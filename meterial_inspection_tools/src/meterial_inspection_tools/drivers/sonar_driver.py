@@ -13,6 +13,7 @@ import os
 import datetime
 import csv
 import threading
+import serial
 from pymodbus.client.sync import ModbusSerialClient as ModbusClient
 import rospy 
 logger = rospy
@@ -87,13 +88,13 @@ class DYP_SONAR():
                 |_____|                             |_____|
                 |  8  |                             |  4  |
                 |{} |                             |{} |
-                |_{}__|                             |_{}|
+                |_{}__|                             |{}|
                 |     |                             |     |
                 |     |                             |     |
                 |_____|_____ _____ _____ ___________|_____|
                 |     |  7  |     |  6  |     |  5  |     |
                 |     | {} |     |{} |     |{} |     |
-                |_____|_{}___|_____|_{}___|_____|_{}__|_____|
+                |_____|_{}___|____|{}___|___|_{}__|_____|
 
     """.format(
         format(dis[0]),format(dis[1]),format(dis[2]), 
@@ -126,7 +127,8 @@ class DYP_SONAR():
                         unit_box[i] = None
                     paired_values.append({"distance":dis[i],"unit" : unit_box[i]})
                 if response.isError():
-                    pass
+                    logger.loginfo("error")
+                    logger.loginfo(response)
             return dis,unit_box,paired_values
 
         dis_input,unit_box,paired_values = loop_distance(self=DYP_SONAR,modbus_client=modbus_client)
@@ -270,6 +272,7 @@ class SonarChecker:
         (SONARCommands.NONE, SonarCheckerStates.CONNECTED): self.parse_reading, # stay
         (SONARCommands.SET_DEFAULT, SonarCheckerStates.CONNECTED): self.set_default_settings, # stay
         (SONARCommands.SAVE, SonarCheckerStates.CONNECTED): self.save_parameters, # stay
+        #(SONARCommands.NONE,SonarCheckerStates.CONNECTED): self.check_connection, # checks port connection 
     }
 
     def srv_cb(self, srv):
@@ -328,7 +331,7 @@ class SonarChecker:
             self.state = SonarCheckerStates.CONNECTED
             self.pub_configs.publish(json.dumps(self._get_current_SONAR_settings()))
             return True
-        self.log_with_frontend(f"Failed to connect CB driver!")
+        self.log_with_frontend(f"Failed to connect sonar driver!")
         self.state = SonarCheckerStates.IDLE
         return False
         
@@ -340,6 +343,7 @@ class SonarChecker:
             self.state = SonarCheckerStates.CONNECTED
             self.pub_configs.publish(json.dumps(self._get_current_SONAR_settings()))
             return True
+        self.log_with_frontend(f"Failed to connect sonar driver!")
         self.state = SonarCheckerStates.IDLE
         return False
 
@@ -348,6 +352,8 @@ class SonarChecker:
             self.parse_thread.join()
         self.modbus_client  = None
         self.log_with_frontend("DISCONNECTING")
+        self.log_with_frontend("DISCONNECTED")
+        self.sonar_model.UNIT_CHECKER = []
         self.state = SonarCheckerStates.IDLE
         return True
 
@@ -355,9 +361,15 @@ class SonarChecker:
         if self.parse_thread and self.parse_thread.is_alive():
             return False
         def parse_target():
-            cb_msg = self.sonar_model.parse_reading(self=self.sonar_model,modbus_client = self.modbus_client)
+            #try:
+                #with serial.Serial(port=self.modbus_configs["port"]) as ser:   
+            sonar_msg = self.sonar_model.parse_reading(self=self.sonar_model,modbus_client = self.modbus_client)
             rospy.sleep(0.001) # same as sonar reading code on lionel
-            self.pub_reading.publish(json.dumps(cb_msg))
+            self.pub_reading.publish(json.dumps(sonar_msg))
+            
+            #except serial.SerialException:
+            #    self.state = SonarCheckerStates.IDLE
+                
         self.parse_thread = threading.Thread(target=parse_target)
         self.parse_thread.start()
     
@@ -373,7 +385,18 @@ class SonarChecker:
             self.parse_thread.join()
         self.log_with_frontend("CFG saved")
         return True
-        
+    """    
+    def check_connection(self):
+        try:
+            with serial.Serial(port=self.modbus_configs["port"]) as ser:
+                logger.loginfo("no problem detecting port")
+                return True
+        except serial.SerialException:
+            logger.loginfo("problem detecting port")
+            self.log_with_frontend("SONAR_USB NOT CONNECTED")
+            return False
+    """
+
 if __name__ == "__main__":
     rospy.init_node("sonar_driver_node")
     sonar_driver_checker = SonarChecker()

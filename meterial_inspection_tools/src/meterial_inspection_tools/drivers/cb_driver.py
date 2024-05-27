@@ -13,6 +13,7 @@ from __future__ import print_function, division
 import sys
 import time
 import struct
+import serial
 from pymodbus.client.sync import ModbusSerialClient as ModbusClient
 
 import rospy 
@@ -297,6 +298,7 @@ class CBChecker:
         (CBCommands.NONE, CBCheckerStates.CONNECTED): self.parse_reading, # stay
         (CBCommands.SET_DEFAULT, CBCheckerStates.CONNECTED): self.set_default_settings, # stay
         (CBCommands.SAVE, CBCheckerStates.CONNECTED): self.save_parameters, # stay
+        #(CBCommands.NONE,CBCheckerStates.IDLE):self.check_connection #check if USB connection is connected
     }
         
     def srv_cb(self, srv):
@@ -355,6 +357,7 @@ class CBChecker:
         self.log_with_frontend(f"CB model: {self.cmd_params} not supported")
         return False
     
+    """
     def connect(self):
         self.state = CBCheckerStates.CONNECTING
         if self._determine_CB_type():
@@ -367,7 +370,11 @@ class CBChecker:
             self.log_with_frontend(f"Failed to connect CB driver!")
             self.state = CBCheckerStates.IDLE
             return False
-    
+        self.log_with_frontend(f"Failed to connect CB driver, check if CB type has been inputted!")
+        self.state = CBCheckerStates.IDLE
+        return False
+    """
+
     def scan(self):
         self.state = CBCheckerStates.SCANNING
         if self._determine_CB_type():
@@ -383,13 +390,20 @@ class CBChecker:
 
     def disconnect(self):
         self.modbus_client  = None
+        self.log_with_frontend("DISCONNECTING")
+        self.log_with_frontend("DISCONNECTED")
         self.state = CBCheckerStates.IDLE
         return True
     
     def parse_reading(self):
-        cb_msg = self.cb_model.parse_reading(self=self.cb_model,modbus_client = self.modbus_client)
-        self.pub_reading.publish(json.dumps(cb_msg))
-        return True
+        try:
+            with serial.Serial(port=self.modbus_configs["port"]) as ser:  
+                cb_msg = self.cb_model.parse_reading(self=self.cb_model,modbus_client = self.modbus_client)
+                self.pub_reading.publish(json.dumps(cb_msg))
+                return True
+        except (serial.SerialException, BrokenPipeError) as e:
+            self.state = CBCheckerStates.IDLE
+            return False
     
     def set_default_settings(self):
         if self.cb_model.set_default_settings(self= self.cb_model,modbus_client=self.modbus_client):
@@ -400,7 +414,15 @@ class CBChecker:
         if self.cb_model.save_parameters(self.modbus_client):
             self.log_with_frontend("CFG saved")
             return True
-        
+    
+    def auto_detect(self):
+        self.state = CBCheckerStates.SCANNING
+        for models in self.CB_DRIVER_MODEL_TABLE.values:
+            modbusclient = models.scan(self=self.models)
+
+        #TODO: continue writing this method
+
+
 if __name__ == "__main__":
     rospy.init_node("cb_driver_node")
     cb_driver_checker = CBChecker()

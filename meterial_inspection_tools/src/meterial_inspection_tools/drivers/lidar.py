@@ -1,1 +1,0 @@
-rospy.init_node("llll")
