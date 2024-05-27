@@ -3,7 +3,6 @@
 
 import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
-import Stats from 'three/addons/libs/stats.module.js'
 
 
 var ws_json
@@ -32,10 +31,16 @@ const buttonDict = {
 
 console.log("depth")
 console.log("test")
-var count = 0 // TEST
 
 // ------------------------------------------------------------------------------------------------
 // 3D Rendering
+var count = 0
+const vertices = [] // ~200k points
+const colors = []
+const gData = []
+var geometry = undefined
+var points = undefined
+const material = new THREE.PointsMaterial( {size: 0.1, vertexColors: true} )
 
 const scene = new THREE.Scene()
 
@@ -62,9 +67,6 @@ document.body.appendChild(info)
 
 const controls = new OrbitControls(camera, renderer.domElement)
 
-const stats = new Stats()
-document.body.appendChild(stats.dom)
-
 function animate() {
   requestAnimationFrame(animate)
 
@@ -78,12 +80,7 @@ function animate() {
     '°'
 
   renderer.render(scene, camera)
-
-  stats.update()
 }
-
-const vertices = [] // ~200k points
-const colors = []
 
 // ------------------------------------------------------------------------------------------------
 // Functions
@@ -102,6 +99,39 @@ function clear_all_ws() {
     }
 }
 
+function startRenderData() {
+    console.log("rendering data is called")
+    var evt = gData[0]
+    console.log("getting data from /depth/data ...") // TEST
+    var eventData = JSON.parse(evt.data)
+    var pointCloud2Data = JSON.parse(eventData.depth.data)
+    
+    console.log("configuring points...") // TEST
+    for (let i = 0; i < pointCloud2Data.coords.length; i++) {
+        var point = pointCloud2Data.coords[i]
+        var color = pointCloud2Data.colors[i]
+        const x = point[0], y = point[1], z = point[2]
+        vertices.push(x, y, z)
+        const r = color[0] / 255, g = color[1] / 255, b = color[2] / 255
+        colors.push(r, g, b)
+    }
+    console.log("points configured") // TEST
+    
+    console.log("Trying to render points...") // TEST
+    // if there was a geom in scene previously
+    if (geometry) {
+        geometry.dispose()
+        scene.remove(points)
+    }
+    geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3))
+    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3))
+    points = new THREE.Points( geometry, material )
+    scene.add( points )
+    animate()
+    console.log("points rendered") // TEST
+}
+
 function create_ws(ip_addr, route, elementId) {
     try {
         const ws = new WebSocket("ws://" + ip_addr + route) // route == /depth_smt
@@ -111,45 +141,17 @@ function create_ws(ip_addr, route, elementId) {
         });
         ws.onmessage = function(evt) {
             // TEST
-            if (route == "/depth/data" && count < 3) { // TEST
-                
-                console.log("getting data from /depth/data ...") // TEST
-                var eventData = JSON.parse(evt.data)
-                console.log(eventData.depth.data)
-                var pointCloud2Data = JSON.parse(eventData.depth.data)
-                console.log(pointCloud2Data.coords)
-                console.log(pointCloud2Data.colors)
-                
-                console.log("configuring points...") // TEST
-                for (let i = 0; i < pointCloud2Data.coords.length; i++) {
-                    var point = pointCloud2Data.coords[i]
-                    var color = pointCloud2Data.colors[i]
-                    const x = point[0]
-                    const y = point[1]
-                    const z = point[2]
-                    vertices.push(x, y, z)
-                    const r = color[0] / 255
-                    const g = color[1] / 255
-                    const b = color[2] / 255
-                    colors.push(r, g, b)
+            if (route == "/depth/data") { // TEST
+                // replace existing data
+                gData[0] = evt
+
+                if (count==0) {
+                    // first time start async funtion
+                    setInterval(startRenderData, 3000); // TODO what if data[0] is being replaced when startRenderData is called concurrently??
+                    count++
                 }
-                console.log("points configured") // TEST
-                
-                if (count == 2) { // TEST
-                    console.log("creating points model...") // TEST
-                    const geometry = new THREE.BufferGeometry();
-                    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3))
-                    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3))
-                    const material = new THREE.PointsMaterial( {size: 0.1, vertexColors: true} )
-                    const points = new THREE.Points( geometry, material )
-                    scene.add( points )
-                    animate()
-                    console.log("points model ready") // TEST
-                }
-                
-                count++ // TEST
             }
-            return evt.data
+            return gData[0].data
         }
         gAll_ws_connections.push(ws)
     } catch (e) {
