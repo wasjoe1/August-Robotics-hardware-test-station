@@ -37,25 +37,20 @@
         <div id="responseData-configs" class="display-content-div"></div>
         <h4 id="readings" class="display-content-header">Readings</h4>
         <div id="responseData-data" class="display-content-div"></div>
-        <h4 class="display-content-header">Response information</h4>
+        <h4 class="display-content-header">Response Information</h4>
         <div id="responseData-info" class="display-content-div"></div>
-      </div>
-
-      <!-- middle of body -->
-      <div style="display: flex; flex-direction: column; background-color: darksalmon;">
-        <!-- buttons -->
-        <button class="btn btn-command btn-default" id="RIONBtn" parameter="RION" onclick="onClickSetParamBtn(this)">RION</button>
-        <button class="btn btn-command btn-default" id="WITBtn" parameter="WIT" onclick="onClickSetParamBtn(this)">WIT</button>
+        <h4 class="display-content-header">Reading Checker</h4>
+        <div id="responseData-reading_checker" class="display-content-div"></div>
       </div>
 
       <!-- right of body -->
       <div style="display: flex; flex-direction: column; justify-content: space-between; background-color: darksalmon;">
         <!-- buttons -->
-        <button class="btn btn-command btn-default" id="scanBtn" onclick="onClickCommandBtn(this)">Scan</button>
-        <button class="btn btn-command btn-default" id="connectBtn" onclick="onClickCommandBtn(this)">Connect</button>
-        <button class="btn btn-command btn-default" id="disconnectBtn" onclick="onClickCommandBtn(this)">Disconnect</button>
-        <button class="btn btn-command btn-default" id="setDefaultBtn" onclick="onClickCommandBtn(this)">Set default</button>
-        <button class="btn btn-command btn-default" id="saveBtn" onclick="onClickCommandBtn(this)">Save</button>
+        <div>Select Baud rate</div>
+        <button class="btn btn-command btn-default" id="setDefaultBtn" baudrate="9600" onclick="onClickCommandBtn(this)">9600 baud</button>
+        <button class="btn btn-command btn-default" id="setDefaultBtn" baudrate="19200" onclick="onClickCommandBtn(this)">19200 baud</button>
+        <button class="btn btn-command btn-default" id="setDefaultBtn" baudrate="57600" onclick="onClickCommandBtn(this)">57600 baud</button>
+        <button class="btn btn-command btn-default" id="setDefaultBtn" baudrate="115200" onclick="onClickCommandBtn(this)">115200 baud</button>
       </div>
     </div>
   </div>

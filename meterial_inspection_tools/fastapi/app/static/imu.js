@@ -14,16 +14,8 @@ const found = url.match(regex)
 current_step = found[2]
 console.log("current step: ", current_step)
 
-gParam = undefined
-gSelectedComponentElement = undefined
-
 const buttonDict = {
-    "scanBtn": "SCAN",
-    "connectBtn": "CONNECT",
-    // "autoDetectBtn": "AUTO DETECT",
-    "disconnectBtn": "DISCONNECT",
     "setDefaultBtn": "SET_DEFAULT",
-    "saveBtn": "SAVE",
 }
 
 console.log("imu")
@@ -37,13 +29,6 @@ function parseStringToInt(str) {
         console.log("Parsing of String to Int failed")
         console.log(e)
         throw e
-    }
-}
-
-function createCmdData(buttonString, param) {
-    return {
-        button: buttonString,
-        parameter: param,
     }
 }
 
@@ -74,6 +59,13 @@ function clear_all_ws() {
     }
 }
 
+function createCmdData(buttonString, param) {
+    return {
+        button: buttonString,
+        parameter: parseStringToInt(param),
+    }
+}
+
 function executeCommand(cmd) {
     console.log(cmd)
 
@@ -91,17 +83,7 @@ function executeCommand(cmd) {
 // ------------------------------------------------------------------------------------------------
 // onClickEvents
 function onClickCommandBtn(element) {
-    executeCommand(createCmdData(buttonDict[element.id], gParam))    
-}
-
-function onClickSetParamBtn(element) {
-    gParam = element.getAttribute("parameter")
-    console.log(gParam)
-    if (gSelectedComponentElement) {
-        gSelectedComponentElement.classList.remove("selected")
-    }
-    element.classList.add("selected")
-    gSelectedComponentElement = element
+    executeCommand(createCmdData(buttonDict[element.id], this.getAttribute("baudrate"))) //TODO change the cmd to not send gParam
 }
 
 // TODO: create an event s.t. when page changes, clear all web sockets
@@ -121,5 +103,9 @@ create_ws(ip_addr, "/imu/state", "responseData-state")
 create_ws(ip_addr, "/imu/info", "responseData-info")
 
 // ------------------------------------------------------------------------------------------------
-// open web socket connection for /configs => for user status
+// open web socket connection for /configs => for config data
 create_ws(ip_addr, "/imu/configs", "responseData-configs")
+
+// ------------------------------------------------------------------------------------------------
+// open web socket connection for /reading_checker => for reading checker
+create_ws(ip_addr, "/imu/reading_checker", "responseData-reading_checker")
