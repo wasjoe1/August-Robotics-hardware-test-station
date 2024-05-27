@@ -23,66 +23,77 @@ class MeterialInspection():
     def __init__(self) -> None:
         logger.loginfo("init meterial inspection...")
         self.send_queue = {
-            "configs": {
-                "imu": [],
-                "inclinometer": [],
-                "cb": [],
-                "sonar": [],
-            },
-            "data": {
-                "imu": [],
-                "inclinometer": [],
-                "cb": [],
-                "sonar": [],
-            },
-            "info": {
-                "imu": [],
-                "inclinometer": [],
-                "cb": [],
-                "sonar": [],
-            },
-            "state": {
-                "imu": [],
-                "inclinometer": [],
-                "cb": [],
-                "sonar": [],
-            },
-            "reading_checker": {
-                "imu": [],
-                "inclinometer": [],
-                "cb": [],
-                "sonar": [],
-            },
+            # "configs": {
+            #     "imu": [],
+            #     "inclinometer": [],
+            #     "cb": [],
+            #     "sonar": [],
+            # },
+            # "data": {
+            #     "imu": [],
+            #     "inclinometer": [],
+            #     "cb": [],
+            #     "sonar": [],
+            # },
+            # "info": {
+            #     "imu": [],
+            #     "inclinometer": [],
+            #     "cb": [],
+            #     "sonar": [],
+            # },
+            # "state": {
+            #     "imu": [],
+            #     "inclinometer": [],
+            #     "cb": [],
+            #     "sonar": [],
+            # },
+            # "reading_checker": {
+            #     "imu": [],
+            #     "inclinometer": [],
+            #     "cb": [],
+            #     "sonar": [],
+            # },
         }
 
-        for sub_node_name, content in msg_dict.items():
-            try:
-                content["topic_configs"].Subscriber(self.topic_configs_cb, callback_args={"name": sub_node_name}) # will be used for the cb_args in the def below
-                logger.loginfo(f"Sub-ed to {sub_node_name}'s topic_configs have succeded")
-            except Exception as e:
-                logger.loginfo(f"Subscription to {sub_node_name}'s topic_configs failed")
-                logger.logerr(e)
+        for component, topics in msg_dict.items():
+            # for all the topics in respective components
+            # try to subscribe to the respective topics
+            # call the respective callback functions
+            for topic in topics:
+                try:
+                    topics["topic"].Subscriber(self.topic_cb, callback_args={"component": component, "topic": topic}) # will be used for the cb_args in the def below
+                    logger.loginfo(f"Sub-ed to {component}'s {topic} have succeded")
+                except Exception as e:
+                    logger.loginfo(f"Subscription to {component}'s {topic} failed")
+                    logger.logerr(e)
 
-            try:
-                content["topic_data"].Subscriber(self.topic_data_cb, callback_args={"name": sub_node_name})
-                logger.loginfo(f"Sub-ed to {sub_node_name}'s topic_data have succeded")
-            except Exception as e:
-                logger.loginfo(f"Subscription to {sub_node_name}'s topic_data failed")
-                logger.logerr(e)
+            # try:
+            #     topics["topic_configs"].Subscriber(self.topic_configs_cb, callback_args={"name": component}) # will be used for the cb_args in the def below
+            #     logger.loginfo(f"Sub-ed to {component}'s topic_configs have succeded")
+            # except Exception as e:
+            #     logger.loginfo(f"Subscription to {component}'s topic_configs failed")
+            #     logger.logerr(e)
+
+            # try:
+            #     topics["topic_data"].Subscriber(self.topic_data_cb, callback_args={"name": component})
+            #     logger.loginfo(f"Sub-ed to {component}'s topic_data have succeded")
+            # except Exception as e:
+            #     logger.loginfo(f"Subscription to {component}'s topic_data failed")
+            #     logger.logerr(e)
             
-            try:
-                content["topic_info"].Subscriber(self.topic_info_cb, callback_args={"name": sub_node_name}) # will be used for the cb_args in the def below
-                logger.loginfo(f"Sub-ed to {sub_node_name}'s topic_info have succeded")
-            except Exception as e:
-                logger.loginfo(f"Subscription to {sub_node_name}'s topic_info failed")
-                logger.logerr(e)
+            # try:
+            #     topics["topic_info"].Subscriber(self.topic_info_cb, callback_args={"name": component}) # will be used for the cb_args in the def below
+            #     logger.loginfo(f"Sub-ed to {component}'s topic_info have succeded")
+            # except Exception as e:
+            #     logger.loginfo(f"Subscription to {component}'s topic_info failed")
+            #     logger.logerr(e)
             
-            try:
-                content["topic_state"].Subscriber(self.topic_state_cb, callback_args={"name": sub_node_name})
-                logger.loginfo(f"Sub-ed to {sub_node_name}'s topic_state have succeded")
-            except Exception as e:
-                logger.loginfo(f"Subscription to {sub_node_name}'s topic_state failed")
-                logger.logerr(e)
+            # try:
+            #     topics["topic_state"].Subscriber(self.topic_state_cb, callback_args={"name": component})
+            #     logger.loginfo(f"Sub-ed to {component}'s topic_state have succeded")
+            # except Exception as e:
+            #     logger.loginfo(f"Subscription to {component}'s topic_state failed")
+            #     logger.logerr(e)
 
     # -------------------------------------------------------------------------------------------------
     # Subscriber call back functions & msg functions
@@ -100,40 +111,59 @@ class MeterialInspection():
     def pop_topic_msg(self, topic, component):
         if len(self.send_queue[topic][component]) > 0:
             del self.send_queue[topic][component][0]
+    
+    def get_topic_to_component_dict(self):
+        res = {}
+        for topic in self.send_queue:
+            for component in self.send_queue[topic]:
+                res[topic] = component
+        return res
+
+
 
     # -------------------------------------------------------------------------------------------------
     # CALLBACKS
-    def topic_configs_cb(self, msg, cb_args):
-        func = lambda a: a.replace("/","").replace("data","")
-        print("call back args in topics", cb_args["name"])
-        print("call back args filtered in topics", func(cb_args["name"]))
-        # func(cb_args["name"]) => returns "imu", msg is wtv data there is in the topic
-        data_to_send = json.dumps({func(cb_args["name"]): convert_ros_message_to_dictionary(msg)})
-        self.send_queue["configs"][func(cb_args["name"])].append(data_to_send)
+    def topic_cb(self, msg, cb_args):
+        print("call back args in topics", cb_args["component"]) # should return 'imu', 'inclinometer', ...
+        print("call back args in topics", cb_args["topic"]) # should return 'topic_info', 'topic_data', ... etc.
+        data_to_send = json.dumps({cb_args["name"]: convert_ros_message_to_dictionary(msg)})
+        if not self.send_queue.get(cb_args["topic"]): # if send q has no such topic
+            self.send_queue[cb_args["topic"]] = []
+        if not self.send_queue[cb_args["topic"]].get(cb_args["component"]): # if send q topic has no such component
+            self.send_queue[cb_args["topic"]][cb_args["component"]] = []
+        self.send_queue[cb_args["topic"]][cb_args["component"]].append(data_to_send)
 
-    def topic_data_cb(self, msg, cb_args):
-        func = lambda a: a.replace("/","").replace("data","")
-        print("call back args in topics", cb_args["name"])
-        print("call back args filtered in topics", func(cb_args["name"]))
-        # func(cb_args["name"]) => returns "imu", msg is wtv data there is in the topic
-        data_to_send = json.dumps({func(cb_args["name"]): convert_ros_message_to_dictionary(msg)})
-        self.send_queue["data"][func(cb_args["name"])].append(data_to_send)
+    # def topic_configs_cb(self, msg, cb_args):
+    #     func = lambda a: a.replace("/","").replace("data","")
+    #     print("call back args in topics", cb_args["name"])
+    #     print("call back args filtered in topics", func(cb_args["name"]))
+    #     # func(cb_args["name"]) => returns "imu", msg is wtv data there is in the topic
+    #     data_to_send = json.dumps({func(cb_args["name"]): convert_ros_message_to_dictionary(msg)})
+    #     self.send_queue["configs"][func(cb_args["name"])].append(data_to_send)
+
+    # def topic_data_cb(self, msg, cb_args):
+    #     func = lambda a: a.replace("/","").replace("data","")
+    #     print("call back args in topics", cb_args["name"])
+    #     print("call back args filtered in topics", func(cb_args["name"]))
+    #     # func(cb_args["name"]) => returns "imu", msg is wtv data there is in the topic
+    #     data_to_send = json.dumps({func(cb_args["name"]): convert_ros_message_to_dictionary(msg)})
+    #     self.send_queue["data"][func(cb_args["name"])].append(data_to_send)
     
-    def topic_info_cb(self, msg, cb_args):
-        func = lambda a: a.replace("/","").replace("data","")
-        print("call back args in topics", cb_args["name"])
-        print("call back args filtered in topics", func(cb_args["name"]))
-        # func(cb_args["name"]) => returns "imu", msg is wtv data there is in the topic
-        data_to_send = json.dumps({func(cb_args["name"]): convert_ros_message_to_dictionary(msg)})
-        self.send_queue["info"][func(cb_args["name"])].append(data_to_send)
+    # def topic_info_cb(self, msg, cb_args):
+    #     func = lambda a: a.replace("/","").replace("data","")
+    #     print("call back args in topics", cb_args["name"])
+    #     print("call back args filtered in topics", func(cb_args["name"]))
+    #     # func(cb_args["name"]) => returns "imu", msg is wtv data there is in the topic
+    #     data_to_send = json.dumps({func(cb_args["name"]): convert_ros_message_to_dictionary(msg)})
+    #     self.send_queue["info"][func(cb_args["name"])].append(data_to_send)
     
-    def topic_state_cb(self, msg, cb_args):
-        func = lambda a: a.replace("/","").replace("data","")
-        print("call back args in topics", cb_args["name"])
-        print("call back args filtered in topics", func(cb_args["name"]))
-        # func(cb_args["name"]) => returns "imu", msg is wtv data there is in the topic
-        data_to_send = json.dumps({func(cb_args["name"]): convert_ros_message_to_dictionary(msg)})
-        self.send_queue["state"][func(cb_args["name"])].append(data_to_send)
+    # def topic_state_cb(self, msg, cb_args):
+    #     func = lambda a: a.replace("/","").replace("data","")
+    #     print("call back args in topics", cb_args["name"])
+    #     print("call back args filtered in topics", func(cb_args["name"]))
+    #     # func(cb_args["name"]) => returns "imu", msg is wtv data there is in the topic
+    #     data_to_send = json.dumps({func(cb_args["name"]): convert_ros_message_to_dictionary(msg)})
+    #     self.send_queue["state"][func(cb_args["name"])].append(data_to_send)
 
     # -------------------------------------------------------------------------------------------------
     # service calls

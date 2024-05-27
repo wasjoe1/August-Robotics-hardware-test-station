@@ -139,6 +139,19 @@ async def listen_to_websocket(websocket, topic, component):
             await websocket.send_text(f"{qData}")
             app.mi.pop_topic_msg(topic, component)
 
+topicToComponent = app.mi.get_topic_to_component_dict()
+for topic, component in topicToComponent:
+    @app.websocket("/imu/configs")
+    async def cb_imu_data(websocket: WebSocket):
+        await listen_to_websocket(websocket, "configs", "imu")
+
+# TODO figuring out the decorator part for this
+# for topic, component in topicToComponent:
+#     @app.websocket(f"/{component}/{topic}")
+#      async def cb(websocket: WebSocket):
+#          await listen_to_websocket(websocket, topic, component)
+    
+
 # IMU
 # /imu_configs socket
 @app.websocket("/imu/configs")
@@ -185,6 +198,10 @@ async def cb_sonar_state(websocket: WebSocket):
 @app.websocket("/sonar/state")
 async def cb_sonar_state(websocket: WebSocket):
     await listen_to_websocket(websocket, "state", "sonar")
+
+@app.websocket("/sonar/reading_checker")
+async def cb_imu_state(websocket: WebSocket):
+    await listen_to_websocket(websocket, "state", "imu")
 
 
 # INCLINOMETER
