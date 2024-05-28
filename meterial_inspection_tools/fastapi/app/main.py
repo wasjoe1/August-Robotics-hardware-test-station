@@ -1,38 +1,33 @@
 import logging
 import json
-
-from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
-
 import asyncio # allows your program to run async functions/codes
 import socket 
-
-from fastapi import Request
-from fastapi import WebSocket
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
-
-
 import os # allows programmer to perform OS dependent operations i.e. reading & writing to files
 
 import _thread
 from concurrent import futures
 
+from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
+from fastapi import Request
+from fastapi import WebSocket
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 
 import rospy
+import rospy as logger
 from ros_mi import MeterialInspection
-
-rospy.loginfo("init main.py...") # TODO figure out why main does print but rosmi does
 
 # -------------------------------------------------------------------------------------------------
 # init
 
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+somelogger = logging.getLogger()
+somelogger.setLevel(logging.INFO)
 ch = logging.StreamHandler() # creates a stream handler object => sends log msgs to a stream (usually for python its the console)
-logger.addHandler(ch) # adds the stream handler to the logger object
-
-logger.info(os.getcwd()) # os.getcwd() gets current working directory from which the python script is being executed
+somelogger.addHandler(ch) # adds the stream handler to the logger object
+# somelogger.info("init main.py...") # TODO figure out why main does print but rosmi does
+rospy.loginfo("init main.py...") # TODO figure out why main does print but rosmi does
+somelogger.info(os.getcwd()) # os.getcwd() gets current working directory from which the python script is being executed
 
 app = FastAPI()
 app.data = None
@@ -44,7 +39,7 @@ templates = Jinja2Templates(directory="templates") # templates directory is used
 
 h_name = socket.gethostname()
 IP_addres = socket.gethostbyname(h_name)
-logger.info("h_name: {}, IP_address {}".format(h_name, IP_addres))
+logger.loginfo("h_name: {}, IP_address {}".format(h_name, IP_addres))
 
 rospy.init_node("fastapi_ros") # initialize the ros node
 app.mi = MeterialInspection()
@@ -77,7 +72,7 @@ def get_lang_data():
         with open("static/lang.txt", "r") as f:
             langdata = f.read()
     except Exception as e:
-        logger.info(e)
+        logger.loginfo(e)
         return 0
     return langdata
 
@@ -89,7 +84,7 @@ async def startup_event():
     try:
         _thread.start_new_thread(ros_serve, ()) # run the ros rate method
     except Exception as e:
-        logger.info("Error: cannot init thread. {}".format(e))
+        logger.loginfo(f"Error: cannot init thread. {e}")
 
 # -------------------------------------------------------------------------------------------------
 # middleware
@@ -100,16 +95,16 @@ async def get_html(request: Request): # request is the 1st arg
 
 @app.get("/step/{mode}", response_class=HTMLResponse) # indicates its a html response
 async def step(request: Request, mode: str): # mode is of string type; its from clicking the page btn
-    logger.info(f"get step {mode}")
+    logger.loginfo(f"get step {mode}")
 
     app.mode = mode
     
     if app.mode is not None:
 
-        logger.info("static/"+app.mode+".txt")
+        logger.loginfo("static/"+app.mode+".txt")
         with open("static/"+str(app.lang)+"_"+app.mode+".txt") as f:
             just_do = f.readlines() # read the lines of the txt file
-            logger.info(just_do)
+            logger.loginfo(just_do)
 
         return templates.TemplateResponse(app.mode+".html", { "request": request, "just_do": just_do, "responseData": responseData })
     else:
@@ -118,32 +113,42 @@ async def step(request: Request, mode: str): # mode is of string type; its from 
 @app.get("/command/{cmd}", response_class=HTMLResponse)
 async def command(request: Request, cmd: str):
     try:
-        logger.info(f"get command {cmd}")
+        logger.loginfo(f"get command {cmd}")
         srv_call_formatted_data = cmd # for now put imu only; returns json string
         # msg_dict[sub_node].service_call(cmd) => json string is passed to the node in the service call; might be the old way of making a service call
         app.mi.send_srv(srv_call_formatted_data)
     except Exception as e:
-        logger.error(e)
+        logger.logerr(e)
 
 # -------------------------------------------------------------------------------------------------
 # WEBSOCKETS (for frontend to connect to)
 
 async def listen_to_websocket(websocket, component, topic):
-    logger.info(f"get websocket data from /{component}_{topic} topic.")
     #TODO
     await websocket.accept()
     while True:
         await asyncio.sleep(0.2)
+        logger.loginfo("b4 has topic message") # TEST its always empty [RESOLVED]
+        logger.loginfo(f"get websocket data from /{component}/{topic} topic.")
+        logger.loginfo(component) # always calling lidar [RESOLVED]
+        logger.loginfo(topic) # always calling topic_info [RESOLVED]
+        logger.loginfo(app.mi.has_topic_msg(component, topic))
         if app.mi.has_topic_msg(component, topic):
+            logger.loginfo("afterhas topic message") # TEST its always empty [RESOLVED]
             qData = app.mi.get_topic_msg(component, topic)
-            logger.info(f"queue data: {qData}")
+            logger.loginfo(f"queue data: {qData}")
             await websocket.send_text(f"{qData}")
             app.mi.pop_topic_msg(component, topic)
 
 componentToTopic = app.mi.get_topic_to_component_dict()
-# TODO figuring out the decorator part for this
+
 for component, topic in componentToTopic:
+    logger.loginfo(f"create websocket {component}, for {topic}")
+    
     @app.websocket(f"/{component}/{topic}") # topic_data, topic_info, etc.
-    async def cb(websocket: WebSocket):
+    async def cb(websocket: WebSocket, component=component, topic=topic): #  RESOLVED using this line of code
+        logger.loginfo("websocket cb called...")
+        logger.loginfo(component)
+        logger.loginfo(topic)
         await listen_to_websocket(websocket, component, topic)
     

@@ -4,6 +4,14 @@
     color: black;
 }
 
+.background-red {
+    background-color: red;
+}
+
+.background-green {
+    background-color: green;
+}
+
 /* ------------------------------------------------------------------------------------------------ */
 /* Containers */
 body {
@@ -100,7 +108,12 @@ div input {
     display: inline-block;
     padding: 8px 25px;
     font-weight: 800;
-    border: 1px;
+    /* border: 1px; */ /*wrong should be border: 1px solid black; if wanna use this attribute*/
+    /* Need to have width, color, style if u wanna do it the way below*/
+    /* border-width: 4px;
+    border-color: rgb(247, 246, 243);
+    border-style: solid; */
+    border: 4px solid rgb(247, 246, 243);
     border-radius: 4px;
     background-color: rgb(247, 246, 243);
     /* text-align: center;

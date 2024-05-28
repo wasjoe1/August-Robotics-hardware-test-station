@@ -54,6 +54,9 @@ class MeterialInspection():
     # depends on the component & topic
     # components => imu, sonar, inclinometer, cb
     # topics are state, info, data, configs
+    def get_send_q(self):
+        return self.send_queue
+
     def get_topic_msg(self, component, topic):
         return self.send_queue[component][topic][0]
 
@@ -64,17 +67,11 @@ class MeterialInspection():
         if len(self.send_queue[component][topic]) > 0:
             del self.send_queue[component][topic][0]
     
-    def get_topic_to_component_dict(self):
-        logger.loginfo("printing out send q ...")
-        logger.loginfo(self.send_queue)
-        
+    def get_topic_to_component_dict(self):        
         res = []
         for component in self.send_queue:
             for topic in self.send_queue[component]:
                 res.append((component, topic))
-        
-        logger.loginfo("printing out component to topic ...")
-        logger.loginfo(res)
         return res
 
     # -------------------------------------------------------------------------------------------------
@@ -89,6 +86,7 @@ class MeterialInspection():
         if not self.send_queue[cb_args["component"]].get(cb_args["topic"]): # if send q component has no such topic
             logger.logerr(f"{cb_args['component']} does not have {cb_args['topic']}")
         self.send_queue[cb_args["component"]][cb_args["topic"]].append(data_to_send)
+        logger.loginfo(len(self.send_queue[cb_args["component"]][cb_args["topic"]]))
 
     # -------------------------------------------------------------------------------------------------
     # service calls

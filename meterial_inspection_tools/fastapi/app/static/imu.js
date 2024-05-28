@@ -35,20 +35,27 @@ function parseStringToInt(str) {
 // TODO: create a web socket manager class to hide all these under the hood implementation (connections, create, get, clear)
 var gAll_ws_connections = []
 
-function create_ws(ip_addr, route, elementId) {
+function create_ws(ip_addr, topic, elementId) {
     try {
-        const ws = new WebSocket("ws://" + ip_addr + route) // route == /imu_smt
+        const ws = new WebSocket("ws://" + ip_addr + topic) // topic == /imu/topic_smt
         ws.addEventListener('open', function(event) {
-            console.log(`${route} socket was opended`)
+            console.log(`${topic} socket was opended`)
             ws.send('Hello ws data!');
         });
         ws.onmessage = function(evt) {    
-            document.getElementById(elementId).textContent = evt.data 
-            return evt.data
+            console.log(evt.data)
+            const data = JSON.parse(evt.data)["imu"]["data"] // for any topic, this is the standard formatting
+            const ele = document.getElementById(elementId)
+            // displayDataOnElement(topic=topic, data=data, ele=ele) // JS Doesnt support named parameters!!
+            displayDataOnElement({topic:topic, data:data, ele:ele})
+            return data
+        }
+        ws.onerror = (e) => {
+            console.log("websocket error ", e)
         }
         gAll_ws_connections.push(ws)
     } catch (e) {
-        console.log(`Failed to create web socket for ${route}`)
+        console.log(`Failed to create web socket for ${topic}`)
         console.error(e)
     }
 }
@@ -102,4 +109,23 @@ const socketNameToElementId = {
 }
 for (const socketName in socketNameToElementId) {
     create_ws(ip_addr, socketName, socketNameToElementId[socketName])
+}
+
+function displayDataOnElement(options) {
+    const {topic, data, ele} = options // use object destructuring
+    switch(topic) {
+        case "/imu/topic_data_checker":
+            if (data == "G") {
+                ele.classList.remove("background-red")
+                ele.classList.add("background-green")
+                ele.textContent == "G"
+            } else {
+                ele.classList.remove("background-green")
+                ele.classList.add("background-red")
+                ele.textContent == "NG"
+            }
+        
+        default: // default is only executed when none of the case matches
+            ele.textContent == data
+    }
 }
