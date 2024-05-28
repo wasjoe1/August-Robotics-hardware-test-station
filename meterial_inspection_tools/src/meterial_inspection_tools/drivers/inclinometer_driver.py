@@ -303,9 +303,9 @@ class InclinChecker:
                 incline_msg = self.inclinometer_model.parse_reading(self.modbus_client,self.unit_id) 
                 self.pub_data.publish(json.dumps(incline_msg))
                 check_NG_or_G = self.inclinometer_model.check_reading(incline_msg)
-                if check_NG_or_G == True:
+                if check_NG_or_G:
                     self.pub_data_check.publish(json.dumps("OK"))
-                elif check_NG_or_G == False:
+                else:
                     self.pub_data_check.publish(json.dumps("NOT OK"))
                 return True
         except (serial.SerialException, BrokenPipeError) as e:

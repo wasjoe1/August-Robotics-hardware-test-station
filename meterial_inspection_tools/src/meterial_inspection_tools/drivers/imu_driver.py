@@ -478,9 +478,9 @@ class IMUChecker:
                     self.pub_reading.publish(json.dumps(str(imu_msg)))
                     #self.pub_reading.publish(str(imu_msg)) #change to json dumps
                     check_NG_or_G = self.imu_model.check_reading(imu_msg)
-                    if check_NG_or_G == True:
+                    if check_NG_or_G:
                         self.pub_data_check.publish(json.dumps("OK"))
-                    elif check_NG_or_G == False: 
+                    else: 
                         self.pub_data_check.publish(json.dumps("NOT OK"))
                    
             except (serial.SerialException, BrokenPipeError) as e:

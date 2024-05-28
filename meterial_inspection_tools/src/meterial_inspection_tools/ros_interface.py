@@ -12,8 +12,8 @@ from meterial_inspection_tools.srv import InclinometerControl #Inclin
 from meterial_inspection_tools.srv import CBControl #CBcontrol
 from meterial_inspection_tools.srv import SonarControl #Sonarcontrol
 #from meterial_inspection_tools.srv import DepthCameraControl #DepthCameracontrol
-from meterial_inspection_tools.srv import GetButton
-from meterial_inspection_tools.srv import GetButtonBaudrate
+from meterial_inspection_tools.srv import GetButton, GetButtonBaudrate, GetButtonUnitID
+#from meterial_inspection_tools.srv import GetButtonBaudrate
 
 
 
@@ -50,8 +50,11 @@ INCLINOMETER_DATA_CHECK = InterfaceWithType('/inclinometer/reading_checker', stm
 CB_DATA = InterfaceWithType('/cb/data',stmsgs.String)
 CB_STATE = InterfaceWithType('/cb/state',stmsgs.String)
 CB_INFO =  InterfaceWithType('/cb/info',stmsgs.String)
+CB_INFO_CHINESE = InterfaceWithType('/cb/info_chinese',stmsgs.String)
 CB_CONFIGS = InterfaceWithType('/cb/configs',stmsgs.String)
-CB_SRV_CMD = InterfaceWithType('/cb/srv_cmd', CBControl) 
+CB_CONFIGS_CHINESE = InterfaceWithType('/cb/configs_chinese',stmsgs.String)
+CB_SRV_CMD = InterfaceWithType('/cb/srv_cmd', GetButtonUnitID) 
+CB_DATA_CHECK = InterfaceWithType('cb/reading_checker',stmsgs.String)
 
 SONAR_DATA = InterfaceWithType('/sonar/data',stmsgs.String)
 SONAR_STATE = InterfaceWithType('/sonar/state',stmsgs.String) 
@@ -106,7 +109,10 @@ msg_dict = {
         "topic_data": CB_DATA,
         "topic_state": CB_STATE,
         "topic_info": CB_INFO,
+        "topic_info_chinese": CB_INFO_CHINESE,
         "topic_configs": CB_CONFIGS,
+        "topic_configs_chinese": CB_CONFIGS_CHINESE,
+        "topic_data_checker": 
     },
 
     "sonar":{

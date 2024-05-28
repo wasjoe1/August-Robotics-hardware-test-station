@@ -6,24 +6,6 @@ Instructions:
 These are the steps to take 
 1. Connect to astra(check if camera is plugged in)
 3. get image --> grabs the pointcloud and then formats it automatically --> desired endgoal
-
-
-Previous version: 
-1. connect to astra
-2. Get pointcloud --> saves pointcloud
-3. Get images --> formats the pointcloud 
-4. disconnect
-
-1. doublecheck that this is the correct version #checked
-2. add in code but comment out --> code for finding path version 
-3. test 1 &2 
-
-
-
-1. assuming i can interact using o3d pop up window --> what i need is a stream of subscriber 
---> format into o3d --> pass
-2.  assuming cannot interact using o3d pop up window --> what i need is a stream of subscriber --> format into o3d
---> separate colours and points and resize to 2D --> pass 
 """
 
 import datetime
