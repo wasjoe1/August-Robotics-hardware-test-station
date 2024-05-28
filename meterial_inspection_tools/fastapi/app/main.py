@@ -20,8 +20,9 @@ from concurrent import futures
 
 
 import rospy
-import rospy as logger
 from ros_mi import MeterialInspection
+
+rospy.loginfo("init main.py...") # TODO figure out why main does print but rosmi does
 
 # -------------------------------------------------------------------------------------------------
 # init
@@ -127,125 +128,22 @@ async def command(request: Request, cmd: str):
 # -------------------------------------------------------------------------------------------------
 # WEBSOCKETS (for frontend to connect to)
 
-async def listen_to_websocket(websocket, topic, component):
+async def listen_to_websocket(websocket, component, topic):
     logger.info(f"get websocket data from /{component}_{topic} topic.")
     #TODO
     await websocket.accept()
     while True:
         await asyncio.sleep(0.2)
-        if app.mi.has_topic_msg(topic, component):
-            qData = app.mi.get_topic_msg(topic, component)
+        if app.mi.has_topic_msg(component, topic):
+            qData = app.mi.get_topic_msg(component, topic)
             logger.info(f"queue data: {qData}")
             await websocket.send_text(f"{qData}")
-            app.mi.pop_topic_msg(topic, component)
+            app.mi.pop_topic_msg(component, topic)
 
-topicToComponent = app.mi.get_topic_to_component_dict()
-for topic, component in topicToComponent:
-    @app.websocket("/imu/configs")
-    async def cb_imu_data(websocket: WebSocket):
-        await listen_to_websocket(websocket, "configs", "imu")
-
+componentToTopic = app.mi.get_topic_to_component_dict()
 # TODO figuring out the decorator part for this
-# for topic, component in topicToComponent:
-#     @app.websocket(f"/{component}/{topic}")
-#      async def cb(websocket: WebSocket):
-#          await listen_to_websocket(websocket, topic, component)
+for component, topic in componentToTopic:
+    @app.websocket(f"/{component}/{topic}") # topic_data, topic_info, etc.
+    async def cb(websocket: WebSocket):
+        await listen_to_websocket(websocket, component, topic)
     
-
-# IMU
-# /imu_configs socket
-@app.websocket("/imu/configs")
-async def cb_imu_data(websocket: WebSocket):
-    await listen_to_websocket(websocket, "configs", "imu")
-
-# /imu_data socket
-@app.websocket("/imu/data")
-async def cb_imu_data(websocket: WebSocket):
-    await listen_to_websocket(websocket, "data", "imu")
-
-# /imu_info socket
-@app.websocket("/imu/info")
-async def cb_imu_state(websocket: WebSocket):
-    await listen_to_websocket(websocket, "info", "imu")
-
-# /imu_state socket
-@app.websocket("/imu/state")
-async def cb_imu_state(websocket: WebSocket):
-    await listen_to_websocket(websocket, "state", "imu")
-
-@app.websocket("/imu/reading_checker")
-async def cb_imu_state(websocket: WebSocket):
-    await listen_to_websocket(websocket, "state", "imu")
-
-
-# SONAR
-# /sonar_configs socket
-@app.websocket("/sonar/configs")
-async def cb_sonar_data(websocket: WebSocket):
-    await listen_to_websocket(websocket, "configs", "sonar")
-
-# /sonar_data socket
-@app.websocket("/sonar/data")
-async def cb_sonar_data(websocket: WebSocket):
-    await listen_to_websocket(websocket, "data", "sonar")
-
-# /sonar_info socket
-@app.websocket("/sonar/info")
-async def cb_sonar_state(websocket: WebSocket):
-    await listen_to_websocket(websocket, "info", "sonar")
-
-# /sonar_state socket
-@app.websocket("/sonar/state")
-async def cb_sonar_state(websocket: WebSocket):
-    await listen_to_websocket(websocket, "state", "sonar")
-
-@app.websocket("/sonar/reading_checker")
-async def cb_imu_state(websocket: WebSocket):
-    await listen_to_websocket(websocket, "state", "imu")
-
-
-# INCLINOMETER
-# /inclinometer_configs socket
-@app.websocket("/inclinometer/configs")
-async def cb_inclinometer_data(websocket: WebSocket):
-    await listen_to_websocket(websocket, "configs", "inclinometer")
-
-# /inclinometer_data socket
-@app.websocket("/inclinometer/data")
-async def cb_inclinometer_data(websocket: WebSocket):
-    await listen_to_websocket(websocket, "data", "inclinometer")
-
-# /inclinometer_info socket
-@app.websocket("/inclinometer/info")
-async def cb_inclinometer_state(websocket: WebSocket):
-    await listen_to_websocket(websocket, "info", "inclinometer")
-
-# /inclinometer_state socket
-@app.websocket("/inclinometer/state")
-async def cb_inclinometer_state(websocket: WebSocket):
-    await listen_to_websocket(websocket, "state", "inclinometer")
-
-
-# CB
-# /cb_configs socket
-@app.websocket("/cb/configs")
-async def cb_cb_data(websocket: WebSocket):
-    await listen_to_websocket(websocket, "configs", "cb")
-
-# /cb_data socket
-@app.websocket("/cb/data")
-async def cb_cb_data(websocket: WebSocket):
-    await listen_to_websocket(websocket, "data", "cb")
-
-# /cb_info socket
-@app.websocket("/cb/info")
-async def cb_cb_state(websocket: WebSocket):
-    await listen_to_websocket(websocket, "info", "cb")
-
-# /cb_state socket
-@app.websocket("/cb/state")
-async def cb_cb_state(websocket: WebSocket):
-    await listen_to_websocket(websocket, "state", "cb")
-
-
-# TODO add depth sensor, lidar

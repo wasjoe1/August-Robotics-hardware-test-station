@@ -91,21 +91,15 @@ function onClickCommandBtn(element) {
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
 // SOCKET CONFIGS
-// open web socket connection for /data (imu data) => for the imu readings
-create_ws(ip_addr, "/imu/data", "responseData-data")
-
-// ------------------------------------------------------------------------------------------------
-// open web socket connection for /state => for the current state
-create_ws(ip_addr, "/imu/state", "responseData-state")
-
-// ------------------------------------------------------------------------------------------------
-// open web socket connection for /info => for user status
-create_ws(ip_addr, "/imu/info", "responseData-info")
-
-// ------------------------------------------------------------------------------------------------
-// open web socket connection for /configs => for config data
-create_ws(ip_addr, "/imu/configs", "responseData-configs")
-
-// ------------------------------------------------------------------------------------------------
-// open web socket connection for /reading_checker => for reading checker
-create_ws(ip_addr, "/imu/reading_checker", "responseData-reading_checker")
+const socketNameToElementId = {
+    "/imu/topic_state": "responseData-state",
+    "/imu/topic_data": "responseData-data",
+    "/imu/topic_data_checker": "responseData-data_checker",
+    "/imu/topic_info": "responseData-info",
+    "/imu/topic_info_chinese": "responseData-info_chinese",
+    "/imu/topic_configs": "responseData-configs",
+    "/imu/topic_configs_chinese": "responseData-configs_chinese",
+}
+for (const socketName in socketNameToElementId) {
+    create_ws(ip_addr, socketName, socketNameToElementId[socketName])
+}

@@ -98,17 +98,15 @@ function onClickCommandBtn(element) {
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
 // SOCKET CONFIGS
-// open web socket connection for /data (inclinometer data) => for the inclinometer readings
-create_ws(ip_addr, "/inclinometer/data", "responseData-data")
-
-// ------------------------------------------------------------------------------------------------
-// open web socket connection for /state => for the current state
-create_ws(ip_addr, "/inclinometer/state", "responseData-state")
-
-// ------------------------------------------------------------------------------------------------
-// open web socket connection for /info => for user status
-create_ws(ip_addr, "/inclinometer/info", "responseData-info")
-
-// ------------------------------------------------------------------------------------------------
-// open web socket connection for /configs => for user status
-create_ws(ip_addr, "/inclinometer/configs", "responseData-configs")
+const socketNameToElementId = {
+    "/inclinometer/topic_state": "responseData-state",
+    "/inclinometer/topic_data": "responseData-data",
+    "/inclinometer/topic_data_checker": "responseData-data_checker",
+    "/inclinometer/topic_info": "responseData-info",
+    "/inclinometer/topic_info_chinese": "responseData-info_chinese",
+    "/inclinometer/topic_configs": "responseData-configs",
+    "/inclinometer/topic_configs_chinese": "responseData-configs_chinese",
+}
+for (const socketName in socketNameToElementId) {
+    create_ws(ip_addr, socketName, socketNameToElementId[socketName])
+}
