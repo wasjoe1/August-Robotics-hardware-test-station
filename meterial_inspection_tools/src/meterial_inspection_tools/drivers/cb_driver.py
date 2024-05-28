@@ -65,11 +65,12 @@ class CBOperations:
     UNIT_ID_CHECKLIST_BRITER = []
     BAUDRATE_CHECKLIST = (9600,57600)
 
+    def check_reading(cb_msg):
+        data_ok_flag = False
+        return data_ok_flag
     
     def parse_reading(modbus_client):
         return get_encoded_data(modbus_client)
-
-    
     
     def scan(configs):
         modbus_client: ModbusClient = None
@@ -81,9 +82,15 @@ class CBOperations:
         return succeeded
 
 
-class CB_VSMD114(CBOperations): #UNIT ID 1,3
+class CB_VSMD114(CBOperations): #UNIT ID 1,3, # no data
     CB_TYPE = "VSMD"
 
+    #no need to check data
+    def check_reading(cb_msg):
+        data_ok_flag = False
+        data_ok_flag ==True 
+        return data_ok_flag
+    
     def parse_reading(self,modbus_client):
         def get_encoded_data(modbus_client):
             pass
@@ -137,6 +144,11 @@ class CB_VSMD114(CBOperations): #UNIT ID 1,3
 class CB_BRITER(CBOperations): #UNIT ID 2,4
     CB_TYPE = "BRITER"
    
+    def check_reading(cb_msg):
+        data_ok_flag = False
+        
+        return data_ok_flag
+    
     def parse_reading(self,modbus_client):
         def get_encoded_data(modbus_client):
             register_values = {}
