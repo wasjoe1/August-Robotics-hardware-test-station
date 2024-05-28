@@ -16,7 +16,7 @@
 
 <body onload="">
   <!-- Header portion -->
-  <div style="height:3%;width:100%;">
+  <div class="header-container">
     <h3 id="title"> 澳谷一站式检测工具 </h3>
     <button hidden="hidden" type="button" class="btn btn-default" onclick="location.href='/'">主页</button>
     <button type="button" class="btn btn-default" onclick="location.href='/step/imu'">IMU</button>
@@ -27,39 +27,41 @@
   </div>
   
   <!-- Body portion -->
-  <div class="flex-container" style="justify-content: space-between;">
-    <!-- left of body -->
-    <div>
-      <h4 class="display-content-header">State</h4>
-      <div id="responseData-state" class="display-content-div"></div>
-      
-      <h4 id="readings" class="display-content-header">Readings</h4>
-      <div id="responseData-data" class="display-content-div"></div>
-      
-      <h4 id="readings" class="display-content-header">NG or G</h4>
-      <div id="responseData-data_checker" class="display-content-div"></div>
-      
-      <h4 class="display-content-header">Response Information</h4>
-      <div id="responseData-info" class="display-content-div"></div>
+  <div class="flex-container">
+    <div class="content-container">
+      <!-- left of body -->
+      <div>
+        <h4 class="display-content-header">State</h4>
+        <div id="responseData-state" class="display-content-div"></div>
+        
+        <h4 id="readings" class="display-content-header">Readings</h4>
+        <div id="responseData-data" class="display-content-div"></div>
+        
+        <h4 id="readings" class="display-content-header">NG or G</h4>
+        <div id="responseData-data_checker" class="display-content-div"></div>
+        
+        <h4 class="display-content-header">Response Information</h4>
+        <div id="responseData-info" class="display-content-div"></div>
 
-      <h4 class="display-content-header">Response Information</h4>
-      <div id="responseData-info_chinese" class="display-content-div"></div>
-      
-      <h4 id="readings" class="display-content-header">Configurations</h4>
-      <div id="responseData-configs" class="display-content-div"></div>
-      
-      <h4 id="readings" class="display-content-header">Configurations</h4>
-      <div id="responseData-configs_chinese" class="display-content-div"></div>
-    </div>
+        <h4 class="display-content-header">Response Information</h4>
+        <div id="responseData-info_chinese" class="display-content-div"></div>
+        
+        <h4 id="readings" class="display-content-header">Configurations</h4>
+        <div id="responseData-configs" class="display-content-div"></div>
+        
+        <h4 id="readings" class="display-content-header">Configurations</h4>
+        <div id="responseData-configs_chinese" class="display-content-div"></div>
+      </div>
 
-    <!-- right of body -->
-    <div style="display: flex; flex-direction: column; justify-content: space-between; background-color: darksalmon;">
-      <!-- buttons -->
-      <button class="btn btn-default" id="scanBtn" onclick="onClickCommandBtn(this)">Scan</button>
-      <button class="btn btn-default" id="connectBtn" onclick="onClickCommandBtn(this)">Connect</button>
-      <button class="btn btn-default" id="disconnectBtn" onclick="onClickCommandBtn(this)">Disconnect</button>
-      <button class="btn btn-default" id="setDefaultBtn" onclick="onClickCommandBtn(this)">Set default</button>
-      <button class="btn btn-default" id="saveBtn" onclick="onClickCommandBtn(this)">Save</button>
+      <!-- right of body -->
+      <div style="display: flex; flex-direction: column; justify-content: space-between; background-color: darksalmon;">
+        <!-- buttons -->
+        <button class="btn btn-default" id="scanBtn" onclick="onClickCommandBtn(this)">Scan</button>
+        <button class="btn btn-default" id="connectBtn" onclick="onClickCommandBtn(this)">Connect</button>
+        <button class="btn btn-default" id="disconnectBtn" onclick="onClickCommandBtn(this)">Disconnect</button>
+        <button class="btn btn-default" id="setDefaultBtn" onclick="onClickCommandBtn(this)">Set default</button>
+        <button class="btn btn-default" id="saveBtn" onclick="onClickCommandBtn(this)">Save</button>
+      </div>
     </div>
   </div>
 </body>

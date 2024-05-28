@@ -29,38 +29,51 @@
   <!-- Body portion -->
   <div class="flex-container">
     <div class="content-container">
-      <!-- left of body -->
-      <div>
-        <h4 class="display-content-header">State</h4>
-        <div id="responseData-state" class="display-content-div"></div>
-        
-        <h4 id="readings" class="display-content-header">Readings</h4>
-        <div id="responseData-data" class="display-content-div"></div>
-        
-        <h4 id="readings" class="display-content-header">NG or G</h4>
-        <div id="responseData-data_checker" class="display-content-div"></div>
-        
-        <h4 class="display-content-header">Response Information</h4>
-        <div id="responseData-info" class="display-content-div"></div>
+      <!-- top-content -->
+      <div class="container green-container top-content-container">
+        <!-- top-left-content -->
+        <div>
+          <h4 class="display-content-header">Configurations</h4>
+          <div id="responseData-configs" class="display-text-div"></div>
+          <!-- <h4 class="display-content-header">Configurations (Chinese)</h4>
+          <div id="responseData-configs_chinese" class="display-text-div"></div> -->
+          <h4 class="display-content-header">Data</h4>
+          <div id="responseData-data" class="display-text-div"></div>
+        </div>
 
-        <h4 class="display-content-header">Response Information</h4>
-        <div id="responseData-info_chinese" class="display-content-div"></div>
-        
-        <h4 id="readings" class="display-content-header">Configurations</h4>
-        <div id="responseData-configs" class="display-content-div"></div>
-        
-        <h4 id="readings" class="display-content-header">Configurations</h4>
-        <div id="responseData-configs_chinese" class="display-content-div"></div>
+        <!-- top-mid-content -->
+        <div>
+          <h4 class="display-content-header">NG / G</h4>
+          <div id="responseData-data_checker" class="display-state-div">G</div>
+        </div>
+
+        <!-- top-right-content -->
+        <div class="top-right-content-container">
+          <!-- buttons -->
+          <div class="display-content-header">Select Baud rate:</div>
+          <button class="btn btn-command btn-default" id="setDefaultBtn" baudrate="9600" onclick="onClickCommandBtn(this)">9600 baud</button>
+          <button class="btn btn-command btn-default" id="setDefaultBtn" baudrate="19200" onclick="onClickCommandBtn(this)">19200 baud</button>
+          <button class="btn btn-command btn-default" id="setDefaultBtn" baudrate="57600" onclick="onClickCommandBtn(this)">57600 baud</button>
+          <button class="btn btn-command btn-default" id="setDefaultBtn" baudrate="115200" onclick="onClickCommandBtn(this)">115200 baud</button>
+        </div>
+      </div>
+      
+      <!-- mid-content -->
+      <div class="container green-container">
+        <h4 class="display-content-header">State</h4>
+        <div id="responseData-state" class="display-state-div">IDLE</div>
+        <h4 class="display-content-header">User Information</h4>
+        <div id="responseData-info" class="display-text-div"></div>
+        <!-- <h4 class="display-content-header">User Information (Chinese)</h4>
+        <div id="responseData-info_chinese" class="display-text-div"></div> -->
       </div>
 
-      <!-- right of body -->
-      <div style="display: flex; flex-direction: column; justify-content: space-between; background-color: darksalmon;">
-        <!-- buttons -->
-        <div>Select Baud rate</div>
-        <button class="btn btn-command btn-default" id="setDefaultBtn" baudrate="9600" onclick="onClickCommandBtn(this)">9600 baud</button>
-        <button class="btn btn-command btn-default" id="setDefaultBtn" baudrate="19200" onclick="onClickCommandBtn(this)">19200 baud</button>
-        <button class="btn btn-command btn-default" id="setDefaultBtn" baudrate="57600" onclick="onClickCommandBtn(this)">57600 baud</button>
-        <button class="btn btn-command btn-default" id="setDefaultBtn" baudrate="115200" onclick="onClickCommandBtn(this)">115200 baud</button>
+      <!-- low-content -->
+      <div class="container green-container">
+        <h4 class="display-content-header">Instructions</h4>
+        <div id="responseData-instructions_english" class="display-text-div">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Veniam, excepturi repellat delectus optio laborum eligendi provident! Distinctio neque repellat enim sapiente iste unde ipsum, minima facilis rem sunt placeat expedita.</div>
+        <!-- <h4 class="display-content-header">Instructions (Chinese)</h4>
+        <div id="responseData-instructions_chinese" class="display-text-div"></div> -->
       </div>
     </div>
   </div>
