@@ -128,11 +128,6 @@ async def listen_to_websocket(websocket, component, topic):
     await websocket.accept()
     while True:
         await asyncio.sleep(0.2)
-        logger.loginfo("b4 has topic message") # TEST its always empty [RESOLVED]
-        logger.loginfo(f"get websocket data from /{component}/{topic} topic.")
-        logger.loginfo(component) # always calling lidar [RESOLVED]
-        logger.loginfo(topic) # always calling topic_info [RESOLVED]
-        logger.loginfo(app.mi.has_topic_msg(component, topic))
         if app.mi.has_topic_msg(component, topic):
             logger.loginfo("afterhas topic message") # TEST its always empty [RESOLVED]
             qData = app.mi.get_topic_msg(component, topic)

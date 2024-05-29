@@ -7,15 +7,14 @@ from meterial_inspection_tools.ros_interface import (
 )
 from rospy_message_converter.message_converter import convert_ros_message_to_dictionary
 from boothbot_msgs.srv import (Command, CommandRequest)
-from meterial_inspection_tools.srv import (IMUControl, IMUControlRequest)
-from meterial_inspection_tools.srv import (SonarControl, SonarControlRequest)
-from meterial_inspection_tools.srv import (InclinometerControl, InclinometerControlRequest)
+from meterial_inspection_tools.srv import (GetButtonBaudrate, GetButtonBaudrateRequest)
 from meterial_inspection_tools.srv import (CBControl, CBControlRequest)
+from meterial_inspection_tools.srv import (SonarControl, SonarControlRequest)
 
 ServiceRequestTypes = {
-    "imu": IMUControlRequest,
+    "imu": GetButtonBaudrateRequest,
     "sonar": SonarControlRequest,
-    "inclinometer": InclinometerControlRequest,
+    "inclinometer": GetButtonBaudrateRequest,
     "cb": CBControlRequest,
 }
 
@@ -92,23 +91,17 @@ class MeterialInspection():
     # service calls
     def send_srv(self, srv):
         srv_dict = json.loads(srv)
-        logger.loginfo(f"send service {srv_dict}")
-        for device_name, request in srv_dict.items(): # sub node name is "device_name"; request is the "req data"
-            logger.loginfo(f"component name is {device_name}")
-            logger.loginfo(f"request data: {request}")
-            
+        for component, params in srv_dict.items():
+            logger.loginfo(f"Sending srv for {component}...")
             try:
-                command = ServiceRequestTypes[device_name]() # get the srv req object
-                command.button = request["button"] # put the parameters into the req obj
-                if request.get("parameter"):
-                    command.parameter = request["parameter"]
-                logger.loginfo(f"command data: {command}")
-                
-                logger.loginfo(f"Service call to {msg_dict[device_name]['srv']}...")                
-                msg_dict[device_name]["srv"].service_call(command)
-                logger.loginfo("Service call succedded")
+                command = ServiceRequestTypes[component]() # get the srv req object
+                for paramName, val in params.items():
+                    # command[paramName] = val # cant use bracket notation for python objects
+                    setattr(command, paramName, val)
+                msg_dict[component]["srv"].service_call(command)
+                logger.loginfo(f"Service call to {msg_dict[component]['srv']} succedded")
             except Exception as e:
-                logger.logerr("Service call failed")
+                logger.logerr(f"Service call to {msg_dict[component]['srv']} failed")
                 logger.logerr(e)
                 raise rospy.ServiceException("Service call failed")
         

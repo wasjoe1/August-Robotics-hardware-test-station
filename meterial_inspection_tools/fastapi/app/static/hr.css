@@ -151,19 +151,16 @@ pre {
     padding: 6px 6px;
 }
 
+/* Default button color */
 button {
+    background-color: #4CAF50; /* Green */
+    color: white;
     border: none;
     cursor: pointer;
     padding: 10px 20px;
     font-weight: bold;
     border-radius: 10px;
     transition: all 0.3s ease;
-}
-  
-/* Default button color */
-button {
-    background-color: #4CAF50; /* Green */
-    color: white;
 }
 
 /* Hover effect */
@@ -174,4 +171,12 @@ button:hover {
 /* Active/focus effect */
 button:active {
     background-color: #3e8e41; /* Dark green */
+}
+
+.background-red {
+    background-color: red;
+}
+
+.background-green {
+    background-color: green;
 }
