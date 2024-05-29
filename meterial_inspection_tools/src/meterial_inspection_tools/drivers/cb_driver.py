@@ -15,7 +15,8 @@ import time
 import struct
 import serial
 from pymodbus.client.sync import ModbusSerialClient as ModbusClient
-
+from pymodbus.exceptions import ConnectionException
+from collections import deque # for moving window filter 
 import rospy 
 logger = rospy
 from enum import Enum, auto
@@ -38,9 +39,6 @@ print(pymodbus.__version__)
 class CBCommands(Enum):
     NONE = auto()
     RESET = auto()
-    #SCAN = auto()
-    #CONNECT = auto()
-    #DISCONNECT = auto()
     AUTO_DETECT = auto()
     SET_DEFAULT = auto()
     #SAVE = auto()
@@ -49,7 +47,6 @@ class CBCheckerStates(Enum):
     INIT = auto()
     IDLE = auto()
     SCANNING = auto()
-    #CONNECTING = auto()
     CONNECTED = auto()
     ERROR = auto()
 
@@ -144,13 +141,30 @@ class CB_VSMD114(CBOperations): #UNIT ID 1,3, # no data
 class CB_BRITER(CBOperations): #UNIT ID 2,4
     CB_TYPE = "BRITER"
    
+    def get_data_frames(cb_msg): 
+        frame = []
+        
+
     def check_reading(cb_msg):
         data_ok_flag = False
+        window_initialized_flag = False
         
+        def initialize_window(window_size):
+            return deque(maxlen=window_size)
+        
+        def add_frame_to_window(frame, window):
+            window.append(frame)
+
+        def average_frame(window):
+
+
+
+
         return data_ok_flag
     
     def parse_reading(self,modbus_client):
         def get_encoded_data(modbus_client):
+            logger.loginfo(modbus_client)
             register_values = {}
             for unit in self.UNIT_ID_CHECKLIST_BRITER:
                 rhr =modbus_client.read_holding_registers(0x0,1,unit= unit)
@@ -218,7 +232,7 @@ class CB_BRITER(CBOperations): #UNIT ID 2,4
 
 class CBChecker: 
     NODE_RATE = 5.0
-    cb_model: CBOperations = None
+    cb_model: CBOperations = CB_BRITER
     _command = None
     _state = None
     modbus_client: ModbusClient = None
@@ -252,12 +266,8 @@ class CBChecker:
 
         self.__STATES_METHODS = {
         (CBCommands.NONE, CBCheckerStates.INIT): self.initialize, # to IDLE
-        #(CBCommands.SCAN, CBCheckerStates.IDLE): self.scan, # to CONNECTED or stay
-        #(CBCommands.CONNECT, CBCheckerStates.IDLE): self.connect, # to CONNECTED or stay
-        #(CBCommands.DISCONNECT, CBCheckerStates.CONNECTED): self.disconnect, # to IDLE
         (CBCommands.NONE, CBCheckerStates.CONNECTED): self.parse_reading, # stay
         (CBCommands.SET_DEFAULT, CBCheckerStates.CONNECTED): self.set_default_settings, # stay
-        #(CBCommands.SAVE, CBCheckerStates.CONNECTED): self.save_parameters, # stay
         (CBCommands.AUTO_DETECT, CBCheckerStates.IDLE): self.auto_detect,
     }
         
@@ -318,24 +328,12 @@ class CBChecker:
             "波特率": self.modbus_configs["baudrate"],
             "ID": self.unit_id,
             }
-    """
-    def scan(self):
-        self.state = CBCheckerStates.SCANNING
-        if self._determine_CB_type():
-            self.modbus_client = self.cb_model.scan(self=self.cb_model,configs=self.modbus_configs)
-            if self.modbus_client:
-                self.log_with_frontend(f'Scanned CB driver on baudrate: {self.modbus_configs["baudrate"]}')
-                self.state = CBCheckerStates.CONNECTED
-                self.pub_configs.publish(json.dumps(self._get_current_CB_settings()))
-                return True
-            self.state = CBCheckerStates.IDLE
-            return False
-
-    """
     
     def parse_reading(self):
         try:
             with serial.Serial(port=self.modbus_configs["port"]) as ser:  
+                logger.loginfo("parsereadinglogger")
+                logger.loginfo(self.modbus_client)
                 cb_msg = self.cb_model.parse_reading(self=self.cb_model,modbus_client = self.modbus_client)
                 self.pub_reading.publish(json.dumps(cb_msg))
                 check_NG_or_G = self.cb_model.check_reading(cb_msg)
@@ -345,7 +343,7 @@ class CBChecker:
                     self.pub_data_check.publish(json.dumps("NOT OK"))
 
                 return True
-        except (serial.SerialException, BrokenPipeError) as e:
+        except (serial.SerialException, BrokenPipeError, ConnectionException) as e:
             self.state = CBCheckerStates.IDLE
             return False
     
@@ -358,13 +356,13 @@ class CBChecker:
     
     def auto_detect(self):
         self.state = CBCheckerStates.SCANNING
-        for models in self.CB_DRIVER_MODEL_TABLE.values:
-            self.modbusclient = models.scan(self=CBOperations,configs = self.modbus_configs) #will it be able to reconfigure the baudrate?
-            if self.modbusclient: 
+        for models in self.CB_DRIVER_MODEL_TABLE.values():
+            self.modbus_client = models.scan(self=CBOperations,configs = self.modbus_configs) #will it be able to reconfigure the baudrate?
+            if self.modbus_client: 
                 if models == CB_BRITER:
-                    self.log_with_frontend(f"Found {models.CB_TYPE} with baudrate: {self.modbusclient['baudrate']}! Unit_ID = {models.UNIT_ID_CHECKLIST_BRITER} ", f"IMU 类型 {models.CB_TYPE}, 波特率: {self.modbusclient['baudrate']}!")      
+                    self.log_with_frontend(f"Found {models.CB_TYPE} with baudrate: {self.modbus_client.baudrate}! Unit_ID = {models.UNIT_ID_CHECKLIST_BRITER} ", f"IMU 类型 {models.CB_TYPE}, 波特率: {self.modbus_client.baudrate}!")      
                 elif models == CB_VSMD114:
-                    self.log_with_frontend(f"Found {models.CB_TYPE} with baudrate: {self.modbusclient['baudrate']}! Unit_ID = {models.UNIT_ID_CHECKLIST_VDSM}", f"IMU 类型 {models.CB_TYPE}, 波特率: {self.modbusclient['baudrate']}!")
+                    self.log_with_frontend(f"Found {models.CB_TYPE} with baudrate: {self.modbus_client.baudrate}! Unit_ID = {models.UNIT_ID_CHECKLIST_VDSM}", f"IMU 类型 {models.CB_TYPE}, 波特率: {self.modbus_client.baudrate}!")
                 self.pub_configs.publish(json.dumps(models.CB_TYPE))
                 self.pub_configs_chinese.publish(json.dumps(models.CB_TYPE))
                 self.cb_model = models
@@ -374,7 +372,20 @@ class CBChecker:
                 return True
             self.state =CBCheckerStates.IDLE
             return False
-
+    
+    
+    def auto_detect(self):
+        self.state = CBCheckerStates.SCANNING
+        self.modbus_client = self.cb_model.scan(self=CBOperations,configs = self.modbus_configs) 
+        logger.loginfo(self.modbus_client)
+        if self.modbus_client: 
+                logger.loginfo("here")
+                self.state = CBCheckerStates.CONNECTED
+                self.pub_configs.publish(json.dumps(self._get_current_CB_settings()))
+                self.pub_configs_chinese.publish(json.dumps(self._get_current_CB_settings_chinese()))
+                return True
+        self.state =CBCheckerStates.IDLE
+        return False
 
 if __name__ == "__main__":
     rospy.init_node("cb_driver_node")

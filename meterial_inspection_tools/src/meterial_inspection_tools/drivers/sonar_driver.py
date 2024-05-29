@@ -34,16 +34,16 @@ class SONARCommands(Enum):
     NONE = auto()
     RESET = auto()
     SCAN = auto()
-    CONNECT = auto()
-    DISCONNECT = auto()
+    #CONNECT = auto()
+    #DISCONNECT = auto()
     SET_DEFAULT = auto()
-    SAVE = auto()
+    #SAVE = auto()
 
 class SonarCheckerStates(Enum): 
     INIT = auto()
     IDLE = auto()
     SCANNING = auto()
-    CONNECTING = auto()
+    #CONNECTING = auto()
     CONNECTED = auto()
     ERROR = auto()
 
@@ -146,7 +146,7 @@ class DYP_SONAR():
                 writer.writerow([timestamp, entry["distance"], entry["unit"]])
         return print_distance(dis_input,unit_box)
     
-
+    """
     def connect(self,configs):
         modbus_client : ModbusClient = None
         temp_client = ModbusClient(**configs)
@@ -177,7 +177,7 @@ class DYP_SONAR():
                     self.UNIT_CHECKER.append(default_unit)
                     logger.loginfo("Sonar connected on default unit 0xFF " + str(sonar_connected_count))
         return modbus_client
-
+    """
 
     def scan(self, configs):
         modbus_client : ModbusClient = None
@@ -267,16 +267,17 @@ class SonarChecker:
         self.__STATES_METHODS = {
         (SONARCommands.NONE, SonarCheckerStates.INIT): self.initialize, # to IDLE
         (SONARCommands.SCAN, SonarCheckerStates.IDLE): self.scan, # to CONNECTED or stay
-        (SONARCommands.CONNECT, SonarCheckerStates.IDLE): self.connect, # to CONNECTED or stay
-        (SONARCommands.DISCONNECT, SonarCheckerStates.CONNECTED): self.disconnect, # to IDLE
+        #(SONARCommands.CONNECT, SonarCheckerStates.IDLE): self.connect, # to CONNECTED or stay
+        #(SONARCommands.DISCONNECT, SonarCheckerStates.CONNECTED): self.disconnect, # to IDLE
         (SONARCommands.NONE, SonarCheckerStates.CONNECTED): self.parse_reading, # stay
         (SONARCommands.SET_DEFAULT, SonarCheckerStates.CONNECTED): self.set_default_settings, # stay
-        (SONARCommands.SAVE, SonarCheckerStates.CONNECTED): self.save_parameters, # stay
+        #(SONARCommands.SAVE, SonarCheckerStates.CONNECTED): self.save_parameters, # stay
         #(SONARCommands.NONE,SonarCheckerStates.CONNECTED): self.check_connection, # checks port connection 
     }
 
     def srv_cb(self, srv):
         self.command = srv.button
+        self.cmd_params = srv.ID
         return True
 
     @property
@@ -322,7 +323,8 @@ class SonarChecker:
         return {
             "baudrate": self.modbus_configs["baudrate"],
             }
-
+    
+    """
     def connect(self):
         self.state = SonarCheckerStates.CONNECTING
         self. modbus_client = self.sonar_model.connect(self=self.sonar_model,configs=self.modbus_configs)
@@ -334,7 +336,8 @@ class SonarChecker:
         self.log_with_frontend(f"Failed to connect sonar driver!")
         self.state = SonarCheckerStates.IDLE
         return False
-        
+    """
+
     def scan(self):
         self.state = SonarCheckerStates.SCANNING
         self.modbus_client = self.sonar_model.scan(self=self.sonar_model,configs=self.modbus_configs)

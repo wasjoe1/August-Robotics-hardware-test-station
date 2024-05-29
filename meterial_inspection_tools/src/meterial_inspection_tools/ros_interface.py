@@ -59,8 +59,10 @@ CB_DATA_CHECK = InterfaceWithType('cb/reading_checker',stmsgs.String)
 SONAR_DATA = InterfaceWithType('/sonar/data',stmsgs.String)
 SONAR_STATE = InterfaceWithType('/sonar/state',stmsgs.String) 
 SONAR_INFO = InterfaceWithType('/sonar/info',stmsgs.String)
+SONAR_INFO_CHINESE = InterfaceWithType('/sonar/info_chinese',stmsgs.String)
 SONAR_CONFIGS = InterfaceWithType('/sonar/configs',stmsgs.String)
-SONAR_SRV_CMD = InterfaceWithType('/sonar/srv_cmd',SonarControl) 
+SONAR_CONFIGS_CHINESE = InterfaceWithType('/sonar/configs_chinese',stmsgs.String)
+SONAR_SRV_CMD = InterfaceWithType('/sonar/srv_cmd',GetButtonUnitID) 
 
 DEPTH_DATA = InterfaceWithType('/depth/data', ssmsgs.PointCloud2)
 DEPTH_STATE = InterfaceWithType('/depth/state',stmsgs.String) 
@@ -112,7 +114,7 @@ msg_dict = {
         "topic_info_chinese": CB_INFO_CHINESE,
         "topic_configs": CB_CONFIGS,
         "topic_configs_chinese": CB_CONFIGS_CHINESE,
-        "topic_data_checker": 
+        "topic_data_checker": CB_DATA_CHECK,
     },
 
     "sonar":{
@@ -120,7 +122,9 @@ msg_dict = {
         "topic_data": SONAR_DATA,
         "topic_state": SONAR_STATE,
         "topic_info": SONAR_INFO,
+        "topic_info_chinese": SONAR_INFO_CHINESE,
         "topic_configs": SONAR_CONFIGS,
+        "topic_configs_chinese": SONAR_CONFIGS_CHINESE,
     },
 
     "depth_camera":{
