@@ -93,6 +93,12 @@ class CB_VSMD114(CBOperations): #UNIT ID 1,3, # do not need to parse data
         data_ok_flag ==True 
         return data_ok_flag
     
+    def create_frame(cb_msg):
+        pass
+    
+    def frame_shift(cb_msg_new):
+        pass
+
     def parse_reading(self,modbus_client):
         def get_encoded_data(modbus_client):
             pass
@@ -181,42 +187,35 @@ class CB_BRITER(CBOperations): #UNIT ID 2,4
     
     def add_frame_to_window(self):
         window_frame = self.frame[:3]
-        logger.loginfo(window_frame)
-        logger.loginfo(type(window_frame))
         self.window= window_frame
 
     def average_frame(self,window):
         logger.loginfo(window)
-        logger.loginfo(type(window))
         total_sum = 0
         for item in window:
             total_sum +=item
-        logger.loginfo(total_sum)
         average = total_sum / len(window)
         return average
     
     def check_within_tolerance(self,average_frame):
         current_value = list(self.frame)[-1]
         difference = current_value-average_frame
-        if difference <= self.tolerance:
-            return False
-        else: 
-            logger.loginfo(difference)
+        if abs(difference) <= self.tolerance:
             return True
+        else: 
+            return False
     
     def frame_shift(self,cb_msg_new): 
         removed_value = self.frame.pop(0)
         logger.loginfo(removed_value)
-        cb_msg_plus_1_testing = cb_msg_new+1
-        self.frame.append(cb_msg_plus_1_testing)
+        self.frame.append(cb_msg_new)
         logger.loginfo(self.frame)
 
     def check_reading(self):
         self.add_frame_to_window(self)
         average_frame = self.average_frame(self,window=self.window)
-        self.check_within_tolerance(self,average_frame)
-
-        
+        check_result = self.check_within_tolerance(self,average_frame)
+        return check_result
 
 
     
