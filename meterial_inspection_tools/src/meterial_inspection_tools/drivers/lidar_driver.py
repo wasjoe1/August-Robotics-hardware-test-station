@@ -224,12 +224,14 @@ class YdlidarChecker:
         self.pub_reading_laserscan.publish(laserscan_one_message_data)
         return True
 
+    """
     def disconnect(self):
         self.log_with_frontend("DISCONNECTING")
         self.log_with_frontend("DISCONNECTED")
         self.state = YdlidarCheckerStates.IDLE
         return True
     
+    """
 
     def get_pointcloud(self):
         laserscan_one_message_data = self.ydliar_model.get_laserscan()

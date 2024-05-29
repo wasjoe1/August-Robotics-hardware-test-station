@@ -39,9 +39,8 @@ print(pymodbus.__version__)
 class CBCommands(Enum):
     NONE = auto()
     RESET = auto()
-    AUTO_DETECT = auto()
+    CONNECT = auto()
     SET_DEFAULT = auto()
-    #SAVE = auto()
 
 class CBCheckerStates(Enum): 
     INIT = auto()
@@ -57,12 +56,13 @@ class CBOperations:
     """
     CB_TYPE = None
     DEFAULT_BAUDRATE = 57600
-    UNIT_ID_CHECKLIST = (1, 2, 3, 4)
+    #UNIT_ID_CHECKLIST = (1, 2, 3, 4)
+    UNIT_ID_CHECKLIST = (1,2)
     UNIT_ID_CHECKLIST_VDSM = []
     UNIT_ID_CHECKLIST_BRITER = []
-    BAUDRATE_CHECKLIST = (9600,57600)
+    BAUDRATE_CHECKLIST = (9600,115200,57600)
 
-    def check_reading(cb_msg):
+    def check_reading():
         data_ok_flag = False
         return data_ok_flag
     
@@ -74,12 +74,17 @@ class CBOperations:
         return modbus_client
 
                 
-    def set_default_settings(modbus_client):
+    def set_default_settings(modbus_client,set_ID):
         succeeded = False
         return succeeded
 
+    def create_frame(cb_msg):
+        pass
+    
+    def frame_shift(cb_msg_new):
+        pass
 
-class CB_VSMD114(CBOperations): #UNIT ID 1,3, # no data
+class CB_VSMD114(CBOperations): #UNIT ID 1,3, # do not need to parse data
     CB_TYPE = "VSMD"
 
     #no need to check data
@@ -112,19 +117,30 @@ class CB_VSMD114(CBOperations): #UNIT ID 1,3, # no data
         return modbus_client
 
         
-    def set_default_settings(self,modbus_client):
+    def set_default_settings(self,modbus_client,set_ID):
         succeeded = False
-        logger.loginfo("Setting baudrate")
+        logger.loginfo("Setting baudrate VSMD")
         baudrate = 57600
         counter_VDSM_set_number = 0
+        set_ID_int = int(set_ID)
         for unit_id in self.UNIT_ID_CHECKLIST_VDSM:
+            #set baudrate
             rwr = modbus_client.write_registers(0x20,baudrate,unit= unit_id)
             if not rwr.isError():
-                logger.loginfo(unit_id)
-                logger.loginfo("Set baudrate to 57600")
-            if rwr.isError():
+                logger.loginfo(str(unit_id)+"Set baudrate to 57600")
+                modbus_client.baudrate = baudrate
+            elif rwr.isError():
                 logger.loginfo("ERROR in setting baudrate")
-            # additional for iteration cycle 1
+            
+            #set ID
+            if (unit_id !=set_ID_int):
+                rwr_unit_ID2 = modbus_client.write_registers(0x1f,1, unit=unit_id)
+                if not rwr_unit_ID2.isError():
+                    logger.loginfo(set_ID + "UNIT ID SET")
+                    counter_VDSM_set_number +=1
+                    logger.loginfo(str(counter_VDSM_set_number) + "number set")
+
+            """
             if (unit_id != 1) and (unit_id != 3) and (counter_VDSM_set_number == 0):  
                     rwr_unit_ID2 = modbus_client.write_registers(0x1f,1, unit=unit_id)
                     if not rwr_unit_ID2.isError():
@@ -134,33 +150,75 @@ class CB_VSMD114(CBOperations): #UNIT ID 1,3, # no data
                 rwr_unit_ID4 = modbus_client.write_registers(0x1f,3, unit=unit_id)
                 if not rwr_unit_ID4.isError():
                     logger.loginfo("UNIT ID 3 SET")
+            """
             succeeded = True 
         return succeeded
 
     
 class CB_BRITER(CBOperations): #UNIT ID 2,4
     CB_TYPE = "BRITER"
-   
-    def get_data_frames(cb_msg): 
-        frame = []
+    window_size = 3
+    window = None
+    frame = []
+    tolerance = 2 
+    data_ok_flag = None
+    
+    """ 
+    1. create window with window_size of 3
+    2. create frame by appending cb_msg value x 4 times
+    3. add frame to window, window fits first 3 values
+    4. get average of window     
+    5. get newest/lsat value in frame
+    6. compare the newest/last -average window value to check if less than 2
+    7. remove the oldest value and add in a new reading value
+    8. repeat step 1 -7
+    """
+
+    #add encoder value into list 
+    def create_frame(self,cb_msg):
+        if len(self.frame) <4: 
+            self.frame.append(cb_msg)
+    
+    def add_frame_to_window(self):
+        window_frame = self.frame[:3]
+        logger.loginfo(window_frame)
+        logger.loginfo(type(window_frame))
+        self.window= window_frame
+
+    def average_frame(self,window):
+        logger.loginfo(window)
+        logger.loginfo(type(window))
+        total_sum = 0
+        for item in window:
+            total_sum +=item
+        logger.loginfo(total_sum)
+        average = total_sum / len(window)
+        return average
+    
+    def check_within_tolerance(self,average_frame):
+        current_value = list(self.frame)[-1]
+        difference = current_value-average_frame
+        if difference <= self.tolerance:
+            return False
+        else: 
+            logger.loginfo(difference)
+            return True
+    
+    def frame_shift(self,cb_msg_new): 
+        removed_value = self.frame.pop(0)
+        logger.loginfo(removed_value)
+        cb_msg_plus_1_testing = cb_msg_new+1
+        self.frame.append(cb_msg_plus_1_testing)
+        logger.loginfo(self.frame)
+
+    def check_reading(self):
+        self.add_frame_to_window(self)
+        average_frame = self.average_frame(self,window=self.window)
+        self.check_within_tolerance(self,average_frame)
+
         
 
-    def check_reading(cb_msg):
-        data_ok_flag = False
-        window_initialized_flag = False
-        
-        def initialize_window(window_size):
-            return deque(maxlen=window_size)
-        
-        def add_frame_to_window(frame, window):
-            window.append(frame)
 
-        def average_frame(window):
-
-
-
-
-        return data_ok_flag
     
     def parse_reading(self,modbus_client):
         def get_encoded_data(modbus_client):
@@ -173,13 +231,14 @@ class CB_BRITER(CBOperations): #UNIT ID 2,4
                 if not rhr.isError():
                     logger.loginfo("SUCCEEDED IN READING UNIT ID " + str(unit))
                     register_value = rhr.registers[0]
-                    register_values[unit] = register_value
-            register_values_str = str(register_values)
-            logger.loginfo(register_values_str)
-            return register_values_str
+                    #register_values[unit] = register_value
+            #register_values_str = str(register_values)
+            #logger.loginfo(register_values_str)
+            #return register_values_str
+                    return register_value
         return get_encoded_data(modbus_client)                   
 
-
+    
     def scan(self,configs):
         modbus_client: ModbusClient = None
         BED_connected_count = 0
@@ -196,24 +255,33 @@ class CB_BRITER(CBOperations): #UNIT ID 2,4
                         BED_connected_count += 1
                         logger.loginfo("No. of BED connected " + str(BED_connected_count) + " ID " + str(unit_id))
                     if not respond.isError():
-                        logger.loginfo("Device that is not BED and not VDSM has been detected but not connected")
+                        logger.loginfo("Device that is not BED has been detected but not connected")
         return modbus_client
 
 
-    def set_default_settings(self,modbus_client):
+    def set_default_settings(self,modbus_client,set_ID):
         succeeded = False
         logger.loginfo("Setting baudrate")
         data_baudrate = 0x03
+        set_ID_int = int(set_ID)
         counter_BRITER_set_number = 0
-        for index,unit_id in enumerate(self.UNIT_ID_CHECKLIST_BRITER):
+        for unit_id in self.UNIT_ID_CHECKLIST_BRITER:
+            #set baudrate
             rwr = modbus_client.write_register(0x0005,data_baudrate, unit = unit_id) 
             if not rwr.isError():
                 logger.loginfo("Set baudrate to 57600 on ID: " + str(unit_id))
-            if rwr.isError():
+            elif rwr.isError():
                 logger.loginfo("Error in setting baudrate")
                 logger.loginfo("ERROR ID" + str(unit_id))
-            rospy.sleep(0.5)
-            #iteration 1
+
+            #set unit ID
+            if (unit_id !=set_ID_int):
+                rwr_unit_ID1 = modbus_client.write_registers(0x0005,set_ID_int,unit=unit_id)
+                if not rwr_unit_ID1.isError():
+                    counter_BRITER_set_number +=1
+                    logger.loginfo(set_ID +" UNIT ID SET")
+
+            """
             if (unit_id != 2) and (unit_id != 4) and (counter_BRITER_set_number == 0):
                 rwr_unit_ID1 = modbus_client.write_registers(0x0005,2,unit=unit_id)
                 counter_BRITER_set_number +=1
@@ -225,6 +293,7 @@ class CB_BRITER(CBOperations): #UNIT ID 2,4
                 if not rwr_unit_ID3.isError():
                     logger.loginfo("UNIT ID 4 SET")
                     self.UNIT_ID_CHECKLIST_BRITER[index]=4
+            """
         succeeded = True
         return succeeded
 
@@ -232,7 +301,7 @@ class CB_BRITER(CBOperations): #UNIT ID 2,4
 
 class CBChecker: 
     NODE_RATE = 5.0
-    cb_model: CBOperations = CB_BRITER
+    cb_model: CBOperations = None
     _command = None
     _state = None
     modbus_client: ModbusClient = None
@@ -268,7 +337,7 @@ class CBChecker:
         (CBCommands.NONE, CBCheckerStates.INIT): self.initialize, # to IDLE
         (CBCommands.NONE, CBCheckerStates.CONNECTED): self.parse_reading, # stay
         (CBCommands.SET_DEFAULT, CBCheckerStates.CONNECTED): self.set_default_settings, # stay
-        (CBCommands.AUTO_DETECT, CBCheckerStates.IDLE): self.auto_detect,
+        (CBCommands.CONNECT, CBCheckerStates.IDLE): self.auto_detect,
     }
         
     def srv_cb(self, srv):
@@ -333,22 +402,31 @@ class CBChecker:
         try:
             with serial.Serial(port=self.modbus_configs["port"]) as ser:  
                 logger.loginfo("parsereadinglogger")
-                logger.loginfo(self.modbus_client)
-                cb_msg = self.cb_model.parse_reading(self=self.cb_model,modbus_client = self.modbus_client)
-                self.pub_reading.publish(json.dumps(cb_msg))
-                check_NG_or_G = self.cb_model.check_reading(cb_msg)
-                if check_NG_or_G: 
-                    self.pub_data_check.publish(json.dumps("OK"))
+                #logger.loginfo(self.modbus_client)
+                for i in range(4):
+                    cb_msg = self.cb_model.parse_reading(self=self.cb_model,modbus_client = self.modbus_client)
+                    if cb_msg is not None:
+                        self.pub_reading.publish(json.dumps(cb_msg))
+                        self.cb_model.create_frame(self=self.cb_model,cb_msg=cb_msg)
+                check_reading = self.cb_model.check_reading(self.cb_model)
+                cb_msg_new = cb_msg = self.cb_model.parse_reading(self=self.cb_model,modbus_client = self.modbus_client)
+                self.cb_model.frame_shift(self=self.cb_model,cb_msg_new=cb_msg_new)
+                logger.loginfo("frameshifted")
+                logger.loginfo(check_reading)
+                if check_reading == True: 
+                    self.pub_data_check.publish("OK")
+                elif check_reading == False: 
+                    self.pub_data_check.publish("NOT OK")
                 else:
-                    self.pub_data_check.publish(json.dumps("NOT OK"))
-
+                    self.pub_data_check.publish("ERROR")
                 return True
         except (serial.SerialException, BrokenPipeError, ConnectionException) as e:
+            self.log_with_frontend("CB unplugged! Check connection","无法连接CB，请确保电源在连接")
             self.state = CBCheckerStates.IDLE
             return False
     
     def set_default_settings(self):
-        if self.cb_model.set_default_settings(self= self.cb_model,modbus_client=self.modbus_client):
+        if self.cb_model.set_default_settings(self= self.cb_model,modbus_client=self.modbus_client,set_ID=self.cmd_params):
             self.log_with_frontend("SETTING SET","设置成功")
             self.log_with_frontend("CFG SAVED","设置保存成功")
             return True
@@ -357,7 +435,7 @@ class CBChecker:
     def auto_detect(self):
         self.state = CBCheckerStates.SCANNING
         for models in self.CB_DRIVER_MODEL_TABLE.values():
-            self.modbus_client = models.scan(self=CBOperations,configs = self.modbus_configs) #will it be able to reconfigure the baudrate?
+            self.modbus_client = models.scan(self=CBOperations,configs = self.modbus_configs) 
             if self.modbus_client: 
                 if models == CB_BRITER:
                     self.log_with_frontend(f"Found {models.CB_TYPE} with baudrate: {self.modbus_client.baudrate}! Unit_ID = {models.UNIT_ID_CHECKLIST_BRITER} ", f"IMU 类型 {models.CB_TYPE}, 波特率: {self.modbus_client.baudrate}!")      
@@ -373,20 +451,6 @@ class CBChecker:
             self.state =CBCheckerStates.IDLE
             return False
     
-    
-    def auto_detect(self):
-        self.state = CBCheckerStates.SCANNING
-        self.modbus_client = self.cb_model.scan(self=CBOperations,configs = self.modbus_configs) 
-        logger.loginfo(self.modbus_client)
-        if self.modbus_client: 
-                logger.loginfo("here")
-                self.state = CBCheckerStates.CONNECTED
-                self.pub_configs.publish(json.dumps(self._get_current_CB_settings()))
-                self.pub_configs_chinese.publish(json.dumps(self._get_current_CB_settings_chinese()))
-                return True
-        self.state =CBCheckerStates.IDLE
-        return False
-
 if __name__ == "__main__":
     rospy.init_node("cb_driver_node")
     cb_driver_checker = CBChecker()

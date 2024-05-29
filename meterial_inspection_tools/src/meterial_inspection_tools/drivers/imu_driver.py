@@ -36,7 +36,8 @@ class IMUCommands(Enum):
     NONE = auto()
     RESET = auto()
     SCAN = auto()
-    AUTO_DETECT = auto()
+    #AUTO_DETECT = auto()
+    CONNECT = auto()
     SET_DEFAULT = auto()
 
 class IMUCheckerStates(Enum):
@@ -385,7 +386,7 @@ class IMUChecker:
 
         self.__STATES_METHODS = {
             (IMUCommands.NONE, IMUCheckerStates.INIT): self.initialize, # to IDLE
-            (IMUCommands.AUTO_DETECT, IMUCheckerStates.IDLE): self.auto_detect, # to CONNECTED or stay
+            (IMUCommands.CONNECT, IMUCheckerStates.IDLE): self.auto_detect, # to CONNECTED or stay
             (IMUCommands.NONE, IMUCheckerStates.CONNECTED): self.parse_reading, # stay
             (IMUCommands.SET_DEFAULT, IMUCheckerStates.CONNECTED): self.set_default_settings, # stay
         }
