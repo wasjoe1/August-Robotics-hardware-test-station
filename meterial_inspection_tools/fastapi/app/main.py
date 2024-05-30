@@ -129,7 +129,7 @@ async def listen_to_websocket(websocket, component, topic):
     while True:
         await asyncio.sleep(0.2)
         if app.mi.has_topic_msg(component, topic):
-            logger.loginfo("afterhas topic message") # TEST its always empty [RESOLVED]
+            logger.loginfo(f"{topic} topic has message") # TEST its always empty [RESOLVED]
             qData = app.mi.get_topic_msg(component, topic)
             logger.loginfo(f"queue data: {qData}")
             await websocket.send_text(f"{qData}")
@@ -142,8 +142,6 @@ for component, topic in componentToTopic:
     
     @app.websocket(f"/{component}/{topic}") # topic_data, topic_info, etc.
     async def cb(websocket: WebSocket, component=component, topic=topic): #  RESOLVED using this line of code
-        logger.loginfo("websocket cb called...")
-        logger.loginfo(component)
-        logger.loginfo(topic)
+        logger.loginfo(f"websocket /{component}/{topic} connecting...")
         await listen_to_websocket(websocket, component, topic)
     

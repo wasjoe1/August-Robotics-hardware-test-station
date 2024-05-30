@@ -33,12 +33,14 @@ function redirectToPage(page) {
 }
 
 function executeSrvCall(data) {
+    console.log("Executing service call...")
     data_str = JSON.stringify(data) // i.e. {imu: {button:__, parameter:__}}
     console.log("send data: " + data_str)
     var url = "http://" + ip_addr + "/command/" + data_str
     var request = new XMLHttpRequest()
     request.open("GET", url)
     request.send()
+    console.log("Executing service call...")
 }
 
 function createSrvCallData(component, data) {
@@ -52,12 +54,13 @@ function createSrvCallData(component, data) {
 // onClickEvents
 const gComponentToData = {
     "imu": { button: "AUTO_DETECT", baudrate: "", }, // TODO: come up with a better system for this, for now its AUTO_DETECT, v2.0 will be CONNECT, but need to have a non hard coded system
+    // "imu": { button: "CONNECT", baudrate: "", },
     "inclinometer": { button: "AUTO_DETECT", baudrate: "", },
 }
 
 function onClickComponentPageBtn(element) {
     try {
-        // execute the service call 
+        // execute the service call
         const component = element.getAttribute("component")
         const data = gComponentToData[component]
         executeSrvCall(createSrvCallData(component, data))

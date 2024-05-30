@@ -20,19 +20,19 @@
   <div class="header-container">
     <h3 id="title"> 澳谷一站式检测工具 </h3>
     <button type="button" class="btn btn-page btn-default" onclick="location.href='/'">主页</button>
-    <button type="button" class="btn btn-page btn-default highlight" onclick="location.href='/step/imu'">IMU</button>
-    <button type="button" class="btn btn-page btn-default" onclick="location.href='/step/inclinometer'">Inclinometer</button>
-    <button type="button" class="btn btn-page btn-default" onclick="location.href='/step/cb'">CB [Encoder & motor driver]</button>
-    <button type="button" class="btn btn-page btn-default" onclick="location.href='/step/sonar'">超声波</button>
+    <button component="imu" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">IMU</button>
+    <button component="inclinometer" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">Inclinometer</button>
+    <button component="cb" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">CB [Encoder & motor driver]</button>
+    <button component="sonar" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">超声波</button>
     <hr />
   </div>
   
   <!-- Body portion -->
-  <div class="flex-container">
-    <div class="content-container">
-      <!-- top-content -->
-      <div class="container green-container top-content-container">
-        <!-- top-left-content -->
+  <div class="body-container">
+    <div class="content-container grid-3col-container">
+      <!-- left-content -->
+      <div class="container green-container left-content-container grid-col-span2">
+        <!-- left-left-content -->
         <div>
           <h4 class="display-content-header">Configurations</h4>
           <div id="responseData-configs" class="display-text-div"></div>
@@ -42,14 +42,14 @@
           <div id="responseData-data" class="display-text-div"></div>
         </div>
 
-        <!-- top-mid-content -->
+        <!-- left-mid-content -->
         <div>
           <h4 class="display-content-header">NG / G</h4>
-          <div id="responseData-data_checker" class="display-state-div">G</div>
+          <div id="responseData-data_checker" class="display-state-div"></div>
         </div>
 
-        <!-- top-right-content -->
-        <div class="top-right-content-container">
+        <!-- left-right-content -->
+        <div class="left-right-content-container">
           <!-- buttons -->
           <div class="display-content-header">Select Baud rate:</div>
           <button class="btn btn-command btn-default" id="setDefaultBtn" baudrate="9600" onclick="onClickCommandBtn()">9600 baud</button>
@@ -59,18 +59,14 @@
         </div>
       </div>
       
-      <!-- mid-content -->
-      <div class="container green-container">
+      <!-- right-content -->
+      <div class="container green-container grid-col-span1">
         <h4 class="display-content-header">State</h4>
         <div id="responseData-state" class="display-state-div">IDLE</div>
         <h4 class="display-content-header">User Information</h4>
         <div id="responseData-info" class="display-text-div"></div>
         <!-- <h4 class="display-content-header">User Information (Chinese)</h4>
         <div id="responseData-info_chinese" class="display-text-div"></div> -->
-      </div>
-
-      <!-- low-content -->
-      <div class="container green-container">
         <h4 class="display-content-header">Instructions</h4>
         <div id="responseData-instructions_english" class="display-text-div">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Veniam, excepturi repellat delectus optio laborum eligendi provident! Distinctio neque repellat enim sapiente iste unde ipsum, minima facilis rem sunt placeat expedita.</div>
         <!-- <h4 class="display-content-header">Instructions (Chinese)</h4>
