@@ -65,6 +65,7 @@ add_service_files(
   GetButton.srv
   GetButtonBaudrate.srv
   GetButtonUnitID.srv
+  GetButtonModel.srv
 )
 
 ## Generate actions in the 'action' folder

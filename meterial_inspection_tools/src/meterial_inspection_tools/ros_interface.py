@@ -12,7 +12,7 @@ from meterial_inspection_tools.srv import InclinometerControl #Inclin
 from meterial_inspection_tools.srv import CBControl #CBcontrol
 from meterial_inspection_tools.srv import SonarControl #Sonarcontrol
 #from meterial_inspection_tools.srv import DepthCameraControl #DepthCameracontrol
-from meterial_inspection_tools.srv import GetButton, GetButtonBaudrate, GetButtonUnitID
+from meterial_inspection_tools.srv import GetButton, GetButtonBaudrate, GetButtonUnitID,GetButtonModel
 #from meterial_inspection_tools.srv import GetButtonBaudrate
 
 
@@ -75,7 +75,8 @@ LIDAR_DATA_LASERSCAN = InterfaceWithType('/lidar/data_laserscan',ssmsgs.LaserSca
 LIDAR_DATA_POINTCLOUD = InterfaceWithType('lidar/data_pointcloud',stmsgs.String)
 LIDAR_STATE = InterfaceWithType('lidar/state',stmsgs.String)
 LIDAR_INFO = InterfaceWithType('lidar/info',stmsgs.String)
-LIDAR_SRV_CMD = InterfaceWithType('lidar/srv_cmd',IMUControl) #shares same service format --> button + model
+LIDAR_INFO_CHINESE = InterfaceWithType('lidar/info/chinese',stmsgs.String)
+LIDAR_SRV_CMD = InterfaceWithType('lidar/srv_cmd',GetButtonModel) 
 
 
 
@@ -141,5 +142,6 @@ msg_dict = {
         "topic_data_pointcloud": LIDAR_DATA_POINTCLOUD,
         "topic_state": LIDAR_STATE,
         "topic_info": LIDAR_INFO,
+        "topic_info_chinese": LIDAR_INFO_CHINESE,
     }
 }

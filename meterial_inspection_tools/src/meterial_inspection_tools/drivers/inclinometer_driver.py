@@ -309,7 +309,7 @@ class InclinChecker:
                     self.pub_data_check.publish(json.dumps("NOT OK"))
                 return True
         except (serial.SerialException, BrokenPipeError) as e:
-            self.log_with_frontend("Inclinometer unplugged! Check connection","无法连接倾角仪，请确保电源在连接")
+            self.log_with_frontend("Inclinometer unplugged! Check connection","无法连接倾角仪，请确保电源再连接")
             self.state = InclinCheckerStates.IDLE
             return False
        
