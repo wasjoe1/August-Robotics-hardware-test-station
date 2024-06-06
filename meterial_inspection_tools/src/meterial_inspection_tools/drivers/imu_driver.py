@@ -214,14 +214,17 @@ class IMURion(IMUOperations):
     
     def scan (self,port):
         serial_port: Serial = None
-        for baud in self.SCAN_BAUDRATES:
-            with Serial(port = port, baudrate=baud, timeout=1.0) as p: 
-                rion_imu_baudrate= p.write(RION_IMU_CONSTANTS.RION_IDENTIFIER.value)
-                rospy.sleep(0.1)
-                response = p.read(1)
-                if response == RION_IMU_CONSTANTS.RION_IDENTIFIER.value:
-                    serial_port = p
-        return serial_port
+        try: 
+            for baud in self.SCAN_BAUDRATES:
+                with Serial(port = port, baudrate=baud, timeout=1.0) as p: 
+                    rion_imu_baudrate= p.write(RION_IMU_CONSTANTS.RION_IDENTIFIER.value)
+                    rospy.sleep(0.1)
+                    response = p.read(1)
+                    if response == RION_IMU_CONSTANTS.RION_IDENTIFIER.value:
+                        serial_port = p
+            return serial_port
+        except serial.SerialException:
+            return False
         
         
    
@@ -315,13 +318,16 @@ class IMUWIT(IMUOperations):
             
     def scan(self,port):
         serial_port: Serial = None
-        for baud in self.SCAN_BAUDRATES:
-            with Serial(port = port,baudrate=baud,timeout=1.0) as p:
-                timestart = rospy.Time.now().to_sec()
-                imu_raw_data = p.read_until(b"\x55\x51")
-                if rospy.Time.now().to_sec() - timestart < 1.0:
-                    serial_port = p 
-        return serial_port
+        try:
+            for baud in self.SCAN_BAUDRATES:
+                with Serial(port = port,baudrate=baud,timeout=1.0) as p:
+                    timestart = rospy.Time.now().to_sec()
+                    imu_raw_data = p.read_until(b"\x55\x51")
+                    if rospy.Time.now().to_sec() - timestart < 1.0:
+                        serial_port = p 
+            return serial_port
+        except serial.SerialException:
+            return False
     
     
     def set_default_settings(serial_port,baudrate_params):

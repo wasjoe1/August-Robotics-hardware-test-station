@@ -64,10 +64,10 @@ SONAR_CONFIGS = InterfaceWithType('/sonar/configs',stmsgs.String)
 SONAR_CONFIGS_CHINESE = InterfaceWithType('/sonar/configs_chinese',stmsgs.String)
 SONAR_SRV_CMD = InterfaceWithType('/sonar/srv_cmd',GetButtonUnitID) 
 
-DEPTH_DATA = InterfaceWithType('/depth/data', ssmsgs.PointCloud2)
+DEPTH_DATA = InterfaceWithType('/depth/data', stmsgs.String)
 DEPTH_STATE = InterfaceWithType('/depth/state',stmsgs.String) 
 DEPTH_INFO = InterfaceWithType('/depth/info',stmsgs.String)
-DEPTH_CONFIGS = InterfaceWithType('/depth/configs',stmsgs.String)
+DEPTH_INFO_CHINESE = InterfaceWithType('/depth/info_chinese',stmsgs.String)
 DEPTH_SRV_CMD = InterfaceWithType('/depth/srv_cmd',GetButton)
 
 LIDAR_DATA_LASERSCAN = InterfaceWithType('/lidar/data_laserscan',ssmsgs.LaserScan)
@@ -133,7 +133,7 @@ msg_dict = {
         "topic_data": DEPTH_DATA,
         "topic_state": DEPTH_STATE,
         "topic_info": DEPTH_INFO,
-        "topic_configs": DEPTH_CONFIGS,
+        "topic_info_chinese": DEPTH_INFO_CHINESE,
     },
 
    "lidar": {
