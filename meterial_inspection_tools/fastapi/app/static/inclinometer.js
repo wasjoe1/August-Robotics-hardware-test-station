@@ -1,99 +1,49 @@
 // import { lang } from './lang.js'
 // import { refresh_page_once_list } from './refresh_once.js'
 
-var ws_json
-var hostname
-var ip_addr = document.location.hostname
-var download_data
+// Defined in index.js:
+// ip_addr
+// current_step
+// regex
 
-var is_gs
+// Set Current step
+setCurrentStep()
 
-var url = window.location.href
-const regex = "http://(.*)/step/(.*)"
-const found = url.match(regex)
-current_step = found[2]
-console.log("current step: ", current_step)
-
-gParam = undefined
-gSelectedComponentElement = undefined
-
-const buttonDict = {
-    "scanBtn": "SCAN",
-    "connectBtn": "CONNECT",
-    "disconnectBtn": "DISCONNECT",
+const buttonIdToButtonString = {
     "setDefaultBtn": "SET_DEFAULT",
-    "saveBtn": "SAVE",
 }
 
-console.log("inclinometer")
+console.log("init inclinometer...")
 
 // ------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
 // Functions
-function parseStringToInt(str) {
-    try {
-        return parseInt(str)
-    } catch (e) {
-        console.log("Parsing of String to Int failed")
-        console.log(e)
-        throw e
-    }
-}
+// Defined in index.js:
+// function parseStringToInt(str)
+// function redirectToPage(page)
+// function formatSrvCallData(component, data)
+// function executeSrvCall(formattedData)
+// function create_ws(ip_addr, topic,  elementId, onMessageFunc) => onMessageFunc(evt, topic, elementId) is executed as such
+// function retrieveComponentData(component, data)
 
-function createCmdData(buttonString, param) {
-    return {
+function formatInclinometerSrvCallData(component, buttonString, baudrate) {
+    var data = {
         button: buttonString,
-        parameter: "", // TODO: might need param in the future
+        baudrate: parseStringToInt(baudrate),
     }
-}
-
-// TODO: create a web socket manager class to hide all these under the hood implementation (connections, create, get, clear)
-var gAll_ws_connections = []
-
-function create_ws(ip_addr, route, elementId) {
-    try {
-        const ws = new WebSocket("ws://" + ip_addr + route) // route == /inclinometer_smt
-        ws.addEventListener('open', function(event) {
-            console.log(`${route} socket was opended`)
-            ws.send('Hello ws data!');
-        });
-        ws.onmessage = function(evt) {    
-            document.getElementById(elementId).textContent = evt.data 
-            return evt.data
-        }
-        gAll_ws_connections.push(ws)
-    } catch (e) {
-        console.log(`Failed to create web socket for ${route}`)
-        console.error(e)
-    }
-}
-
-function clear_all_ws() {
-    for (const ws in gAll_ws_connections) {
-        ws.close()
-    }
-}
-
-function executeCommand(cmd) {
-    console.log(cmd)
-
-    var cmd_dict = {}
-    cmd_dict[current_step] = cmd
-    cmd_str = JSON.stringify(cmd_dict) // i.e. {inclinometer: {button:__, parameter:__}}
-    console.log("send cmd: " + cmd_str)
-    var url = "http://" + ip_addr + "/command/" + cmd_str
-    var request = new XMLHttpRequest()
-    request.open("GET", url)
-    request.send()
+    data = formatSrvCallData(component, data)
+    return data
 }
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
 // onClickEvents
-function onClickCommandBtn(element) {
-    executeCommand(createCmdData(buttonDict[element.id]))    
+function onClickCommandBtn() {
+    executeSrvCall(formatInclinometerSrvCallData(
+            current_step,
+            buttonIdToButtonString[this.id],
+            this.getAttribute("baudrate")))
 }
-
-// TODO: create an event s.t. when page changes, clear all web sockets
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
@@ -103,10 +53,52 @@ const socketNameToElementId = {
     "/inclinometer/topic_data": "responseData-data",
     "/inclinometer/topic_data_checker": "responseData-data_checker",
     "/inclinometer/topic_info": "responseData-info",
-    "/inclinometer/topic_info_chinese": "responseData-info_chinese",
+    // "/inclinometer/topic_info_chinese": "responseData-info_chinese",
     "/inclinometer/topic_configs": "responseData-configs",
-    "/inclinometer/topic_configs_chinese": "responseData-configs_chinese",
+    // "/inclinometer/topic_configs_chinese": "responseData-configs_chinese",
 }
+
+function formatInclinometerDisplayData(data) {
+    data = retrieveComponentData(current_step, data)
+    return {dataEle: undefined, dataArr : data}
+}
+
+function displayDataOnElement(options) {
+    const {topic, data, ele} = options // use object destructuring
+    const formattedData = formatInclinometerDisplayData(data) // contains element & dataArr //TODO
+    const {dataEle, dataArr} = formattedData
+
+    //TODO
+    switch(topic) { 
+        case "/inclinometer/topic_data_checker": //TODO
+            if (dataArr[0] == 'OK') {
+                console.log("data is OK") // TEST
+                ele.classList.remove("background-red")
+                ele.classList.add("background-green")
+                ele.textContent = "G"
+            } else {
+                console.log("data is not OK") // TEST
+                ele.classList.remove("background-green")
+                ele.classList.add("background-red")
+                ele.textContent = "NG"
+            }
+            break
+        // case "/inclinometer/topic_data": //TODO
+        //     ele.replaceChildren(dataEle)
+        //     break
+        // case "/inclinometer/topic_configs": //TODO
+        //     ele.replaceChildren(dataEle)
+        //     break
+        default:
+            ele.textContent = retrieveComponentData(current_step, data)
+    }
+}
+
+function onMessageFunc(evt, topic, elementId) { // data is contained in evt.data
+    displayDataOnElement({topic:topic, data:evt.data, ele:document.getElementById(elementId)})
+    return evt.data
+}
+
 for (const socketName in socketNameToElementId) {
-    create_ws(ip_addr, socketName, socketNameToElementId[socketName])
+    create_ws(ip_addr, socketName, socketNameToElementId[socketName], onMessageFunc)
 }

@@ -1,15 +1,21 @@
+// NOTE:
+// 1. Anything updated here might cause errors in other _component_.js files,
+// please ensure changes are update in all _component_.js files
+// 2. Refer to test_example_new_js_file.js when creating new _component_.js files
+
+// ------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------ 
 // import { lang } from './lang.js'
 // import { refresh_page_once_list } from './refresh_once.js'
 
-var ws_json
-var hostname
-var ip_addr = document.location.hostname
-var download_data
-
-var is_gs
-
-var url = window.location.href
+// var ws_json
+// var hostname
+// var download_data
+// var is_gs
+// var url = window.location.href // this is to get the frontend's current url
+const ip_addr = document.location.hostname // this is the backend's ip addr => for GET/ POST reqs
 const regex = "http://(.*)/step/(.*)"
+var current_step = undefined
 
 console.log("init index...")
 // ------------------------------------------------------------------------------------------------
@@ -26,15 +32,25 @@ function parseStringToInt(str) {
     }
 }
 
+function setCurrentStep() {
+    var url = window.location.href
+    var gFound = url.match(regex)
+    current_step = gFound[2]
+    console.log("current step: ", current_step)
+}
+
 function redirectToPage(page) {
     // Stop the data stream(?) => for now no srv call for disconnect, data streams until physical disconnect
     // Redirect to page
     window.location.href = page; // can be /, /step/imu, /step/inclinometer
 }
 
-function executeSrvCall(data) {
+// ------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
+// SERVICE CALLS
+function executeSrvCall(formattedData) {
     console.log("Executing service call...")
-    data_str = JSON.stringify(data) // i.e. {imu: {button:__, parameter:__}}
+    data_str = JSON.stringify(formattedData) // i.e. {imu: {button:__, parameter:__}}
     console.log("send data: " + data_str)
     var url = "http://" + ip_addr + "/command/" + data_str
     var request = new XMLHttpRequest()
@@ -43,7 +59,7 @@ function executeSrvCall(data) {
     console.log("Executing service call...")
 }
 
-function createSrvCallData(component, data) {
+function formatSrvCallData(component, data) {
     formattedData = {}
     formattedData[component] = data
     return formattedData
@@ -62,8 +78,8 @@ function onClickComponentPageBtn(element) {
     try {
         // execute the service call
         const component = element.getAttribute("component")
-        const data = gComponentToData[component]
-        executeSrvCall(createSrvCallData(component, data))
+        const initData = gComponentToData[component]
+        executeSrvCall(formatSrvCallData(component, initData))
         
         // on successful connection, switch pages
         const pageRef = `/step/${component}`
@@ -76,7 +92,7 @@ function onClickComponentPageBtn(element) {
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-// Web socket creation
+// WEB SOCKET CREATION & TOPICS
 const gAll_ws_connections = []
 
 function clear_all_ws() {
@@ -102,3 +118,9 @@ function create_ws(ip_addr, topic, elementId, onMessageFunc) {
         console.error(e)
     }
 }
+
+function retrieveComponentData(component, data) {
+    return (!data)
+    ? data
+    : JSON.parse(data)[component]["data"] //TODO
+  }

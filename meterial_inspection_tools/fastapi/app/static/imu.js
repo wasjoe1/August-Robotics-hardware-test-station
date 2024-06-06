@@ -1,19 +1,16 @@
 // import { lang } from './lang.js'
 // import { refresh_page_once_list } from './refresh_once.js'
 
-var ws_json
-var hostname
-var ip_addr = document.location.hostname
-var download_data
+// Defined in index.js:
+// ip_addr
+// current_step
+// regex
 
-var is_gs
+// Set Current step
+setCurrentStep()
 
-var url = window.location.href
-var gFound = url.match(regex)
-current_step = gFound[2]
-console.log("current step: ", current_step)
-
-const buttonDict = {
+// buttonIdToButtonString
+const buttonIdToButtonString = {
     "setDefaultBtn": "SET_DEFAULT",
 }
 
@@ -22,16 +19,20 @@ console.log("init imu...")
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
 // Functions
+// Defined in index.js:
+// function parseStringToInt(str)
+// function redirectToPage(page)
+// function formatSrvCallData(component, data)
+// function executeSrvCall(formattedData)
+// function create_ws(ip_addr, topic,  elementId, onMessageFunc) => onMessageFunc(evt, topic, elementId) is executed as such
+// function retrieveComponentData(component, data)
 
-// function executeSrvCall(data) is defined in index.js
-// function parseStringToInt(str) is defined in index.js
-
-function createSrvCallData(component, buttonString, param) {
-    data = {}
-    data[component] = {
+function formatImuSrvCallData(component, buttonString, baudrate) {
+    var data =  {
         button: buttonString,
-        parameter: parseStringToInt(param),
+        baudrate: parseStringToInt(baudrate),
     }
+    data = formatSrvCallData(component, data)
     return data
 }
 
@@ -39,9 +40,9 @@ function createSrvCallData(component, buttonString, param) {
 // ------------------------------------------------------------------------------------------------
 // onClickEvents
 function onClickCommandBtn() {
-    executeSrvCall(createSrvCallData(
+    executeSrvCall(formatImuSrvCallData(
             current_step,
-            buttonDict[this.id], 
+            buttonIdToButtonString[this.id], 
             this.getAttribute("baudrate")))
 }
 
@@ -58,9 +59,8 @@ const socketNameToElementId = {
     // "/imu/topic_configs_chinese": "responseData-configs_chinese",
 }
 
-function formatImuData(data) {
-    if (!data) { return data }
-    data = JSON.parse(data)["imu"]["data"]
+function formatImuDisplayData(data) {
+    data = retrieveComponentData(current_step, data)
     console.log(data)
     data = data.split("\\n")
     console.log(data)
@@ -82,9 +82,8 @@ function formatImuData(data) {
 // function onMessageFunc(evt) needs to take in (evt) arg
 function displayDataOnElement(options) {
     const {topic, data, ele} = options // use object destructuring
-    const formattedData = formatImuData(data) // contains element & dataArr
-    const dataEle = formattedData.element
-    const dataArr = formattedData.dataArr
+    const formattedData = formatImuDisplayData(data) // contains element & dataArr
+    const {dataEle, dataArr} = formattedData
 
     switch(topic) {
         case "/imu/topic_data_checker":
@@ -109,11 +108,11 @@ function displayDataOnElement(options) {
             ele.replaceChildren(dataEle)
             break
         default:
-            ele.textContent = JSON.parse(data)["imu"]["data"]
+            ele.textContent = retrieveComponentData(current_step, data)
     }
 }
 
-function onMessageFunc(evt, topic, elementId) {
+function onMessageFunc(evt, topic, elementId) { // data is contained in evt.data
     // displayDataOnElement(topic=topic, data=data, ele=ele) // JS Doesnt support named parameters!!
     displayDataOnElement({topic:topic, data:evt.data, ele:document.getElementById(elementId)})
     return evt.data
