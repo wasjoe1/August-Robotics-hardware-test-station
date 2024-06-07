@@ -85,7 +85,6 @@ class MeterialInspection():
         if not self.send_queue[cb_args["component"]].get(cb_args["topic"]): # if send q component has no such topic
             logger.logerr(f"{cb_args['component']} does not have {cb_args['topic']}")
         self.send_queue[cb_args["component"]][cb_args["topic"]].append(data_to_send)
-        logger.loginfo(len(self.send_queue[cb_args["component"]][cb_args["topic"]]))
 
     # -------------------------------------------------------------------------------------------------
     # service calls

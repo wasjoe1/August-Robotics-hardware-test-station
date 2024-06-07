@@ -29,7 +29,7 @@ console.log("init inclinometer...")
 function formatInclinometerSrvCallData(component, buttonString, baudrate) {
     var data = {
         button: buttonString,
-        baudrate: parseStringToInt(baudrate),
+        baudrate: baudrate,
     }
     data = formatSrvCallData(component, data)
     return data

@@ -113,7 +113,7 @@ async def step(request: Request, mode: str): # mode is of string type; its from 
 @app.get("/command/{cmd}", response_class=HTMLResponse)
 async def command(request: Request, cmd: str):
     try:
-        logger.loginfo(f"get command {cmd}")
+        logger.loginfo(f"send ROS command {cmd}")
         srv_call_formatted_data = cmd # for now put imu only; returns json string
         # msg_dict[sub_node].service_call(cmd) => json string is passed to the node in the service call; might be the old way of making a service call
         app.mi.send_srv(srv_call_formatted_data)

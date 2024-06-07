@@ -30,7 +30,7 @@ console.log("init imu...")
 function formatImuSrvCallData(component, buttonString, baudrate) {
     var data =  {
         button: buttonString,
-        baudrate: parseStringToInt(baudrate),
+        baudrate: baudrate, // dont change to int as data has to be in string
     }
     data = formatSrvCallData(component, data)
     return data
@@ -39,11 +39,11 @@ function formatImuSrvCallData(component, buttonString, baudrate) {
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
 // onClickEvents
-function onClickCommandBtn() {
+function onClickCommandBtn(element) {
     executeSrvCall(formatImuSrvCallData(
             current_step,
-            buttonIdToButtonString[this.id], 
-            this.getAttribute("baudrate")))
+            buttonIdToButtonString[element.id], 
+            element.getAttribute("baudrate")))
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -61,9 +61,7 @@ const socketNameToElementId = {
 
 function formatImuDisplayData(data) {
     data = retrieveComponentData(current_step, data)
-    console.log(data)
     data = data.split("\\n")
-    console.log(data)
     let charToRemove = '"'
     var regExToRemoveChar = new RegExp(charToRemove, 'g')
     data[0] = data[0].replace(regExToRemoveChar, '') // remove the " at the start
@@ -75,7 +73,7 @@ function formatImuDisplayData(data) {
         p.textContent = data[i]
         container.appendChild(p)
     }
-    return {element: container, dataArr : data}
+    return {dataEle: container, dataArr : data}
 }
 
 // function create_ws(ip_addr, topic, onMessageFunc) created in index.js
@@ -102,9 +100,11 @@ function displayDataOnElement(options) {
             }
             break
         case "/imu/topic_data":
+            console.log("/imu/topic_data")
             ele.replaceChildren(dataEle)
             break
         case "/imu/topic_configs":
+            console.log("/imu/topic_configs")
             ele.replaceChildren(dataEle)
             break
         default:

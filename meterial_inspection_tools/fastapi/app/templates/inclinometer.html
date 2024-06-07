@@ -21,7 +21,7 @@
     <h3 id="title"> 澳谷一站式检测工具 </h3>
     <button type="button" class="btn btn-page btn-default" onclick="location.href='/'">主页</button>
     <button component="imu" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">IMU</button>
-    <button component="inclinometer" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">Inclinometer</button>
+    <button component="inclinometer" type="button" class="btn btn-page btn-default highlight" onclick="onClickComponentPageBtn(this)">Inclinometer</button>
     <button component="cb" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">CB [Encoder & motor driver]</button>
     <button component="sonar" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">超声波</button>
     <hr />
@@ -52,14 +52,14 @@
         <div class="left-right-content-container">
           <!-- buttons -->
           <div class="display-content-header">Select Baud rate:</div>
-          <button class="btn btn-command btn-default" id="setDefaultBtn" baudrate="2400" onclick="onClickCommandBtn()">2400 baud</button>
-          <button class="btn btn-command btn-default" id="setDefaultBtn" baudrate="4800" onclick="onClickCommandBtn()">4800 baud</button>
-          <button class="btn btn-command btn-default" id="setDefaultBtn" baudrate="9600" onclick="onClickCommandBtn()">9600 baud</button>
-          <button class="btn btn-command btn-default" id="setDefaultBtn" baudrate="19200" onclick="onClickCommandBtn()">19200 baud</button>
-          <button class="btn btn-command btn-default" id="setDefaultBtn" baudrate="115200" onclick="onClickCommandBtn()">115200 baud</button>
-          <button class="btn btn-command btn-default" id="setDefaultBtn" baudrate="14400" onclick="onClickCommandBtn()">14400 baud</button>
-          <button class="btn btn-command btn-default" id="setDefaultBtn" baudrate="38400" onclick="onClickCommandBtn()">38400 baud</button>
-          <button class="btn btn-command btn-default" id="setDefaultBtn" baudrate="57600" onclick="onClickCommandBtn()">57600 baud</button>
+          <button class="btn btn-command btn-default" id="setDefaultBtn" baudrate="2400" onclick="onClickCommandBtn(this)">2400 baud</button>
+          <button class="btn btn-command btn-default" id="setDefaultBtn" baudrate="4800" onclick="onClickCommandBtn(this)">4800 baud</button>
+          <button class="btn btn-command btn-default" id="setDefaultBtn" baudrate="9600" onclick="onClickCommandBtn(this)">9600 baud</button>
+          <button class="btn btn-command btn-default" id="setDefaultBtn" baudrate="19200" onclick="onClickCommandBtn(this)">19200 baud</button>
+          <button class="btn btn-command btn-default" id="setDefaultBtn" baudrate="115200" onclick="onClickCommandBtn(this)">115200 baud</button>
+          <button class="btn btn-command btn-default" id="setDefaultBtn" baudrate="14400" onclick="onClickCommandBtn(this)">14400 baud</button>
+          <button class="btn btn-command btn-default" id="setDefaultBtn" baudrate="38400" onclick="onClickCommandBtn(this)">38400 baud</button>
+          <button class="btn btn-command btn-default" id="setDefaultBtn" baudrate="57600" onclick="onClickCommandBtn(this)">57600 baud</button>
         </div>
       </div>
       
