@@ -16,46 +16,61 @@
 
 <body onload="">
   <!-- Header portion -->
+  <!-- Header portion -->
   <div class="header-container">
-    <h3 id="title"> 澳谷一站式检测工具 </h3>
-    <button type="button" class="btn btn-page btn-default" onclick="location.href='/'">主页</button>
-    <button type="button" class="btn btn-page btn-default" onclick="location.href='/step/imu'">IMU</button>
-    <button type="button" class="btn btn-page btn-default" onclick="location.href='/step/inclinometer'">Inclinometer</button>
-    <button type="button" class="btn btn-page btn-default highlight" onclick="location.href='/step/cb'">CB [Encoder & motor driver]</button>
-    <button type="button" class="btn btn-page btn-default" onclick="location.href='/step/sonar'">超声波</button>
+    <h2 id="title"> 澳谷一站式检测工具 </h2>
+    <button type="button" class="btn btn-page btn-default" onclick="location.href='/'">主页</button> <!-- no component-->
+    <button component="imu" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">IMU</button>
+    <button component="inclinometer" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">Inclinometer</button>
+    <button component="cb" type="button" class="btn btn-page btn-default highlight" onclick="onClickComponentPageBtn(this)">CB [Encoder & motor driver]</button>
+    <button component="sonar" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">超声波</button>
     <hr />
   </div>
   
   <!-- Body portion -->
-  <div class="flex-container">
-    <div class="content-container">
-      <!-- left of body -->
-      <div>
+  <div class="body-container">
+    <div class="content-container grid-3col-container">
+      <!-- left-content -->
+      <div class="container green-container left-content-container grid-col-span2">
+        <!-- left-left-content -->
+        <div>
+          <h4 class="display-content-header">Configurations</h4>
+          <div id="responseData-configs" class="display-text-div"></div>
+          <!-- <h4 class="display-content-header">Configurations (Chinese)</h4>
+          <div id="responseData-configs_chinese" class="display-text-div"></div> -->
+          <h4 class="display-content-header">Data</h4>
+          <div id="responseData-data" class="display-text-div"></div>
+        </div>
+
+        <!-- left-mid-content -->
+        <div>
+          <h4 class="display-content-header">NG / G</h4>
+          <div id="responseData-data_checker" class="display-state-div"></div>
+        </div>
+
+        <!-- left-right-content -->
+        <div class="left-right-content-container">
+          <!-- buttons -->
+          <div class="display-content-header">Select Unit ID:</div>
+          <button class="btn btn-command btn-default" id="setDefaultBtn" unitid="1" onclick="onClickCommandBtn(this)">1</button>
+          <button class="btn btn-command btn-default" id="setDefaultBtn" unitid="2" onclick="onClickCommandBtn(this)">2</button>
+          <button class="btn btn-command btn-default" id="setDefaultBtn" unitid="3" onclick="onClickCommandBtn(this)">3</button>
+          <button class="btn btn-command btn-default" id="setDefaultBtn" unitid="4" onclick="onClickCommandBtn(this)">4</button>
+        </div>
+      </div>
+      
+      <!-- right-content -->
+      <div class="container green-container grid-col-span1">
         <h4 class="display-content-header">State</h4>
-        <div id="responseData-state" class="display-content-div"></div>
-        <h4 id="readings" class="display-content-header">Configurations</h4>
-        <div id="responseData-configs" class="display-content-div"></div>
-        <h4 id="readings" class="display-content-header">Readings</h4>
-        <div id="responseData-data" class="display-content-div"></div>
-        <h4 class="display-content-header">Response information</h4>
-        <div id="responseData-info" class="display-content-div"></div>
-      </div>
-
-      <!-- middle of body -->
-      <div style="display: flex; flex-direction: column; background-color: darksalmon;">
-        <!-- buttons -->
-        <button class="btn btn-default" id="VSMDBtn" parameter="VSMD" onclick="onClickSetParamBtn(this)">VSMD</button>
-        <button class="btn btn-default" id="BRITERBtn" parameter="BRITER" onclick="onClickSetParamBtn(this)">BRITER</button>
-      </div>
-
-      <!-- right of body -->
-      <div style="display: flex; flex-direction: column; justify-content: space-between; background-color: darksalmon;">
-        <!-- buttons -->
-        <button class="btn btn-default" id="scanBtn" onclick="onClickCommandBtn(this)">Scan</button>
-        <button class="btn btn-default" id="connectBtn" onclick="onClickCommandBtn(this)">Connect</button>
-        <button class="btn btn-default" id="disconnectBtn" onclick="onClickCommandBtn(this)">Disconnect</button>
-        <button class="btn btn-default" id="setDefaultBtn" onclick="onClickCommandBtn(this)">Set default</button>
-        <button class="btn btn-default" id="saveBtn" onclick="onClickCommandBtn(this)">Save</button>
+        <div id="responseData-state" class="display-state-div">TEST</div>
+        <h4 class="display-content-header">User Information</h4>
+        <div id="responseData-info" class="display-text-div"></div>
+        <!-- <h4 class="display-content-header">User Information (Chinese)</h4>
+        <div id="responseData-info_chinese" class="display-text-div"></div> -->
+        <h4 class="display-content-header">Instructions</h4>
+        <div id="responseData-instructions_english" class="display-text-div">TEST Lorem ipsum dolor sit amet, consectetur adipisicing elit. Veniam, excepturi repellat delectus optio laborum eligendi provident! Distinctio neque repellat enim sapiente iste unde ipsum, minima facilis rem sunt placeat expedita.</div>
+        <!-- <h4 class="display-content-header">Instructions (Chinese)</h4>
+        <div id="responseData-instructions_chinese" class="display-text-div"></div> -->
       </div>
     </div>
   </div>

@@ -1,124 +1,121 @@
 // import { lang } from './lang.js'
 // import { refresh_page_once_list } from './refresh_once.js'
 
-var ws_json
-var hostname
-var ip_addr = document.location.hostname
-var download_data
+// Set Current step
+setCurrentStep()
 
-var is_gs
-
-var url = window.location.href
-const regex = "http://(.*)/step/(.*)"
-const found = url.match(regex)
-current_step = found[2]
-console.log("current step: ", current_step)
-
-gParam = undefined
-gSelectedComponentElement = undefined
-
-const buttonDict = {
-    "scanBtn": "SCAN",
-    "connectBtn": "CONNECT",
-    "disconnectBtn": "DISCONNECT",
+const buttonIdToButtonString = {
     "setDefaultBtn": "SET_DEFAULT",
-    "saveBtn": "SAVE",
 }
 
-console.log("cb")
+//TODO
+console.log("init cb...") // log the init-ing component
 
 // ------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
 // Functions
-function parseStringToInt(str) {
-    try {
-        return parseInt(str)
-    } catch (e) {
-        console.log("Parsing of String to Int failed")
-        console.log(e)
-        throw e
-    }
-}
+// Defined in index.js:
+// function parseStringToInt(str)
+// function redirectToPage(page)
+// function formatSrvCallData(component, data)
+// function executeSrvCall(formattedData)
+// function create_ws(ip_addr, topic,  elementId, onMessageFunc) => onMessageFunc(evt, topic, elementId) is executed as such
 
-function createCmdData(buttonString, param) {
-    return {
+function formatCBSrvCallData(component, buttonString, unitid) {
+    var data =  {
         button: buttonString,
-        parameter: param,
+        baudrate: unitid,
     }
-}
-
-// TODO: create a web socket manager class to hide all these under the hood implementation (connections, create, get, clear)
-var gAll_ws_connections = []
-
-function create_ws(ip_addr, route, elementId) {
-    try {
-        const ws = new WebSocket("ws://" + ip_addr + route) // route == /cb_smt
-        ws.addEventListener('open', function(event) {
-            console.log(`${route} socket was opended`)
-            ws.send('Hello ws data!');
-        });
-        ws.onmessage = function(evt) {    
-            document.getElementById(elementId).textContent = evt.data 
-            return evt.data
-        }
-        gAll_ws_connections.push(ws)
-    } catch (e) {
-        console.log(`Failed to create web socket for ${route}`)
-        console.error(e)
-    }
-}
-
-function clear_all_ws() {
-    for (const ws in gAll_ws_connections) {
-        ws.close()
-    }
-}
-
-function executeCommand(cmd) {
-    console.log(cmd)
-
-    var cmd_dict = {}
-    cmd_dict[current_step] = cmd
-    cmd_str = JSON.stringify(cmd_dict) // i.e. {cb: {button:__, parameter:__}}
-    console.log("send cmd: " + cmd_str)
-    var url = "http://" + ip_addr + "/command/" + cmd_str
-    var request = new XMLHttpRequest()
-    request.open("GET", url)
-    request.send()
+    data = formatSrvCallData(component, data)
+    return data
 }
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
 // onClickEvents
 function onClickCommandBtn(element) {
-    executeCommand(createCmdData(buttonDict[element.id], gParam))    
+    executeSrvCall(formatCBSrvCallData(
+            current_step,
+            buttonIdToButtonString[element.id],
+            element.getAttribute("unitid")))
 }
 
-function onClickSetParamBtn(element) {
-    gParam = element.getAttribute("parameter")
-    console.log(gParam)
-    if (gSelectedComponentElement) {
-        gSelectedComponentElement.classList.remove("selected")
+// ------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
+// SOCKET CONFIGS & CREATION
+const socketNameToElementId = {
+    "/cb/topic_state": "responseData-state",
+    "/cb/topic_data": "responseData-data",
+    "/cb/topic_data_checker": "responseData-data_checker",
+    "/cb/topic_info": "responseData-info",
+    // "/cb/topic_info_chinese": "responseData-info_chinese",
+    "/cb/topic_configs": "responseData-configs",
+    // "/cb/topic_configs_chinese": "responseData-configs_chinese",
+}
+
+//TODO
+function formatCBDisplayData(data) { //TODO
+    data = retrieveComponentData(current_step, data)
+    //TODO
+    // data = data.split("\\n") 
+    // console.log(data)
+    // let charToRemove = '"'
+    // var regExToRemoveChar = new RegExp(charToRemove, 'g')
+    // data[0] = data[0].replace(regExToRemoveChar, '') // remove the " at the start
+    // data[data.length-1] = data[data.length-1].replace(regExToRemoveChar, '') // remove the " at the end
+
+    //TODO
+    // var container = document.createElement("div")
+    // for (var i = 0; i < data.length; i++) {
+    //     var p = document.createElement("p")
+    //     p.textContent = data[i]
+    //     container.appendChild(p)
+    // }
+
+    //TODO
+    return {dataEle: container, dataArr : data} //TODO if no ele container == undefined
+}
+
+function displayDataOnElement(options) {
+    const {topic, data, ele} = options // use object destructuring
+    const formattedData = formatCBDisplayData(data) // contains element & dataArr //TODO
+    const {dataEle, dataArr} = formattedData
+
+    //TODO
+    switch(topic) { 
+        case "/cb/topic_data_checker":
+            if (dataArr[0] == 'OK') {
+                console.log("data is OK") // TEST
+                console.log(dataArr[0]) // TEST
+                ele.classList.remove("background-red")
+                ele.classList.add("background-green")
+                ele.textContent = "G"
+            } else {
+                console.log("data is not OK") // TEST
+                console.log(dataArr[0]) // TEST
+                ele.classList.remove("background-green")
+                ele.classList.add("background-red")
+                ele.textContent = "NG"
+            }
+            break
+        case "/cb/topic_data": //TODO
+            // ele.replaceChildren(dataEle)
+            break
+        case "/cb/topic_configs": //TODO
+            // ele.replaceChildren(dataEle)
+            break
+        default:
+            ele.textContent = retrieveComponentData(current_step, data) //TODO
     }
-    element.classList.add("selected")
-    gSelectedComponentElement = element
 }
 
-// TODO: create an event s.t. when page changes, clear all web sockets
+//TODO currently each onMessageFunc is different for each component, hence not abstracted away
+function onMessageFunc(evt, topic, elementId) { // data is contained in evt.data
+    displayDataOnElement({topic:topic, data:evt.data, ele:document.getElementById(elementId)}) //TODO
+    return evt.data
+}
 
-// ------------------------------------------------------------------------------------------------
-// ------------------------------------------------------------------------------------------------
-// SOCKET CONFIGS
-// open web socket connection for /data (cb data) => for the cb readings
-create_ws(ip_addr, "/cb/data", "responseData-data")
-
-// ------------------------------------------------------------------------------------------------
-// open web socket connection for /state => for the current state
-create_ws(ip_addr, "/cb/state", "responseData-state")
-
-// ------------------------------------------------------------------------------------------------
-// open web socket connection for /info => for user status
-create_ws(ip_addr, "/cb/info", "responseData-info")
-
-// ------------------------------------------------------------------------------------------------
-// open web socket connection for /configs => for user status
-create_ws(ip_addr, "/cb/configs", "responseData-configs")
+//TODO
+for (const socketName in socketNameToElementId) {
+    create_ws(ip_addr, socketName, socketNameToElementId[socketName], onMessageFunc)
+}

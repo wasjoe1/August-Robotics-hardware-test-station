@@ -25,7 +25,7 @@
 // current_step is set
 // regex is set
 
-// Set Current step
+// TODO: Set Current step
 setCurrentStep()
 
 //TODO
@@ -53,7 +53,7 @@ function format_component_SrvCallData(component, _more_) { //TODO
     var data =  {
         // wtv you want to include in the srv call, i.e.
         // button: buttonString,
-        // baudrate: parseStringToInt(baudrate),
+        // baudrate: baudrate, // has to be string to be accepted in srv calls
     }
     data = formatSrvCallData(component, data)
     return data
@@ -62,19 +62,19 @@ function format_component_SrvCallData(component, _more_) { //TODO
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
 // onClickEvents
-function onClickCommandBtn() {
+function onClickCommandBtn(element) {
     executeSrvCall(format_component_SrvCallData( //TODO
             current_step,
-            // buttonIdToButtonString[this.id], //TODO 
-            // this.getAttribute("baudrate")))
+            // buttonIdToButtonString[element.id], //TODO 
+            // element.getAttribute("baudrate")))
             ))
 }
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
 // SOCKET CONFIGS & CREATION
+//TODO
 const socketNameToElementId = {
-    //TODO
     // "socketName": "elementId" //TODO
     // "/imu/topic_state": "responseData-state",
     // "/imu/topic_data": "responseData-data",
