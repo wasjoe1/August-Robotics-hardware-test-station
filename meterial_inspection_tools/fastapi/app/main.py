@@ -7,10 +7,8 @@ import os # allows programmer to perform OS dependent operations i.e. reading & 
 import _thread
 from concurrent import futures
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, WebSocket, HTTPException
 from fastapi.responses import HTMLResponse
-from fastapi import Request
-from fastapi import WebSocket
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -119,6 +117,7 @@ async def command(request: Request, cmd: str):
         app.mi.send_srv(srv_call_formatted_data)
     except Exception as e:
         logger.logerr(e)
+        raise HTTPException(status_code=500, detail="Service call failed: "+str(e))
 
 # -------------------------------------------------------------------------------------------------
 # WEBSOCKETS (for frontend to connect to)

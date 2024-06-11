@@ -38,11 +38,11 @@ function formatInclinometerSrvCallData(component, buttonString, baudrate) {
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
 // onClickEvents
-function onClickCommandBtn() {
+function onClickCommandBtn(element) {
     executeSrvCall(formatInclinometerSrvCallData(
             current_step,
-            buttonIdToButtonString[this.id],
-            this.getAttribute("baudrate")))
+            buttonIdToButtonString[element.id],
+            element.getAttribute("index")))
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -59,19 +59,42 @@ const socketNameToElementId = {
 }
 
 function formatInclinometerDisplayData(data) {
-    data = retrieveComponentData(current_step, data)
-    return {dataEle: undefined, dataArr : data}
+    var container = undefined
+    try {
+        data = JSON.parse(data) // for configs & data, parsing of JSON is required
+        // if data is already a string, it will throw a syntax error
+        // i.e. JSON.parse("s") => error
+        //      JSON.parse('"OK"') => returns 'OK'
+    } catch (e) {
+        if (e instanceof SyntaxError) {
+            console.log(`data is already a valid JS object: ${data}`)
+            return {dataEle: container, dataVal: data}
+        }
+        console.error("An unexpected error occurred in parsing JSON data: " + e.message);
+        throw e
+    }
+
+    if (typeof(data) == "object" && data != null) {
+        container = document.createElement("div")
+        for (var prop in data) {
+            var p = document.createElement("p")
+            p.textContent = `${prop}: ${data[prop]}`
+            container.appendChild(p)
+        }
+    }
+    return {dataEle: container, dataVal: data}
 }
 
 function displayDataOnElement(options) {
     const {topic, data, ele} = options // use object destructuring
-    const formattedData = formatInclinometerDisplayData(data) // contains element & dataArr //TODO
-    const {dataEle, dataArr} = formattedData
+    const compData = retrieveComponentData(current_step, data)
+    const {dataEle, dataVal} = formatInclinometerDisplayData(compData)
 
     //TODO
-    switch(topic) { 
+    switch(topic) {
         case "/inclinometer/topic_data_checker": //TODO
-            if (dataArr[0] == 'OK') {
+            console.log(dataVal)
+            if (dataVal == 'OK') {
                 console.log("data is OK") // TEST
                 ele.classList.remove("background-red")
                 ele.classList.add("background-green")
@@ -83,12 +106,12 @@ function displayDataOnElement(options) {
                 ele.textContent = "NG"
             }
             break
-        // case "/inclinometer/topic_data": //TODO
-        //     ele.replaceChildren(dataEle)
-        //     break
-        // case "/inclinometer/topic_configs": //TODO
-        //     ele.replaceChildren(dataEle)
-        //     break
+        case "/inclinometer/topic_data": //TODO
+            ele.replaceChildren(dataEle)
+            break
+        case "/inclinometer/topic_configs": //TODO
+            ele.replaceChildren(dataEle)
+            break
         default:
             ele.textContent = retrieveComponentData(current_step, data)
     }
@@ -102,3 +125,5 @@ function onMessageFunc(evt, topic, elementId) { // data is contained in evt.data
 for (const socketName in socketNameToElementId) {
     create_ws(ip_addr, socketName, socketNameToElementId[socketName], onMessageFunc)
 }
+
+console.log("init-ed inclinometer")
