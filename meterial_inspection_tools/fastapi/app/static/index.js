@@ -82,7 +82,7 @@ function formatSrvCallData(component, data) {
 // ------------------------------------------------------------------------------------------------
 // onClickEvents
 const gComponentToData = {
-    "imu": { button: "AUTO_DETECT", baudrate: "", }, // For this ver, imu is auto_detect
+    "imu": { button: "CONNECT", baudrate: "", }, // For this ver, imu is connect
     // "imu": { button: "CONNECT", baudrate: "", },
     "inclinometer": { button: "CONNECT", baudrate: "", },
     "cb": { button: "CONNECT", ID: "", },

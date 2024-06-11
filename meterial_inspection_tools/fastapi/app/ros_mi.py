@@ -13,9 +13,9 @@ from meterial_inspection_tools.srv import (SonarControl, SonarControlRequest)
 
 ServiceRequestTypes = {
     "imu": GetButtonBaudrateRequest,
-    "sonar": SonarControlRequest,
     "inclinometer": GetButtonBaudrateRequest,
     "cb": GetButtonUnitIDRequest,
+    "sonar": GetButtonUnitIDRequest,
 }
 
 class MeterialInspection():
