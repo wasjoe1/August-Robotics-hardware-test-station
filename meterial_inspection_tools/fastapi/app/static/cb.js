@@ -46,7 +46,7 @@ function onClickCommandBtn(element) {
 const socketNameToElementId = {
     "/cb/topic_state": "responseData-state",
     "/cb/topic_data": "responseData-data",
-    "/cb/topic_data_checker": "responseData-data_checker",
+    // "/cb/topic_data_checker": "responseData-data_checker", // refer to ros_interface.py, for this ver, cb does not have a data_checker topic
     "/cb/topic_info": "responseData-info",
     // "/cb/topic_info_chinese": "responseData-info_chinese",
     "/cb/topic_configs": "responseData-configs",
