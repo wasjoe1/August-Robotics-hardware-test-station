@@ -36,7 +36,8 @@ class IMUCommands(Enum):
     NONE = auto()
     RESET = auto()
     SCAN = auto()
-    AUTO_DETECT = auto()
+    #AUTO_DETECT = auto()
+    CONNECT = auto()
     SET_DEFAULT = auto()
 
 class IMUCheckerStates(Enum):
@@ -213,14 +214,17 @@ class IMURion(IMUOperations):
     
     def scan (self,port):
         serial_port: Serial = None
-        for baud in self.SCAN_BAUDRATES:
-            with Serial(port = port, baudrate=baud, timeout=1.0) as p: 
-                rion_imu_baudrate= p.write(RION_IMU_CONSTANTS.RION_IDENTIFIER.value)
-                rospy.sleep(0.1)
-                response = p.read(1)
-                if response == RION_IMU_CONSTANTS.RION_IDENTIFIER.value:
-                    serial_port = p
-        return serial_port
+        try: 
+            for baud in self.SCAN_BAUDRATES:
+                with Serial(port = port, baudrate=baud, timeout=1.0) as p: 
+                    rion_imu_baudrate= p.write(RION_IMU_CONSTANTS.RION_IDENTIFIER.value)
+                    rospy.sleep(0.1)
+                    response = p.read(1)
+                    if response == RION_IMU_CONSTANTS.RION_IDENTIFIER.value:
+                        serial_port = p
+            return serial_port
+        except serial.SerialException:
+            return False
         
         
    
@@ -314,13 +318,16 @@ class IMUWIT(IMUOperations):
             
     def scan(self,port):
         serial_port: Serial = None
-        for baud in self.SCAN_BAUDRATES:
-            with Serial(port = port,baudrate=baud,timeout=1.0) as p:
-                timestart = rospy.Time.now().to_sec()
-                imu_raw_data = p.read_until(b"\x55\x51")
-                if rospy.Time.now().to_sec() - timestart < 1.0:
-                    serial_port = p 
-        return serial_port
+        try:
+            for baud in self.SCAN_BAUDRATES:
+                with Serial(port = port,baudrate=baud,timeout=1.0) as p:
+                    timestart = rospy.Time.now().to_sec()
+                    imu_raw_data = p.read_until(b"\x55\x51")
+                    if rospy.Time.now().to_sec() - timestart < 1.0:
+                        serial_port = p 
+            return serial_port
+        except serial.SerialException:
+            return False
     
     
     def set_default_settings(serial_port,baudrate_params):
@@ -385,7 +392,7 @@ class IMUChecker:
 
         self.__STATES_METHODS = {
             (IMUCommands.NONE, IMUCheckerStates.INIT): self.initialize, # to IDLE
-            (IMUCommands.AUTO_DETECT, IMUCheckerStates.IDLE): self.auto_detect, # to CONNECTED or stay
+            (IMUCommands.CONNECT, IMUCheckerStates.IDLE): self.auto_detect, # to CONNECTED or stay
             (IMUCommands.NONE, IMUCheckerStates.CONNECTED): self.parse_reading, # stay
             (IMUCommands.SET_DEFAULT, IMUCheckerStates.CONNECTED): self.set_default_settings, # stay
         }
@@ -478,9 +485,9 @@ class IMUChecker:
                     self.pub_reading.publish(json.dumps(str(imu_msg)))
                     #self.pub_reading.publish(str(imu_msg)) #change to json dumps
                     check_NG_or_G = self.imu_model.check_reading(imu_msg)
-                    if check_NG_or_G == True:
+                    if check_NG_or_G:
                         self.pub_data_check.publish(json.dumps("OK"))
-                    elif check_NG_or_G == False: 
+                    else: 
                         self.pub_data_check.publish(json.dumps("NOT OK"))
                    
             except (serial.SerialException, BrokenPipeError) as e:

@@ -64,6 +64,8 @@ add_service_files(
   SonarControl.srv
   GetButton.srv
   GetButtonBaudrate.srv
+  GetButtonUnitID.srv
+  GetButtonModel.srv
 )
 
 ## Generate actions in the 'action' folder

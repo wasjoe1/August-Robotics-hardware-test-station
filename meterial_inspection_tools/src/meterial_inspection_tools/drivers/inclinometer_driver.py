@@ -153,7 +153,7 @@ class InclinSVT626T (InclinOperations):
                     modbus_client = temp_client
                     unit_id_constant = unit_id
         return modbus_client,unit_id_constant
-    
+
 
     def set_default_settings(self,modbus_client,unit_id,command_params):
         succeeded = False
@@ -303,13 +303,13 @@ class InclinChecker:
                 incline_msg = self.inclinometer_model.parse_reading(self.modbus_client,self.unit_id) 
                 self.pub_data.publish(json.dumps(incline_msg))
                 check_NG_or_G = self.inclinometer_model.check_reading(incline_msg)
-                if check_NG_or_G == True:
+                if check_NG_or_G:
                     self.pub_data_check.publish(json.dumps("OK"))
-                elif check_NG_or_G == False:
+                else:
                     self.pub_data_check.publish(json.dumps("NOT OK"))
                 return True
         except (serial.SerialException, BrokenPipeError) as e:
-            self.log_with_frontend("Inclinometer unplugged! Check connection","无法连接倾角仪，请确保电源在连接")
+            self.log_with_frontend("Inclinometer unplugged! Check connection","无法连接倾角仪，请确保电源再连接")
             self.state = InclinCheckerStates.IDLE
             return False
        
@@ -326,7 +326,7 @@ class InclinChecker:
     def connect_scan(self):
         #connect and scan merged
         self.state = InclinCheckerStates.SCANNING
-        self. modbus_client,self.unit_id= self.inclinometer_model.scan(self=self.inclinometer_model,configs = self.modbus_configs)
+        self.modbus_client,self.unit_id= self.inclinometer_model.scan(self=self.inclinometer_model,configs = self.modbus_configs)
         if self.modbus_client:
             self.log_with_frontend(f'Scanned Inclinometer on baudrate: {self.modbus_configs["baudrate"]}', f'波特率 {self.modbus_configs["baudrate"]}')
             self.state = InclinCheckerStates.CONNECTED

@@ -12,8 +12,8 @@ from meterial_inspection_tools.srv import InclinometerControl #Inclin
 from meterial_inspection_tools.srv import CBControl #CBcontrol
 from meterial_inspection_tools.srv import SonarControl #Sonarcontrol
 #from meterial_inspection_tools.srv import DepthCameraControl #DepthCameracontrol
-from meterial_inspection_tools.srv import GetButton
-from meterial_inspection_tools.srv import GetButtonBaudrate
+from meterial_inspection_tools.srv import GetButton, GetButtonBaudrate, GetButtonUnitID,GetButtonModel
+#from meterial_inspection_tools.srv import GetButtonBaudrate
 
 
 
@@ -50,19 +50,24 @@ INCLINOMETER_DATA_CHECK = InterfaceWithType('/inclinometer/reading_checker', stm
 CB_DATA = InterfaceWithType('/cb/data',stmsgs.String)
 CB_STATE = InterfaceWithType('/cb/state',stmsgs.String)
 CB_INFO =  InterfaceWithType('/cb/info',stmsgs.String)
+CB_INFO_CHINESE = InterfaceWithType('/cb/info_chinese',stmsgs.String)
 CB_CONFIGS = InterfaceWithType('/cb/configs',stmsgs.String)
-CB_SRV_CMD = InterfaceWithType('/cb/srv_cmd', CBControl) 
+CB_CONFIGS_CHINESE = InterfaceWithType('/cb/configs_chinese',stmsgs.String)
+CB_SRV_CMD = InterfaceWithType('/cb/srv_cmd', GetButtonUnitID) 
+CB_DATA_CHECK = InterfaceWithType('cb/reading_checker',stmsgs.String)
 
 SONAR_DATA = InterfaceWithType('/sonar/data',stmsgs.String)
 SONAR_STATE = InterfaceWithType('/sonar/state',stmsgs.String) 
 SONAR_INFO = InterfaceWithType('/sonar/info',stmsgs.String)
+SONAR_INFO_CHINESE = InterfaceWithType('/sonar/info_chinese',stmsgs.String)
 SONAR_CONFIGS = InterfaceWithType('/sonar/configs',stmsgs.String)
-SONAR_SRV_CMD = InterfaceWithType('/sonar/srv_cmd',SonarControl) 
+SONAR_CONFIGS_CHINESE = InterfaceWithType('/sonar/configs_chinese',stmsgs.String)
+SONAR_SRV_CMD = InterfaceWithType('/sonar/srv_cmd',GetButtonUnitID) 
 
-DEPTH_DATA = InterfaceWithType('/depth/data', ssmsgs.PointCloud2)
+DEPTH_DATA = InterfaceWithType('/depth/data', stmsgs.String)
 DEPTH_STATE = InterfaceWithType('/depth/state',stmsgs.String) 
 DEPTH_INFO = InterfaceWithType('/depth/info',stmsgs.String)
-DEPTH_CONFIGS = InterfaceWithType('/depth/configs',stmsgs.String)
+DEPTH_INFO_CHINESE = InterfaceWithType('/depth/info_chinese',stmsgs.String)
 DEPTH_SRV_CMD = InterfaceWithType('/depth/srv_cmd',GetButton)
 
 LIDAR_DATA_LASERSCAN = InterfaceWithType('/lidar/data_laserscan',ssmsgs.LaserScan)
@@ -70,7 +75,8 @@ LIDAR_DATA_LASERSCAN = InterfaceWithType('/lidar/data_laserscan',ssmsgs.LaserSca
 LIDAR_DATA_POINTCLOUD = InterfaceWithType('lidar/data_pointcloud',stmsgs.String)
 LIDAR_STATE = InterfaceWithType('lidar/state',stmsgs.String)
 LIDAR_INFO = InterfaceWithType('lidar/info',stmsgs.String)
-LIDAR_SRV_CMD = InterfaceWithType('lidar/srv_cmd',IMUControl) #shares same service format --> button + model
+LIDAR_INFO_CHINESE = InterfaceWithType('lidar/info/chinese',stmsgs.String)
+LIDAR_SRV_CMD = InterfaceWithType('lidar/srv_cmd',GetButtonModel) 
 
 
 
@@ -106,7 +112,10 @@ msg_dict = {
         "topic_data": CB_DATA,
         "topic_state": CB_STATE,
         "topic_info": CB_INFO,
+        "topic_info_chinese": CB_INFO_CHINESE,
         "topic_configs": CB_CONFIGS,
+        "topic_configs_chinese": CB_CONFIGS_CHINESE,
+        "topic_data_checker": CB_DATA_CHECK,
     },
 
     "sonar":{
@@ -114,7 +123,9 @@ msg_dict = {
         "topic_data": SONAR_DATA,
         "topic_state": SONAR_STATE,
         "topic_info": SONAR_INFO,
+        "topic_info_chinese": SONAR_INFO_CHINESE,
         "topic_configs": SONAR_CONFIGS,
+        "topic_configs_chinese": SONAR_CONFIGS_CHINESE,
     },
 
     "depth_camera":{
@@ -122,7 +133,7 @@ msg_dict = {
         "topic_data": DEPTH_DATA,
         "topic_state": DEPTH_STATE,
         "topic_info": DEPTH_INFO,
-        "topic_configs": DEPTH_CONFIGS,
+        "topic_info_chinese": DEPTH_INFO_CHINESE,
     },
 
    "lidar": {
@@ -132,5 +143,6 @@ msg_dict = {
         "topic_data": LIDAR_DATA_POINTCLOUD,
         "topic_state": LIDAR_STATE,
         "topic_info": LIDAR_INFO,
+        "topic_info_chinese": LIDAR_INFO_CHINESE,
     }
 }
