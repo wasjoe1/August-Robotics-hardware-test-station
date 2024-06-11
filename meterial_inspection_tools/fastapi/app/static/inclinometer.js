@@ -113,7 +113,7 @@ function displayDataOnElement(options) {
             ele.replaceChildren(dataEle)
             break
         default:
-            ele.textContent = retrieveComponentData(current_step, data)
+            ele.textContent = compData
     }
 }
 

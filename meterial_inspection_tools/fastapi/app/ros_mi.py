@@ -7,15 +7,15 @@ from meterial_inspection_tools.ros_interface import (
 )
 from rospy_message_converter.message_converter import convert_ros_message_to_dictionary
 from boothbot_msgs.srv import (Command, CommandRequest)
-from meterial_inspection_tools.srv import (GetButtonBaudrate, GetButtonBaudrateRequest)
-from meterial_inspection_tools.srv import (CBControl, CBControlRequest)
+from meterial_inspection_tools.srv import (GetButtonBaudrate, GetButtonBaudrateRequest) # IMU, inclinometer
+from meterial_inspection_tools.srv import (GetButtonUnitID, GetButtonUnitIDRequest) # cb
 from meterial_inspection_tools.srv import (SonarControl, SonarControlRequest)
 
 ServiceRequestTypes = {
     "imu": GetButtonBaudrateRequest,
     "sonar": SonarControlRequest,
     "inclinometer": GetButtonBaudrateRequest,
-    "cb": CBControlRequest,
+    "cb": GetButtonUnitIDRequest,
 }
 
 class MeterialInspection():

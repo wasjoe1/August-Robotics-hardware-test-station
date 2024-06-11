@@ -24,7 +24,7 @@ console.log("init cb...") // log the init-ing component
 function formatCBSrvCallData(component, buttonString, unitid) {
     var data =  {
         button: buttonString,
-        baudrate: unitid,
+        ID: unitid,
     }
     data = formatSrvCallData(component, data)
     return data
@@ -55,57 +55,42 @@ const socketNameToElementId = {
 
 //TODO
 function formatCBDisplayData(data) { //TODO
-    data = retrieveComponentData(current_step, data)
-    //TODO
-    // data = data.split("\\n") 
-    // console.log(data)
-    // let charToRemove = '"'
-    // var regExToRemoveChar = new RegExp(charToRemove, 'g')
-    // data[0] = data[0].replace(regExToRemoveChar, '') // remove the " at the start
-    // data[data.length-1] = data[data.length-1].replace(regExToRemoveChar, '') // remove the " at the end
+    var container = undefined
+    try {
+        data = JSON.parse(data)
+    } catch (e) {
+        if (e instanceof SyntaxError) {
+            console.log(`data is already a valid JS object: ${data}`)
+            return {dataEle: container, dataVal: data}
+        }
+        console.error("An unexpected error occurred in parsing JSON data: " + e.message);
+        throw e
+    }
 
-    //TODO
-    // var container = document.createElement("div")
-    // for (var i = 0; i < data.length; i++) {
-    //     var p = document.createElement("p")
-    //     p.textContent = data[i]
-    //     container.appendChild(p)
-    // }
-
-    //TODO
-    return {dataEle: container, dataArr : data} //TODO if no ele container == undefined
+    if (typeof(data) == "object" && data != null) {
+        container = document.createElement("div")
+        for (var prop in data) {
+            var p = document.createElement("p")
+            p.textContent = `${prop}: ${data[prop]}`
+            container.appendChild(p)
+        }
+    }
+    return {dataEle: container, dataVal: data}
 }
 
 function displayDataOnElement(options) {
-    const {topic, data, ele} = options // use object destructuring
-    const formattedData = formatCBDisplayData(data) // contains element & dataArr //TODO
-    const {dataEle, dataArr} = formattedData
+    const {topic, data, ele} = options
+    const compData = retrieveComponentData(current_step, data)
+    const {dataEle, dataVal} = formatCBDisplayData(compData)
 
     //TODO
     switch(topic) { 
-        case "/cb/topic_data_checker":
-            if (dataArr[0] == 'OK') {
-                console.log("data is OK") // TEST
-                console.log(dataArr[0]) // TEST
-                ele.classList.remove("background-red")
-                ele.classList.add("background-green")
-                ele.textContent = "G"
-            } else {
-                console.log("data is not OK") // TEST
-                console.log(dataArr[0]) // TEST
-                ele.classList.remove("background-green")
-                ele.classList.add("background-red")
-                ele.textContent = "NG"
-            }
-            break
-        case "/cb/topic_data": //TODO
-            // ele.replaceChildren(dataEle)
-            break
-        case "/cb/topic_configs": //TODO
-            // ele.replaceChildren(dataEle)
+        // case "/cb/topic_data_checker": there's no data checker topic
+        case "/cb/topic_configs":
+            ele.replaceChildren(dataEle)
             break
         default:
-            ele.textContent = retrieveComponentData(current_step, data) //TODO
+            ele.textContent = compData // CB data is already a string
     }
 }
 
