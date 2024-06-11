@@ -55,6 +55,20 @@ function executeSrvCall(formattedData) {
     var url = "http://" + ip_addr + "/command/" + data_str
     var request = new XMLHttpRequest()
     request.open("GET", url)
+    request.onload = function () {
+        if (request.status >= 200 && request.status < 300) {
+            console.log("Request successful, check ROS side for service call. status:", request.responseText);
+        } else if (request.status >= 400 && request.status < 500) {
+            console.error("Client error. Status:", request.status);
+        } else if (request.status >= 500) {
+            console.error("Server error. Status:", request.status);
+        } else {
+            console.error("Unexpected response. Status:", request.status);
+        }
+    };
+    request.onerror = function () {
+        console.error("Network error occurred.");
+    };
     request.send()
 }
 
