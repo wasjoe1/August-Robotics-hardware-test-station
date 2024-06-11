@@ -56,7 +56,6 @@ function executeSrvCall(formattedData) {
     var request = new XMLHttpRequest()
     request.open("GET", url)
     request.send()
-    console.log("Executing service call...")
 }
 
 function formatSrvCallData(component, data) {
@@ -69,9 +68,9 @@ function formatSrvCallData(component, data) {
 // ------------------------------------------------------------------------------------------------
 // onClickEvents
 const gComponentToData = {
-    "imu": { button: "AUTO_DETECT", baudrate: "", }, // TODO: come up with a better system for this, for now its AUTO_DETECT, v2.0 will be CONNECT, but need to have a non hard coded system
+    "imu": { button: "AUTO_DETECT", baudrate: "", }, // For this ver, imu is auto_detect
     // "imu": { button: "CONNECT", baudrate: "", },
-    "inclinometer": { button: "AUTO_DETECT", baudrate: "", },
+    "inclinometer": { button: "CONNECT", baudrate: "", },
 }
 
 function onClickComponentPageBtn(element) {
@@ -123,4 +122,6 @@ function retrieveComponentData(component, data) {
     return (!data)
     ? data
     : JSON.parse(data)[component]["data"] //TODO
-  }
+}
+
+console.log("init-ed index")

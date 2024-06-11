@@ -61,7 +61,11 @@ const socketNameToElementId = {
 
 function formatImuDisplayData(data) {
     data = retrieveComponentData(current_step, data)
+    
+    // split the return char
     data = data.split("\\n")
+    
+    // remove the " char
     let charToRemove = '"'
     var regExToRemoveChar = new RegExp(charToRemove, 'g')
     data[0] = data[0].replace(regExToRemoveChar, '') // remove the " at the start
@@ -85,26 +89,23 @@ function displayDataOnElement(options) {
 
     switch(topic) {
         case "/imu/topic_data_checker":
+            console.log(dataArr[0]) // TEST
             if (dataArr[0] == 'OK') {
                 console.log("data is OK") // TEST
-                console.log(dataArr[0]) // TEST
                 ele.classList.remove("background-red")
                 ele.classList.add("background-green")
                 ele.textContent = "G"
             } else {
                 console.log("data is not OK") // TEST
-                console.log(dataArr[0]) // TEST
                 ele.classList.remove("background-green")
                 ele.classList.add("background-red")
                 ele.textContent = "NG"
             }
             break
         case "/imu/topic_data":
-            console.log("/imu/topic_data")
             ele.replaceChildren(dataEle)
             break
         case "/imu/topic_configs":
-            console.log("/imu/topic_configs")
             ele.replaceChildren(dataEle)
             break
         default:
