@@ -20,6 +20,7 @@ import datetime
 import csv
 import threading
 import serial
+import pymodbus
 from pymodbus.client.sync import ModbusSerialClient as ModbusClient
 import rospy 
 logger = rospy
@@ -34,9 +35,6 @@ from meterial_inspection_tools.ros_interface import (
     SONAR_INFO_CHINESE,
     SONAR_STATE,
 )
-
-import pymodbus
-print(pymodbus.__version__)
 
 class SONARCommands(Enum):
     NONE = auto()
@@ -70,7 +68,7 @@ class DYP_SONAR():
         }
     #BAUDRATE_CHECKLIST = [115200,57600, 9600]
     BAUDRATE_CHECKLIST = [9600,57600,115200]
-    UNIT_CHECKER = []
+    UNIT_CHECKER = [] # array of Units that are registered
     sonar_counter = 0
 
     def parse_reading(self, modbus_client):
@@ -78,25 +76,27 @@ class DYP_SONAR():
         #TODO: check how many sonars are there on lionel
         def print_distance(dis,unit_box): 
             distance_image = """
-        {} : {}
-        {} : {}
-        {} : {}
-        {} : {}
-        {} : {}
-        {} : {}
-        {} : {}
-        {} : {}
-        """.format(
-            format(unit_box[0]), format(dis[0]),
-            format(unit_box[1]), format(dis[1]),
-            format(unit_box[2]), format(dis[2]),
-            format(unit_box[3]), format(dis[3]),
-            format(unit_box[4]), format(dis[4]),
-            format(unit_box[5]), format(dis[5]),
-            format(unit_box[6]), format(dis[6]),
-            format(unit_box[7]), format(dis[7]),
-        )
+                    {} : {}
+                    {} : {}
+                    {} : {}
+                    {} : {}
+                    {} : {}
+                    {} : {}
+                    {} : {}
+                    {} : {}
+                    """.format(
+                        format(unit_box[0]), format(dis[0]),
+                        format(unit_box[1]), format(dis[1]),
+                        format(unit_box[2]), format(dis[2]),
+                        format(unit_box[3]), format(dis[3]),
+                        format(unit_box[4]), format(dis[4]),
+                        format(unit_box[5]), format(dis[5]),
+                        format(unit_box[6]), format(dis[6]),
+                        format(unit_box[7]), format(dis[7]),
+                    )
             logger.loginfo(distance_image)
+            logger.loginfo(unit_box)
+            logger.loginfo(dis)
             return distance_image
         
         def loop_distance(self,modbus_client):
@@ -155,7 +155,7 @@ class DYP_SONAR():
         global set_available_flag
         set_available_flag = None
 
-        for baudrate in self.BAUDRATE_CHECKLIST:
+        for baudrate in self.BAUDRATE_CHECKLIST: # PROPOSED: why is baud rate necessary here?
             # ORIGINAL
             configs.update({"baudrate":baudrate})
             logger.loginfo(baudrate)
@@ -163,10 +163,13 @@ class DYP_SONAR():
             logger.loginfo(temp_client)
             
             for unit in self.UNIT_DICT_CHECKER:
+                logger.loginfo(f"Attempting to connect to {unit}'s register 0x200...")
                 respond = temp_client.read_holding_registers(0x200, 1,unit=unit)
                 if respond.isError():
-                    logger.loginfo("error in connecting")
+                    logger.loginfo(f"Failed to connect to {unit}'s register 0x200")
+                    logger.loginfo(f"Response error: {respond}")
                 if not respond.isError():
+                    logger.loginfo(f"Connected to {unit}'s register 0x200")
                     self.sonar_counter +=1 
                     self.UNIT_CHECKER.append(unit)
                     modbus_client = temp_client
@@ -299,12 +302,11 @@ class SonarChecker:
 
 
         self.__STATES_METHODS = {
-        (SONARCommands.NONE, SonarCheckerStates.INIT): self.initialize, # to IDLE
-        (SONARCommands.CONNECT, SonarCheckerStates.IDLE): self.scan, # to CONNECTED or stay
-        (SONARCommands.NONE, SonarCheckerStates.CONNECTED): self.parse_reading, # stay
-        (SONARCommands.SET_DEFAULT, SonarCheckerStates.CONNECTED): self.set_default_settings, # stay
-
-    }
+            (SONARCommands.NONE, SonarCheckerStates.INIT): self.initialize, # to IDLE
+            (SONARCommands.CONNECT, SonarCheckerStates.IDLE): self.scan, # to CONNECTED or stay
+            (SONARCommands.NONE, SonarCheckerStates.CONNECTED): self.parse_reading, # stay
+            (SONARCommands.SET_DEFAULT, SonarCheckerStates.CONNECTED): self.set_default_settings, # stay
+        }
 
     def srv_cb(self, srv):
         self.command = srv.button
@@ -356,13 +358,13 @@ class SonarChecker:
         return {
             "baudrate": self.modbus_configs["baudrate"],
             "ID" : self.unit_id,
-            }
+        }
     
     def _get_current_SONAR_settings_chinese(self):
         return {
             "波特率": self.modbus_configs["baudrate"],
             "ID": self.unit_id,
-            }
+        }
 
     def scan(self):
         self.state = SonarCheckerStates.SCANNING

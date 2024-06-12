@@ -10,7 +10,8 @@ from concurrent import futures
 from fastapi import FastAPI, Request, WebSocket, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
+from fastapi.templating import Jinja2Templates # helps import the jinja2 templating, used to render HTML templates in FastAPI
+# Template rendering provides methods to render THML with data passed to them; dynamically input data into HTML content
 
 import rospy
 import rospy as logger
