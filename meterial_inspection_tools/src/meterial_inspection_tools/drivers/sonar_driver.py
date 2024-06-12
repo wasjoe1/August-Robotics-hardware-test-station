@@ -57,22 +57,24 @@ class SonarCheckerStates(Enum):
 # -------------------------------------------------------------------------------------------------
 class DYPSonar():
     BAUDRATE_CHECKLIST = [9600,57600,115200] # is this still necessary(?)
-    DEFAULT_BAUDRATE = BAUDRATE_CHECKLIST[0] #9600
+    DEFAULT_BAUDRATE = 0x0003 # corresponds to 9600 bps
+    # DEFAULT_BAUDRATE = 3 # corresponds to 9600 bps
     # total 10 available IDs but 8 slots to connect sonars
     UNIT_DICT_CHECKER = [0xe6 ,0xe8 ,0xd0,0xfa,0xfe,0xea,0xe4,0xe2,0xd2,0xec] #for ID that has already been set
     UNIT_DICT_SETTER = {
-        "0xe6,": 0xe6,
-        "0xe8,": 0xe8,
-        "0xd0,": 0xd0,
-        "0xfa,": 0xfa,
-        "0xfe,": 0xfe,
-        "0xea,": 0xea,
-        "0xe4,": 0xe4,
-        "0xe2,": 0xe2,
-        "0xd2,": 0xd2,
-        "0xec,": 0xec,
+        "0xe6": 0xe6,
+        "0xe8": 0xe8,
+        "0xd0": 0xd0,
+        "0xfa": 0xfa,
+        "0xfe": 0xfe,
+        "0xea": 0xea,
+        "0xe4": 0xe4,
+        "0xe2": 0xe2,
+        "0xd2": 0xd2,
+        "0xec": 0xec,
     }
     UNIT_CHECKER = set() # use a set to check
+    SET_AVAILABLE_FLAG = False
 
     # ---------------------------------------------------------------------------------------------
     # FUNCTIONS
@@ -82,7 +84,8 @@ class DYPSonar():
         paired_values = []
         
         for i, unit in enumerate(DYPSonar.UNIT_CHECKER): # not sure if you intend to have this as a class or instance variable, but u declared as a class variable
-            response = modbus_client.read_holding_registers(0x0101, 1, unit = unit)
+            unit = self.UNIT_DICT_SETTER[unit]
+            response = modbus_client.read_holding_registers(0x0101, 1, unit=unit)
             if not response.isError(): # can find the unit ID
                 distance = response.registers[0]
                 if distance is not None: # ignore when distance is not valid since distances[i] & unitIDs[i] are already set to be None initially
@@ -118,7 +121,6 @@ class DYPSonar():
     # ---------------------------------------------------------------------------------------------
     # PROCESSES
     def scan(self, configs):
-        global set_available_flag
         modbus_client : ModbusClient = None
 
         for baudrate in self.BAUDRATE_CHECKLIST:
@@ -128,19 +130,19 @@ class DYPSonar():
             temp_client = ModbusClient(**configs)
             logger.loginfo(temp_client)
 
-            for unit in self.UNIT_DICT_CHECKER: # put UNIT_DICT_CHECKER_DEFAULT into UNIT_DICT_CHECKER also
+            for unit_string, unit in self.UNIT_DICT_SETTER.items(): # put UNIT_DICT_CHECKER_DEFAULT into UNIT_DICT_CHECKER also
                 sonar_unit = temp_client.read_holding_registers(0x200, 1,unit=unit)
                 if not sonar_unit.isError(): # if valid
-                    self.UNIT_CHECKER.add(unit)
+                    self.UNIT_CHECKER.add(unit_string)
                     modbus_client = temp_client
                 else: # else
-                    logger.loginfo(f"Failed to connect to unit ID {unit}")
-            set_available_flag = len(self.UNIT_CHECKER) == 1 # false if UNIT CHECKER has more than 1 sonar_unit
+                    logger.loginfo(f"Failed to connect to unit ID {unit_string}")
+            logger.loginfo(f"There are currently {len(self.UNIT_CHECKER)} sonars connected")
+            self.SET_AVAILABLE_FLAG = len(self.UNIT_CHECKER) == 1 # false if UNIT CHECKER has more than 1 sonar_unit
 
-            logger.loginfo(self.UNIT_CHECKER)
         return modbus_client
 
-    def parse_readings(self, modbus_client):
+    def parse_readings(self, modbus_client): # self.sonar_model.parse_readings(self=self.sonar_model, modbus_client=self.modbus_client)
         distances_inputs, unitIDs, paired_values = self.loop_distance(modbus_client)
         timestamp = datetime.datetime.now()
         header = ["timestamp", "distance", "unit"]
@@ -157,11 +159,15 @@ class DYPSonar():
     
     # version 1: only 1 unit_id
     def set_default_settings(self, modbus_client, id_to_set_string):
-        if (not set_available_flag):
+        if (not self.SET_AVAILABLE_FLAG):
+            logger.loginfo(f"set_available flag is False")
             return False
         curr_id_string = self.UNIT_CHECKER.pop()
+        logger.loginfo(f"TEST: {curr_id_string}")
         curr_id = self.UNIT_DICT_SETTER[curr_id_string] # returns curr id in hex
+        logger.loginfo(f"TEST: {id_to_set_string}")
         id_to_set = self.UNIT_DICT_SETTER[id_to_set_string] # change to the hex val
+        logger.loginfo(f"TEST: {self.DEFAULT_BAUDRATE}")
         
         # Set baudrate TODO: Find out if we do need to set baudrate
         rwr_baudrate = modbus_client.write_register(0x201, self.DEFAULT_BAUDRATE, unit=curr_id) # set baudrate to 9600
@@ -214,7 +220,7 @@ class DYPSonar():
 # -------------------------------------------------------------------------------------------------
 class SonarChecker:
     NODE_RATE = 5.0 # in start
-    sonar_model = DYPSonar 
+    sonar_model = DYPSonar()
     modbus_client : ModbusClient = None
     modbus_configs = {
         "method": "rtu",
@@ -300,7 +306,7 @@ class SonarChecker:
 
     def scan(self):
         self.state = SonarCheckerStates.SCANNING # IDLE b4
-        self.modbus_client = self.sonar_model.scan(self=self.sonar_model,configs=self.modbus_configs)
+        self.modbus_client = self.sonar_model.scan(configs=self.modbus_configs)
         if self.modbus_client:
             self.log_to_web(f'Scanned sonar on baudrate: {self.modbus_configs["baudrate"]}',f'波特率: {self.modbus_configs["baudrate"]}')
             self.pub_configs.publish(json.dumps(self.get_current_baudrate()))
@@ -316,7 +322,7 @@ class SonarChecker:
             return False
         def parse_target():
             try:
-                sonar_msg = self.sonar_model.parse_readings(self=self.sonar_model, modbus_client=self.modbus_client)
+                sonar_msg = self.sonar_model.parse_readings(modbus_client=self.modbus_client)
                 rospy.sleep(0.5) # Previously rospy.sleep(0.001), same as sonar reading code on lionel
                 self.pub_reading.publish(json.dumps(sonar_msg))
             except serial.SerialException:
@@ -330,7 +336,8 @@ class SonarChecker:
     def set_default_settings(self):
         if self.parse_thread and self.parse_thread.is_alive():
             self.parse_thread.join()
-        if self.sonar_model.set_default_settings(self=self.sonar_model, modbus_client=self.modbus_client, id_to_set=self.cmd_params):
+        logger.loginfo(f"TEST: {self.cmd_params}")
+        if self.sonar_model.set_default_settings(modbus_client=self.modbus_client, id_to_set_string=self.cmd_params):
             self.log_to_web("DEFAULT SETTINGS SET Baudrate & Unit ID was updated","设置成功")
             self.log_to_web("CFG SAVED","设置保存成功")
         else: 
