@@ -261,7 +261,7 @@ class DYP_SONAR():
             # PROPOSED
             # logger.loginfo("PROBLEM SETTING UNIT") if rwr_unit.isError() else logger.loginfo("unit set")
 
-        succeeded = True
+        succeeded = True # this means no matter default settings are set, it will return true?
         return succeeded
         
 
