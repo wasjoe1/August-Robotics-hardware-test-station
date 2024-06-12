@@ -76,6 +76,24 @@ class DYPSonar():
 
     # ---------------------------------------------------------------------------------------------
     # FUNCTIONS
+    def loop_distance(self, modbus_client):
+        distances = [None]*10
+        unitIDs = [None]*10
+        paired_values = []
+        
+        for i, unit in enumerate(DYPSonar.UNIT_CHECKER): # not sure if you intend to have this as a class or instance variable, but u declared as a class variable
+            response = modbus_client.read_holding_registers(0x0101, 1, unit = unit)
+            if not response.isError(): # can find the unit ID
+                distance = response.registers[0]
+                if distance is not None: # ignore when distance is not valid since distances[i] & unitIDs[i] are already set to be None initially
+                    distances[i] = format(distance/1000.,'.2f')
+                    unitIDs[i] = format(hex(unit)) # 
+                paired_values.append({ "distance":distances[i], "unit" : unitIDs[i] })
+            else: 
+                logger.loginfo("error")
+
+        return distances, unitIDs, paired_values
+    
     def format_and_print_sonars(self, distances, unitIDs): 
         formatted_data = """
                 {} : {}
@@ -97,24 +115,6 @@ class DYPSonar():
                     format(unitIDs[7]), format(distances[7]),)
         logger.loginfo(formatted_data)
         return formatted_data
-    
-    def loop_distance(self, modbus_client):
-        distances = [None]*10
-        unitIDs = [None]*10
-        paired_values = []
-        
-        for i, unit in enumerate(DYPSonar.UNIT_CHECKER): # not sure if you intend to have this as a class or instance variable, but u declared as a class variable
-            response = modbus_client.read_holding_registers(0x0101, 1, unit = unit)
-            if not response.isError(): # can find the unit ID
-                distance = response.registers[0]
-                if distance is not None: # ignore when distance is not valid since distances[i] & unitIDs[i] are already set to be None initially
-                    distances[i] = format(distance/1000.,'.2f')
-                    unitIDs[i] = format(hex(unit)) # 
-                paired_values.append({ "distance":distances[i], "unit" : unitIDs[i] })
-            else: 
-                logger.loginfo("error")
-
-        return distances, unitIDs, paired_values
     # ---------------------------------------------------------------------------------------------
     # PROCESSES
     def scan(self, configs):
