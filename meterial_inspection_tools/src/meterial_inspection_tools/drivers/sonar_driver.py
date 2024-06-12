@@ -57,22 +57,22 @@ class SonarCheckerStates(Enum):
 # -------------------------------------------------------------------------------------------------
 class DYPSonar():
     BAUDRATE_CHECKLIST = [9600,57600,115200] # is this still necessary(?)
-    DEFAULT_BAUDRATE = 3 #9600
+    DEFAULT_BAUDRATE = BAUDRATE_CHECKLIST[0] #9600
     # total 10 available IDs but 8 slots to connect sonars
     UNIT_DICT_CHECKER = [0xe6 ,0xe8 ,0xd0,0xfa,0xfe,0xea,0xe4,0xe2,0xd2,0xec] #for ID that has already been set
-    UNIT_DICT_CHECKER_DEFAULT = 0xFF # for default ID  
+    UNIT_DICT_CHECKER_DEFAULT = 0xFF # for default ID
     UNIT_DICT_SETTER = {
-            "0": 0xe6,
-            "1": 0xe8,
-            "2": 0xd0,
-            "3": 0xfa,
-            "4": 0xfe,
-            "5": 0xea,
-            "6": 0xe4,
-            "7": 0xe2,
-            "8": 0xd2,
-            "9": 0xec,
-        }
+        "0xe6,": 0xe6,
+        "0xe8,": 0xe8,
+        "0xd0,": 0xd0,
+        "0xfa,": 0xfa,
+        "0xfe,": 0xfe,
+        "0xea,": 0xea,
+        "0xe4,": 0xe4,
+        "0xe2,": 0xe2,
+        "0xd2,": 0xd2,
+        "0xec,": 0xec,
+    }
     UNIT_CHECKER = set() # use a set to check
 
     # ---------------------------------------------------------------------------------------------
@@ -119,8 +119,8 @@ class DYPSonar():
     # ---------------------------------------------------------------------------------------------
     # PROCESSES
     def scan(self, configs):
-        modbus_client : ModbusClient = None
         global set_available_flag
+        modbus_client : ModbusClient = None
 
         for baudrate in self.BAUDRATE_CHECKLIST:
             configs.update({"baudrate":baudrate})
@@ -155,22 +155,36 @@ class DYPSonar():
             for entry in paired_values:
                 writer.writerow([timestamp, entry["distance"], entry["unit"]])
         return self.format_and_print_sonars(distances_inputs, unitIDs)
+    
+    # version 1: only 1 unit_id
+    def set_default_settings(self, modbus_client, unit_id):        
+        if (not set_available_flag):
+            return False
+        self.sonar_model.UNIT_CHECKER = [ self.sonar_model.UNIT_DICT_SETTER[self.cmd_params] ]
+    
+    # version 2: mutltiple unit_id
+    def set_default_settings(self, modbus_client, curr_id, id_to_set): # all ids here are string
+        if (curr_id not in self.UNIT_CHECKER) or (id_to_set in self.UNIT_CHECKER):
+            return False
+        id_to_set = self.UNIT_DICT_SETTER[id_to_set] # change to the hex val
+        curr_id = self.UNIT_DICT_SETTER[curr_id] # change to the hex val
         
-    def set_default_settings(self,modbus_client,unit_id):
-        succeeded = False
-        for unit in self.UNIT_CHECKER:
-            #set baudrate
-            rwr_baudrate = modbus_client.write_register(0x201,self.DEFAULT_BAUDRATE,unit=unit) #set baudrate to 9600
-            logger.loginfo("PROBLEM SETTING BAUDRATE") if rwr_baudrate.isError() else logger.loginfo("Set baudrate to 9600")
+        # Set baudrate TODO: Find out if we do need to set baudrate
+        rwr_baudrate = modbus_client.write_register(0x201, self.DEFAULT_BAUDRATE, unit=curr_id) # set baudrate to 9600
+        if rwr_baudrate.isError():
+            logger.loginfo("PROBLEM SETTING BAUDRATE")
+            return False
+        logger.loginfo("Baudrate set to 9600")
+        
+        # Set unit
+        rospy.sleep(0.1)
+        rwr_unit = modbus_client.write_register(0x200, id_to_set, unit=curr_id)
+        if rwr_unit.isError():
+            logger.loginfo("PROBLEM SETTING UNIT")
+            return False
+        logger.loginfo(f"unit ID was set from {curr_id} to {id_to_set}")
 
-            #set unit
-            unit_set = self.UNIT_DICT_SETTER[unit_id]
-            rospy.sleep(0.1)
-            rwr_unit = modbus_client.write_register(0x200,unit_set, unit=unit)
-            logger.loginfo("PROBLEM SETTING UNIT") if rwr_unit.isError() else logger.loginfo("unit set")
-
-        succeeded = True
-        return succeeded
+        return True
         
 # -------------------------------------------------------------------------------------------------
 # -------------------------------------------------------------------------------------------------
@@ -178,7 +192,6 @@ class SonarChecker:
     NODE_RATE = 5.0 # in start
     sonar_model = DYPSonar 
     modbus_client : ModbusClient = None
-    unit_id = None
     modbus_configs = {
         "method": "rtu",
         "port": "/dev/sonar",
@@ -293,14 +306,11 @@ class SonarChecker:
     def set_default_settings(self):
         if self.parse_thread and self.parse_thread.is_alive():
             self.parse_thread.join()
-        if set_available_flag == True:
-            if self.sonar_model.set_default_settings(self=self.sonar_model, modbus_client=self.modbus_client, unit_id=self.cmd_params):
-                self.sonar_model.UNIT_CHECKER = [ self.sonar_model.UNIT_DICT_SETTER[self.cmd_params] ]
+        if self.sonar_model.set_default_settings(self=self.sonar_model, modbus_client=self.modbus_client, unit_id=self.cmd_params):
                 self.log_to_web("SETTING SET","设置成功")
                 self.log_to_web("CFG SAVED","设置保存成功")
-                return True
         else: 
-            self.log_to_web("Ensure there is only one sonar connected", "系统只能同时设置一个sonar")
+            self.log_to_web(f"Error in setting Baudrate/ Unit ID for {self.cmd_params}", "系统只能同时设置一个sonar") # TODO: Change the chinese
 
     # ---------------------------------------------------------------------------------------------
     # FUNCTIONS
