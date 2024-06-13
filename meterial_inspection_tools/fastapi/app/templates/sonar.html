@@ -9,46 +9,118 @@
   <link rel="stylesheet" href="../static/bootstrap.min.css">
   <script src="../static/jquery.min.js"></script>
   <script src="../static/bootstrap.min.js"></script>
-
   <link rel="stylesheet" href="../static/hr.css">
+
+  <script src="../static/index.js"></script>
   <script src="../static/sonar.js"></script>
 </head>
 
 <body onload="">
   <!-- Header portion -->
   <div class="header-container">
-    <h3 id="title"> 澳谷一站式检测工具 </h3>
-    <button type="button" class="btn btn-page btn-default" onclick="location.href='/'">主页</button>
-    <button type="button" class="btn btn-page btn-default" onclick="location.href='/step/imu'">IMU</button>
-    <button type="button" class="btn btn-page btn-default" onclick="location.href='/step/inclinometer'">Inclinometer</button>
-    <button type="button" class="btn btn-page btn-default" onclick="location.href='/step/cb'">CB [Encoder & motor driver]</button>
-    <button type="button" class="btn btn-page btn-default highlight" onclick="location.href='/step/sonar'">超声波</button>
+    <h2 id="title"> 澳谷一站式检测工具 </h2>
+    <button type="button" class="btn btn-page btn-default" onclick="location.href='/'">主页</button> <!-- no component-->
+    <button component="imu" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">IMU</button>
+    <button component="inclinometer" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">Inclinometer</button>
+    <button component="cb" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">CB [Encoder & motor driver]</button>
+    <button component="sonar" type="button" class="btn btn-page btn-default highlight" onclick="onClickComponentPageBtn(this)">超声波</button>
     <hr />
   </div>
   
   <!-- Body portion -->
-  <div class="flex-container">
-    <div class="content-container">
-      <!-- left of body -->
-      <div>
-        <h4 class="display-content-header">State</h4>
-        <div id="responseData-state" class="display-content-div"></div>
-        <h4 id="readings" class="display-content-header">Configurations</h4>
-        <div id="responseData-configs" class="display-content-div"></div>
-        <h4 id="readings" class="display-content-header">Readings</h4>
-        <div id="responseData-data" class="display-content-div"></div>
-        <h4 class="display-content-header">Response information</h4>
-        <div id="responseData-info" class="display-content-div"></div>
-      </div>
+  <div class="body-container">
+    <div class="content-container grid-3col-container">
+      <!-- left-content -->
+      <div class="container green-container left-content-container grid-col-span2">
+        <!-- left-left-content -->
+        <div>
+          <h4 class="display-content-header">Configurations</h4>
+          <div id="responseData-configs" class="display-text-div"></div>
+          <!-- <h4 class="display-content-header">Configurations (Chinese)</h4>
+          <div id="responseData-configs_chinese" class="display-text-div"></div> -->
+          <h4 class="display-content-header">Data</h4>
+          <div id="responseData-data" class="display-text-div">
+            <!-- top of lionel -->
+            <div class="flex-container-row-center">
+              <div class="lionel-sonar-box background-red"><div>0xe6</div><div id="0xe6-value">TEST</div></div>
+              <div class="lionel-sonar-box background-red"><div>0xe8</div><div id="0xe8-value">TEST</div></div>
+              <div class="lionel-sonar-box background-red"><div>0xd0</div><div id="0xd0-value">TEST</div></div>
+            </div>
+            <!-- middle lionel -->
+            <div class="flex-container-row">
+              <!-- middle left of lionel -->
+              <div class="flex-container-col-space-evenly">
+                <div class="lionel-sonar-box background-red"><div>0xd2</div><div id="0xd2-value">TEST</div></div>
+                <div class="lionel-sonar-box background-red"><div>0xec</div><div id="0xec-value">TEST</div></div>
+              </div>
+              <!-- lionel -->
+              <div id="lionel-machine-container">
+                <div id="lionel-machine" class="flex-container-col-space-between-center">
+                  <div id="lionel-machine-front">FRONT</div>
+                  <div id="lionel-machine-back">BACK</div>
+                </div>
+              </div>
+              <!-- middle right of lionel -->
+              <div class="flex-container-col-space-evenly">
+                <div class="lionel-sonar-box background-red"><div>0xfa</div><div id="0xfa-value">TEST</div></div>
+                <div class="lionel-sonar-box background-red"><div>0xfe</div><div id="0xfe-value">TEST</div></div>
+              </div>
+            </div>
+            <!-- bottom of lionel -->
+            <div class="flex-container-row-center">
+              <div class="lionel-sonar-box background-red disabled"><div>0xe2</div><div id="0xe2-value">TEST</div></div>
+              <div class="lionel-sonar-box background-red"><div>0xe4</div><div id="0xe4-value">TEST</div></div>
+              <div class="lionel-sonar-box background-red disabled"><div>0xea</div><div id="0xea-value">TEST</div></div>
+            </div>
+            
+            <!-- extra address -->
+            <div class="lionel-sonar-box background-red"><div>0xff</div><div id="0xff-value">TEST</div></div>
+          </div>
+        </div>
 
-      <!-- right of body -->
-      <div style="display: flex; flex-direction: column; justify-content: space-between; background-color: darksalmon;">
-        <!-- buttons -->
-        <button class="btn btn-default" id="scanBtn" onclick="onClickCommandBtn(this)">Scan</button>
-        <button class="btn btn-default" id="connectBtn" onclick="onClickCommandBtn(this)">Connect</button>
-        <button class="btn btn-default" id="disconnectBtn" onclick="onClickCommandBtn(this)">Disconnect</button>
-        <button class="btn btn-default" id="setDefaultBtn" onclick="onClickCommandBtn(this)">Set default</button>
-        <button class="btn btn-default" id="saveBtn" onclick="onClickCommandBtn(this)">Save</button>
+        <!-- left-right-content -->
+        <div id="set-unit-id-container" class="left-right-content-container">
+          <!-- buttons -->
+          <div class="display-content-header">Set Unit ID:</div>
+          <div class="form-group">
+            <label for="current-unit-id">Current Unit ID</label>
+            <input type="text" class="form-control" id="current-unit-id" value="TEST" disabled readonly> <!-- Need to change the value-->
+          </div>
+          <div class="form-group">
+            <label for="current-unit-id">Select Unit ID</label>
+            <select class="custom-select" id="inputGroupSelect04">
+              <option selected disabled>Unit ID</option>
+              <option value="0xe6">0xe6</option> <!-- Add disabled to make the option unselectable-->
+              <option value="0xe8">0xe8</option>
+              <option value="0xd0">0xd0</option>
+              <option value="0xfa">0xfa</option>
+              <option value="0xfe">0xfe</option>
+              <option value="0xea">0xea</option>
+              <option value="0xe4">0xe4</option>
+              <option value="0xe2">0xe2</option>
+              <option value="0xd2">0xd2</option>
+              <option value="0xec">0xec</option>
+              <option value="0xff">deafult(0xff)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <button class="btn btn-outline-secondary" id="setDefaultBtn" onclick="onClickCommandBtn(this)">Set</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- right-content -->
+      <div class="container green-container grid-col-span1">
+        <h4 class="display-content-header">State</h4>
+        <div id="responseData-state" class="display-state-div"></div>
+        <h4 class="display-content-header">User Information</h4>
+        <div id="responseData-info" class="display-text-div"></div>
+        <!-- <h4 class="display-content-header">User Information (Chinese)</h4>
+        <div id="responseData-info_chinese" class="display-text-div"></div> -->
+        <h4 class="display-content-header">Instructions</h4>
+        <div id="responseData-instructions_english" class="display-text-div">TEST Lorem ipsum dolor sit amet, consectetur adipisicing elit. Veniam, excepturi repellat delectus optio laborum eligendi provident! Distinctio neque repellat enim sapiente iste unde ipsum, minima facilis rem sunt placeat expedita.</div>
+        <!-- <h4 class="display-content-header">Instructions (Chinese)</h4>
+        <div id="responseData-instructions_chinese" class="display-text-div"></div> -->
       </div>
     </div>
   </div>

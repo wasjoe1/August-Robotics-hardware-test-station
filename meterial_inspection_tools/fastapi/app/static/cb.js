@@ -53,8 +53,7 @@ const socketNameToElementId = {
     // "/cb/topic_configs_chinese": "responseData-configs_chinese",
 }
 
-//TODO
-function formatCBDisplayData(data) { //TODO
+function formatCBDisplayData(data) {
     var container = undefined
     try {
         data = JSON.parse(data)

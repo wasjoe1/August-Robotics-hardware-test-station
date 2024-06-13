@@ -1,139 +1,105 @@
-var ws_json
-var hostname
-var ip_addr = document.location.hostname
-var download_data
+// import { lang } from './lang.js'
+// import { refresh_page_once_list } from './refresh_once.js'
 
-var is_gs
+// Set Current step
+setCurrentStep()
 
-var url = window.location.href
-const regex = "http://(.*)/step/(.*)"
-const found = url.match(regex)
-current_step = found[2]
-console.log("current step: ", current_step)
-
-const buttonDict = {
-    "scanBtn": "SCAN",
-    "connectBtn": "CONNECT",
-    // "autoDetectBtn": "AUTO DETECT",
-    "disconnectBtn": "DISCONNECT",
+const buttonIdToButtonString = {
     "setDefaultBtn": "SET_DEFAULT",
-    "saveBtn": "SAVE",
 }
 
-function formatSonarDataReadings(data) {
-    if (!data) { return data }
-    // console.log(data)
-    data = JSON.parse(data)["sonar"]["data"]
-    console.log(data)
-    data = data.split("\\n")
-    data.pop() // remove the " at the end
-    data.shift() // remove the " at the start
-    
-    var container = document.createElement("div")
-    for (var i = 0; i < data.length; i++) {
-        var div = document.createElement("pre")
-        div.textContent = data[i]
-        container.appendChild(div)
-    }
-    return container
-}
-
-const route_data_formatters = {
-    "/sonar/state": (data) => JSON.parse(data)["sonar"]["data"],
-    "/sonar/configs": (data) => JSON.parse(data)["sonar"]["data"],
-    "/sonar/data": formatSonarDataReadings,
-    "/sonar/info": (data) => JSON.parse(data)["sonar"]["data"],
-}
-
-
-console.log("sonar")
+//TODO
+console.log("init sonar...") // log the init-ing component
 
 // ------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
 // Functions
-function parseStringToInt(str) {
-    try {
-        return parseInt(str)
-    } catch (e) {
-        console.log("Parsing of String to Int failed")
-        console.log(e)
-        throw e
-    }
-}
+// Defined in index.js:
+// function parseStringToInt(str)
+// function redirectToPage(page)
+// function formatSrvCallData(component, data)
+// function executeSrvCall(formattedData)
+// function create_ws(ip_addr, topic,  elementId, onMessageFunc) => onMessageFunc(evt, topic, elementId) is executed as such
 
-function createCmdData(buttonString) {
-    return {
+function formatSonarSrvCallData(component, buttonString, unitid) {
+    var data =  {
         button: buttonString,
+        ID: unitid, // is a string
     }
-}
-
-// TODO: create a web socket manager class to hide all these under the hood implementation (connections, create, get, clear)
-var gAll_ws_connections = []
-
-function create_ws(ip_addr, route, elementId) {
-    try {
-        const ws = new WebSocket("ws://" + ip_addr + route) // route == /imu_smt
-        ws.addEventListener('open', function(event) {
-            console.log(`${route} socket was opended`)
-            ws.send('Hello ws data!');
-        });
-        ws.onmessage = function(evt) {
-            if (route == "/sonar/data") {
-                document.getElementById(elementId).replaceChildren(route_data_formatters[route](evt.data))
-            } else {
-                document.getElementById(elementId).textContent = route_data_formatters[route](evt.data)
-            }
-            return evt.data
-        }
-        gAll_ws_connections.push(ws)
-    } catch (e) {
-        console.log(`Failed to create web socket for ${route}`)
-        console.error(e)
-    }
-}
-
-function clear_all_ws() {
-    for (const ws in gAll_ws_connections) {
-        ws.close()
-    }
-}
-
-function executeCommand(cmd) {
-    console.log(cmd)
-
-    var cmd_dict = {}
-    cmd_dict[current_step] = cmd
-    cmd_str = JSON.stringify(cmd_dict) // i.e. {imu: {button:__}}
-    console.log("send cmd: " + cmd_str)
-    var url = "http://" + ip_addr + "/command/" + cmd_str
-    var request = new XMLHttpRequest()
-    request.open("GET", url)
-    request.send()
+    data = formatSrvCallData(component, data)
+    return data
 }
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
 // onClickEvents
 function onClickCommandBtn(element) {
-    executeCommand(createCmdData(buttonDict[element.id]))    
+    executeSrvCall(formatSonarSrvCallData(
+            current_step,
+            buttonIdToButtonString[element.id],
+            element.getAttribute("unitid"))) //TODO: change this attribute that im getting the data from
 }
 
-// TODO: create an event s.t. when page changes, clear all web sockets
-
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-// SOCKET CONFIGS
-// open web socket connection for /data (imu data) => for the imu readings
-create_ws(ip_addr, "/sonar/data", "responseData-data")
+// SOCKET CONFIGS & CREATION
+const socketNameToElementId = {
+    "/sonar/topic_state": "responseData-state",
+    "/sonar/topic_data": "responseData-data",
+    // "/sonar/topic_data_checker": "responseData-data_checker", // refer to ros_interface.py, for this ver, sonar does not have a data_checker topic
+    "/sonar/topic_info": "responseData-info",
+    // "/sonar/topic_info_chinese": "responseData-info_chinese",
+    "/sonar/topic_configs": "responseData-configs",
+    // "/sonar/topic_configs_chinese": "responseData-configs_chinese",
+}
 
-// ------------------------------------------------------------------------------------------------
-// open web socket connection for /state => for the current state
-create_ws(ip_addr, "/sonar/state", "responseData-state")
+//TODO
+function formatSonarDisplayData(data) { //TODO
+    var container = undefined
+    try {
+        data = JSON.parse(data)
+    } catch (e) {
+        if (e instanceof SyntaxError) {
+            console.log(`data is already a valid JS object: ${data}`)
+            return {dataEle: container, dataVal: data}
+        }
+        console.error("An unexpected error occurred in parsing JSON data: " + e.message);
+        throw e
+    }
 
-// ------------------------------------------------------------------------------------------------
-// open web socket connection for /info => for user status
-create_ws(ip_addr, "/sonar/info", "responseData-info")
+    if (typeof(data) == "object" && data != null) {
+        container = document.createElement("div")
+        for (var prop in data) {
+            var p = document.createElement("p")
+            p.textContent = `${prop}: ${data[prop]}`
+            container.appendChild(p)
+        }
+    }
+    return {dataEle: container, dataVal: data}
+}
 
-// ------------------------------------------------------------------------------------------------
-// open web socket connection for /configs => for user status
-create_ws(ip_addr, "/sonar/configs", "responseData-configs")
+function displayDataOnElement(options) {//TODO
+    const {topic, data, ele} = options
+    const compData = retrieveComponentData(current_step, data)
+    const {dataEle, dataVal} = formatSonarDisplayData(compData)
 
+    //TODO
+    switch(topic) { 
+        // case "/sonar/topic_data_checker": there's no data checker topic
+        case "/sonar/topic_configs":
+            ele.replaceChildren(dataEle)
+            break
+        default:
+            ele.textContent = compData // sonar data is already a string
+    }
+}
+
+//TODO currently each onMessageFunc is different for each component, hence not abstracted away
+function onMessageFunc(evt, topic, elementId) { // data is contained in evt.data
+    displayDataOnElement({topic:topic, data:evt.data, ele:document.getElementById(elementId)}) //TODO
+    return evt.data
+}
+
+for (const socketName in socketNameToElementId) {
+    create_ws(ip_addr, socketName, socketNameToElementId[socketName], onMessageFunc)
+}
