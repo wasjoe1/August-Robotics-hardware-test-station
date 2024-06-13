@@ -83,7 +83,7 @@ class InclinOperations:
     @staticmethod
     def set_default_settings(modbus_client,unit_id,command_params):
         succeeded = False
-        return succeeded,modbus_client.unit_id
+        return succeeded,modbus_client,unit_id
     
     @staticmethod
     def save_parameters(modbus_client,unit_id):

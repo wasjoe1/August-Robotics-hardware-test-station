@@ -483,6 +483,8 @@ class IMUChecker:
                 with serial.Serial(port=self.PORT) as ser:
                     imu_msg = self.imu_model.parse_reading(self.serial_port)
                     self.pub_reading.publish(json.dumps(str(imu_msg)))
+                    self.pub_configs.publish(json.dumps(self.imu_model.IMU_TYPE))
+                    self.pub_state.publish(json.dumps(self._state.name))
                     #self.pub_reading.publish(str(imu_msg)) #change to json dumps
                     check_NG_or_G = self.imu_model.check_reading(imu_msg)
                     if check_NG_or_G:
@@ -502,7 +504,7 @@ class IMUChecker:
         logger.loginfo("called set_default")
         if self.imu_model.set_default_settings(self.PORT,self.cmd_params):
             logger.loginfo(self.serial_port)
-            self.log_with_frontend("SETTING SET","设置成功")
+            self.log_with_frontend("SETTING SET at baudrate of " + self.cmd_params,"设置成功, 波特率:" + self.cmd_params)
         #save settings
             if self.imu_model.save_parameters(self.PORT):
                 self.log_with_frontend("CFG SAVED","设置保存成功")

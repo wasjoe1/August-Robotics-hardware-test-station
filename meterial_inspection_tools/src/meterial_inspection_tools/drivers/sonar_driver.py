@@ -6,13 +6,6 @@
 INSTRUCTIONS: 
 1.ensure pymodbus is in 1.5.2 version
 2. this script can read data for multiple sonars, but can only set one sonar at a time
-
-Code logic: 
-flag_check_set_method_available == None
-1. scan for multiple sonars --> if more than 1 --> can only read and therefore not set --> flag ==False for multiple sonars
- if flag == false, pass set settings 
-2. if have one --> flag == True. can set settings (take current unit_id) --> set unit_id
-
 """
 
 import os
@@ -57,7 +50,7 @@ class DYP_SONAR():
     UNIT_DICT_CHECKER_DEFAULT = 0xFF # for default ID  
     DEFAULT_BAUDRATE = 3 #9600
     UNIT_DICT_SETTER = {
-            "0": 0xe6,
+            "0": 0xe6, 
             "1": 0xe8,
             "2": 0xd0,
             "3": 0xfa,
@@ -68,7 +61,6 @@ class DYP_SONAR():
             "8": 0xd2,
             "9": 0xec,
         }
-    #BAUDRATE_CHECKLIST = [115200,57600, 9600]
     BAUDRATE_CHECKLIST = [9600,57600,115200]
     UNIT_CHECKER = []
     sonar_counter = 0

@@ -1,5 +1,0 @@
-#Request
-string button
----
-#Response
-bool accepted
