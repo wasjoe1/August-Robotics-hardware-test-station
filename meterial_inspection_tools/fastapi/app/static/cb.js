@@ -34,10 +34,15 @@ function formatCBSrvCallData(component, buttonString, unitid) {
 // ------------------------------------------------------------------------------------------------
 // onClickEvents
 function onClickCommandBtn(element) {
-    executeSrvCall(formatCBSrvCallData(
+    try {
+        executeSrvCall(formatCBSrvCallData(
             current_step,
             buttonIdToButtonString[element.id],
             element.getAttribute("unitid")))
+    } catch (e) {
+        console.error(e)
+        console.log("Setting of CB unit id failed")
+    }
 }
 
 // ------------------------------------------------------------------------------------------------

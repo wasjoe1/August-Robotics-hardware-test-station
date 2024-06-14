@@ -48,28 +48,31 @@ function redirectToPage(page) {
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
 // SERVICE CALLS
-function executeSrvCall(formattedData) {
-    console.log("Executing service call...")
-    data_str = JSON.stringify(formattedData) // i.e. {imu: {button:__, parameter:__}}
-    console.log("send data: " + data_str)
-    var url = "http://" + ip_addr + "/command/" + data_str
-    var request = new XMLHttpRequest()
-    request.open("GET", url)
-    request.onload = function () {
-        if (request.status >= 200 && request.status < 300) {
-            console.log("Request successful, check ROS side for service call. status:", request.responseText);
-        } else if (request.status >= 400 && request.status < 500) {
-            console.error("Client error. Status:", request.status);
-        } else if (request.status >= 500) {
-            console.error("Server error. Status:", request.status);
+async function executeSrvCall(formattedData) {
+    try {
+        console.log("Executing service call...");
+        const data_str = JSON.stringify(formattedData); // i.e. {imu: {button:__, parameter:__}}
+        console.log("send data: " + data_str);
+        const url = `http://${ip_addr}/command/${data_str}`;
+        
+        const response = await fetch(url, { method: 'GET' });
+        if (response.ok) {
+            const responseData = await response.text();
+            console.log("Request successful, check ROS side for service call. Status:", response.status);
+        } else if (response.status >= 400 && response.status < 500) {
+            console.error("Client error. Status:", response.status);
+            throw new Error(`ClientError: Client error occurred. Status: ${response.status}, Response: ${await response.text()}`);
+        } else if (response.status >= 500) {
+            console.error("Server error. Status:", response.status);
+            throw new Error(`ServerError: Server error occurred. Status: ${response.status}, Response: ${await response.text()}`);
         } else {
-            console.error("Unexpected response. Status:", request.status);
+            console.error("Unexpected response. Status:", response.status);
+            throw new Error(`UnexpectedResponseError: Unexpected response. Status: ${response.status}, Response: ${await response.text()}`);
         }
-    };
-    request.onerror = function () {
-        console.error("Network error occurred.");
-    };
-    request.send()
+    } catch (e) {
+        console.error("Network error occurred:", e);
+        throw e
+    }
 }
 
 function formatSrvCallData(component, data) {

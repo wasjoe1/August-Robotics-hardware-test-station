@@ -69,6 +69,18 @@ function onClickCommandBtn(element) {
             // element.getAttribute("baudrate")))
             ))
 }
+function onClickCommandBtn(element) {
+    try {
+        executeSrvCall(formatSonarSrvCallData( //TODO
+            current_step,
+            // buttonIdToButtonString[element.id], //TODO 
+            // element.getAttribute("baudrate"))) //TODO: change this attribute that im getting the data from
+    ))
+    } catch (e) {
+        console.error(e)
+        console.log("Setting of _setting_ failed")
+    }
+}
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------

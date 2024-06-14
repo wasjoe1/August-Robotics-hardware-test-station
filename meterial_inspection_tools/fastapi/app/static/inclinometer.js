@@ -39,10 +39,15 @@ function formatInclinometerSrvCallData(component, buttonString, baudrate) {
 // ------------------------------------------------------------------------------------------------
 // onClickEvents
 function onClickCommandBtn(element) {
-    executeSrvCall(formatInclinometerSrvCallData(
+    try {
+        executeSrvCall(formatInclinometerSrvCallData(
             current_step,
             buttonIdToButtonString[element.id],
             element.getAttribute("index")))
+    } catch (e) {
+        console.error(e)
+        console.log("Setting of Inclinometer baud rate failed")
+    }
 }
 
 // ------------------------------------------------------------------------------------------------

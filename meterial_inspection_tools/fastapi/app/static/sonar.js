@@ -8,8 +8,9 @@ const buttonIdToButtonString = {
     "setDefaultBtn": "SET_DEFAULT",
 }
 
-//TODO
+// INIT Sonar
 console.log("init sonar...") // log the init-ing component
+const gSonars = new Set()
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
@@ -30,14 +31,38 @@ function formatSonarSrvCallData(component, buttonString, unitid) {
     return data
 }
 
+function getValueFromSelectComponent(id) {
+    const selectElement = document.getElementById(id);
+    const selectedValue = selectElement.value;
+    if (gSonars.has(selectedValue)) {
+        console.error("Unit ID value already exists. Please select another value")
+        throw new Error("DuplicateUnitIDError: The selected Unit ID value already exists.");
+    }
+    return selectedValue
+}
+
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
 // onClickEvents
 function onClickCommandBtn(element) {
-    executeSrvCall(formatSonarSrvCallData(
+    try {
+        // Check for 1 sonar
+        if (gSonars.size > 1) { throw new Error("There is more than 1 sonar connected")}
+
+        // execute srv vall
+        const selectedValue = getValueFromSelectComponent("selected-id-value")
+        executeSrvCall(formatSonarSrvCallData(
             current_step,
             buttonIdToButtonString[element.id],
-            element.getAttribute("unitid"))) //TODO: change this attribute that im getting the data from
+            selectedValue))
+        
+        // if successful, delete value from the set & add new value
+        gSonars.clear()
+        gSonars.add(selectedValue)
+    } catch (e) {
+        console.error(e)
+        console.log("Setting of Sonar unit id failed")
+    }
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -53,20 +78,20 @@ const socketNameToElementId = {
     // "/sonar/topic_configs_chinese": "responseData-configs_chinese",
 }
 
-//TODO
-function formatSonarDisplayData(data) { //TODO
+function formatSonarDisplayData(data) {
     var container = undefined
     try {
         data = JSON.parse(data)
     } catch (e) {
         if (e instanceof SyntaxError) {
-            console.log(`data is already a valid JS object: ${data}`)
-            return {dataEle: container, dataVal: data}
+            console.log(`Data is already a valid JS object: ${data}`)
+            return {dataEle: container, dataVal: data} // display data val as is in textcontent
         }
         console.error("An unexpected error occurred in parsing JSON data: " + e.message);
         throw e
     }
 
+    // for object/ array types, display each "prop: val" in block style
     if (typeof(data) == "object" && data != null) {
         container = document.createElement("div")
         for (var prop in data) {
@@ -78,14 +103,28 @@ function formatSonarDisplayData(data) { //TODO
     return {dataEle: container, dataVal: data}
 }
 
-function displayDataOnElement(options) {//TODO
+function formatAndDisplaySonarBoxData(dataVal) {
+    // ASSUMPTION: User is instructed to plug in the sonars and not plug in/out additional sonars per use
+    for (const id_string in dataVal) {
+        // check if its in the set, else add
+        if (!gSonars.has(id_string)) { gSonars.add(id_string) }
+
+        // display on html
+        sonarBox = document.getElementById(`${id_string}-value`)
+        sonarBox.textContent = dataVal[id_string]
+    }
+}
+
+function displayDataOnElement(options) {
     const {topic, data, ele} = options
     const compData = retrieveComponentData(current_step, data)
     const {dataEle, dataVal} = formatSonarDisplayData(compData)
 
-    //TODO
-    switch(topic) { 
+    switch(topic) {
         // case "/sonar/topic_data_checker": there's no data checker topic
+        case "/sonar/data":
+            formatAndDisplaySonarBoxData(dataVal)
+            break
         case "/sonar/topic_configs":
             ele.replaceChildren(dataEle)
             break
@@ -94,9 +133,8 @@ function displayDataOnElement(options) {//TODO
     }
 }
 
-//TODO currently each onMessageFunc is different for each component, hence not abstracted away
 function onMessageFunc(evt, topic, elementId) { // data is contained in evt.data
-    displayDataOnElement({topic:topic, data:evt.data, ele:document.getElementById(elementId)}) //TODO
+    displayDataOnElement({topic:topic, data:evt.data, ele:document.getElementById(elementId)})
     return evt.data
 }
 
