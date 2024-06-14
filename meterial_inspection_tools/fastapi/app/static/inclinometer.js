@@ -93,7 +93,6 @@ function displayDataOnElement(options) {
     //TODO
     switch(topic) {
         case "/inclinometer/topic_data_checker": //TODO
-            console.log(dataVal)
             if (dataVal == 'OK') {
                 console.log("data is OK") // TEST
                 ele.classList.remove("background-red")
@@ -107,7 +106,13 @@ function displayDataOnElement(options) {
             }
             break
         case "/inclinometer/topic_data": //TODO
-            ele.replaceChildren(dataEle)
+            var container = document.createElement("div")
+            for (var prop in dataVal) {
+                var p = document.createElement("p")
+                p.textContent = `${prop == 0 ? 'x' : 'y'}: ${data[prop]}`
+                container.appendChild(p)
+            }
+            ele.replaceChildren(container)
             break
         case "/inclinometer/topic_configs": //TODO
             ele.replaceChildren(dataEle)
