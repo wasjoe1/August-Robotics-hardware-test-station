@@ -1,4 +1,8 @@
 /* Styling */
+.hide {
+    display: none;
+}
+
 .highlight {
     background-color: #51c057; /* Dark green */
     color: black;

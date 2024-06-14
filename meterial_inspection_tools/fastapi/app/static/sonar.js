@@ -113,6 +113,14 @@ function formatAndDisplaySonarBoxData(dataVal) {
         sonarBox = document.getElementById(`${id_string}-value`)
         sonarBox.textContent = dataVal[id_string]
     }
+
+    // check number of sonars 
+    var set_id_container = document.getElementById("set-unit-id-container")
+    if (gSonars.size == 1) {
+        if (set_id_container.classList.contains("hide")) { set_id_container.classList.remove("hide") }
+    } else {
+        if (!set_id_container.classList.contains("hide")) { set_id_container.classList.add("hide") }
+    }
 }
 
 function displayDataOnElement(options) {
