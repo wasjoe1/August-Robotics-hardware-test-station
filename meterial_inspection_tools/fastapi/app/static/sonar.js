@@ -44,17 +44,17 @@ function getValueFromSelectComponent(id) {
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
 // onClickEvents
-function onClickCommandBtn(element) {
+async function onClickCommandBtn(element) {
     try {
         // Check for 1 sonar
         if (gSonars.size > 1) { throw new Error("There is more than 1 sonar connected")}
 
         // execute srv vall
         const selectedValue = getValueFromSelectComponent("selected-id-value")
-        executeSrvCall(formatSonarSrvCallData(
-            current_step,
-            buttonIdToButtonString[element.id],
-            selectedValue))
+        await executeSrvCall(formatSonarSrvCallData(
+                current_step,
+                buttonIdToButtonString[element.id],
+                selectedValue))
         
         // if successful, delete value from the set & add new value
         gSonars.clear()
