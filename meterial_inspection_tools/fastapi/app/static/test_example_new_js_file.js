@@ -62,14 +62,7 @@ function format_component_SrvCallData(component, _more_) { //TODO
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
 // onClickEvents
-function onClickCommandBtn(element) {
-    executeSrvCall(format_component_SrvCallData( //TODO
-            current_step,
-            // buttonIdToButtonString[element.id], //TODO 
-            // element.getAttribute("baudrate")))
-            ))
-}
-function onClickCommandBtn(element) {
+async function onClickCommandBtn(element) {
     try {
         executeSrvCall(formatSonarSrvCallData( //TODO
             current_step,
