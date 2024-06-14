@@ -85,8 +85,27 @@ function displayDataOnElement(options) {
 
     //TODO
     switch(topic) { 
-        // case "/cb/topic_data_checker": there's no data checker topic
+        case "/cb/topic_data_checker":
+            console.log(dataVal)
+            if (dataVal == 'OK') {
+                console.log("data is OK") // TEST
+                ele.classList.remove("background-red")
+                ele.classList.add("background-green")
+                ele.textContent = "G"
+            } else {
+                console.log("data is not OK") // TEST
+                ele.classList.remove("background-green")
+                ele.classList.add("background-red")
+                ele.textContent = "NG"
+            }
+            break
         case "/cb/topic_configs":
+            var data_checker_container = document.getElementById("responseData-data_checker-container")
+            if (dataVal["model"] == "BRITER") {
+                if (data_checker_container.classList.contains("hide")) { ele.classList.remove("hide") } // unhide the NG/ G
+            } else {
+                if (!data_checker_container.classList.contains("hide")) { ele.classList.add("hide") } // hide the NG/ G
+            }
             ele.replaceChildren(dataEle)
             break
         default:
