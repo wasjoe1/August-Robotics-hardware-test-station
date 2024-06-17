@@ -39,11 +39,16 @@ function formatImuSrvCallData(component, buttonString, baudrate) {
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
 // onClickEvents
-function onClickCommandBtn(element) {
-    executeSrvCall(formatImuSrvCallData(
-            current_step,
-            buttonIdToButtonString[element.id], 
-            element.getAttribute("baudrate")))
+async function onClickCommandBtn(element) {
+    try {
+        await executeSrvCall(formatImuSrvCallData(
+                current_step,
+                buttonIdToButtonString[element.id], 
+                element.getAttribute("baudrate")))
+    } catch (e) {
+        console.error(e)
+        console.log("Setting of IMU baudrate failed")
+    }
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -60,8 +65,6 @@ const socketNameToElementId = {
 }
 
 function formatImuDisplayData(data) {
-    data = retrieveComponentData(current_step, data)
-    
     // split the return char
     data = data.split("\\n")
     
@@ -84,8 +87,8 @@ function formatImuDisplayData(data) {
 // function onMessageFunc(evt) needs to take in (evt) arg
 function displayDataOnElement(options) {
     const {topic, data, ele} = options // use object destructuring
-    const formattedData = formatImuDisplayData(data) // contains element & dataArr
-    const {dataEle, dataArr} = formattedData
+    const compData = retrieveComponentData(current_step, data)
+    const {dataEle, dataArr} = formatImuDisplayData(compData) // contains element & dataArr
 
     switch(topic) {
         case "/imu/topic_data_checker":
@@ -109,7 +112,7 @@ function displayDataOnElement(options) {
             ele.replaceChildren(dataEle)
             break
         default:
-            ele.textContent = retrieveComponentData(current_step, data)
+            ele.textContent = compData
     }
 }
 
