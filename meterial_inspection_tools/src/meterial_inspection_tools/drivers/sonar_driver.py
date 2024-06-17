@@ -103,6 +103,7 @@ class DYP_SONAR():
             dis = [None]*10
             unit_box = [None]*10
             paired_values = []
+            returnValue = {}
             
             # ORIGINAL
             for i,unit in enumerate(self.UNIT_CHECKER):
@@ -112,6 +113,7 @@ class DYP_SONAR():
                     if distance is not None:
                         dis[i] = format(distance/1000.,'.2f')
                         unit_box[i] = format(hex(unit))
+                        returnValue[unit_box[i]] = dis[i]
                     else: 
                         dis[i] = None
                         unit_box[i] = None
@@ -131,9 +133,9 @@ class DYP_SONAR():
             #     else: 
             #         logger.loginfo("error")
 
-            return dis,unit_box,paired_values
+            return dis,unit_box,paired_values, returnValue
 
-        dis_input,unit_box,paired_values = loop_distance(self=DYP_SONAR,modbus_client=modbus_client)
+        dis_input,unit_box,paired_values,returnValue = loop_distance(self=DYP_SONAR,modbus_client=modbus_client)
         #distance_image = print_distance(dis_input,unit_box)
         timestamp = datetime.datetime.now()
         header = ["timestamp", "distance", "unit"]
@@ -146,7 +148,8 @@ class DYP_SONAR():
 
             for entry in paired_values:
                 writer.writerow([timestamp, entry["distance"], entry["unit"]])
-        return print_distance(dis_input,unit_box)
+        print_distance(dis_input,unit_box)
+        return returnValue
     
  
 

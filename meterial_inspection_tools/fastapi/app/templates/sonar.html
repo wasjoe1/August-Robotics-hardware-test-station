@@ -42,16 +42,16 @@
           <div id="responseData-data" class="display-text-div">
             <!-- top of lionel -->
             <div class="flex-container-row-center">
-              <div class="lionel-sonar-box background-red"><div>0xe6</div><div id="0xe6-value">TEST</div></div>
-              <div class="lionel-sonar-box background-red"><div>0xe8</div><div id="0xe8-value">TEST</div></div>
-              <div class="lionel-sonar-box background-red"><div>0xd0</div><div id="0xd0-value">TEST</div></div>
+              <div class="lionel-sonar-box background-red"><div>0xe6</div><div id="0xe6-value">NONE</div></div>
+              <div class="lionel-sonar-box background-red"><div>0xe8</div><div id="0xe8-value">NONE</div></div>
+              <div class="lionel-sonar-box background-red"><div>0xd0</div><div id="0xd0-value">NONE</div></div>
             </div>
             <!-- middle lionel -->
             <div class="flex-container-row">
               <!-- middle left of lionel -->
               <div class="flex-container-col-space-evenly">
-                <div class="lionel-sonar-box background-red"><div>0xd2</div><div id="0xd2-value">TEST</div></div>
-                <div class="lionel-sonar-box background-red"><div>0xec</div><div id="0xec-value">TEST</div></div>
+                <div class="lionel-sonar-box background-red"><div>0xd2</div><div id="0xd2-value">NONE</div></div>
+                <div class="lionel-sonar-box background-red"><div>0xec</div><div id="0xec-value">NONE</div></div>
               </div>
               <!-- lionel -->
               <div id="lionel-machine-container">
@@ -62,19 +62,19 @@
               </div>
               <!-- middle right of lionel -->
               <div class="flex-container-col-space-evenly">
-                <div class="lionel-sonar-box background-red"><div>0xfa</div><div id="0xfa-value">TEST</div></div>
-                <div class="lionel-sonar-box background-red"><div>0xfe</div><div id="0xfe-value">TEST</div></div>
+                <div class="lionel-sonar-box background-red"><div>0xfa</div><div id="0xfa-value">NONE</div></div>
+                <div class="lionel-sonar-box background-red"><div>0xfe</div><div id="0xfe-value">NONE</div></div>
               </div>
             </div>
             <!-- bottom of lionel -->
             <div class="flex-container-row-center">
-              <div class="lionel-sonar-box background-red disabled"><div>0xe2</div><div id="0xe2-value">TEST</div></div>
-              <div class="lionel-sonar-box background-red"><div>0xe4</div><div id="0xe4-value">TEST</div></div>
-              <div class="lionel-sonar-box background-red disabled"><div>0xea</div><div id="0xea-value">TEST</div></div>
+              <div class="lionel-sonar-box background-red disabled"><div>0xe2</div><div id="0xe2-value">NONE</div></div>
+              <div class="lionel-sonar-box background-red"><div>0xe4</div><div id="0xe4-value">NONE</div></div>
+              <div class="lionel-sonar-box background-red disabled"><div>0xea</div><div id="0xea-value">NONE</div></div>
             </div>
             
             <!-- extra address -->
-            <div class="lionel-sonar-box background-red"><div>0xff</div><div id="0xff-value">TEST</div></div>
+            <div class="lionel-sonar-box background-red"><div>0xff</div><div id="0xff-value">NONE</div></div>
           </div>
         </div>
 
@@ -84,12 +84,12 @@
           <div class="display-content-header">Set Unit ID:</div>
           <div class="form-group">
             <label for="current-unit-id">Current Unit ID</label>
-            <input type="text" class="form-control" id="current-unit-id" value="TEST" disabled readonly> <!-- Need to change the value-->
+            <input type="text" class="form-control" id="current-unit-id" disabled readonly>
           </div>
           <div class="form-group">
             <label for="current-unit-id">Select Unit ID</label>
             <select class="custom-select" id="selected-id-value">
-              <option selected disabled>Unit ID</option>
+              <option value="false" selected disabled>Unit ID</option>
               <option value="0xe6">0xe6</option> <!-- Add disabled to make the option unselectable-->
               <option value="0xe8">0xe8</option>
               <option value="0xd0">0xd0</option>

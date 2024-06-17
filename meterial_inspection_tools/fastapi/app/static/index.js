@@ -89,6 +89,7 @@ const gComponentToData = {
     // "imu": { button: "CONNECT", baudrate: "", },
     "inclinometer": { button: "CONNECT", baudrate: "", },
     "cb": { button: "CONNECT", ID: "", },
+    "sonar": { button: "CONNECT", ID: "", },
 }
 
 function onClickComponentPageBtn(element) {
