@@ -11,6 +11,7 @@
   <script src="../static/bootstrap.min.js"></script>
   <link rel="stylesheet" href="../static/hr.css">
 
+  <script src="../static/lang.js"></script>
   <script src="../static/index.js"></script>
   <script src="../static/sonar.js"></script>
 </head>
@@ -18,12 +19,13 @@
 <body onload="">
   <!-- Header portion -->
   <div class="header-container">
-    <h2 id="title"> 澳谷一站式检测工具 </h2>
-    <button type="button" class="btn btn-page btn-default" onclick="location.href='/'">主页</button> <!-- no component-->
-    <button component="imu" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">IMU</button>
-    <button component="inclinometer" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">Inclinometer</button>
-    <button component="cb" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">CB [Encoder & motor driver]</button>
-    <button component="sonar" type="button" class="btn btn-page btn-default highlight" onclick="onClickComponentPageBtn(this)">超声波</button>
+    <h3 id="title"> August Robotics All-In-One hardware testing station </h3>
+    <button id="homePageBtn" type="button" class="btn btn-page btn-default" onclick="location.href='/'">Home</button> <!-- no component-->
+    <button id="imuPageBtn" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">IMU</button>
+    <button id="inclinometerPageBtn" component="inclinometer" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">Inclinometer</button>
+    <button id="cbPageBtn" component="cb" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">CB [Encoder & motor driver]</button>
+    <button id="sonarPageBtn" component="sonar" type="button" class="btn btn-page btn-default highlight" onclick="onClickComponentPageBtn(this)">Sonar</button>
+    <button id="switchLangBtn" type="button" class="btn btn-page btn-default" onclick="switch_lang()">中文</button>
     <hr />
   </div>
   
@@ -81,13 +83,13 @@
         <!-- left-right-content -->
         <div id="set-unit-id-container" class="left-right-content-container hide">
           <!-- buttons -->
-          <div class="display-content-header">Set Unit ID:</div>
+          <div id="set-unit-id-header" class="display-content-header">Set Unit ID:</div>
           <div class="form-group">
-            <label for="current-unit-id">Current Unit ID</label>
+            <label id="current-unit-id-label" for="current-unit-id">Current Unit ID</label>
             <input type="text" class="form-control" id="current-unit-id" disabled readonly>
           </div>
           <div class="form-group">
-            <label for="current-unit-id">Select Unit ID</label>
+            <label id="selected-id-value-label" for="selected-id-value">Select Unit ID</label>
             <select class="custom-select" id="selected-id-value">
               <option value="false" selected disabled>Unit ID</option>
               <option value="0xe6">0xe6</option> <!-- Add disabled to make the option unselectable-->
@@ -100,7 +102,7 @@
               <option value="0xe2">0xe2</option>
               <option value="0xd2">0xd2</option>
               <option value="0xec">0xec</option>
-              <option value="0xff">deafult(0xff)</option>
+              <option id="default-value" value="0xff">0xff (default)</option>
             </select>
           </div>
           <div class="form-group">
