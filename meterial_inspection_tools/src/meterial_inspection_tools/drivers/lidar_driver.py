@@ -9,6 +9,9 @@ INSTRUCTIONS:
 3. get pointcloud
 """
 
+#-------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
+
 from ctypes import *
 from sensor_msgs.msg import LaserScan, PointCloud2
 from laser_geometry import LaserProjection
@@ -45,6 +48,9 @@ class YdlidarCheckerStates(Enum):
     CONNECTED = auto()
     ERROR = auto()
 
+
+#-------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
 class YDLIAROperations: 
 
     """
@@ -70,7 +76,11 @@ class YDLIAROperations:
     def check_connection(port):
         connection_flag = os.path.exists(port)
         return connection_flag
-    
+
+
+
+#-------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
 class YDLIDAR_G2(YDLIAROperations): 
     YDLIDAR_TYPE = "G2"
 
@@ -99,7 +109,7 @@ class YDLIDAR_G2(YDLIAROperations):
     
     def formatting_pointcloud(ros_cloud):
 
-        #for formatting if required by frontend
+        #add more for formatting if required by frontend
         def format_data(data):
             pass
 
@@ -128,11 +138,15 @@ class YDLIDAR_G2(YDLIAROperations):
     def check_connection(port):
         connection_flag = os.path.exists(port)
         return connection_flag
-    
+
+
+
+#-------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
 class YdlidarChecker:
     port = '/dev/ydlidar'
     NODE_RATE = 5.0
-    ydliar_model = None
+    ydliar_model:YDLIAROperations = None
     _command = None
     _state = None
 
@@ -227,11 +241,11 @@ class YdlidarChecker:
         return False
     
 
-
     def get_laserscan(self):
         laserscan_one_message_data = self.ydliar_model.get_laserscan()
         self.log_with_frontend("one frame of laserscan data captured", "以获取激光扫描数据")
         self.pub_reading_laserscan.publish(laserscan_one_message_data)
+        self.log_with_frontend("one frame of laserscan data published", "以发出laserscan data")
         return True
 
     def get_pointcloud(self):
@@ -240,6 +254,7 @@ class YdlidarChecker:
         frontend_formatted_pointcloud = self.ydliar_model.formatting_pointcloud(formatted_pointcloud)
         logger.loginfo(frontend_formatted_pointcloud) 
         self.pub_reading_pointcloud.publish(frontend_formatted_pointcloud)
+        self.log_with_frontend("one frame of pointcloud data published", "以发出pointcloud data")
         return formatted_pointcloud
     
 
@@ -254,6 +269,9 @@ class YdlidarChecker:
         if check_connection_result == False: 
             self.log_with_frontend("Ydliar unplugged, check connection!", "无法连接lidar,请确保电源再连接")
             self.state = YdlidarCheckerStates.IDLE
+
+
+#-------------------------------------------------------------------------------------------------------
 
 
 if __name__ == "__main__":

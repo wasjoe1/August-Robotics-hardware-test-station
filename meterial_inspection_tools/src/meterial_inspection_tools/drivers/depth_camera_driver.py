@@ -1,6 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+"""
+INSTRUCTIONS: 
+1. CN, EN version
+"""
+
+#----------------------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------------------
+
 import os
 import json
 import rospy
@@ -34,6 +42,9 @@ class DepthCheckerStates(Enum):
     CONNECTED = auto()
     ERROR = auto()
 
+#-------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
+    
 class ASTRA_CAMERA():
     # DATA publish value is in pointcloud2 format
 
@@ -91,6 +102,9 @@ def convertCloudFromRosToPoints(ros_cloud):
 
     return json.dumps({ "coords": xyz, "colors": rgb })
 
+
+#-------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
 
 class DepthChecker:
     port = '/dev/astrauvc'
@@ -181,16 +195,17 @@ class DepthChecker:
         return data
     
     def parse_reading(self):
-
-        self.pub_reading.publish(convertCloudFromRosToPoints(data_global))
+        self.pub_reading.publish(convertCloudFromRosToPoints(data_global)) #method for addiional formatting required for rgb
         #self.pub_reading.publish(data_global)
         check_connection_result = self.depthcamera_model.check_connection(self.port)
         if check_connection_result == False:
             self.log_with_frontend("Depth Camera unplugged, check connection!", "无法连接深度摄像头,请确保电源再连接")
             self.state= DepthCheckerStates.IDLE
-
         return True
-        
+    
+
+#-------------------------------------------------------------------------------------------------------
+
 if __name__ == "__main__":
     rospy.init_node("depth_camera_driver_node")
     depth_driver_checker = DepthChecker()

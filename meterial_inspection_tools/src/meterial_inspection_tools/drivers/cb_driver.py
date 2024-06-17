@@ -4,11 +4,11 @@
 """
 INSTRUCTIONS: 
 1.ensure pymodbus is in 1.5.2 version
-2. this script can test and set parameters for multiple VSMD (驱动机) or BRITER （编码器） together
-3. key in VSMD or BRITER in parameters to specify which component is being tested 
-4. SAVE and CLOSE buttons are not required, but for user experience
+2. CN, EN version
 """
 
+#-------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
 from __future__ import print_function, division
 import threading
 import sys
@@ -36,6 +36,9 @@ from meterial_inspection_tools.ros_interface import (
 import pymodbus
 print(pymodbus.__version__)
 
+#-------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
+
 class CBCommands(Enum):
     NONE = auto()
     RESET = auto()
@@ -49,7 +52,9 @@ class CBCheckerStates(Enum):
     CONNECTED = auto()
     ERROR = auto()
 
-
+#-------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
+    
 class CBOperations: 
     """
     Interface class
@@ -78,8 +83,10 @@ class CBOperations:
         succeeded = False
         return succeeded
 
+#-------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
+class CB_VSMD114(CBOperations): #UNIT ID 1,3, # do not need to parse data,  #TODO: add in method to set 正转，反转
 
-class CB_VSMD114(CBOperations): #UNIT ID 1,3, # do not need to parse data
     CB_TYPE = "VSMD"
 
     #no need to check data
@@ -156,7 +163,8 @@ class CB_VSMD114(CBOperations): #UNIT ID 1,3, # do not need to parse data
             succeeded = True 
         return succeeded
 
-    
+#-------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
 class CB_BRITER(CBOperations): #UNIT ID 2,4
     CB_TYPE = "BRITER"
     window_size = 3
@@ -165,7 +173,7 @@ class CB_BRITER(CBOperations): #UNIT ID 2,4
     tolerance = 2 
     data_ok_flag = None
     
-    # how the moving window filter works
+    # moving window filter
     """ 
     1. create window with window_size of 3
     2. create frame by appending cb_msg value x 4 times
@@ -215,7 +223,6 @@ class CB_BRITER(CBOperations): #UNIT ID 2,4
     def parse_reading(self,modbus_client):
         def get_encoded_data(modbus_client):
             #logger.loginfo(modbus_client)
-            register_values = {}
             for unit in self.UNIT_ID_CHECKLIST_BRITER:
                 rhr =modbus_client.read_holding_registers(0x0,1,unit= unit)
                 #if rhr.isError():
@@ -245,6 +252,7 @@ class CB_BRITER(CBOperations): #UNIT ID 2,4
                         logger.loginfo("No. of BED connected " + str(BED_connected_count) + " ID " + str(unit_id))
                     if not respond.isError():
                         logger.loginfo("Device that is not BED has been detected but not connected")
+        logger.loginfo(self.UNIT_ID_CHECKLIST_BRITER)
         return modbus_client
 
 
@@ -265,15 +273,19 @@ class CB_BRITER(CBOperations): #UNIT ID 2,4
 
             #set unit ID
             if (unit_id !=set_ID_int):
-                rwr_unit_ID1 = modbus_client.write_registers(0x0005,set_ID_int,unit=unit_id)
-                if not rwr_unit_ID1.isError():
+                rwr_unit_ID = modbus_client.write_registers(0x0005,set_ID_int,unit=unit_id)
+                if not rwr_unit_ID.isError():
                     counter_BRITER_set_number +=1
                     logger.loginfo(set_ID +" UNIT ID SET")
+                    self.UNIT_ID_CHECKLIST_BRITER = [set_ID_int]
+                else: 
+                    logger.loginfo(rwr_unit_ID)
         succeeded = True
         return succeeded
 
 
-
+#-------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
 class CBChecker: 
     NODE_RATE = 5.0
     cb_model: CBOperations = None
@@ -281,6 +293,7 @@ class CBChecker:
     _state = None
     modbus_client: ModbusClient = None
     unit_id = None
+    configs_model = None
 
     CB_DRIVER_MODEL_TABLE = { 
         CB_BRITER.CB_TYPE: CB_BRITER,
@@ -364,12 +377,14 @@ class CBChecker:
     
     def _get_current_CB_settings(self):
         return {
+            "model": self.configs_model ,
             "baudrate": self.modbus_configs["baudrate"],
             "ID": self.unit_id,
             }
     
     def _get_current_CB_settings_chinese(self):
         return {
+            "model": self.configs_model ,
             "波特率": self.modbus_configs["baudrate"],
             "ID": self.unit_id,
             }
@@ -396,6 +411,9 @@ class CBChecker:
                         self.pub_data_check.publish("OK")
                     else: 
                         self.pub_data_check.publish("NOT OK")
+                    rospy.sleep(0.1)
+                    self.pub_configs.publish(json.dumps(self._get_current_CB_settings()))
+                    self.pub_configs_chinese.publish(json.dumps(self._get_current_CB_settings_chinese()))
                     
             except (serial.SerialException, BrokenPipeError, ConnectionException) as e:
                 self.log_with_frontend("CB unplugged! Check connection","无法连接CB，请确保电源在连接")
@@ -422,9 +440,13 @@ class CBChecker:
             self.modbus_client = models.scan(self=CBOperations,configs = self.modbus_configs) 
             if self.modbus_client: 
                 if models == CB_BRITER:
-                    self.log_with_frontend(f"Found {models.CB_TYPE} with baudrate: {self.modbus_client.baudrate}! Unit_ID = {models.UNIT_ID_CHECKLIST_BRITER} ", f"CB 类型 {models.CB_TYPE}, 波特率: {self.modbus_client.baudrate}!")      
+                    self.log_with_frontend(f"Found {models.CB_TYPE} with baudrate: {self.modbus_client.baudrate}! Unit ID = {models.UNIT_ID_CHECKLIST_BRITER[0]} ", f"CB 类型 {models.CB_TYPE}, 波特率: {self.modbus_client.baudrate}!")
+                    self.unit_id = models.UNIT_ID_CHECKLIST_BRITER[0]
+                    self.configs_model = "BRITER"      
                 elif models == CB_VSMD114:
-                    self.log_with_frontend(f"Found {models.CB_TYPE} with baudrate: {self.modbus_client.baudrate}! Unit_ID = {models.UNIT_ID_CHECKLIST_VDSM}", f"CB 类型 {models.CB_TYPE}, 波特率: {self.modbus_client.baudrate}!")
+                    self.log_with_frontend(f"Found {models.CB_TYPE} with baudrate: {self.modbus_client.baudrate}! Unit ID = {models.UNIT_ID_CHECKLIST_VDSM[0]}", f"CB 类型 {models.CB_TYPE}, 波特率: {self.modbus_client.baudrate}!")
+                    self.unit_id = models.UNIT_ID_CHECKLIST_VDSM[0]
+                    self.configs_model = "VSMD" 
                 self.pub_configs.publish(json.dumps(models.CB_TYPE))
                 self.pub_configs_chinese.publish(json.dumps(models.CB_TYPE))
                 self.cb_model = models
@@ -434,7 +456,8 @@ class CBChecker:
                 return True
             self.state =CBCheckerStates.IDLE
             return False
-    
+
+#-------------------------------------------------------------------------------------------------------
 if __name__ == "__main__":
     rospy.init_node("cb_driver_node")
     cb_driver_checker = CBChecker()

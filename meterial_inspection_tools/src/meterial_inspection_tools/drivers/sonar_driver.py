@@ -6,6 +6,7 @@
 INSTRUCTIONS: 
 1.ensure pymodbus is in 1.5.2 version
 2. this script can read data for multiple sonars, but can only set one sonar at a time
+3. CN, EN version
 """
 
 import os
@@ -44,10 +45,44 @@ class SonarCheckerStates(Enum):
     CONNECTED = auto()
     ERROR = auto()
 
+
+#-------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
+class SonarOperations:
+    """
+    Interface class
+    """
+
+    def parse_reading(self,modbus_client):
+        """
+        def print_distance(dis,unit_box):
+            return distance_image
+        """
+        def loop_distance(self,modbus_client):
+            return dis,unit_box,paired_values_display, paired_values_csv
+        
+        dis_input,unit_box,paired_values_display, paired_values_csv = loop_distance(modbus_client)
+        return paired_values_display    
+        
+    
+    def scan (self,configs):
+        modbus_client: ModbusClient = None
+        global set_available_flag
+        set_available_flag = None
+        return modbus_client
+    
+    def set_default_settings(self,modbus_client,unit_id):
+        succeeded = False
+        return succeeded
+    
+
+#-------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
 class DYP_SONAR():
     #8 sonars
-    UNIT_DICT_CHECKER = [0xe6 ,0xe8 ,0xd0,0xfa,0xfe,0xea,0xe4,0xe2,0xd2,0xec] #for ID that has already been set
-    UNIT_DICT_CHECKER_DEFAULT = 0xFF # for default ID  
+    UNIT_DICT_CHECKER = [0xe6 ,0xe8 ,0xd0,0xfa,0xfe,0xea,0xe4,0xe2,0xd2,0xec,0x01] #for ID that has already been set
+    #UNIT_DICT_CHECKER_DEFAULT = 0xFF # BROADCAST ID  
+    UNIT_DICT_CHECKER_DEFAULT = 0x01 #DEFAULT ID
     DEFAULT_BAUDRATE = 3 #9600
     UNIT_DICT_SETTER = {
             "0": 0xe6, 
@@ -65,38 +100,15 @@ class DYP_SONAR():
     UNIT_CHECKER = []
     sonar_counter = 0
 
-    def parse_reading(self, modbus_client):
-        
-        #TODO: check how many sonars are there on lionel
-        def print_distance(dis,unit_box): 
-            distance_image = """
-        {} : {}
-        {} : {}
-        {} : {}
-        {} : {}
-        {} : {}
-        {} : {}
-        {} : {}
-        {} : {}
-        """.format(
-            format(unit_box[0]), format(dis[0]),
-            format(unit_box[1]), format(dis[1]),
-            format(unit_box[2]), format(dis[2]),
-            format(unit_box[3]), format(dis[3]),
-            format(unit_box[4]), format(dis[4]),
-            format(unit_box[5]), format(dis[5]),
-            format(unit_box[6]), format(dis[6]),
-            format(unit_box[7]), format(dis[7]),
-        )
-            logger.loginfo(distance_image)
-            return distance_image
+    def parse_reading(self, modbus_client): # current version of lionel has 8 sonars, previous version has 10
+
         
         def loop_distance(self,modbus_client):
             dis = [None]*10
             unit_box = [None]*10
-            paired_values = []
+            paired_values_csv = []
+            paired_values_display = []
             
-            # ORIGINAL
             for i,unit in enumerate(self.UNIT_CHECKER):
                 response = modbus_client.read_holding_registers(0x0101, 1, unit = unit)
                 if not response.isError():
@@ -104,28 +116,18 @@ class DYP_SONAR():
                     if distance is not None:
                         dis[i] = format(distance/1000.,'.2f')
                         unit_box[i] = format(hex(unit))
-                    else: 
-                        dis[i] = None
-                        unit_box[i] = None
-                    paired_values.append({"distance":dis[i],"unit" : unit_box[i]})
-                if response.isError():
+                    paired_values_display.append({unit_box[i]:dis[i]})
+                    paired_values_csv.append({"distance":dis[i],"unit" : unit_box[i]})
+                    logger.loginfo(paired_values_display)
+                else:
                     logger.loginfo("error")
+                    logger.loginfo(response)
             
-            # PROPOSED
-            # for i, unit in enumerate(DYP_SONAR.UNIT_CHECKER): # not sure if you intend to have this as a class or instance variable, but u declared as a class variable
-            #     response = modbus_client.read_holding_registers(0x0101, 1, unit = unit)
-            #     if not response.isError():
-            #         distance  = response.registers[0]
-            #         if distance is not None: # ignore when distance is not valid since dis[i] & unit_box[i] are already set to be None initially
-            #             dis[i] = format(distance/1000.,'.2f')
-            #             unit_box[i] = format(hex(unit))
-            #         paired_values.append({ "distance":dis[i], "unit" : unit_box[i] })
-            #     else: 
-            #         logger.loginfo("error")
+            logger.loginfo(paired_values_display)
+            return dis,unit_box,paired_values_display,paired_values_csv
 
-            return dis,unit_box,paired_values
-
-        dis_input,unit_box,paired_values = loop_distance(self=DYP_SONAR,modbus_client=modbus_client)
+        dis_input,unit_box,paired_values_display, paired_values_csv = loop_distance(self,modbus_client)
+        #dis_input,unit_box,paired_values_display, paired_values_csv = loop_distance(self=DYP_SONAR,modbus_client=modbus_client)
         #distance_image = print_distance(dis_input,unit_box)
         timestamp = datetime.datetime.now()
         header = ["timestamp", "distance", "unit"]
@@ -136,13 +138,14 @@ class DYP_SONAR():
             if file_empty:
                 writer.writerow(header)
 
-            for entry in paired_values:
+            for entry in paired_values_csv:
                 writer.writerow([timestamp, entry["distance"], entry["unit"]])
-        return print_distance(dis_input,unit_box)
-    
+        #return print_distance(dis_input,unit_box)
+        return paired_values_display
  
+    
+    def scan(self, configs): 
 
-    def scan(self, configs):
         modbus_client : ModbusClient = None
         global set_available_flag
         set_available_flag = None
@@ -154,67 +157,16 @@ class DYP_SONAR():
             temp_client = ModbusClient(**configs)
             logger.loginfo(temp_client)
             
-            for unit in self.UNIT_DICT_CHECKER:
-                respond = temp_client.read_holding_registers(0x200, 1,unit=unit)
-                if respond.isError():
-                    logger.loginfo("error in connecting")
-                if not respond.isError():
-                    self.sonar_counter +=1 
+            for unit in self.UNIT_DICT_CHECKER: # Check the no. of already set sonars
+                sonar_unit = temp_client.read_holding_registers(0x200, 1,unit=unit)
+                if sonar_unit.isError():
+                    logger.loginfo(f"Failed to connect to unit ID {unit}")
+                else:
                     self.UNIT_CHECKER.append(unit)
                     modbus_client = temp_client
-            if self.sonar_counter == 0:
-                response =temp_client.read_holding_registers(0x200, 1, unit=self.UNIT_DICT_CHECKER_DEFAULT)
-                if not response.isError():
-                    modbus_client = temp_client
-                    self.sonar_counter +=1
-                    self.UNIT_CHECKER.append(0xFF)
-            if self.sonar_counter == 1:
-                set_available_flag = True
-            elif self.sonar_counter > 1: 
-                set_available_flag = False
+            set_available_flag = len(self.UNIT_CHECKER) == 1 
             logger.loginfo(self.UNIT_CHECKER)
 
-            # PROPOSED V1
-            # configs.update({"baudrate":baudrate})
-            # logger.loginfo(baudrate)
-
-            # temp_client = ModbusClient(**configs)
-            # logger.loginfo(temp_client)
-
-            # for unit in self.UNIT_DICT_CHECKER: # Check the no. of already set sonars
-            #     sonar_unit = temp_client.read_holding_registers(0x200, 1,unit=unit)
-            #     if not sonar_unit.isError(): # if valid
-            #         self.UNIT_CHECKER.append(unit)
-            #         modbus_client = temp_client
-            #     else: # else
-            #         logger.loginfo(f"Failed to connect to unit ID {unit}")
-            
-            # if len(self.UNIT_CHECKER) == 0: # since counter >= 0
-            #     sonar_unit = temp_client.read_holding_registers(0x200, 1, unit=self.UNIT_DICT_CHECKER_DEFAULT)
-            #     if not sonar_unit.isError():
-            #         self.UNIT_CHECKER.append(self.UNIT_DICT_CHECKER_DEFAULT)
-            #         modbus_client = temp_client
-            # set_available_flag = len(self.UNIT_CHECKER) == 1 # false if UNIT CHECKER has more than 1 sonar_unit
-
-            # logger.loginfo(self.UNIT_CHECKER)
-
-            # PROPOSED V2
-            # configs.update({"baudrate":baudrate})
-            # logger.loginfo(baudrate)
-
-            # temp_client = ModbusClient(**configs)
-            # logger.loginfo(temp_client)
-
-            # for unit in self.UNIT_DICT_CHECKER: # put UNIT_DICT_CHECKER_DEFAULT into UNIT_DICT_CHECKER also
-            #     sonar_unit = temp_client.read_holding_registers(0x200, 1,unit=unit)
-            #     if not sonar_unit.isError(): # if valid
-            #         self.UNIT_CHECKER.append(unit)
-            #         modbus_client = temp_client
-            #     else: # else
-            #         logger.loginfo(f"Failed to connect to unit ID {unit}")
-            # set_available_flag = len(self.UNIT_CHECKER) == 1 # false if UNIT CHECKER has more than 1 sonar_unit
-
-            # logger.loginfo(self.UNIT_CHECKER)
         return modbus_client
 
     # PROPOSED function creation 
@@ -227,40 +179,38 @@ class DYP_SONAR():
     #     return False
 
         
-    # Can only set 1 at a time(?)
     def set_default_settings(self,modbus_client,unit_id):
         succeeded = False
         for unit in self.UNIT_CHECKER:
             #set baudrate
             rwr_baudrate = modbus_client.write_register(0x201,self.DEFAULT_BAUDRATE,unit=unit) #set baudrate to 9600
-            # ORIGINAL
-            if not rwr_baudrate.isError():
-                logger.loginfo("Set baudrate to 9600")
-            else: 
-                logger.loginfo("PROBLEM SETTING BAUDRATE")
-            # PROPOSED
-            # logger.loginfo("PROBLEM SETTING BAUDRATE") if rwr_baudrate.isError() else logger.loginfo("Set baudrate to 9600")
+            logger.loginfo("PROBLEM SETTING BAUDRATE") if rwr_baudrate.isError() else logger.loginfo("Set baudrate to 9600")
+
 
             #set unit
             unit_set = self.UNIT_DICT_SETTER[unit_id]
             rospy.sleep(0.1)
             rwr_unit = modbus_client.write_register(0x200,unit_set, unit=unit)
-            # ORIGINAL
+            #logger.loginfo("PROBLEM SETTING UNIT") if rwr_unit.isError() else logger.loginfo("unit set")
+
             if not rwr_unit.isError():
                 logger.loginfo("unit set")
-            if rwr_unit.isError():
+                self.UNIT_CHECKER = [unit_set] #TODO: test if this refreshes the unit set
+            else:
                 logger.loginfo("PROBLEM SETTING UNIT")
-            # PROPOSED
-            # logger.loginfo("PROBLEM SETTING UNIT") if rwr_unit.isError() else logger.loginfo("unit set")
+                logger.loginfo(rwr_unit)
 
-        succeeded = True # this means no matter default settings are set, it will return true?
+
+        succeeded = True 
         return succeeded
-        
+    
 
 
+#-------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
 class SonarChecker:
     NODE_RATE = 5.0
-    sonar_model = DYP_SONAR
+    sonar_model:SonarOperations = DYP_SONAR()
     _command = None
     _state = None
     modbus_client : ModbusClient = None
@@ -295,7 +245,6 @@ class SonarChecker:
         (SONARCommands.CONNECT, SonarCheckerStates.IDLE): self.scan, # to CONNECTED or stay
         (SONARCommands.NONE, SonarCheckerStates.CONNECTED): self.parse_reading, # stay
         (SONARCommands.SET_DEFAULT, SonarCheckerStates.CONNECTED): self.set_default_settings, # stay
-
     }
 
     def srv_cb(self, srv):
@@ -358,7 +307,8 @@ class SonarChecker:
 
     def scan(self):
         self.state = SonarCheckerStates.SCANNING
-        self.modbus_client = self.sonar_model.scan(self=self.sonar_model,configs=self.modbus_configs)
+        #self.modbus_client = self.sonar_model.scan(self=self.sonar_model,configs=self.modbus_configs)
+        self.modbus_client = self.sonar_model.scan(self.modbus_configs)
         logger.loginfo(self.modbus_client)
         if self.modbus_client:
             self.log_with_frontend(f'Scanned sonar on baudrate: {self.modbus_configs["baudrate"]}',f'波特率: {self.modbus_configs["baudrate"]}')
@@ -366,7 +316,7 @@ class SonarChecker:
             self.pub_configs.publish(json.dumps(self._get_current_SONAR_settings()))
             self.pub_configs_chinese.publish(json.dumps(self._get_current_SONAR_settings_chinese()))
             return True
-        self.log_with_frontend(f"Failed to connect sonar driver!, Check connection",f"无法连上 sonar")
+        self.log_with_frontend(f"Failed to connect sonar driver!, Check connection",f"无法连上 声纳")
         self.state = SonarCheckerStates.IDLE
         return False
 
@@ -375,7 +325,8 @@ class SonarChecker:
             return False
         def parse_target():
             try:
-                sonar_msg = self.sonar_model.parse_reading(self=self.sonar_model,modbus_client = self.modbus_client)
+                #sonar_msg = self.sonar_model.parse_reading(self=self.sonar_model,modbus_client = self.modbus_client)
+                sonar_msg = self.sonar_model.parse_reading(self.modbus_client)
                 rospy.sleep(0.5)
                 # rospy.sleep(0.001) # same as sonar reading code on lionel
                 self.pub_reading.publish(json.dumps(sonar_msg))
@@ -393,9 +344,9 @@ class SonarChecker:
         if self.parse_thread and self.parse_thread.is_alive():
             self.parse_thread.join()
         if set_available_flag == True:
-            if self.sonar_model.set_default_settings(self= self.sonar_model,modbus_client=self.modbus_client, unit_id=self.cmd_params):
-                self.sonar_model.UNIT_CHECKER = [self.sonar_model.UNIT_DICT_SETTER[self.cmd_params]] #TODO: test 
-                # PROPOSED Should shift the above line of code into set_default_settings
+            #if self.sonar_model.set_default_settings(self= self.sonar_model,modbus_client=self.modbus_client, unit_id=self.cmd_params):
+            if self.sonar_model.set_default_settings(self.modbus_client, self.cmd_params):
+                #self.sonar_model.UNIT_CHECKER = [self.sonar_model.UNIT_DICT_SETTER[self.cmd_params]] 
                 self.log_with_frontend("SETTING SET","设置成功")
                 self.log_with_frontend("CFG SAVED","设置保存成功")
                 return True
@@ -403,7 +354,7 @@ class SonarChecker:
             self.log_with_frontend("Ensure there is only one sonar connected", "系统只能同时设置一个sonar")
             
     
-
+#-------------------------------------------------------------------------------------------------------
 if __name__ == "__main__":
     rospy.init_node("sonar_driver_node")
     sonar_driver_checker = SonarChecker()

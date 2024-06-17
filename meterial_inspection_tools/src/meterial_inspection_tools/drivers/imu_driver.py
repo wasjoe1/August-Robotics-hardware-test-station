@@ -3,8 +3,12 @@
 
 """
 INSTRUCTIONS: 
-1. This script prase reading and sets baudrate for WIT and RION IMUs
+1. This script parse reading and sets baudrate for WIT and RION IMUs
 """
+
+#-------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
+
 import threading
 import rospy
 from sensor_msgs.msg import Imu
@@ -35,8 +39,6 @@ from imu_driver_constants import (
 class IMUCommands(Enum):
     NONE = auto()
     RESET = auto()
-    SCAN = auto()
-    #AUTO_DETECT = auto()
     CONNECT = auto()
     SET_DEFAULT = auto()
 
@@ -47,7 +49,8 @@ class IMUCheckerStates(Enum):
     CONNECTED = auto()
     ERROR = auto()
 
-
+#-------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
 class IMUOperations:
     """
     Interfaces class
@@ -57,16 +60,10 @@ class IMUOperations:
     DEFAULT_BAUDRATE = 115200
 
     @staticmethod
-    def connect(port):
-        serial_port: Serial = None
-        return serial_port
-
-    @staticmethod
     def scan(port):
         serial_port: Serial = None
         return serial_port
      
-
     @staticmethod
     def parse_reading(serial_port):
         """
@@ -87,6 +84,9 @@ class IMUOperations:
     def check_reading(imu_msg_data):
         return True
         
+
+#-------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
 class IMURion(IMUOperations):
     IMU_TYPE = "RION"
     G = 9.80665
@@ -224,6 +224,7 @@ class IMURion(IMUOperations):
                         serial_port = p
             return serial_port
         except serial.SerialException:
+            logger.loginfo("Error in connecting, check connection and baudrate")
             return False
         
         
@@ -242,7 +243,9 @@ class IMURion(IMUOperations):
     def save_parameters(serial_port):
         return True
     
-        
+
+#-------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
 class IMUWIT(IMUOperations):
     IMU_TYPE = "WIT"
 
@@ -327,6 +330,7 @@ class IMUWIT(IMUOperations):
                         serial_port = p 
             return serial_port
         except serial.SerialException:
+            logger.loginfo("Error in connecting, check connection and baudrate")
             return False
     
     
@@ -361,8 +365,9 @@ class IMUWIT(IMUOperations):
             return True
         elif q0 !=0: 
             return False
-    
 
+#-------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
 class IMUChecker:
     NODE_RATE = 5.0
     PORT = "/dev/imu"
@@ -484,8 +489,8 @@ class IMUChecker:
                     imu_msg = self.imu_model.parse_reading(self.serial_port)
                     self.pub_reading.publish(json.dumps(str(imu_msg)))
                     self.pub_configs.publish(json.dumps(self.imu_model.IMU_TYPE))
+                    self.pub_configs_chinese.publish(json.dumps(self.imu_model.IMU_TYPE))
                     self.pub_state.publish(json.dumps(self._state.name))
-                    #self.pub_reading.publish(str(imu_msg)) #change to json dumps
                     check_NG_or_G = self.imu_model.check_reading(imu_msg)
                     if check_NG_or_G:
                         self.pub_data_check.publish(json.dumps("OK"))
@@ -493,6 +498,7 @@ class IMUChecker:
                         self.pub_data_check.publish(json.dumps("NOT OK"))
                    
             except (serial.SerialException, BrokenPipeError) as e:
+                logger.loginfo(e)
                 self.log_with_frontend("IMU unplugged! Check connection","无法连接IMU，请确保电源再连接")
                 self.state = IMUCheckerStates.IDLE
         
@@ -504,15 +510,15 @@ class IMUChecker:
         logger.loginfo("called set_default")
         if self.imu_model.set_default_settings(self.PORT,self.cmd_params):
             logger.loginfo(self.serial_port)
-            self.log_with_frontend("SETTING SET at baudrate of " + self.cmd_params,"设置成功, 波特率:" + self.cmd_params)
+            self.log_with_frontend("SETTING SET, BAUDRATE: " + self.cmd_params,"设置成功, 波特率:" + self.cmd_params)
         #save settings
             if self.imu_model.save_parameters(self.PORT):
-                self.log_with_frontend("CFG SAVED","设置保存成功")
+                self.log_with_frontend("CFG SAVED, BAUDRATE: " + self.cmd_params,"设置保存成功 波特率:" + self.cmd_params)
                 return True
         else: 
             self.log_with_frontend("Baudrate setting unavailable, choose another setting","无法设置选项，请选其他的波特率")
             
-
+#-------------------------------------------------------------------------------------------------------
 if __name__ == "__main__":
     rospy.init_node("imu_driver_node")
     imu_checker = IMUChecker()
