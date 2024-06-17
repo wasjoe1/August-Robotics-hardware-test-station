@@ -45,3 +45,25 @@ function drawLidar(data) {
     });
     updateCanvas()
 }
+
+function convert_data_to_pointcloud(angle_increment, ranges){
+    start_ang = 0
+    for (let i = 0; i < ranges.length; i++) {
+        ang = start_ang + i*angle_increment
+        lidar_data.push([ranges[i]*Math.cos(ang), ranges[i]*Math.sin(ang)]);
+    }
+}
+
+data_socket.onmessage = function(evt) {
+    // convert data to json
+    // console.log(evt.data)
+    ws_json = eval('(' + evt.data + ')')
+    if ((current_step in ws_json)){
+        // lidar display
+        ws_json = ws_json[current_step]
+        convert_data_to_pointcloud(ws_json["angle_increment"], ws_json["ranges"])
+        find_element()
+        drawLidar(lidar_data)
+        lidar_data = []
+    }
+}

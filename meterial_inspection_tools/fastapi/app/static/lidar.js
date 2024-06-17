@@ -1,23 +1,3 @@
-// INSTRUCTIONS
-// Add index.js to newly created html page
-// add in respective page & command buttons
-
-// Steps in creating js page
-// 1. set current step
-// 2. Create buttonIdToButtonString dictionary
-// 3. create format_component_SrvCallData(component, ....) => use formatSrvCallData(component, data)
-// 4. create onClickCommandButton() => use executeSrvCall(formattedData) & format_component_SrvCallData(component, ....)
-// 5. open websockets
-  // - create socketNameToElementId dictionary
-  // - create format_component_DisplayData(data) => use formatSrvCallData
-  // - create displayDataOnElement(options) => use format_component_DisplayData(data), options == {topic, data, element}
-  // - create onMessageFunc(evt, topic, elementId) => use displayDataOnElement(options), data == evt.data
-  // - open websockets using a for loop & create_ws(ip_addr, socketName, socketNameToElementId[socketName], onMessageFunc) => use onMessageFunc & socketNameToElementId dictionary
-
-// ------------------------------------------------------------------------------------------------
-// ------------------------------------------------------------------------------------------------
-// EXAMPLE JS PAGE, copy from here
-
 // import { lang } from './lang.js'
 // import { refresh_page_once_list } from './refresh_once.js'
 
@@ -31,12 +11,11 @@ setCurrentStep()
 //TODO
 // buttonIdToButtonString
 const buttonIdToButtonString = {
-    // "_btnId_": "_btn_strin_param_",
-    // i.e. "setDefaultBtn": "SET_DEFAULT",
+    "setDefaultBtn": "SET_DEFAULT",
 }
 
 //TODO
-console.log("init _component_...") // log the init-ing component
+console.log("init lidar...") // log the init-ing component
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
@@ -49,11 +28,10 @@ console.log("init _component_...") // log the init-ing component
 // function create_ws(ip_addr, topic,  elementId, onMessageFunc) => onMessageFunc(evt, topic, elementId) is executed as such
 
 //TODO
-function format_component_SrvCallData(component, _more_) { //TODO
+function formatLidarSrvCallData(component, _more_) { //TODO
     var data =  {
-        // wtv you want to include in the srv call, i.e.
-        // button: buttonString,
-        // baudrate: baudrate, // has to be string to be accepted in srv calls
+        button: buttonString,
+        baudrate: baudrate, // has to be string to be accepted in srv calls
     }
     data = formatSrvCallData(component, data)
     return data
@@ -64,11 +42,10 @@ function format_component_SrvCallData(component, _more_) { //TODO
 // onClickEvents
 async function onClickCommandBtn(element) {
     try {
-        executeSrvCall(formatSonarSrvCallData( //TODO
+        executeSrvCall(formatLidarSrvCallData(
             current_step,
-            // buttonIdToButtonString[element.id], //TODO 
-            // element.getAttribute("baudrate"))) //TODO: change this attribute that im getting the data from
-    ))
+            buttonIdToButtonString[element.id],
+            element.getAttribute("baudrate"))) // TODO
     } catch (e) {
         console.error(e)
         console.log("Setting of _setting_ failed")
@@ -81,18 +58,19 @@ async function onClickCommandBtn(element) {
 //TODO
 const socketNameToElementId = {
     // "socketName": "elementId" //TODO
-    // "/imu/topic_state": "responseData-state",
-    // "/imu/topic_data": "responseData-data",
-    // "/imu/topic_data_checker": "responseData-data_checker",
-    // "/imu/topic_info": "responseData-info",
-    // "/imu/topic_info_chinese": "responseData-info_chinese",
-    // "/imu/topic_configs": "responseData-configs",
-    // "/imu/topic_configs_chinese": "responseData-configs_chinese",
+    "/lidar/topic_state": "responseData-state",
+    "/lidar/topic_data": "responseData-data",
+    "/lidar/topic_data_checker": "responseData-data_checker",
+    "/lidar/topic_info": "responseData-info",
+    // "/lidar/topic_info_chinese": "responseData-info_chinese",
+    "/lidar/topic_configs": "responseData-configs",
+    // "/lidar/topic_configs_chinese": "responseData-configs_chinese",
 }
 
 //TODO
-function formatImuDisplayData(data) { //TODO
+function formatLidarDisplayData(data) { //TODO
     data = retrieveComponentData(current_step, data)
+    console.log(data)
     //TODO
     // data = data.split("\\n") 
     // console.log(data)
@@ -116,11 +94,11 @@ function formatImuDisplayData(data) { //TODO
 function displayDataOnElement(options) {
     const {topic, data, ele} = options // use object destructuring
     const compData = retrieveComponentData(current_step, data) //TODO
-    const {dataEle, dataArr} = formatImuDisplayData(data) // contains element & dataArr //TODO
+    const {dataEle, dataArr} = formatLidarDisplayData(data) // contains element & dataArr //TODO
 
     //TODO
     switch(topic) { 
-        case "/imu/topic_data_checker":
+        case "/lidar/topic_data_checker":
             if (dataArr[0] == 'OK') {
                 console.log("data is OK") // TEST
                 console.log(dataArr[0]) // TEST
@@ -135,10 +113,10 @@ function displayDataOnElement(options) {
                 ele.textContent = "NG"
             }
             break
-        case "/imu/topic_data": //TODO
+        case "/lidar/topic_data": //TODO
             // ele.replaceChildren(dataEle)
             break
-        case "/imu/topic_configs": //TODO
+        case "/lidar/topic_configs": //TODO
             // ele.replaceChildren(dataEle)
             break
         default:
@@ -146,7 +124,6 @@ function displayDataOnElement(options) {
     }
 }
 
-//TODO currently each onMessageFunc is different for each component, hence not abstracted away
 function onMessageFunc(evt, topic, elementId) { // data is contained in evt.data
     displayDataOnElement({topic:topic, data:evt.data, ele:document.getElementById(elementId)}) //TODO
     return evt.data
