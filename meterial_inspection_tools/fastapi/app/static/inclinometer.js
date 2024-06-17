@@ -109,7 +109,7 @@ function displayDataOnElement(options) {
             var container = document.createElement("div")
             for (var prop in dataVal) {
                 var p = document.createElement("p")
-                p.textContent = `${prop == 0 ? 'x' : 'y'}: ${data[prop]}`
+                p.textContent = `${prop == 0 ? 'x' : 'y'}: ${dataVal[prop]}`
                 container.appendChild(p)
             }
             ele.replaceChildren(container)
