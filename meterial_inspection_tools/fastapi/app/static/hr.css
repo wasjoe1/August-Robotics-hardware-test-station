@@ -4,6 +4,10 @@
     color: black;
 }
 
+.hide {
+    display: none;
+}
+
 .background-red {
     background-color: red;
 }

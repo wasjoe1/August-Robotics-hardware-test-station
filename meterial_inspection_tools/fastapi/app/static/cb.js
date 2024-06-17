@@ -102,8 +102,10 @@ function displayDataOnElement(options) {
         case "/cb/topic_configs":
             var data_checker_container = document.getElementById("responseData-data_checker-container")
             if (dataVal["model"] == "BRITER") {
+                console.log(dataVal["model"])
                 if (data_checker_container.classList.contains("hide")) { ele.classList.remove("hide") } // unhide the NG/ G
             } else {
+                console.log(dataVal["model"])
                 if (!data_checker_container.classList.contains("hide")) { ele.classList.add("hide") } // hide the NG/ G
             }
             ele.replaceChildren(dataEle)
