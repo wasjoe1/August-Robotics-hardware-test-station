@@ -1,15 +1,9 @@
 // import { lang } from './lang.js'
 // import { refresh_page_once_list } from './refresh_once.js'
 
-// Set Current step
-setCurrentStep()
-
 const buttonIdToButtonString = {
     "setDefaultBtn": "SET_DEFAULT",
 }
-
-//TODO
-console.log("init cb...") // log the init-ing component
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
@@ -119,13 +113,36 @@ function displayDataOnElement(options) {
     }
 }
 
-//TODO currently each onMessageFunc is different for each component, hence not abstracted away
 function onMessageFunc(evt, topic, elementId) { // data is contained in evt.data
     displayDataOnElement({topic:topic, data:evt.data, ele:document.getElementById(elementId)}) //TODO
     return evt.data
 }
 
-//TODO
-for (const socketName in socketNameToElementId) {
-    create_ws(ip_addr, socketName, socketNameToElementId[socketName], onMessageFunc)
-}
+// ------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
+// INIT
+window.addEventListener('load', async function() {
+    try {
+        console.log("windows on load...")
+        console.log("init cb...") // log the init-ing component
+        // Set Current step
+        setCurrentStep()
+        
+        // Refresh the page (language setting)
+        refresh_page_once(cur_lang)
+    
+        // execute the service call
+        const initData = gComponentToData[current_step]
+        await executeSrvCall(formatSrvCallData(current_step, initData))
+
+        // open websockets
+        for (const socketName in socketNameToElementId) {
+            create_ws(ip_addr, socketName, socketNameToElementId[socketName], onMessageFunc)
+        }
+
+        console.log("init-ed cb")
+    } catch (e) {
+        console.log(`failed to connect to ${element.getAttribute("component")}`)
+        console.log(e)
+    }
+});

@@ -5,8 +5,11 @@
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------ 
-import step_to_text_dict from './lang.js'
+// import step_to_text_dict from './lang.js'
 // import { refresh_page_once_list } from './refresh_once.js'
+// window.onClickComponentPageBtn = onClickComponentPageBtn;
+// window.switch_lang = switch_lang;
+// window.setCurrentStep = setCurrentStep
 
 // var ws_json
 // var hostname
@@ -120,11 +123,9 @@ function redirectToPage(page) {
 
 function refresh_page_once(l) {
     console.log("refreshing page...")
-    console.log(step_to_text_dict)
     var element_id_to_text_dict = step_to_text_dict[current_step]
-    for (eleId in element_id_to_text_dict) {
-        console.log(eleId, element_id_to_text_dict[eleId])
-        get_element_by_id(eleId).innerText = element_id_to_text_dict[eleId][l]
+    for (var eleId in element_id_to_text_dict) {
+        get_element_by_id(eleId).textContent = element_id_to_text_dict[eleId][l]
     }
     console.log("page refreshed")
 }
@@ -151,6 +152,7 @@ function switch_lang() {
 // ------------------------------------------------------------------------------------------------
 // SERVICE CALLS
 async function executeSrvCall(formattedData) {
+    console.log(formattedData)
     try {
         console.log("Executing service call...");
         const data_str = JSON.stringify(formattedData); // i.e. {imu: {button:__, parameter:__}}
@@ -178,7 +180,7 @@ async function executeSrvCall(formattedData) {
 }
 
 function formatSrvCallData(component, data) {
-    formattedData = {}
+    var formattedData = {}
     formattedData[component] = data
     return formattedData
 }
@@ -196,12 +198,8 @@ const gComponentToData = {
 
 async function onClickComponentPageBtn(element) {
     try {
-        // execute the service call
+        // redirect page according to component attribute 
         const component = element.getAttribute("component")
-        const initData = gComponentToData[component]
-        await executeSrvCall(formatSrvCallData(component, initData))
-        
-        // on successful connection, switch pages
         const pageRef = `/step/${component}`
         redirectToPage(pageRef)
     } catch (e) {

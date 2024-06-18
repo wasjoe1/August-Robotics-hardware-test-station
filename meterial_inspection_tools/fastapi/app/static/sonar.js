@@ -1,15 +1,10 @@
 // import { lang } from './lang.js'
 // import { refresh_page_once_list } from './refresh_once.js'
 
-// Set Current step
-setCurrentStep()
-
 const buttonIdToButtonString = {
     "setDefaultBtn": "SET_DEFAULT",
 }
 
-// INIT Sonar
-console.log("init sonar...") // log the init-ing component
 const gSonars = new Set()
 
 // ------------------------------------------------------------------------------------------------
@@ -154,6 +149,33 @@ function onMessageFunc(evt, topic, elementId) { // data is contained in evt.data
     return evt.data
 }
 
-for (const socketName in socketNameToElementId) {
-    create_ws(ip_addr, socketName, socketNameToElementId[socketName], onMessageFunc)
-}
+// INIT
+window.addEventListener('load', async function() {
+    try {
+        console.log("windows on load...")
+        console.log("init sonar...") // log the init-ing component
+
+        // Reset the set
+        gSonars = new Set()
+
+        // Set Current step
+        setCurrentStep()
+        
+        // Refresh the page (language setting)
+        refresh_page_once(cur_lang)
+    
+        // execute the service call
+        const initData = gComponentToData[current_step]
+        await executeSrvCall(formatSrvCallData(current_step, initData))
+
+        // open websockets
+        for (const socketName in socketNameToElementId) {
+            create_ws(ip_addr, socketName, socketNameToElementId[socketName], onMessageFunc)
+        }
+
+        console.log("init-ed sonar")
+    } catch (e) {
+        console.log(`failed to connect to ${element.getAttribute("component")}`)
+        console.log(e)
+    }
+});

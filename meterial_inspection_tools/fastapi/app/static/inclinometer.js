@@ -6,14 +6,9 @@
 // current_step
 // regex
 
-// Set Current step
-setCurrentStep()
-
 const buttonIdToButtonString = {
     "setDefaultBtn": "SET_DEFAULT",
 }
-
-console.log("init inclinometer...")
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
@@ -132,8 +127,31 @@ function onMessageFunc(evt, topic, elementId) { // data is contained in evt.data
     return evt.data
 }
 
-for (const socketName in socketNameToElementId) {
-    create_ws(ip_addr, socketName, socketNameToElementId[socketName], onMessageFunc)
-}
+// ------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
+// INIT
+window.addEventListener('load', async function() {
+    try {
+        console.log("windows on load...")
+        console.log("init inclinometer...")
+        // Set Current step
+        setCurrentStep()
+        
+        // Refresh the page (language setting)
+        refresh_page_once(cur_lang)
+    
+        // execute the service call
+        const initData = gComponentToData[current_step]
+        await executeSrvCall(formatSrvCallData(current_step, initData))
 
-console.log("init-ed inclinometer")
+        // open websockets
+        for (const socketName in socketNameToElementId) {
+            create_ws(ip_addr, socketName, socketNameToElementId[socketName], onMessageFunc)
+        }
+
+        console.log("init-ed inclinometer")
+    } catch (e) {
+        console.log(`failed to connect to ${element.getAttribute("component")}`)
+        console.log(e)
+    }
+});
