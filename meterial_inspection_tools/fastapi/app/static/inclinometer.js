@@ -53,9 +53,9 @@ const socketNameToElementId = {
     "/inclinometer/topic_data": "responseData-data",
     "/inclinometer/topic_data_checker": "responseData-data_checker",
     "/inclinometer/topic_info": "responseData-info",
-    // "/inclinometer/topic_info_chinese": "responseData-info_chinese",
+    "/inclinometer/topic_info_chinese": "responseData-info_chinese",
     "/inclinometer/topic_configs": "responseData-configs",
-    // "/inclinometer/topic_configs_chinese": "responseData-configs_chinese",
+    "/inclinometer/topic_configs_chinese": "responseData-configs_chinese",
 }
 
 function formatInclinometerDisplayData(data) {
@@ -114,7 +114,8 @@ function displayDataOnElement(options) {
             }
             ele.replaceChildren(container)
             break
-        case "/inclinometer/topic_configs": //TODO
+        case "/inclinometer/topic_configs_chinese":
+        case "/inclinometer/topic_configs":
             ele.replaceChildren(dataEle)
             break
         default:

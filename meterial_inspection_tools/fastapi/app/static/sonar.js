@@ -72,9 +72,9 @@ const socketNameToElementId = {
     "/sonar/topic_data": "responseData-data",
     // "/sonar/topic_data_checker": "responseData-data_checker", // refer to ros_interface.py, for this ver, sonar does not have a data_checker topic
     "/sonar/topic_info": "responseData-info",
-    // "/sonar/topic_info_chinese": "responseData-info_chinese",
+    "/sonar/topic_info_chinese": "responseData-info_chinese",
     "/sonar/topic_configs": "responseData-configs",
-    // "/sonar/topic_configs_chinese": "responseData-configs_chinese",
+    "/sonar/topic_configs_chinese": "responseData-configs_chinese",
 }
 
 function formatSonarDisplayData(data) {
@@ -137,6 +137,7 @@ function displayDataOnElement(options) {
             formatAndDisplaySonarBoxData(dataVal)
             break
         case "/sonar/topic_configs":
+        case "/sonar/topic_configs_chinese":
             ele.replaceChildren(dataEle)
             break
         default:

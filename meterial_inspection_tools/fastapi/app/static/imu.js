@@ -60,9 +60,9 @@ const socketNameToElementId = {
     "/imu/topic_data": "responseData-data",
     "/imu/topic_data_checker": "responseData-data_checker",
     "/imu/topic_info": "responseData-info",
-    // "/imu/topic_info_chinese": "responseData-info_chinese",
+    "/imu/topic_info_chinese": "responseData-info_chinese",
     "/imu/topic_configs": "responseData-configs",
-    // "/imu/topic_configs_chinese": "responseData-configs_chinese",
+    "/imu/topic_configs_chinese": "responseData-configs_chinese",
 }
 
 function formatImuDisplayData(data) {
@@ -107,8 +107,7 @@ function displayDataOnElement(options) {
             }
             break
         case "/imu/topic_data":
-            ele.replaceChildren(dataEle)
-            break
+        case "/imu/topic_configs_chinese":
         case "/imu/topic_configs":
             ele.replaceChildren(dataEle)
             break

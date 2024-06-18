@@ -121,12 +121,24 @@ function redirectToPage(page) {
 //     updata_user_manual(response)
 // }
 
-function refresh_page_once(l) {
+function refresh_page_once(cur_lang) {
     console.log("refreshing page...")
+    // Change text content of headers
     var element_id_to_text_dict = step_to_text_dict[current_step]
     for (var eleId in element_id_to_text_dict) {
-        get_element_by_id(eleId).textContent = element_id_to_text_dict[eleId][l]
+        get_element_by_id(eleId).textContent = element_id_to_text_dict[eleId][cur_lang]
     }
+
+    // Hide/ Unhide eng or chi elements
+    var arr = [document.getElementsByClassName("english_element"), document.getElementsByClassName("chinese_element")]
+    for (let i = 0; i < arr.length; i++) {
+        if (i == cur_lang) {
+            for (let ele of arr[cur_lang]) { if (ele.classList.contains("hide")) { ele.classList.remove("hide") } } // unhide the new selected language
+        } else {
+            for (let ele of arr[i]) { if (!ele.classList.contains("hide")) { ele.classList.add("hide") } } // hide the new selected language
+        }
+    }
+    
     console.log("page refreshed")
 }
 
@@ -190,7 +202,6 @@ function formatSrvCallData(component, data) {
 // onClickEvents
 const gComponentToData = {
     "imu": { button: "CONNECT", baudrate: "", }, // For this ver, imu is connect
-    // "imu": { button: "CONNECT", baudrate: "", },
     "inclinometer": { button: "CONNECT", baudrate: "", },
     "cb": { button: "CONNECT", ID: "", },
     "sonar": { button: "CONNECT", ID: "", },
@@ -240,7 +251,7 @@ function create_ws(ip_addr, topic, elementId, onMessageFunc) {
 function retrieveComponentData(component, data) {
     return (!data)
     ? data
-    : JSON.parse(data)[component]["data"] //TODO
+    : JSON.parse(data)[component]["data"] //TODO: see if its possible to find any other similar abstractions
 }
 
 console.log("init-ed index")
