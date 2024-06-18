@@ -1,10 +1,14 @@
 // import { lang } from './lang.js'
 // import { refresh_page_once_list } from './refresh_once.js'
 
+// Defined in lang.js:
+// step_to_text_dict
+
 // Defined in index.js:
 // ip_addr
 // current_step
 // regex
+// cur_lang // EN is 0, CN is 1
 
 // buttonIdToButtonString
 const buttonIdToButtonString = {
@@ -21,6 +25,8 @@ const buttonIdToButtonString = {
 // function executeSrvCall(formattedData)
 // function create_ws(ip_addr, topic,  elementId, onMessageFunc) => onMessageFunc(evt, topic, elementId) is executed as such
 // function retrieveComponentData(component, data)
+// function refresh_page_once(l) => takes in cur_lang
+// function switch_lang()
 
 function formatImuSrvCallData(component, buttonString, baudrate) {
     var data =  {
