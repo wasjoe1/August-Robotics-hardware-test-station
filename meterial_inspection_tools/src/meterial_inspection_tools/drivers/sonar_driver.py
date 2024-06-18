@@ -85,16 +85,16 @@ class DYP_SONAR():
     UNIT_DICT_CHECKER_DEFAULT = 0x01 #DEFAULT ID
     DEFAULT_BAUDRATE = 3 #9600
     UNIT_DICT_SETTER = {
-            "0": 0xe6, 
-            "1": 0xe8,
-            "2": 0xd0,
-            "3": 0xfa,
-            "4": 0xfe,
-            "5": 0xea,
-            "6": 0xe4,
-            "7": 0xe2,
-            "8": 0xd2,
-            "9": 0xec,
+            "0xe6": 0xe6, 
+            "0xe8": 0xe8,
+            "0xd0": 0xd0,
+            "0xfa": 0xfa,
+            "0xfe": 0xfe,
+            "0xea": 0xea,
+            "0xe4": 0xe4,
+            "0xe2": 0xe2,
+            "0xd2": 0xd2,
+            "0xec": 0xec,
         }
     BAUDRATE_CHECKLIST = [9600,57600,115200]
     UNIT_CHECKER = []
