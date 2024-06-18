@@ -112,7 +112,7 @@ async def step(request: Request, mode: str): # mode is of string type; its from 
             just_do = f.readlines() # read the lines of the txt file
             logger.info(just_do)
 
-        return templates.TemplateResponse(app.mode+".html", { "request": request, "just_do": just_do, "responseData": responseData })
+        return templates.TemplateResponse(app.mode+".html", { "request": request, "just_do": just_do, "responseData": responseData }) # line of code that responds with new html
     else:
         return None
 
