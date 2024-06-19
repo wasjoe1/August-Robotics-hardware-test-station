@@ -7,76 +7,44 @@ from meterial_inspection_tools.ros_interface import (
 )
 from rospy_message_converter.message_converter import convert_ros_message_to_dictionary
 from boothbot_msgs.srv import (Command, CommandRequest)
-from meterial_inspection_tools.srv import (IMUControl, IMUControlRequest)
+from meterial_inspection_tools.srv import (GetButtonBaudrate, GetButtonBaudrateRequest) # IMU, inclinometer
+from meterial_inspection_tools.srv import (GetButtonUnitID, GetButtonUnitIDRequest) # cb
 from meterial_inspection_tools.srv import (SonarControl, SonarControlRequest)
-from meterial_inspection_tools.srv import (InclinometerControl, InclinometerControlRequest)
-from meterial_inspection_tools.srv import (CBControl, CBControlRequest)
 
 ServiceRequestTypes = {
-    "imu": IMUControlRequest,
-    "sonar": SonarControlRequest,
-    "inclinometer": InclinometerControlRequest,
-    "cb": CBControlRequest,
+    "imu": GetButtonBaudrateRequest,
+    "inclinometer": GetButtonBaudrateRequest,
+    "cb": GetButtonUnitIDRequest,
+    "sonar": GetButtonUnitIDRequest,
 }
 
 class MeterialInspection():
     def __init__(self) -> None:
         logger.loginfo("init meterial inspection...")
-        self.send_queue = {
-            "configs": {
-                "imu": [],
-                "inclinometer": [],
-                "cb": [],
-                "sonar": [],
-            },
-            "data": {
-                "imu": [],
-                "inclinometer": [],
-                "cb": [],
-                "sonar": [],
-            },
-            "info": {
-                "imu": [],
-                "inclinometer": [],
-                "cb": [],
-                "sonar": [],
-            },
-            "state": {
-                "imu": [],
-                "inclinometer": [],
-                "cb": [],
-                "sonar": [],
-            },
-        }
+        self.send_queue = {} # {component: {topic1: [], topic2: []...}, ... }
 
-        for sub_node_name, content in msg_dict.items():
-            try:
-                content["topic_configs"].Subscriber(self.topic_configs_cb, callback_args={"name": sub_node_name}) # will be used for the cb_args in the def below
-                logger.loginfo(f"Sub-ed to {sub_node_name}'s topic_configs have succeded")
-            except Exception as e:
-                logger.loginfo(f"Subscription to {sub_node_name}'s topic_configs failed")
-                logger.logerr(e)
-
-            try:
-                content["topic_data"].Subscriber(self.topic_data_cb, callback_args={"name": sub_node_name})
-                logger.loginfo(f"Sub-ed to {sub_node_name}'s topic_data have succeded")
-            except Exception as e:
-                logger.loginfo(f"Subscription to {sub_node_name}'s topic_data failed")
-                logger.logerr(e)
-            
-            try:
-                content["topic_info"].Subscriber(self.topic_info_cb, callback_args={"name": sub_node_name}) # will be used for the cb_args in the def below
-                logger.loginfo(f"Sub-ed to {sub_node_name}'s topic_info have succeded")
-            except Exception as e:
-                logger.loginfo(f"Subscription to {sub_node_name}'s topic_info failed")
-                logger.logerr(e)
-            
-            try:
-                content["topic_state"].Subscriber(self.topic_state_cb, callback_args={"name": sub_node_name})
-                logger.loginfo(f"Sub-ed to {sub_node_name}'s topic_state have succeded")
-            except Exception as e:
-                logger.loginfo(f"Subscription to {sub_node_name}'s topic_state failed")
-                logger.logerr(e)
+        for component, topics in msg_dict.items():
+            logger.loginfo(f"All Topics in {component} component: {topics}")
+            for topic in topics:
+                # for all the topics in respective components
+                # subscribe to respective topics
+                # call the respective callback functions
+                # skip srv calls
+                if topic == "srv":
+                    continue
+                try:
+                    # create msg storage for component & topic
+                    if not self.send_queue.get(component): # if send q has no such topic
+                        self.send_queue[component] = {}
+                    if not self.send_queue[component].get(topic): # if send q topic has no such component
+                        self.send_queue[component][topic] = []
+                    
+                    topics[topic].Subscriber(self.topic_cb, callback_args={"component": component, "topic": topic}) # will be used for the cb_args in the def below
+                    logger.loginfo("after node subscribed")
+                    logger.loginfo(f"Sub-ed to {component}'s {topic} have succeded")
+                except TypeError as e:
+                    logger.loginfo(f"Subscription to {component}'s {topic} failed")
+                    logger.logerr(e)
 
     # -------------------------------------------------------------------------------------------------
     # Subscriber call back functions & msg functions
@@ -85,71 +53,54 @@ class MeterialInspection():
     # depends on the component & topic
     # components => imu, sonar, inclinometer, cb
     # topics are state, info, data, configs
-    def get_topic_msg(self, topic, component):
-        return self.send_queue[topic][component][0]
+    def get_send_q(self):
+        return self.send_queue
 
-    def has_topic_msg(self, topic, component):
-        return len(self.send_queue[topic][component]) > 0
+    def get_topic_msg(self, component, topic):
+        return self.send_queue[component][topic][0]
 
-    def pop_topic_msg(self, topic, component):
-        if len(self.send_queue[topic][component]) > 0:
-            del self.send_queue[topic][component][0]
+    def has_topic_msg(self, component, topic):
+        return len(self.send_queue[component][topic]) > 0
+
+    def pop_topic_msg(self, component, topic):
+        if len(self.send_queue[component][topic]) > 0:
+            del self.send_queue[component][topic][0]
+    
+    def get_topic_to_component_dict(self):        
+        res = []
+        for component in self.send_queue:
+            for topic in self.send_queue[component]:
+                res.append((component, topic))
+        return res
 
     # -------------------------------------------------------------------------------------------------
     # CALLBACKS
-    def topic_configs_cb(self, msg, cb_args):
-        func = lambda a: a.replace("/","").replace("data","")
-        print("call back args in topics", cb_args["name"])
-        print("call back args filtered in topics", func(cb_args["name"]))
-        # func(cb_args["name"]) => returns "imu", msg is wtv data there is in the topic
-        data_to_send = json.dumps({func(cb_args["name"]): convert_ros_message_to_dictionary(msg)})
-        self.send_queue["configs"][func(cb_args["name"])].append(data_to_send)
-
-    def topic_data_cb(self, msg, cb_args):
-        func = lambda a: a.replace("/","").replace("data","")
-        print("call back args in topics", cb_args["name"])
-        print("call back args filtered in topics", func(cb_args["name"]))
-        # func(cb_args["name"]) => returns "imu", msg is wtv data there is in the topic
-        data_to_send = json.dumps({func(cb_args["name"]): convert_ros_message_to_dictionary(msg)})
-        self.send_queue["data"][func(cb_args["name"])].append(data_to_send)
-    
-    def topic_info_cb(self, msg, cb_args):
-        func = lambda a: a.replace("/","").replace("data","")
-        print("call back args in topics", cb_args["name"])
-        print("call back args filtered in topics", func(cb_args["name"]))
-        # func(cb_args["name"]) => returns "imu", msg is wtv data there is in the topic
-        data_to_send = json.dumps({func(cb_args["name"]): convert_ros_message_to_dictionary(msg)})
-        self.send_queue["info"][func(cb_args["name"])].append(data_to_send)
-    
-    def topic_state_cb(self, msg, cb_args):
-        func = lambda a: a.replace("/","").replace("data","")
-        print("call back args in topics", cb_args["name"])
-        print("call back args filtered in topics", func(cb_args["name"]))
-        # func(cb_args["name"]) => returns "imu", msg is wtv data there is in the topic
-        data_to_send = json.dumps({func(cb_args["name"]): convert_ros_message_to_dictionary(msg)})
-        self.send_queue["state"][func(cb_args["name"])].append(data_to_send)
+    # TODO Double check that subscribers can use the same cb func
+    def topic_cb(self, msg, cb_args):
+        print("call back component arg: ", cb_args["component"]) # should return 'imu', 'inclinometer', ...
+        print("call back topic arg: ", cb_args["topic"]) # should return 'topic_info', 'topic_data', ... etc.
+        data_to_send = json.dumps({cb_args["component"]: convert_ros_message_to_dictionary(msg)})
+        if not self.send_queue.get(cb_args["component"]): # if send q has no such component
+            logger.logerr(f"{cb_args['component']} component does not exist")
+        if not self.send_queue[cb_args["component"]].get(cb_args["topic"]): # if send q component has no such topic
+            logger.logerr(f"{cb_args['component']} does not have {cb_args['topic']}")
+        self.send_queue[cb_args["component"]][cb_args["topic"]].append(data_to_send)
 
     # -------------------------------------------------------------------------------------------------
     # service calls
     def send_srv(self, srv):
         srv_dict = json.loads(srv)
-        logger.loginfo(f"send service {srv_dict}")
-        for device_name, request in srv_dict.items(): # sub node name is "device_name"; request is the "req data"
-            logger.loginfo(f"component name is {device_name}")
-            logger.loginfo(f"request data: {request}")
-            
+        for component, params in srv_dict.items():
+            logger.loginfo(f"Sending srv for {component}...")
             try:
-                command = ServiceRequestTypes[device_name]() # get the srv req object
-                command.button = request["button"] # put the parameters into the req obj
-                if request.get("parameter"):
-                    command.parameter = request["parameter"]
-                logger.loginfo(f"command data: {command}")
-                
-                logger.loginfo(f"Service call to {msg_dict[device_name]['srv']}...")                
-                msg_dict[device_name]["srv"].service_call(command)
-                logger.loginfo("Service call succedded")
+                command = ServiceRequestTypes[component]() # get the srv req object
+                for paramName, val in params.items():
+                    # command[paramName] = val # cant use bracket notation for python objects
+                    setattr(command, paramName, val)
+                msg_dict[component]["srv"].service_call(command)
+                logger.loginfo(f"Service call to {msg_dict[component]['srv']} succedded")
             except Exception as e:
-                logger.logerr("Service call failed")
+                logger.logerr(f"Service call to {msg_dict[component]['srv']} failed")
                 logger.logerr(e)
                 raise rospy.ServiceException("Service call failed")
         

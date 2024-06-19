@@ -11,15 +11,20 @@
   <script src="../static/bootstrap.min.js"></script>
   
   <link rel="stylesheet" href="../static/hr.css">
+  <script src="../static/lang.js"></script>
+  <script src="../static/index.js"></script>
 </head>
 
 <body onload="">
-    <div style="height:3%;width:100%;float:left;">
-        <h3 id="title"> 澳谷一站式检测工具 </h3>
-        <button type="button" class="btn btn-default" onclick="location.href='/'">主页</button>
-        <button type="button" class="btn btn-default" onclick="location.href='/step/imu'">IMU</button>
-        <button type="button" class="btn btn-default" onclick="location.href='/step/inclinometer'">Inclinometer</button>
-        <button type="button" class="btn btn-default" onclick="location.href='/step/cb'">CB [Encoder & motor driver]</button>
-        <button type="button" class="btn btn-default" onclick="location.href='/step/sonar'">超声波</button>
-    </div>
+  <!-- Header portion -->
+  <div class="header-container">
+    <h3 id="title"> August Robotics All-In-One hardware testing station </h3>
+    <button id="homePageBtn" type="button" class="btn btn-page btn-default highlight" onclick="location.href='/'">Home</button>
+    <button id="imuPageBtn" component="imu" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">IMU</button>
+    <button id="inclinometerPageBtn" component="inclinometer" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">Inclinometer</button>
+    <button id="cbPageBtn" component="cb" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">CB [Encoder & motor driver]</button>
+    <button id="sonarPageBtn" component="sonar" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">Sonar</button>
+    <button id="switchLangBtn" type="button" class="btn btn-page btn-default" onclick="switch_lang()">中文</button>
+    <hr />
+  </div>
 </body>

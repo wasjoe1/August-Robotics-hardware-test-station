@@ -138,8 +138,9 @@ msg_dict = {
 
    "lidar": {
         "srv": LIDAR_SRV_CMD,
-        "topic_data_laserscan": LIDAR_DATA_LASERSCAN,
-        "topic_data_pointcloud": LIDAR_DATA_POINTCLOUD,
+        # "topic_data_laserscan": LIDAR_DATA_LASERSCAN,
+        # "topic_data_pointcloud": LIDAR_DATA_POINTCLOUD,
+        "topic_data": LIDAR_DATA_POINTCLOUD,
         "topic_state": LIDAR_STATE,
         "topic_info": LIDAR_INFO,
         "topic_info_chinese": LIDAR_INFO_CHINESE,

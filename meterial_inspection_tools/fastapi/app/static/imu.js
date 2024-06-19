@@ -1,125 +1,152 @@
 // import { lang } from './lang.js'
 // import { refresh_page_once_list } from './refresh_once.js'
 
-var ws_json
-var hostname
-var ip_addr = document.location.hostname
-var download_data
+// Defined in lang.js:
+// step_to_text_dict
 
-var is_gs
+// Defined in index.js:
+// ip_addr
+// current_step
+// regex
+// cur_lang // EN is 0, CN is 1
 
-var url = window.location.href
-const regex = "http://(.*)/step/(.*)"
-const found = url.match(regex)
-current_step = found[2]
-console.log("current step: ", current_step)
-
-gParam = undefined
-gSelectedComponentElement = undefined
-
-const buttonDict = {
-    "scanBtn": "SCAN",
-    "connectBtn": "CONNECT",
-    // "autoDetectBtn": "AUTO DETECT",
-    "disconnectBtn": "DISCONNECT",
+// buttonIdToButtonString
+const buttonIdToButtonString = {
     "setDefaultBtn": "SET_DEFAULT",
-    "saveBtn": "SAVE",
 }
-
-console.log("imu")
 
 // ------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
 // Functions
-function parseStringToInt(str) {
-    try {
-        return parseInt(str)
-    } catch (e) {
-        console.log("Parsing of String to Int failed")
-        console.log(e)
-        throw e
-    }
-}
+// Defined in index.js:
+// function parseStringToInt(str)
+// function redirectToPage(page)
+// function formatSrvCallData(component, data)
+// function executeSrvCall(formattedData)
+// function create_ws(ip_addr, topic,  elementId, onMessageFunc) => onMessageFunc(evt, topic, elementId) is executed as such
+// function retrieveComponentData(component, data)
+// function refresh_page_once(l) => takes in cur_lang
+// function switch_lang()
 
-function createCmdData(buttonString, param) {
-    return {
+function formatImuSrvCallData(component, buttonString, baudrate) {
+    var data =  {
         button: buttonString,
-        parameter: param,
+        baudrate: baudrate, // dont change to int as data has to be in string
     }
-}
-
-// TODO: create a web socket manager class to hide all these under the hood implementation (connections, create, get, clear)
-var gAll_ws_connections = []
-
-function create_ws(ip_addr, route, elementId) {
-    try {
-        const ws = new WebSocket("ws://" + ip_addr + route) // route == /imu_smt
-        ws.addEventListener('open', function(event) {
-            console.log(`${route} socket was opended`)
-            ws.send('Hello ws data!');
-        });
-        ws.onmessage = function(evt) {    
-            document.getElementById(elementId).textContent = evt.data 
-            return evt.data
-        }
-        gAll_ws_connections.push(ws)
-    } catch (e) {
-        console.log(`Failed to create web socket for ${route}`)
-        console.error(e)
-    }
-}
-
-function clear_all_ws() {
-    for (const ws in gAll_ws_connections) {
-        ws.close()
-    }
-}
-
-function executeCommand(cmd) {
-    console.log(cmd)
-
-    var cmd_dict = {}
-    cmd_dict[current_step] = cmd
-    cmd_str = JSON.stringify(cmd_dict) // i.e. {imu: {button:__, parameter:__}}
-    console.log("send cmd: " + cmd_str)
-    var url = "http://" + ip_addr + "/command/" + cmd_str
-    var request = new XMLHttpRequest()
-    request.open("GET", url)
-    request.send()
+    data = formatSrvCallData(component, data)
+    return data
 }
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
 // onClickEvents
-function onClickCommandBtn(element) {
-    executeCommand(createCmdData(buttonDict[element.id], gParam))    
-}
-
-function onClickSetParamBtn(element) {
-    gParam = element.getAttribute("parameter")
-    console.log(gParam)
-    if (gSelectedComponentElement) {
-        gSelectedComponentElement.classList.remove("selected")
+async function onClickCommandBtn(element) {
+    try {
+        await executeSrvCall(formatImuSrvCallData(
+                current_step,
+                buttonIdToButtonString[element.id], 
+                element.getAttribute("baudrate")))
+    } catch (e) {
+        console.error(e)
+        console.log("Setting of IMU baudrate failed")
     }
-    element.classList.add("selected")
-    gSelectedComponentElement = element
 }
 
-// TODO: create an event s.t. when page changes, clear all web sockets
+// ------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
+// SOCKET CONFIGS & CREATION
+const socketNameToElementId = {
+    "/imu/topic_state": "responseData-state",
+    "/imu/topic_data": "responseData-data",
+    "/imu/topic_data_checker": "responseData-data_checker",
+    "/imu/topic_info": "responseData-info",
+    "/imu/topic_info_chinese": "responseData-info_chinese",
+    "/imu/topic_configs": "responseData-configs",
+    "/imu/topic_configs_chinese": "responseData-configs_chinese",
+}
+
+function formatImuDisplayData(data) {
+    // split the return char
+    data = data.split("\\n")
+    
+    // remove the " char
+    let charToRemove = '"'
+    var regExToRemoveChar = new RegExp(charToRemove, 'g')
+    data[0] = data[0].replace(regExToRemoveChar, '') // remove the " at the start
+    data[data.length-1] = data[data.length-1].replace(regExToRemoveChar, '') // remove the " at the end
+    
+    var container = document.createElement("div")
+    for (var i = 0; i < data.length; i++) {
+        var p = document.createElement("p")
+        p.textContent = data[i]
+        container.appendChild(p)
+    }
+    return {dataEle: container, dataArr : data}
+}
+
+// function create_ws(ip_addr, topic, onMessageFunc) created in index.js
+// function onMessageFunc(evt) needs to take in (evt) arg
+function displayDataOnElement(options) {
+    const {topic, data, ele} = options // use object destructuring
+    const compData = retrieveComponentData(current_step, data)
+    const {dataEle, dataArr} = formatImuDisplayData(compData) // contains element & dataArr
+
+    switch(topic) {
+        case "/imu/topic_data_checker":
+            console.log(dataArr[0]) // TEST
+            if (dataArr[0] == 'OK') {
+                console.log("data is OK") // TEST
+                ele.classList.remove("background-red")
+                ele.classList.add("background-green")
+                ele.textContent = "G"
+            } else {
+                console.log("data is not OK") // TEST
+                ele.classList.remove("background-green")
+                ele.classList.add("background-red")
+                ele.textContent = "NG"
+            }
+            break
+        case "/imu/topic_data":
+        case "/imu/topic_configs_chinese":
+        case "/imu/topic_configs":
+            ele.replaceChildren(dataEle)
+            break
+        default:
+            ele.textContent = compData
+    }
+}
+
+function onMessageFunc(evt, topic, elementId) { // data is contained in evt.data
+    // displayDataOnElement(topic=topic, data=data, ele=ele) // JS Doesnt support named parameters!!
+    displayDataOnElement({topic:topic, data:evt.data, ele:document.getElementById(elementId)})
+    return evt.data
+}
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
-// SOCKET CONFIGS
-// open web socket connection for /data (imu data) => for the imu readings
-create_ws(ip_addr, "/imu/data", "responseData-data")
+// INIT
+window.addEventListener('load', async function() {
+    try {
+        console.log("windows on load...")
+        console.log("init imu...")
+        // Set Current step
+        setCurrentStep()
+        
+        // Refresh the page (language setting)
+        refresh_page_once(cur_lang)
+    
+        // execute the service call
+        const initData = gComponentToData[current_step]
+        await executeSrvCall(formatSrvCallData(current_step, initData))
 
-// ------------------------------------------------------------------------------------------------
-// open web socket connection for /state => for the current state
-create_ws(ip_addr, "/imu/state", "responseData-state")
+        // open websockets
+        for (const socketName in socketNameToElementId) {
+            create_ws(ip_addr, socketName, socketNameToElementId[socketName], onMessageFunc)
+        }
 
-// ------------------------------------------------------------------------------------------------
-// open web socket connection for /info => for user status
-create_ws(ip_addr, "/imu/info", "responseData-info")
-
-// ------------------------------------------------------------------------------------------------
-// open web socket connection for /configs => for user status
-create_ws(ip_addr, "/imu/configs", "responseData-configs")
+        console.log("init-ed imu")
+    } catch (e) {
+        console.log(`failed to connect to ${element.getAttribute("component")}`)
+        console.log(e)
+    }
+});
