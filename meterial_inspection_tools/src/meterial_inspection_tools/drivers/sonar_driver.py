@@ -106,13 +106,8 @@ class DYP_SONAR():
         def loop_distance(self,modbus_client):
             dis = [None]*10
             unit_box = [None]*10
-<<<<<<< HEAD
             paired_values_csv = []
             paired_values_display = []
-=======
-            paired_values = []
-            returnValue = {}
->>>>>>> task-I96VCC-meterial-inspection-tools-joe-branch
             
             for i,unit in enumerate(self.UNIT_CHECKER):
                 response = modbus_client.read_holding_registers(0x0101, 1, unit = unit)
@@ -121,45 +116,18 @@ class DYP_SONAR():
                     if distance is not None:
                         dis[i] = format(distance/1000.,'.2f')
                         unit_box[i] = format(hex(unit))
-<<<<<<< HEAD
                     paired_values_display.append({unit_box[i]:dis[i]})
                     paired_values_csv.append({"distance":dis[i],"unit" : unit_box[i]})
                     logger.loginfo(paired_values_display)
                 else:
-=======
-                        returnValue[unit_box[i]] = dis[i]
-                    else: 
-                        dis[i] = None
-                        unit_box[i] = None
-                    paired_values.append({"distance":dis[i],"unit" : unit_box[i]})
-                if response.isError():
->>>>>>> task-I96VCC-meterial-inspection-tools-joe-branch
                     logger.loginfo("error")
                     logger.loginfo(response)
             
-<<<<<<< HEAD
             logger.loginfo(paired_values_display)
             return dis,unit_box,paired_values_display,paired_values_csv
 
         dis_input,unit_box,paired_values_display, paired_values_csv = loop_distance(self,modbus_client)
         #dis_input,unit_box,paired_values_display, paired_values_csv = loop_distance(self=DYP_SONAR,modbus_client=modbus_client)
-=======
-            # PROPOSED
-            # for i, unit in enumerate(DYP_SONAR.UNIT_CHECKER): # not sure if you intend to have this as a class or instance variable, but u declared as a class variable
-            #     response = modbus_client.read_holding_registers(0x0101, 1, unit = unit)
-            #     if not response.isError():
-            #         distance  = response.registers[0]
-            #         if distance is not None: # ignore when distance is not valid since dis[i] & unit_box[i] are already set to be None initially
-            #             dis[i] = format(distance/1000.,'.2f')
-            #             unit_box[i] = format(hex(unit))
-            #         paired_values.append({ "distance":dis[i], "unit" : unit_box[i] })
-            #     else: 
-            #         logger.loginfo("error")
-
-            return dis,unit_box,paired_values, returnValue
-
-        dis_input,unit_box,paired_values,returnValue = loop_distance(self=DYP_SONAR,modbus_client=modbus_client)
->>>>>>> task-I96VCC-meterial-inspection-tools-joe-branch
         #distance_image = print_distance(dis_input,unit_box)
         timestamp = datetime.datetime.now()
         header = ["timestamp", "distance", "unit"]
@@ -172,14 +140,8 @@ class DYP_SONAR():
 
             for entry in paired_values_csv:
                 writer.writerow([timestamp, entry["distance"], entry["unit"]])
-<<<<<<< HEAD
         #return print_distance(dis_input,unit_box)
         return paired_values_display
-=======
-        print_distance(dis_input,unit_box)
-        return returnValue
-    
->>>>>>> task-I96VCC-meterial-inspection-tools-joe-branch
  
     
     def scan(self, configs): 
