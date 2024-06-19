@@ -72,7 +72,7 @@ class InclinOperations:
     """
 
     AUTOLEVEL_INCLINOMETER_BAUDRATE = 115200
-    BAUDRATE_CHECKLIST = (9600,115200) 
+    BAUDRATE_CHECKLIST = (9600, 19200, 115200, 57600, 2400, 4800, 14400, 38400)
 
     def connect(configs):
         modbus_client: ModbusClient = None
@@ -149,6 +149,7 @@ class InclinSVT626T (InclinOperations):
         unit_id_constant = None
         for baudrate in self.BAUDRATE_CHECKLIST:
             configs.update({"baudrate":baudrate})
+            logger.loginfo(configs)
             for unit_id in self.UNIT_ID_CHECKLIST: 
                 temp_client = ModbusClient(**configs)
                 x,y = self.parse_reading(temp_client,unit_id)
@@ -331,8 +332,11 @@ class InclinChecker:
         #connect and scan merged
         self.state = InclinCheckerStates.SCANNING
         #self.modbus_client,self.unit_id= self.inclinometer_model.scan(self=self.inclinometer_model,configs = self.modbus_configs)
+        logger.loginfo("SCANNING...") # TEST
+        logger.loginfo(self.inclinometer_model.scan(self.modbus_configs)) # TEST
         self.modbus_client,self.unit_id= self.inclinometer_model.scan(self.modbus_configs)
         if self.modbus_client:
+            logger.loginfo("SCAN SUCCESSFUL") # TEST
             self.log_with_frontend(f'Scanned Inclinometer on baudrate: {self.modbus_configs["baudrate"]}', f'波特率 {self.modbus_configs["baudrate"]}')
             self.state = InclinCheckerStates.CONNECTED
             self.pub_configs.publish(json.dumps(self._get_current_inclin_settings()))

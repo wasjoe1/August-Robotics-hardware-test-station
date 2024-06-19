@@ -152,7 +152,7 @@ window.addEventListener('load', async function() {
 
         console.log("init-ed inclinometer")
     } catch (e) {
-        console.log(`failed to connect to ${element.getAttribute("component")}`)
+        console.log(`failed to connect to inclinometer`)
         console.log(e)
     }
 });

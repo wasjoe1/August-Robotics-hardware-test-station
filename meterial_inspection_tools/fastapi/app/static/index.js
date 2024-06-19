@@ -135,6 +135,7 @@ function refresh_page_once(cur_lang) {
         if (i == cur_lang) {
             for (let ele of arr[cur_lang]) { if (ele.classList.contains("hide")) { ele.classList.remove("hide") } } // unhide the new selected language
         } else {
+            console.log(arr[i])
             for (let ele of arr[i]) { if (!ele.classList.contains("hide")) { ele.classList.add("hide") } } // hide the new selected language
         }
     }

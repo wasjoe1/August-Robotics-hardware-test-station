@@ -50,14 +50,20 @@ async function onClickCommandBtn(element) {
 
         // execute srv vall
         const selectedValue = getValueFromSelectComponent("selected-id-value")
+        console.log("Changing unit id...")
         await executeSrvCall(formatSonarSrvCallData(
                 current_step,
                 buttonIdToButtonString[element.id],
                 selectedValue))
+        console.log("Unit id changed")
         
         // if successful, delete value from the set & add new value
         gSonars.clear()
+        console.log(`gSonars after clear():`) //TEST
+        console.log(gSonars) //TEST
         gSonars.add(selectedValue)
+        console.log(`gSonars after add(): ${gSonars.size}`) //TEST
+        console.log(gSonars) //TEST
     } catch (e) {
         console.error(e)
         console.log("Setting of Sonar unit id failed")
@@ -105,8 +111,11 @@ function formatSonarDisplayData(data) {
 function formatAndDisplaySonarBoxData(dataVal) {
     // ASSUMPTION: User is instructed to plug in the sonars and not plug in/out additional sonars per use
     // ASSUMPTION: data is in this format: {"0xfa": "0.06" , "_unit_id_": "_value_"}
+    console.log("data value to be displayed from ROS:") //TEST
     console.log(dataVal) // TEST: await for ROS test completion then del this
     for (const id_string in dataVal) {
+        console.log("gsonars referenced in displaying data") //TEST
+        console.log(gSonars)//TEST
         // check if its in the set, else add
         if (!gSonars.has(id_string)) { gSonars.add(id_string) }
 
@@ -118,6 +127,8 @@ function formatAndDisplaySonarBoxData(dataVal) {
 
     // check number of sonars 
     var set_id_container = document.getElementById("set-unit-id-container")
+    console.log("Sonars found:") //TEST
+    console.log(gSonars)
     if (gSonars.size == 1) {
         document.getElementById("current-unit-id").value = [...gSonars][0]
         if (set_id_container.classList.contains("hide")) { set_id_container.classList.remove("hide") }
@@ -134,6 +145,8 @@ function displayDataOnElement(options) {
     switch(topic) {
         // case "/sonar/topic_data_checker": there's no data checker topic
         case "/sonar/topic_data":
+            console.log("Data from ROS:") //TEST
+            console.log(dataVal) //TEST
             formatAndDisplaySonarBoxData(dataVal)
             break
         case "/sonar/topic_configs":
@@ -157,7 +170,7 @@ window.addEventListener('load', async function() {
         console.log("init sonar...") // log the init-ing component
 
         // Reset the set
-        gSonars = new Set()
+        gSonars.clear()
 
         // Set Current step
         setCurrentStep()
@@ -176,7 +189,7 @@ window.addEventListener('load', async function() {
 
         console.log("init-ed sonar")
     } catch (e) {
-        console.log(`failed to connect to ${element.getAttribute("component")}`)
+        console.log(`failed to connect to sonar`)
         console.log(e)
     }
 });

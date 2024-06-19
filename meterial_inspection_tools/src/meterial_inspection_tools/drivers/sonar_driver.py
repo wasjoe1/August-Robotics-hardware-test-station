@@ -107,7 +107,7 @@ class DYP_SONAR():
             dis = [None]*10
             unit_box = [None]*10
             paired_values_csv = []
-            paired_values_display = []
+            paired_values_display = {} # [{unit: val}, ...] => {unit: val, unit: val, unit: val....}
             
             for i,unit in enumerate(self.UNIT_CHECKER):
                 response = modbus_client.read_holding_registers(0x0101, 1, unit = unit)
@@ -116,7 +116,7 @@ class DYP_SONAR():
                     if distance is not None:
                         dis[i] = format(distance/1000.,'.2f')
                         unit_box[i] = format(hex(unit))
-                    paired_values_display.append({unit_box[i]:dis[i]})
+                    paired_values_display[unit_box[i]] = dis[i]
                     paired_values_csv.append({"distance":dis[i],"unit" : unit_box[i]})
                     logger.loginfo(paired_values_display)
                 else:
@@ -296,13 +296,11 @@ class SonarChecker:
     def _get_current_SONAR_settings(self):
         return {
             "baudrate": self.modbus_configs["baudrate"],
-            "ID" : self.unit_id,
             }
     
     def _get_current_SONAR_settings_chinese(self):
         return {
             "波特率": self.modbus_configs["baudrate"],
-            "ID": self.unit_id,
             }
 
     def scan(self):

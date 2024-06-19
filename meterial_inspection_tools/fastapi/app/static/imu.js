@@ -84,6 +84,23 @@ function formatImuDisplayData(data) {
     return {dataEle: container, dataArr : data}
 }
 
+function parseComponentData(data) {
+    try {
+        data = JSON.parse(data) // for configs & data, parsing of JSON is required
+        // if data is already a string, it will throw a syntax error
+        // i.e. JSON.parse("s") => error
+        //      JSON.parse('"OK"') => returns 'OK'
+    } catch (e) {
+        if (e instanceof SyntaxError) {
+            console.log(`data is already a valid JS object: ${data}`)
+            return data
+        }
+        console.error("An unexpected error occurred in parsing JSON data: " + e.message);
+        throw e
+    }
+    return data
+}
+
 // function create_ws(ip_addr, topic, onMessageFunc) created in index.js
 // function onMessageFunc(evt) needs to take in (evt) arg
 function displayDataOnElement(options) {
@@ -112,7 +129,7 @@ function displayDataOnElement(options) {
             ele.replaceChildren(dataEle)
             break
         default:
-            ele.textContent = compData
+            ele.textContent = parseComponentData(compData)
     }
 }
 
@@ -146,7 +163,7 @@ window.addEventListener('load', async function() {
 
         console.log("init-ed imu")
     } catch (e) {
-        console.log(`failed to connect to ${element.getAttribute("component")}`)
+        console.log(`failed to connect to imu`)
         console.log(e)
     }
 });

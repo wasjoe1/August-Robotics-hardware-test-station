@@ -95,10 +95,10 @@ class CB_VSMD114(CBOperations): #UNIT ID 1,3, # do not need to parse data,  #TOD
         data_ok_flag ==True 
         return data_ok_flag
     
-    def create_frame(cb_msg):
+    def create_frame(self, cb_msg):
         pass
     
-    def frame_shift(cb_msg_new):
+    def frame_shift(self, cb_msg_new):
         pass
 
     def parse_reading(self,modbus_client):
@@ -295,8 +295,9 @@ class CBChecker:
     unit_id = None
     configs_model = None
 
-    CB_DRIVER_MODEL_TABLE = { 
-        CB_BRITER.CB_TYPE: CB_BRITER,
+    CB_DRIVER_MODEL_TABLE = {
+        # TODO: for testing purpose, put the component that you want to test as the 1st line
+        CB_BRITER.CB_TYPE: CB_BRITER, # TODO: in this case VSMD is being tested
         CB_VSMD114.CB_TYPE: CB_VSMD114,
     }
 
@@ -398,7 +399,7 @@ class CBChecker:
                 with serial.Serial(port=self.modbus_configs["port"]) as ser:  
                     #logger.loginfo(self.modbus_client)
                     for i in range(4):
-                        cb_msg = self.cb_model.parse_reading(self=self.cb_model,modbus_client = self.modbus_client)
+                        cb_msg = self.cb_model.parse_reading(self=self.cb_model,modbus_client = self.modbus_client) # TODO: Ensure class & instance function & variable designs are considered
                         if cb_msg is not None:
                             self.pub_reading.publish(json.dumps(cb_msg))
                             self.cb_model.create_frame(self=self.cb_model,cb_msg=cb_msg)

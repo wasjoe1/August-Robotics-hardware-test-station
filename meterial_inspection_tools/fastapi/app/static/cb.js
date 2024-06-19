@@ -101,11 +101,10 @@ function displayDataOnElement(options) {
         case "/cb/topic_configs":
             var data_checker_container = document.getElementById("responseData-data_checker-container")
             if (dataVal["model"] == "BRITER") {
-                console.log(dataVal["model"])
-                if (data_checker_container.classList.contains("hide")) { ele.classList.remove("hide") } // unhide the NG/ G
+                if (data_checker_container.classList.contains("hide")) { data_checker_container.classList.remove("hide") } // unhide the NG/ G
             } else {
                 console.log(dataVal["model"])
-                if (!data_checker_container.classList.contains("hide")) { ele.classList.add("hide") } // hide the NG/ G
+                if (!data_checker_container.classList.contains("hide")) { data_checker_container.classList.add("hide") } // hide the NG/ G
             }
             ele.replaceChildren(dataEle)
             break
@@ -143,7 +142,7 @@ window.addEventListener('load', async function() {
 
         console.log("init-ed cb")
     } catch (e) {
-        console.log(`failed to connect to ${element.getAttribute("component")}`)
+        console.log(`failed to connect to cb`)
         console.log(e)
     }
 });
