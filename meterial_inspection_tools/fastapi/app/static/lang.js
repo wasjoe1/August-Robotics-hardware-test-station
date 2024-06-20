@@ -20,7 +20,7 @@ const step_to_text_dict = {
         "dataHeader": ["Data", "数据"],
         "dataValidityHeader": ["NG / G", "不好 / 好"],
         "commandButtonsHeader": ["Select Baud Rate", "选择波特率"],
-        "stateHeader": ["State", "系统情况"],
+        "stateHeader": ["State", "系统状态"],
         "userInfoHeader": ["User Information", "用户信息"],
         "instructionsHeader": ["Instructions", "操作指南"],
         // "responseData-instructions": ["", ""], // TODO
@@ -38,7 +38,7 @@ const step_to_text_dict = {
         "dataHeader": ["Data", "数据"],
         "dataValidityHeader": ["NG / G", "不好 / 好"],
         "commandButtonsHeader": ["Select Baud Rate", "选择波特率"],
-        "stateHeader": ["State", "系统情况"],
+        "stateHeader": ["State", "系统状态"],
         "userInfoHeader": ["User Information", "用户信息"],
         "instructionsHeader": ["Instructions", "操作指南"],
         // "responseData-instructions": ["", ""], // TODO
@@ -55,7 +55,7 @@ const step_to_text_dict = {
         "dataHeader": ["Data", "数据"],
         "dataValidityHeader": ["NG / G", "不好 / 好"],
         "commandButtonsHeader": ["Select Baud Rate", "选择波特率"],
-        "stateHeader": ["State", "系统情况"],
+        "stateHeader": ["State", "系统状态"],
         "userInfoHeader": ["User Information", "用户信息"],
         "instructionsHeader": ["Instructions", "操作指南"],
         // "responseData-instructions": ["", ""], // TODO
@@ -72,7 +72,7 @@ const step_to_text_dict = {
         "sonarPageBtn": ["Sonar", "超声波"],
         "configurationsHeader": ["Configurations", "读传感器配置"],
         "dataHeader": ["Data", "数据"],
-        "stateHeader": ["State", "系统情况"],
+        "stateHeader": ["State", "系统状态"],
         "userInfoHeader": ["User Information", "用户信息"],
         "instructionsHeader": ["Instructions", "操作指南"],
         // "responseData-instructions": ["", ""], // TODO

@@ -209,6 +209,10 @@ pre {
     padding: 0px;
     margin: 0px;
     border: 0px;
+    width: 100%;
+    white-space: pre-wrap; /* This property enables wrapping */
+    word-wrap: normal;
+    word-break: normal;
 }
 
 /* ------------------------------------------------------------------------------------------------ */
