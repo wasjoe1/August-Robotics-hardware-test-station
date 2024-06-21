@@ -1,20 +1,19 @@
 // import { lang } from './lang.js'
 // import { refresh_page_once_list } from './refresh_once.js'
 
+// Defined in lang.js:
+// step_to_text_dict
+
 // Defined in index.js:
 // ip_addr
 // current_step
 // regex
-
-// Set Current step
-setCurrentStep()
+// cur_lang // EN is 0, CN is 1
 
 // buttonIdToButtonString
 const buttonIdToButtonString = {
     "setDefaultBtn": "SET_DEFAULT",
 }
-
-console.log("init imu...")
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
@@ -26,6 +25,8 @@ console.log("init imu...")
 // function executeSrvCall(formattedData)
 // function create_ws(ip_addr, topic,  elementId, onMessageFunc) => onMessageFunc(evt, topic, elementId) is executed as such
 // function retrieveComponentData(component, data)
+// function refresh_page_once(l) => takes in cur_lang
+// function switch_lang()
 
 function formatImuSrvCallData(component, buttonString, baudrate) {
     var data =  {
@@ -59,9 +60,9 @@ const socketNameToElementId = {
     "/imu/topic_data": "responseData-data",
     "/imu/topic_data_checker": "responseData-data_checker",
     "/imu/topic_info": "responseData-info",
-    // "/imu/topic_info_chinese": "responseData-info_chinese",
+    "/imu/topic_info_chinese": "responseData-info_chinese",
     "/imu/topic_configs": "responseData-configs",
-    // "/imu/topic_configs_chinese": "responseData-configs_chinese",
+    "/imu/topic_configs_chinese": "responseData-configs_chinese",
 }
 
 function formatImuDisplayData(data) {
@@ -81,6 +82,23 @@ function formatImuDisplayData(data) {
         container.appendChild(p)
     }
     return {dataEle: container, dataArr : data}
+}
+
+function parseComponentData(data) {
+    try {
+        data = JSON.parse(data) // for configs & data, parsing of JSON is required
+        // if data is already a string, it will throw a syntax error
+        // i.e. JSON.parse("s") => error
+        //      JSON.parse('"OK"') => returns 'OK'
+    } catch (e) {
+        if (e instanceof SyntaxError) {
+            console.log(`data is already a valid JS object: ${data}`)
+            return data
+        }
+        console.error("An unexpected error occurred in parsing JSON data: " + e.message);
+        throw e
+    }
+    return data
 }
 
 // function create_ws(ip_addr, topic, onMessageFunc) created in index.js
@@ -106,13 +124,12 @@ function displayDataOnElement(options) {
             }
             break
         case "/imu/topic_data":
-            ele.replaceChildren(dataEle)
-            break
+        case "/imu/topic_configs_chinese":
         case "/imu/topic_configs":
             ele.replaceChildren(dataEle)
             break
         default:
-            ele.textContent = compData
+            ele.textContent = parseComponentData(compData)
     }
 }
 
@@ -122,6 +139,31 @@ function onMessageFunc(evt, topic, elementId) { // data is contained in evt.data
     return evt.data
 }
 
-for (const socketName in socketNameToElementId) {
-    create_ws(ip_addr, socketName, socketNameToElementId[socketName], onMessageFunc)
-}
+// ------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
+// INIT
+window.addEventListener('load', async function() {
+    try {
+        console.log("windows on load...")
+        console.log("init imu...")
+        // Set Current step
+        setCurrentStep()
+        
+        // Refresh the page (language setting)
+        refresh_page_once(cur_lang)
+    
+        // execute the service call
+        const initData = gComponentToData[current_step]
+        await executeSrvCall(formatSrvCallData(current_step, initData))
+
+        // open websockets
+        for (const socketName in socketNameToElementId) {
+            create_ws(ip_addr, socketName, socketNameToElementId[socketName], onMessageFunc)
+        }
+
+        console.log("init-ed imu")
+    } catch (e) {
+        console.log(`failed to connect to imu`)
+        console.log(e)
+    }
+});

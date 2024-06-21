@@ -21,9 +21,13 @@
 // import { lang } from './lang.js'
 // import { refresh_page_once_list } from './refresh_once.js'
 
+// Defined in lang.js:
+// step_to_text_dict
+
 // ip_addr is set
 // current_step is set
 // regex is set
+// cur_lang // EN is 0, CN is 1
 
 // TODO: Set Current step
 setCurrentStep()
@@ -47,6 +51,8 @@ console.log("init _component_...") // log the init-ing component
 // function formatSrvCallData(component, data)
 // function executeSrvCall(formattedData)
 // function create_ws(ip_addr, topic,  elementId, onMessageFunc) => onMessageFunc(evt, topic, elementId) is executed as such
+// function refresh_page_once(l) => takes in cur_lang
+// function switch_lang()
 
 //TODO
 function format_component_SrvCallData(component, _more_) { //TODO

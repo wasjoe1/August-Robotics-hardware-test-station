@@ -6,7 +6,8 @@ import rospy
 
 logger = rospy
 
-from pymodbus.client.sync import ModbusSerialClient as ModbusClient
+#from pymodbus.client.sync import ModbusSerialClient as ModbusClient
+from pymodbus.client import ModbusSerialClient as ModbusClient
 from assemble_tools.get_key import GetKey
 
 INSTRUCTION = """

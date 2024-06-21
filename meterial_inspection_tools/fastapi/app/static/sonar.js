@@ -1,15 +1,10 @@
 // import { lang } from './lang.js'
 // import { refresh_page_once_list } from './refresh_once.js'
 
-// Set Current step
-setCurrentStep()
-
 const buttonIdToButtonString = {
     "setDefaultBtn": "SET_DEFAULT",
 }
 
-// INIT Sonar
-console.log("init sonar...") // log the init-ing component
 const gSonars = new Set()
 
 // ------------------------------------------------------------------------------------------------
@@ -55,14 +50,20 @@ async function onClickCommandBtn(element) {
 
         // execute srv vall
         const selectedValue = getValueFromSelectComponent("selected-id-value")
+        console.log("Changing unit id...")
         await executeSrvCall(formatSonarSrvCallData(
                 current_step,
                 buttonIdToButtonString[element.id],
                 selectedValue))
+        console.log("Unit id changed")
         
         // if successful, delete value from the set & add new value
         gSonars.clear()
+        console.log(`gSonars after clear():`) //TEST
+        console.log(gSonars) //TEST
         gSonars.add(selectedValue)
+        console.log(`gSonars after add(): ${gSonars.size}`) //TEST
+        console.log(gSonars) //TEST
     } catch (e) {
         console.error(e)
         console.log("Setting of Sonar unit id failed")
@@ -77,9 +78,9 @@ const socketNameToElementId = {
     "/sonar/topic_data": "responseData-data",
     // "/sonar/topic_data_checker": "responseData-data_checker", // refer to ros_interface.py, for this ver, sonar does not have a data_checker topic
     "/sonar/topic_info": "responseData-info",
-    // "/sonar/topic_info_chinese": "responseData-info_chinese",
+    "/sonar/topic_info_chinese": "responseData-info_chinese",
     "/sonar/topic_configs": "responseData-configs",
-    // "/sonar/topic_configs_chinese": "responseData-configs_chinese",
+    "/sonar/topic_configs_chinese": "responseData-configs_chinese",
 }
 
 function formatSonarDisplayData(data) {
@@ -110,8 +111,11 @@ function formatSonarDisplayData(data) {
 function formatAndDisplaySonarBoxData(dataVal) {
     // ASSUMPTION: User is instructed to plug in the sonars and not plug in/out additional sonars per use
     // ASSUMPTION: data is in this format: {"0xfa": "0.06" , "_unit_id_": "_value_"}
+    console.log("data value to be displayed from ROS:") //TEST
     console.log(dataVal) // TEST: await for ROS test completion then del this
     for (const id_string in dataVal) {
+        console.log("gsonars referenced in displaying data") //TEST
+        console.log(gSonars)//TEST
         // check if its in the set, else add
         if (!gSonars.has(id_string)) { gSonars.add(id_string) }
 
@@ -123,6 +127,8 @@ function formatAndDisplaySonarBoxData(dataVal) {
 
     // check number of sonars 
     var set_id_container = document.getElementById("set-unit-id-container")
+    console.log("Sonars found:") //TEST
+    console.log(gSonars)
     if (gSonars.size == 1) {
         document.getElementById("current-unit-id").value = [...gSonars][0]
         if (set_id_container.classList.contains("hide")) { set_id_container.classList.remove("hide") }
@@ -139,9 +145,12 @@ function displayDataOnElement(options) {
     switch(topic) {
         // case "/sonar/topic_data_checker": there's no data checker topic
         case "/sonar/topic_data":
+            console.log("Data from ROS:") //TEST
+            console.log(dataVal) //TEST
             formatAndDisplaySonarBoxData(dataVal)
             break
         case "/sonar/topic_configs":
+        case "/sonar/topic_configs_chinese":
             ele.replaceChildren(dataEle)
             break
         default:
@@ -154,6 +163,33 @@ function onMessageFunc(evt, topic, elementId) { // data is contained in evt.data
     return evt.data
 }
 
-for (const socketName in socketNameToElementId) {
-    create_ws(ip_addr, socketName, socketNameToElementId[socketName], onMessageFunc)
-}
+// INIT
+window.addEventListener('load', async function() {
+    try {
+        console.log("windows on load...")
+        console.log("init sonar...") // log the init-ing component
+
+        // Reset the set
+        gSonars.clear()
+
+        // Set Current step
+        setCurrentStep()
+        
+        // Refresh the page (language setting)
+        refresh_page_once(cur_lang)
+    
+        // execute the service call
+        const initData = gComponentToData[current_step]
+        await executeSrvCall(formatSrvCallData(current_step, initData))
+
+        // open websockets
+        for (const socketName in socketNameToElementId) {
+            create_ws(ip_addr, socketName, socketNameToElementId[socketName], onMessageFunc)
+        }
+
+        console.log("init-ed sonar")
+    } catch (e) {
+        console.log(`failed to connect to sonar`)
+        console.log(e)
+    }
+});

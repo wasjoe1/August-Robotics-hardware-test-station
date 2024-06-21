@@ -11,6 +11,7 @@
   <script src="../static/bootstrap.min.js"></script>
   <link rel="stylesheet" href="../static/hr.css">
 
+  <script src="../static/lang.js"></script>
   <script src="../static/index.js"></script>
   <script src="../static/imu.js"></script>
 </head>
@@ -18,12 +19,13 @@
 <body onload="">
   <!-- Header portion -->
   <div class="header-container">
-    <h3 id="title"> 澳谷一站式检测工具 </h3>
-    <button type="button" class="btn btn-page btn-default" onclick="location.href='/'">主页</button>
-    <button component="imu" type="button" class="btn btn-page btn-default highlight" onclick="onClickComponentPageBtn(this)">IMU</button>
-    <button component="inclinometer" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">Inclinometer</button>
-    <button component="cb" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">CB [Encoder & motor driver]</button>
-    <button component="sonar" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">超声波</button>
+    <h3 id="title"> August Robotics All-In-One hardware testing station </h3>
+    <button id="homePageBtn" type="button" class="btn btn-page btn-default" onclick="location.href='/'">Home</button>
+    <button id="imuPageBtn" component="imu" type="button" class="btn btn-page btn-default highlight" onclick="onClickComponentPageBtn(this)">IMU</button>
+    <button id="inclinometerPageBtn" component="inclinometer" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">Inclinometer</button>
+    <button id="cbPageBtn" component="cb" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">CB [Encoder & motor driver]</button>
+    <button id="sonarPageBtn" component="sonar" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">Sonar</button>
+    <button id="switchLangBtn" type="button" class="btn btn-page btn-default" onclick="switch_lang()">中文</button>
     <hr />
   </div>
   
@@ -34,43 +36,64 @@
       <div class="container green-container left-content-container grid-col-span2">
         <!-- left-left-content -->
         <div>
-          <h4 class="display-content-header">Configurations</h4>
-          <div id="responseData-configs" class="display-text-div"></div>
-          <!-- <h4 class="display-content-header">Configurations (Chinese)</h4>
-          <div id="responseData-configs_chinese" class="display-text-div"></div> -->
-          <h4 class="display-content-header">Data</h4>
+          <h4 id="configurationsHeader" class="display-content-header">Configurations</h4>
+          <div id="responseData-configs" class="display-text-div english_element"></div>
+          <div id="responseData-configs_chinese" class="display-text-div chinese_element"></div>
+          <h4 id="dataHeader" class="display-content-header">Data</h4>
           <div id="responseData-data" class="display-text-div"></div>
         </div>
 
         <!-- left-mid-content -->
         <div>
-          <h4 class="display-content-header">NG / G</h4>
+          <h4 id="dataValidityHeader" class="display-content-header">NG / G</h4>
           <div id="responseData-data_checker" class="display-state-div"></div>
         </div>
 
         <!-- left-right-content -->
         <div class="left-right-content-container">
           <!-- buttons -->
-          <div class="display-content-header">Select Baud rate:</div>
-          <button class="btn btn-command btn-default" id="setDefaultBtn" baudrate="9600" onclick="onClickCommandBtn(this)">9600 baud</button>
-          <button class="btn btn-command btn-default" id="setDefaultBtn" baudrate="19200" onclick="onClickCommandBtn(this)">19200 baud</button>
-          <button class="btn btn-command btn-default" id="setDefaultBtn" baudrate="57600" onclick="onClickCommandBtn(this)">57600 baud</button>
-          <button class="btn btn-command btn-default" id="setDefaultBtn" baudrate="115200" onclick="onClickCommandBtn(this)">115200 baud</button>
+          <div id="commandButtonsHeader" class="display-content-header">Select Baud Rate:</div>
+          <button class="btn btn-command btn-default english_element" id="setDefaultBtn" baudrate="9600" onclick="onClickCommandBtn(this)">9600 baud</button>
+          <button class="btn btn-command btn-default english_element" id="setDefaultBtn" baudrate="19200" onclick="onClickCommandBtn(this)">19200 baud</button>
+          <button class="btn btn-command btn-default english_element" id="setDefaultBtn" baudrate="57600" onclick="onClickCommandBtn(this)">57600 baud</button>
+          <button class="btn btn-command btn-default english_element" id="setDefaultBtn" baudrate="115200" onclick="onClickCommandBtn(this)">115200 baud</button>
+          <button class="btn btn-command btn-default chinese_element" id="setDefaultBtn" baudrate="9600" onclick="onClickCommandBtn(this)">9600 波特率</button>
+          <button class="btn btn-command btn-default chinese_element" id="setDefaultBtn" baudrate="19200" onclick="onClickCommandBtn(this)">19200 波特率</button>
+          <button class="btn btn-command btn-default chinese_element" id="setDefaultBtn" baudrate="57600" onclick="onClickCommandBtn(this)">57600 波特率</button>
+          <button class="btn btn-command btn-default chinese_element" id="setDefaultBtn" baudrate="115200" onclick="onClickCommandBtn(this)">115200 波特率</button>
         </div>
       </div>
       
       <!-- right-content -->
       <div class="container green-container grid-col-span1">
-        <h4 class="display-content-header">State</h4>
+        <h4 id="stateHeader" class="display-content-header">State</h4>
         <div id="responseData-state" class="display-state-div"></div>
-        <h4 class="display-content-header">User Information</h4>
-        <div id="responseData-info" class="display-text-div"></div>
-        <!-- <h4 class="display-content-header">User Information (Chinese)</h4>
-        <div id="responseData-info_chinese" class="display-text-div"></div> -->
-        <h4 class="display-content-header">Instructions</h4>
-        <div id="responseData-instructions_english" class="display-text-div">TEST Lorem ipsum dolor sit amet, consectetur adipisicing elit. Veniam, excepturi repellat delectus optio laborum eligendi provident! Distinctio neque repellat enim sapiente iste unde ipsum, minima facilis rem sunt placeat expedita.</div>
-        <!-- <h4 class="display-content-header">Instructions (Chinese)</h4>
-        <div id="responseData-instructions_chinese" class="display-text-div"></div> -->
+        <h4 id="userInfoHeader" class="display-content-header">User Information</h4>
+        <div id="responseData-info" class="display-text-div english_element"></div>
+        <div id="responseData-info_chinese" class="display-text-div chinese_element"></div>
+        <h4 id="instructionsHeader" class="display-content-header">Instructions</h4>
+        <pre id="responseData-instructions_english" class="display-text-div english_element">
+0. Plug in IMU
+1. Click on IMU button (Ensure IMU is already plugged in else repeat from step 0)
+2. Observe readings (Configurations, Data, State, User Information)
+3. NG/G displays whether the IMU has valid readings
+4. Click on the required Baud rate (Only if the current baud rate is wrong/ invalid)
+5. Check new readings as needed
+6. Plug out the IMU USB from the microcontroller to disconnect
+* Ensure that the IMU is the only component plugged in
+* Do not plug in other hardware components while testing
+        </pre>
+        <pre id="responseData-instructions_chinese" class="display-text-div chinese_element">
+0. 插入IMU
+1. 点击IMU按钮（确保IMU已插入，否则从第0步重新开始）
+2. 观察读数（配置、数据、状态、用户信息）
+3. NG/G显示IMU是否有有效读数
+4. 点击所需的波特率（仅当当前波特率错误/无效时）
+5. 检查新的数据
+6. 从微控制器拔出IMU的USB以断开连接
+* 在测试过程中确保IMU是唯一插入的模块
+* 在测试过程中不要插入其他硬件模块          
+        </pre>
       </div>
     </div>
   </div>
