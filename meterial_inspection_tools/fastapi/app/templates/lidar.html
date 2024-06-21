@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>澳谷一站式检测工具</title>
+  <link rel="stylesheet" href="../static/bootstrap.min.css">
+  <script src="../static/jquery.min.js"></script>
+  <script src="../static/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="../static/hr.css">
+
+  <script src="../static/lang.js"></script>
+  <script src="../static/index.js"></script>
+  <script src="../static/lidar.js"></script>
+</head>
+
+<body onload="">
+  <!-- Header portion -->
+  <div class="header-container">
+    <h3 id="title"> August Robotics All-In-One hardware testing station </h3>
+    <button id="homePageBtn" type="button" class="btn btn-page btn-default" onclick="location.href='/'">Home</button> <!-- no component-->
+    <button id="imuPageBtn" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">IMU</button>
+    <button id="inclinometerPageBtn" component="inclinometer" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">Inclinometer</button>
+    <button id="cbPageBtn" component="cb" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">CB [Encoder & motor driver]</button>
+    <button id="sonarPageBtn" component="sonar" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">Sonar</button>
+    <button id="lidarPageBtn" component="lidar" type="button" class="btn btn-page btn-default highlight" onclick="onClickComponentPageBtn(this)">Lidar</button>
+    <button id="switchLangBtn" type="button" class="btn btn-page btn-default" onclick="switch_lang()">中文</button>
+    <hr />
+  </div>
+
+  <!-- Body portion -->
+  <div class="body-container">
+    <div class="content-container grid-3col-container">
+      <!-- left-content -->
+      <div class="container green-container left-content-container grid-col-span2">
+        <!-- left-left-content -->
+        <div>
+          <h4 id="configurationsHeader" class="display-content-header">Configurations</h4>
+          <div id="responseData-configs" class="display-text-div english_element"></div>
+          <div id="responseData-configs_chinese" class="display-text-div chinese_element"></div>
+          <h4 id="dataHeader" class="display-content-header">Data</h4>
+          <canvas id="responseData-data"></canvas>
+          <!-- <div id="responseData-data" class="display-text-div"></div> -->
+        </div>
+      </div>
+      
+      <!-- right-content -->
+      <div class="container green-container grid-col-span1">
+        <h4 id="stateHeader" class="display-content-header">State</h4>
+        <div id="responseData-state" class="display-state-div"></div>
+        <h4 id="userInfoHeader" class="display-content-header">User Information</h4>
+        <div id="responseData-info" class="display-text-div english_element"></div>
+        <div id="responseData-info_chinese" class="display-text-div chinese_element"></div>
+        <h4 id="instructionsHeader" class="display-content-header">Instructions</h4>
+        <pre id="responseData-instructions_english" class="display-text-div english_element">
+<!-- English instrcutions -->
+        </pre>
+        <pre id="responseData-instructions_chinese" class="display-text-div chinese_element">
+<!-- Chinese instrcutions -->
+        </pre>
+      </div>
+    </div>
+  </div>
+</body>

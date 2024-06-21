@@ -29,18 +29,12 @@
 // regex is set
 // cur_lang // EN is 0, CN is 1
 
-// TODO: Set Current step
-setCurrentStep()
-
 //TODO
 // buttonIdToButtonString
 const buttonIdToButtonString = {
     // "_btnId_": "_btn_strin_param_",
     // i.e. "setDefaultBtn": "SET_DEFAULT",
 }
-
-//TODO
-console.log("init _component_...") // log the init-ing component
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
@@ -98,44 +92,49 @@ const socketNameToElementId = {
 
 //TODO
 function formatImuDisplayData(data) { //TODO
-    data = retrieveComponentData(current_step, data)
-    //TODO
-    // data = data.split("\\n") 
-    // console.log(data)
-    // let charToRemove = '"'
-    // var regExToRemoveChar = new RegExp(charToRemove, 'g')
-    // data[0] = data[0].replace(regExToRemoveChar, '') // remove the " at the start
-    // data[data.length-1] = data[data.length-1].replace(regExToRemoveChar, '') // remove the " at the end
+    // TODO
+    // var container = undefined
+    // try {
+    //     data = JSON.parse(data)
+    // } catch (e) {
+    //     if (e instanceof SyntaxError) {
+    //         console.log(`Data is already a valid JS object: ${data}`)
+    //         return {dataEle: container, dataVal: data} // display data val as is in textcontent
+    //     }
+    //     console.error("An unexpected error occurred in parsing JSON data: " + e.message);
+    //     throw e
+    // }
 
-    //TODO
-    // var container = document.createElement("div")
-    // for (var i = 0; i < data.length; i++) {
-    //     var p = document.createElement("p")
-    //     p.textContent = data[i]
-    //     container.appendChild(p)
+    // TODO
+    // // for object/ array types, display each "prop: val" in block style
+    // if (typeof(data) == "object" && data != null) {
+    //     container = document.createElement("div")
+    //     for (var prop in data) {
+    //         var p = document.createElement("p")
+    //         p.textContent = `${prop}: ${data[prop]}`
+    //         container.appendChild(p)
+    //     }
     // }
 
     //TODO
-    return {dataEle: container, dataArr : data} //TODO if no ele container == undefined
+    return {dataEle: container, dataVal : data} //TODO if no ele container == undefined
 }
 
 function displayDataOnElement(options) {
     const {topic, data, ele} = options // use object destructuring
     const compData = retrieveComponentData(current_step, data) //TODO
-    const {dataEle, dataArr} = formatImuDisplayData(data) // contains element & dataArr //TODO
+    const {dataEle, dataVal} = formatImuDisplayData(compData) // contains element & dataArr //TODO
 
     //TODO
     switch(topic) { 
-        case "/imu/topic_data_checker":
-            if (dataArr[0] == 'OK') {
+        case "/inclinometer/topic_data_checker": //TODO
+            if (dataVal == 'OK') {
                 console.log("data is OK") // TEST
-                console.log(dataArr[0]) // TEST
                 ele.classList.remove("background-red")
                 ele.classList.add("background-green")
                 ele.textContent = "G"
             } else {
                 console.log("data is not OK") // TEST
-                console.log(dataArr[0]) // TEST
                 ele.classList.remove("background-green")
                 ele.classList.add("background-red")
                 ele.textContent = "NG"
@@ -158,7 +157,32 @@ function onMessageFunc(evt, topic, elementId) { // data is contained in evt.data
     return evt.data
 }
 
-//TODO
-for (const socketName in socketNameToElementId) {
-    create_ws(ip_addr, socketName, socketNameToElementId[socketName], onMessageFunc)
-}
+// ------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
+// INIT
+window.addEventListener('load', async function() {
+    try {
+        console.log("windows on load...")
+        console.log("init _component_...") // log the init-ing component
+
+        // Set Current step
+        setCurrentStep()
+        
+        // Refresh the page (language setting)
+        refresh_page_once(cur_lang)
+    
+        // execute the service call
+        const initData = gComponentToData[current_step]
+        await executeSrvCall(formatSrvCallData(current_step, initData))
+
+        // open websockets
+        for (const socketName in socketNameToElementId) {
+            create_ws(ip_addr, socketName, socketNameToElementId[socketName], onMessageFunc)
+        }
+
+        console.log("init-ed _component_")
+    } catch (e) {
+        console.log(`failed to connect to _component_`)
+        console.log(e)
+    }
+});

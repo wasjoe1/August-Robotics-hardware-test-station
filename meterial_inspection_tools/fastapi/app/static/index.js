@@ -126,7 +126,9 @@ function refresh_page_once(cur_lang) {
     // Change text content of headers
     var element_id_to_text_dict = step_to_text_dict[current_step]
     for (var eleId in element_id_to_text_dict) {
+        console.log(eleId)
         get_element_by_id(eleId).textContent = element_id_to_text_dict[eleId][cur_lang]
+        console.log(get_element_by_id(eleId).textContent)
     }
 
     // Hide/ Unhide eng or chi elements

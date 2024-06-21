@@ -74,7 +74,7 @@ class MeterialInspection():
         return res
 
     # -------------------------------------------------------------------------------------------------
-    # CALLBACKS
+    # Topic Callback
     # TODO Double check that subscribers can use the same cb func
     def topic_cb(self, msg, cb_args):
         print("call back component arg: ", cb_args["component"]) # should return 'imu', 'inclinometer', ...
@@ -87,7 +87,7 @@ class MeterialInspection():
         self.send_queue[cb_args["component"]][cb_args["topic"]].append(data_to_send)
 
     # -------------------------------------------------------------------------------------------------
-    # service calls
+    # Service calls
     def send_srv(self, srv):
         srv_dict = json.loads(srv)
         for component, params in srv_dict.items():
