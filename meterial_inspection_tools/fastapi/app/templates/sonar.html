@@ -9,46 +9,146 @@
   <link rel="stylesheet" href="../static/bootstrap.min.css">
   <script src="../static/jquery.min.js"></script>
   <script src="../static/bootstrap.min.js"></script>
-
   <link rel="stylesheet" href="../static/hr.css">
+
+  <script src="../static/lang.js"></script>
+  <script src="../static/index.js"></script>
   <script src="../static/sonar.js"></script>
 </head>
 
 <body onload="">
   <!-- Header portion -->
-  <div style="height:3%;width:100%;">
-    <h3 id="title"> 澳谷一站式检测工具 </h3>
-    <button type="button" class="btn btn-default" onclick="location.href='/'">主页</button>
-    <button type="button" class="btn btn-default" onclick="location.href='/step/imu'">IMU</button>
-    <button type="button" class="btn btn-default" onclick="location.href='/step/inclinometer'">Inclinometer</button>
-    <button type="button" class="btn btn-default" onclick="location.href='/step/cb'">CB [Encoder & motor driver]</button>
-    <button type="button" class="btn btn-default" onclick="location.href='/step/sonar'">超声波</button>
-    <button type="button" class="btn btn-default" onclick="location.href='/step/depth'">Depth Camera Sensor</button>
+  <div class="header-container">
+    <h3 id="title"> August Robotics All-In-One hardware testing station </h3>
+    <button id="homePageBtn" type="button" class="btn btn-page btn-default" onclick="location.href='/'">Home</button> <!-- no component-->
+    <button id="imuPageBtn" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">IMU</button>
+    <button id="inclinometerPageBtn" component="inclinometer" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">Inclinometer</button>
+    <button id="cbPageBtn" component="cb" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">CB [Encoder & motor driver]</button>
+    <button id="sonarPageBtn" component="sonar" type="button" class="btn btn-page btn-default highlight" onclick="onClickComponentPageBtn(this)">Sonar</button>
+    <button id="switchLangBtn" type="button" class="btn btn-page btn-default" onclick="switch_lang()">中文</button>
     <hr />
   </div>
   
   <!-- Body portion -->
-  <div class="flex-container" style="justify-content: space-between;">
-    <!-- left of body -->
-    <div>
-      <h4 class="display-content-header">State</h4>
-      <div id="responseData-state" class="display-content-div"></div>
-      <h4 id="readings" class="display-content-header">Configurations</h4>
-      <div id="responseData-configs" class="display-content-div"></div>
-      <h4 id="readings" class="display-content-header">Readings</h4>
-      <div id="responseData-data" class="display-content-div"></div>
-      <h4 class="display-content-header">Response information</h4>
-      <div id="responseData-info" class="display-content-div"></div>
-    </div>
+  <div class="body-container">
+    <div class="content-container grid-3col-container">
+      <!-- left-content -->
+      <div class="container green-container left-content-container grid-col-span2">
+        <!-- left-left-content -->
+        <div>
+          <h4 id="configurationsHeader" class="display-content-header">Configurations</h4>
+          <div id="responseData-configs" class="display-text-div english_element"></div>
+          <div id="responseData-configs_chinese" class="display-text-div chinese_element"></div>
+          <h4 id="dataHeader" class="display-content-header">Data</h4>
+          <div id="responseData-data" class="display-text-div">
+            <!-- top of lionel -->
+            <div class="flex-container-row-center">
+              <div class="lionel-sonar-box background-red"><div>0xe6</div><div id="0xe6-value">NONE</div></div>
+              <div class="lionel-sonar-box background-red"><div>0xe8</div><div id="0xe8-value">NONE</div></div>
+              <div class="lionel-sonar-box background-red"><div>0xd0</div><div id="0xd0-value">NONE</div></div>
+            </div>
+            <!-- middle lionel -->
+            <div class="flex-container-row">
+              <!-- middle left of lionel -->
+              <div class="flex-container-col-space-evenly">
+                <div class="lionel-sonar-box background-red"><div>0xd2</div><div id="0xd2-value">NONE</div></div>
+                <div class="lionel-sonar-box background-red"><div>0xec</div><div id="0xec-value">NONE</div></div>
+              </div>
+              <!-- lionel -->
+              <div id="lionel-machine-container">
+                <div id="lionel-machine" class="flex-container-col-space-between-center">
+                  <div id="lionel-machine-front">FRONT</div>
+                  <div id="lionel-machine-back">BACK</div>
+                </div>
+              </div>
+              <!-- middle right of lionel -->
+              <div class="flex-container-col-space-evenly">
+                <div class="lionel-sonar-box background-red"><div>0xfa</div><div id="0xfa-value">NONE</div></div>
+                <div class="lionel-sonar-box background-red"><div>0xfe</div><div id="0xfe-value">NONE</div></div>
+              </div>
+            </div>
+            <!-- bottom of lionel -->
+            <div class="flex-container-row-center">
+              <div class="lionel-sonar-box background-red disabled"><div>0xe2</div><div id="0xe2-value">NONE</div></div>
+              <div class="lionel-sonar-box background-red"><div>0xe4</div><div id="0xe4-value">NONE</div></div>
+              <div class="lionel-sonar-box background-red disabled"><div>0xea</div><div id="0xea-value">NONE</div></div>
+            </div>
+            
+            <!-- extra address -->
+            <div class="lionel-sonar-box background-red"><div>0xff</div><div id="0xff-value">NONE</div></div>
+          </div>
+        </div>
 
-    <!-- right of body -->
-    <div style="display: flex; flex-direction: column; justify-content: space-between; background-color: darksalmon;">
-      <!-- buttons -->
-      <button class="btn btn-default" id="scanBtn" onclick="onClickCommandBtn(this)">Scan</button>
-      <button class="btn btn-default" id="connectBtn" onclick="onClickCommandBtn(this)">Connect</button>
-      <button class="btn btn-default" id="disconnectBtn" onclick="onClickCommandBtn(this)">Disconnect</button>
-      <button class="btn btn-default" id="setDefaultBtn" onclick="onClickCommandBtn(this)">Set default</button>
-      <button class="btn btn-default" id="saveBtn" onclick="onClickCommandBtn(this)">Save</button>
+        <!-- left-right-content -->
+        <div id="set-unit-id-container" class="left-right-content-container hide">
+          <!-- buttons -->
+          <div id="set-unit-id-header" class="display-content-header">Set Unit ID:</div>
+          <div class="form-group">
+            <label id="current-unit-id-label" for="current-unit-id">Current Unit ID</label>
+            <input type="text" class="form-control" id="current-unit-id" disabled readonly>
+          </div>
+          <div class="form-group">
+            <label id="selected-id-value-label" for="selected-id-value">Select Unit ID</label>
+            <select class="custom-select" id="selected-id-value">
+              <option value="false" selected disabled>Unit ID</option>
+              <option value="0xe6">0xe6</option> <!-- Add disabled to make the option unselectable-->
+              <option value="0xe8">0xe8</option>
+              <option value="0xd0">0xd0</option>
+              <option value="0xfa">0xfa</option>
+              <option value="0xfe">0xfe</option>
+              <option value="0xea">0xea</option>
+              <option value="0xe4">0xe4</option>
+              <option value="0xe2">0xe2</option>
+              <option value="0xd2">0xd2</option>
+              <option value="0xec">0xec</option>
+              <option id="default-value" value="0xff">0xff (default)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <button class="btn btn-outline-secondary" id="setDefaultBtn" onclick="onClickCommandBtn(this)">Set</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- right-content -->
+      <div class="container green-container grid-col-span1">
+        <h4 id="stateHeader" class="display-content-header">State</h4>
+        <div id="responseData-state" class="display-state-div"></div>
+        <h4 id="userInfoHeader" class="display-content-header">User Information</h4>
+        <div id="responseData-info" class="display-text-div english_element"></div>
+        <div id="responseData-info_chinese" class="display-text-div chinese_element"></div>
+        <h4 id="instructionsHeader" class="display-content-header">Instructions</h4>
+        <pre id="responseData-instructions_english" class="display-text-div english_element">
+0. Plug in Sonar (Ensure the Sonar devices that you want to test are pre-connected to the USB)
+1. Click on Sonar button (Ensure Sonar is already plugged in else repeat from step 0)
+2. Observe readings (Configurations, Data, State, User Information)
+3. To change the current unit ID:
+  a. Select a new Unit ID and click the set button (This is only available iff there is 1 Sonar device connected to the system)
+  b. Reload the page
+4. Check new readings as needed
+5. Plug out the Sonar USB from the microcontroller to disconnect
+* Ensure that the Sonar is the only component plugged in
+* Do not plug in other hardware components while testing
+* 0xe2 & 0xea are unit IDs for legacy Lionels
+* 0xff is the factory default Unit ID of Sonar devices
+* when data is detected for a Sonar device, the data is displayed and the background is changed from red to white          
+        </pre>
+        <pre id="responseData-instructions_chinese" class="display-text-div chinese_element">
+0. 插入超声波（确保要测试的超声波设备都已预先连接到USB）
+1. 点击超声波按钮（确保超声波已插入，否则从第0步重新开始）
+2. 观察读数（配置、数据、状态、用户信息）
+3. 若要更改当前设备地址:
+  a. 切换到新的设备地址并点击“设置”按钮（仅当系统中仅连接1个超声波设备时可用）
+  b. 重新加载页面
+4. 检查新的数据
+5. 从微控制器拔出超声波的USB以断开连接
+* 确保CB是唯一插入的模块
+* 测试过程中不要插入其他硬件模块
+* 0xe2和0xea是旧版Lionels的设备地址
+* 0xff是超声波设备的出厂默认设备地址
+* 当检测到超声波设备的数据时，数据将显示并且背景从红色变为白色          
+        </pre>
+      </div>
     </div>
   </div>
 </body>

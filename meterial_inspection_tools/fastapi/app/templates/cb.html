@@ -9,53 +9,88 @@
   <link rel="stylesheet" href="../static/bootstrap.min.css">
   <script src="../static/jquery.min.js"></script>
   <script src="../static/bootstrap.min.js"></script>
-
   <link rel="stylesheet" href="../static/hr.css">
+
+  <script src="../static/lang.js"></script>
+  <script src="../static/index.js"></script>
   <script src="../static/cb.js"></script>
 </head>
 
 <body onload="">
   <!-- Header portion -->
-  <div style="height:3%;width:100%;">
-    <h3 id="title"> 澳谷一站式检测工具 </h3>
-    <button type="button" class="btn btn-default" onclick="location.href='/'">主页</button>
-    <button type="button" class="btn btn-default" onclick="location.href='/step/imu'">IMU</button>
-    <button type="button" class="btn btn-default" onclick="location.href='/step/inclinometer'">Inclinometer</button>
-    <button type="button" class="btn btn-default" onclick="location.href='/step/cb'">CB [Encoder & motor driver]</button>
-    <button type="button" class="btn btn-default" onclick="location.href='/step/sonar'">超声波</button>
-    <button type="button" class="btn btn-default" onclick="location.href='/step/depth'">Depth Camera Sensor</button>
+  <div class="header-container">
+    <h3 id="title"> August Robotics All-In-One hardware testing station </h3>
+    <button id="homePageBtn" type="button" class="btn btn-page btn-default" onclick="location.href='/'">Home</button> <!-- no component-->
+    <button id="imuPageBtn" component="imu" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">IMU</button>
+    <button id="inclinometerPageBtn" component="inclinometer" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">Inclinometer</button>
+    <button id="cbPageBtn" component="cb" type="button" class="btn btn-page btn-default highlight" onclick="onClickComponentPageBtn(this)">CB [Encoder & motor driver]</button>
+    <button id="sonarPageBtn" component="sonar" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">Sonar</button>
+    <button id="switchLangBtn" type="button" class="btn btn-page btn-default" onclick="switch_lang()">中文</button>
     <hr />
   </div>
   
   <!-- Body portion -->
-  <div class="flex-container" style="justify-content: space-between;">
-    <!-- left of body -->
-    <div>
-      <h4 class="display-content-header">State</h4>
-      <div id="responseData-state" class="display-content-div"></div>
-      <h4 id="readings" class="display-content-header">Configurations</h4>
-      <div id="responseData-configs" class="display-content-div"></div>
-      <h4 id="readings" class="display-content-header">Readings</h4>
-      <div id="responseData-data" class="display-content-div"></div>
-      <h4 class="display-content-header">Response information</h4>
-      <div id="responseData-info" class="display-content-div"></div>
-    </div>
+  <div class="body-container">
+    <div class="content-container grid-3col-container">
+      <!-- left-content -->
+      <div class="container green-container left-content-container grid-col-span2">
+        <!-- left-left-content -->
+        <div>
+          <h4 id="configurationsHeader" class="display-content-header">Configurations</h4>
+          <div id="responseData-configs" class="display-text-div english_element"></div>
+          <div id="responseData-configs_chinese" class="display-text-div chinese_element"></div>
+          <h4 id="dataHeader" class="display-content-header">Data</h4>
+          <div id="responseData-data" class="display-text-div"></div>
+        </div>
 
-    <!-- middle of body -->
-    <div style="display: flex; flex-direction: column; background-color: darksalmon;">
-      <!-- buttons -->
-      <button class="btn btn-default" id="VSMDBtn" parameter="VSMD" onclick="onClickSetParamBtn(this)">VSMD</button>
-      <button class="btn btn-default" id="BRITERBtn" parameter="BRITER" onclick="onClickSetParamBtn(this)">BRITER</button>
-    </div>
+        <!-- left-mid-content -->
+        <div id="responseData-data_checker-container" class="hide">
+          <h4 id="dataValidityHeader" class="display-content-header">NG / G</h4>
+          <div id="responseData-data_checker" class="display-state-div"></div>
+        </div>
 
-    <!-- right of body -->
-    <div style="display: flex; flex-direction: column; justify-content: space-between; background-color: darksalmon;">
-      <!-- buttons -->
-      <button class="btn btn-default" id="scanBtn" onclick="onClickCommandBtn(this)">Scan</button>
-      <button class="btn btn-default" id="connectBtn" onclick="onClickCommandBtn(this)">Connect</button>
-      <button class="btn btn-default" id="disconnectBtn" onclick="onClickCommandBtn(this)">Disconnect</button>
-      <button class="btn btn-default" id="setDefaultBtn" onclick="onClickCommandBtn(this)">Set default</button>
-      <button class="btn btn-default" id="saveBtn" onclick="onClickCommandBtn(this)">Save</button>
+        <!-- left-right-content -->
+        <div class="left-right-content-container">
+          <!-- buttons -->
+          <div id="commandButtonsHeader" class="display-content-header">Select Unit ID:</div>
+          <button class="btn btn-command btn-default" id="setDefaultBtn" unitid="1" onclick="onClickCommandBtn(this)">1</button>
+          <button class="btn btn-command btn-default" id="setDefaultBtn" unitid="2" onclick="onClickCommandBtn(this)">2</button>
+          <button class="btn btn-command btn-default" id="setDefaultBtn" unitid="3" onclick="onClickCommandBtn(this)">3</button>
+          <button class="btn btn-command btn-default" id="setDefaultBtn" unitid="4" onclick="onClickCommandBtn(this)">4</button>
+        </div>
+      </div>
+      
+      <!-- right-content -->
+      <div class="container green-container grid-col-span1">
+        <h4 id="stateHeader" class="display-content-header">State</h4>
+        <div id="responseData-state" class="display-state-div"></div>
+        <h4 id="userInfoHeader" class="display-content-header">User Information</h4>
+        <div id="responseData-info" class="display-text-div english_element"></div>
+        <div id="responseData-info_chinese" class="display-text-div chinese_element"></div>
+        <h4 id="instructionsHeader" class="display-content-header">Instructions</h4>
+        <pre id="responseData-instructions_english" class="display-text-div english_element">
+0. Plug in CB
+1. Click on CB button (Ensure CB is already plugged in else repeat from step 0)
+2. Observe readings (Configurations, Data, State, User Information)
+3. NG/G displays whether the BRITER has valid readings (This is not available when only VSMD is connected)
+4. Click on the required Unit ID (Only if the current Unit ID is wrong/ invalid)
+5. Check new readings as needed
+6. Plug out the CB USB from the microcontroller to disconnect
+* Ensure that the CB is the only component plugged in
+* Do not plug in other hardware components while testing          
+        </pre>
+        <pre id="responseData-instructions_chinese" class="display-text-div chinese_element">
+0. 插入CB
+1. 点击CB按钮（确保CB已插入，否则从第0步重新开始）
+2. 观察读数（配置、数据、状态、用户信息）
+3. NG/G显示BRITER是否有有效读数（仅当仅连接VSMD时不可用）
+4. 点击所需的设备地址（仅当当前设备地址错误/无效时）
+5. 检查新的数据
+6. 从微控制器拔出CB的USB以断开连接
+* 确保CB是唯一插入的模块
+* 测试过程中不要插入其他硬件模块          
+        </pre>
+      </div>
     </div>
   </div>
 </body>

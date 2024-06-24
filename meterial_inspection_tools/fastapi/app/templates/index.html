@@ -11,16 +11,32 @@
   <script src="../static/bootstrap.min.js"></script>
   
   <link rel="stylesheet" href="../static/hr.css">
+  <script src="../static/lang.js"></script>
+  <script src="../static/index.js"></script>
 </head>
 
 <body onload="">
-    <div style="height:3%;width:100%;float:left;">
-        <h3 id="title"> 澳谷一站式检测工具 </h3>
-        <button type="button" class="btn btn-default" onclick="location.href='/'">主页</button>
-        <button type="button" class="btn btn-default" onclick="location.href='/step/imu'">IMU</button>
-        <button type="button" class="btn btn-default" onclick="location.href='/step/inclinometer'">Inclinometer</button>
-        <button type="button" class="btn btn-default" onclick="location.href='/step/cb'">CB [Encoder & motor driver]</button>
-        <button type="button" class="btn btn-default" onclick="location.href='/step/sonar'">超声波</button>
-        <button type="button" class="btn btn-default" onclick="location.href='/step/depth'">Depth Camera Sensor</button>
-    </div>
+  <!-- Header portion -->
+  <div class="header-container">
+    <h3 id="title"> August Robotics All-In-One hardware testing station </h3>
+    <button id="homePageBtn" type="button" class="btn btn-page btn-default highlight" onclick="location.href='/'">Home</button>
+    <button id="imuPageBtn" component="imu" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">IMU</button>
+    <button id="inclinometerPageBtn" component="inclinometer" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">Inclinometer</button>
+    <button id="cbPageBtn" component="cb" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">CB [Encoder & motor driver]</button>
+    <button id="sonarPageBtn" component="sonar" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">Sonar</button>
+    <button id="switchLangBtn" type="button" class="btn btn-page btn-default" onclick="switch_lang()">中文</button>
+    <hr />
+  </div>
+  <pre id="responseData-instructions_english" class="display-text-div english_element">
+0. Before clicking on any of the component buttons, ensure that you've plugged in the component. This is because connection to the component is initiated once the button is clicked
+1. click on the English/ 中文 button to switch between chinese & english language
+2. Ensure 1 USB of each component is connected to the micro-controller at any point of time during testing
+3. Do not insert extra components unless instructed to do so during testing    
+  </pre>
+  <pre id="responseData-instructions_chinese" class="display-text-div chinese_element">
+0. 在点击任何模块按钮之前，请确保已插入模块。因为一旦点击按钮，将会开始连接模块
+1. 点击英文/中文按钮以切换中英文
+2. 在测试过程中，确保每个模块的1个USB始终连接到微控制器
+3. 除非在测试过程中有指示，否则不要插入额外的模块    
+  </pre>
 </body>

@@ -1,6 +1,6 @@
 #Request
 string button
-string parameter
+string baudrate
 ---
 #Response
 bool accepted

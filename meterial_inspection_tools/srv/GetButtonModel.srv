@@ -1,6 +1,6 @@
 #Request
 string button
-string parameter
+string model
 ---
 #Response
 bool accepted

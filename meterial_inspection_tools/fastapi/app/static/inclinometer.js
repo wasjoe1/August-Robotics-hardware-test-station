@@ -1,114 +1,158 @@
 // import { lang } from './lang.js'
 // import { refresh_page_once_list } from './refresh_once.js'
 
-var ws_json
-var hostname
-var ip_addr = document.location.hostname
-var download_data
+// Defined in index.js:
+// ip_addr
+// current_step
+// regex
 
-var is_gs
-
-var url = window.location.href
-const regex = "http://(.*)/step/(.*)"
-const found = url.match(regex)
-current_step = found[2]
-console.log("current step: ", current_step)
-
-gParam = undefined
-gSelectedComponentElement = undefined
-
-const buttonDict = {
-    "scanBtn": "SCAN",
-    "connectBtn": "CONNECT",
-    "disconnectBtn": "DISCONNECT",
+const buttonIdToButtonString = {
     "setDefaultBtn": "SET_DEFAULT",
-    "saveBtn": "SAVE",
 }
-
-console.log("inclinometer")
 
 // ------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
 // Functions
-function parseStringToInt(str) {
-    try {
-        return parseInt(str)
-    } catch (e) {
-        console.log("Parsing of String to Int failed")
-        console.log(e)
-        throw e
-    }
-}
+// Defined in index.js:
+// function parseStringToInt(str)
+// function redirectToPage(page)
+// function formatSrvCallData(component, data)
+// function executeSrvCall(formattedData)
+// function create_ws(ip_addr, topic,  elementId, onMessageFunc) => onMessageFunc(evt, topic, elementId) is executed as such
+// function retrieveComponentData(component, data)
 
-function createCmdData(buttonString, param) {
-    return {
+function formatInclinometerSrvCallData(component, buttonString, baudrate) {
+    var data = {
         button: buttonString,
-        parameter: "", // TODO: might need param in the future
+        baudrate: baudrate,
     }
-}
-
-// TODO: create a web socket manager class to hide all these under the hood implementation (connections, create, get, clear)
-var gAll_ws_connections = []
-
-function create_ws(ip_addr, route, elementId) {
-    try {
-        const ws = new WebSocket("ws://" + ip_addr + route) // route == /inclinometer_smt
-        ws.addEventListener('open', function(event) {
-            console.log(`${route} socket was opended`)
-            ws.send('Hello ws data!');
-        });
-        ws.onmessage = function(evt) {    
-            document.getElementById(elementId).textContent = evt.data 
-            return evt.data
-        }
-        gAll_ws_connections.push(ws)
-    } catch (e) {
-        console.log(`Failed to create web socket for ${route}`)
-        console.error(e)
-    }
-}
-
-function clear_all_ws() {
-    for (const ws in gAll_ws_connections) {
-        ws.close()
-    }
-}
-
-function executeCommand(cmd) {
-    console.log(cmd)
-
-    var cmd_dict = {}
-    cmd_dict[current_step] = cmd
-    cmd_str = JSON.stringify(cmd_dict) // i.e. {inclinometer: {button:__, parameter:__}}
-    console.log("send cmd: " + cmd_str)
-    var url = "http://" + ip_addr + "/command/" + cmd_str
-    var request = new XMLHttpRequest()
-    request.open("GET", url)
-    request.send()
+    data = formatSrvCallData(component, data)
+    return data
 }
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
 // onClickEvents
-function onClickCommandBtn(element) {
-    executeCommand(createCmdData(buttonDict[element.id]))    
+async function onClickCommandBtn(element) {
+    try {
+        await executeSrvCall(formatInclinometerSrvCallData(
+                current_step,
+                buttonIdToButtonString[element.id],
+                element.getAttribute("index")))
+    } catch (e) {
+        console.error(e)
+        console.log("Setting of Inclinometer baud rate failed")
+    }
 }
-
-// TODO: create an event s.t. when page changes, clear all web sockets
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
 // SOCKET CONFIGS
-// open web socket connection for /data (inclinometer data) => for the inclinometer readings
-create_ws(ip_addr, "/inclinometer/data", "responseData-data")
+const socketNameToElementId = {
+    "/inclinometer/topic_state": "responseData-state",
+    "/inclinometer/topic_data": "responseData-data",
+    "/inclinometer/topic_data_checker": "responseData-data_checker",
+    "/inclinometer/topic_info": "responseData-info",
+    "/inclinometer/topic_info_chinese": "responseData-info_chinese",
+    "/inclinometer/topic_configs": "responseData-configs",
+    "/inclinometer/topic_configs_chinese": "responseData-configs_chinese",
+}
+
+function formatInclinometerDisplayData(data) {
+    var container = undefined
+    try {
+        data = JSON.parse(data) // for configs & data, parsing of JSON is required
+        // if data is already a string, it will throw a syntax error
+        // i.e. JSON.parse("s") => error
+        //      JSON.parse('"OK"') => returns 'OK'
+    } catch (e) {
+        if (e instanceof SyntaxError) {
+            console.log(`data is already a valid JS object: ${data}`)
+            return {dataEle: container, dataVal: data}
+        }
+        console.error("An unexpected error occurred in parsing JSON data: " + e.message);
+        throw e
+    }
+
+    if (typeof(data) == "object" && data != null) {
+        container = document.createElement("div")
+        for (var prop in data) {
+            var p = document.createElement("p")
+            p.textContent = `${prop}: ${data[prop]}`
+            container.appendChild(p)
+        }
+    }
+    return {dataEle: container, dataVal: data}
+}
+
+function displayDataOnElement(options) {
+    const {topic, data, ele} = options // use object destructuring
+    const compData = retrieveComponentData(current_step, data)
+    const {dataEle, dataVal} = formatInclinometerDisplayData(compData)
+
+    //TODO
+    switch(topic) {
+        case "/inclinometer/topic_data_checker": //TODO
+            if (dataVal == 'OK') {
+                console.log("data is OK") // TEST
+                ele.classList.remove("background-red")
+                ele.classList.add("background-green")
+                ele.textContent = "G"
+            } else {
+                console.log("data is not OK") // TEST
+                ele.classList.remove("background-green")
+                ele.classList.add("background-red")
+                ele.textContent = "NG"
+            }
+            break
+        case "/inclinometer/topic_data": //TODO
+            var container = document.createElement("div")
+            for (var prop in dataVal) {
+                var p = document.createElement("p")
+                p.textContent = `${prop == 0 ? 'x' : 'y'}: ${dataVal[prop]}`
+                container.appendChild(p)
+            }
+            ele.replaceChildren(container)
+            break
+        case "/inclinometer/topic_configs_chinese":
+        case "/inclinometer/topic_configs":
+            ele.replaceChildren(dataEle)
+            break
+        default:
+            ele.textContent = compData
+    }
+}
+
+function onMessageFunc(evt, topic, elementId) { // data is contained in evt.data
+    displayDataOnElement({topic:topic, data:evt.data, ele:document.getElementById(elementId)})
+    return evt.data
+}
 
 // ------------------------------------------------------------------------------------------------
-// open web socket connection for /state => for the current state
-create_ws(ip_addr, "/inclinometer/state", "responseData-state")
-
 // ------------------------------------------------------------------------------------------------
-// open web socket connection for /info => for user status
-create_ws(ip_addr, "/inclinometer/info", "responseData-info")
+// INIT
+window.addEventListener('load', async function() {
+    try {
+        console.log("windows on load...")
+        console.log("init inclinometer...")
+        // Set Current step
+        setCurrentStep()
+        
+        // Refresh the page (language setting)
+        refresh_page_once(cur_lang)
+    
+        // execute the service call
+        const initData = gComponentToData[current_step]
+        await executeSrvCall(formatSrvCallData(current_step, initData))
 
-// ------------------------------------------------------------------------------------------------
-// open web socket connection for /configs => for user status
-create_ws(ip_addr, "/inclinometer/configs", "responseData-configs")
+        // open websockets
+        for (const socketName in socketNameToElementId) {
+            create_ws(ip_addr, socketName, socketNameToElementId[socketName], onMessageFunc)
+        }
+
+        console.log("init-ed inclinometer")
+    } catch (e) {
+        console.log(`failed to connect to inclinometer`)
+        console.log(e)
+    }
+});
