@@ -244,7 +244,7 @@ class YdlidarChecker:
     def get_laserscan(self):
         laserscan_one_message_data = self.ydliar_model.get_laserscan()
         self.log_with_frontend("one frame of laserscan data captured", "以获取激光扫描数据")
-        self.pub_reading_laserscan.publish(laserscan_one_message_data)
+        self.pub_reading_laserscan.publish(laserscan_one_message_data) # PUBLISHING laserscan data
         self.log_with_frontend("one frame of laserscan data published", "以发出laserscan data")
         return True
 
@@ -253,7 +253,7 @@ class YdlidarChecker:
         formatted_pointcloud = self.ydliar_model.get_pointcloud(laserscan_one_message_data)
         frontend_formatted_pointcloud = self.ydliar_model.formatting_pointcloud(formatted_pointcloud)
         logger.loginfo(frontend_formatted_pointcloud) 
-        self.pub_reading_pointcloud.publish(frontend_formatted_pointcloud)
+        self.pub_reading_pointcloud.publish(frontend_formatted_pointcloud) # PUBLISHING pointcloud data
         self.log_with_frontend("one frame of pointcloud data published", "以发出pointcloud data")
         return formatted_pointcloud
     

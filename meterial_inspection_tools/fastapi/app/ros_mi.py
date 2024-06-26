@@ -9,12 +9,14 @@ from rospy_message_converter.message_converter import convert_ros_message_to_dic
 from boothbot_msgs.srv import (Command, CommandRequest)
 from meterial_inspection_tools.srv import (GetButtonBaudrate, GetButtonBaudrateRequest) # IMU, inclinometer
 from meterial_inspection_tools.srv import (GetButtonUnitID, GetButtonUnitIDRequest) # CB, Sonar
+from meterial_inspection_tools.srv import (GetButtonModel, GetButtonModelRequest) # lidar
 
 ServiceRequestTypes = {
     "imu": GetButtonBaudrateRequest,
     "inclinometer": GetButtonBaudrateRequest,
     "cb": GetButtonUnitIDRequest,
     "sonar": GetButtonUnitIDRequest,
+    "lidar": GetButtonModelRequest,
 }
 
 class MeterialInspection():
@@ -73,7 +75,7 @@ class MeterialInspection():
         return res
 
     # -------------------------------------------------------------------------------------------------
-    # CALLBACKS
+    # Topic Callback
     # TODO Double check that subscribers can use the same cb func
     def topic_cb(self, msg, cb_args):
         print("call back component arg: ", cb_args["component"]) # should return 'imu', 'inclinometer', ...
@@ -86,14 +88,18 @@ class MeterialInspection():
         self.send_queue[cb_args["component"]][cb_args["topic"]].append(data_to_send)
 
     # -------------------------------------------------------------------------------------------------
-    # service calls
+    # Service calls
     def send_srv(self, srv):
         srv_dict = json.loads(srv)
         for component, params in srv_dict.items():
             logger.loginfo(f"Sending srv for {component}...")
             try:
+                logger.loginfo("Before getting the command type...") # TEST
                 command = ServiceRequestTypes[component]() # get the srv req object
+                logger.loginfo("After getting the command type") # TEST
                 for paramName, val in params.items():
+                    logger.loginfo(paramName) # TEST
+                    logger.loginfo(val) # TEST
                     # command[paramName] = val # cant use bracket notation for python objects
                     setattr(command, paramName, val)
                 msg_dict[component]["srv"].service_call(command)
