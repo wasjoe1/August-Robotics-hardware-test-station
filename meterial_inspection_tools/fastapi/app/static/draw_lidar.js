@@ -20,7 +20,9 @@ function find_element() {
     canvasWidth = canvas.width;
     canvasHeight = canvas.height;
     ctx = canvas.getContext("2d");
-    canvasData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);   
+    ctx.fillStyle = "black";
+    console.log(ctx.fillStyle)
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
 // That's how you define the value of a pixel
@@ -47,7 +49,7 @@ function updateCanvas() {
 }
 
 function drawLidar() {
-    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+    // ctx.clearRect(0, 0, canvasWidth, canvasHeight);
     canvasData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);  
     lidar_data.forEach(element => {
         drawPixel(element[0], element[1]) // process the data & put into canvasData.data
