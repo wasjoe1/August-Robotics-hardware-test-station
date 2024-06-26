@@ -110,8 +110,8 @@ const step_to_text_dict = {
 
         "configurationsHeader": ["Configurations", "读传感器配置"],
         "dataHeader": ["Data", "数据"],
-        "dataValidityHeader": ["NG / G", "不好 / 好"],
-        "commandButtonsHeader": ["Select Baud Rate", "选择波特率"],
+        // "dataValidityHeader": ["NG / G", "不好 / 好"],
+        // "commandButtonsHeader": ["Select Baud Rate", "选择波特率"],
         "stateHeader": ["State", "系统状态"],
         "userInfoHeader": ["User Information", "用户信息"],
         "instructionsHeader": ["Instructions", "操作指南"],

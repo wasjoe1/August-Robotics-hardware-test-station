@@ -5,11 +5,6 @@
 // current_step is set
 // regex is set
 
-// buttonIdToButtonString
-// const buttonIdToButtonString = {
-//     "setDefaultBtn": "SET_DEFAULT",
-// }
-
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
 // Functions
@@ -21,29 +16,27 @@
 // function create_ws(ip_addr, topic,  elementId, onMessageFunc) => onMessageFunc(evt, topic, elementId) is executed as such
 
 //TODO
-// function formatLidarSrvCallData(component, _more_) { //TODO
-//     var data =  {
-//         button: buttonString,
-//         baudrate: baudrate, // has to be string to be accepted in srv calls
-//     }
-//     data = formatSrvCallData(component, data)
-//     return data
-// }
+function formatLidarSrvCallData(component) {
+    var data =  {
+        button: "GET_LASERSCAN",
+        // button: "GET_POINTCLOUD",
+        model: "G2",
+    }
+    data = formatSrvCallData(component, data)
+    return data
+}
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
 // onClickEvents
-// async function onClickCommandBtn(element) {
-//     try {
-//         executeSrvCall(formatLidarSrvCallData(
-//             current_step,
-//             buttonIdToButtonString[element.id],
-//             element.getAttribute("baudrate"))) // TODO
-//     } catch (e) {
-//         console.error(e)
-//         console.log("Setting of _setting_ failed")
-//     }
-// }
+async function onClickCommandBtn(element) {
+    try {
+        executeSrvCall(formatLidarSrvCallData(current_step))
+    } catch (e) {
+        console.error(e)
+        console.log("Failed to retrieve lidar data")
+    }
+}
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
@@ -51,11 +44,13 @@
 const socketNameToElementId = {
     "/lidar/topic_state": "responseData-state",
     "/lidar/topic_data": "responseData-data",
-    "/lidar/topic_data_checker": "responseData-data_checker",
+    "/lidar/topic_data_laserscan": "responseData-data",
+    "/lidar/topic_data_pointcloud": "responseData-data",
     "/lidar/topic_info": "responseData-info",
     "/lidar/topic_info_chinese": "responseData-info_chinese",
-    "/lidar/topic_configs": "responseData-configs",
-    "/lidar/topic_configs_chinese": "responseData-configs_chinese",
+    // "/lidar/topic_data_checker": "responseData-data_checker",
+    // "/lidar/topic_configs": "responseData-configs",
+    // "/lidar/topic_configs_chinese": "responseData-configs_chinese",
 }
 
 function formatLidarDisplayData(data) {
@@ -85,38 +80,27 @@ function formatLidarDisplayData(data) {
 
 function displayDataOnElement(options) {
     const {topic, data, ele} = options
-    const compData = retrieveComponentData(current_step, data)
-    const {dataEle, dataVal} = formatSonarDisplayData(compData)
+    const compData = retrieveComponentData("lidar", data)
+    const {dataEle, dataVal} = formatLidarDisplayData(compData)
 
     //TODO
-    switch(topic) { 
-        // case "/lidar/topic_data_checker":
-        //     if (dataVal == 'OK') {
-        //         console.log("data is OK") // TEST
-        //         ele.classList.remove("background-red")
-        //         ele.classList.add("background-green")
-        //         ele.textContent = "G"
-        //     } else {
-        //         console.log("data is not OK") // TEST
-        //         ele.classList.remove("background-green")
-        //         ele.classList.add("background-red")
-        //         ele.textContent = "NG"
-        //     }
-        //     break
-        case "/lidar/topic_data": //TODO
+    switch(topic) {
+        case "/lidar/topic_data_laserscan": //TODO
             console.log(data)
-            console.log(compData)
+            console.log(JSON.parse(data))
+            console.log(JSON.parse(data)["lidar"])
+            var lidarData = JSON.parse(data)["lidar"]
 
             // convert_data_to_pointcloud(angle_increment, ranges)
             // find_element()
             // drawLidar(data)
                 // drawPixel (x, y, r=255, g=0, b=0, a=266, max_len = 6)
                 // function updateCanvas()
-            convert_data_to_pointcloud(data["angle_increment"], data["ranges"])
+            
+            convert_data_to_pointcloud(lidarData["angle_increment"], lidarData["ranges"])
             find_element()
-            drawLidar(lidar_data)
-            lidar_data = []
-            // ele.replaceChildren(dataEle)
+            drawLidar()
+            resetLidarData() // lidar_data = []
             break
         case "/lidar/topic_configs":
             ele.replaceChildren(dataEle)

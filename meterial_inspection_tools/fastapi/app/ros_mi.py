@@ -8,14 +8,15 @@ from meterial_inspection_tools.ros_interface import (
 from rospy_message_converter.message_converter import convert_ros_message_to_dictionary
 from boothbot_msgs.srv import (Command, CommandRequest)
 from meterial_inspection_tools.srv import (GetButtonBaudrate, GetButtonBaudrateRequest) # IMU, inclinometer
-from meterial_inspection_tools.srv import (GetButtonUnitID, GetButtonUnitIDRequest) # cb
-from meterial_inspection_tools.srv import (SonarControl, SonarControlRequest)
+from meterial_inspection_tools.srv import (GetButtonUnitID, GetButtonUnitIDRequest) # cb, Sonar
+from meterial_inspection_tools.srv import (GetButtonModel, GetButtonModelRequest) # lidar
 
 ServiceRequestTypes = {
     "imu": GetButtonBaudrateRequest,
     "inclinometer": GetButtonBaudrateRequest,
     "cb": GetButtonUnitIDRequest,
     "sonar": GetButtonUnitIDRequest,
+    "lidar": GetButtonModelRequest,
 }
 
 class MeterialInspection():
@@ -93,8 +94,12 @@ class MeterialInspection():
         for component, params in srv_dict.items():
             logger.loginfo(f"Sending srv for {component}...")
             try:
+                logger.loginfo("Before getting the command type...") # TEST
                 command = ServiceRequestTypes[component]() # get the srv req object
+                logger.loginfo("After getting the command type") # TEST
                 for paramName, val in params.items():
+                    logger.loginfo(paramName) # TEST
+                    logger.loginfo(val) # TEST
                     # command[paramName] = val # cant use bracket notation for python objects
                     setattr(command, paramName, val)
                 msg_dict[component]["srv"].service_call(command)

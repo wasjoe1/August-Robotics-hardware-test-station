@@ -13,6 +13,7 @@
 
   <script src="../static/lang.js"></script>
   <script src="../static/index.js"></script>
+  <script src="../static/draw_lidar.js"></script>
   <script src="../static/lidar.js"></script>
 </head>
 
@@ -43,6 +44,12 @@
           <h4 id="dataHeader" class="display-content-header">Data</h4>
           <canvas id="responseData-data"></canvas>
           <!-- <div id="responseData-data" class="display-text-div"></div> -->
+        </div>
+        <!-- left-right-content -->
+        <!-- <div class="left-right-content-container"> -->
+        <div>
+          <!-- buttons -->
+          <button class="btn btn-command btn-default english_element" onclick="onClickCommandBtn(this)">Get Data</button>
         </div>
       </div>
       

@@ -208,6 +208,7 @@ const gComponentToData = {
     "inclinometer": { button: "CONNECT", baudrate: "", },
     "cb": { button: "CONNECT", ID: "", },
     "sonar": { button: "CONNECT", ID: "", },
+    "lidar": { button: "CONNECT", model: "G2", }
 }
 
 async function onClickComponentPageBtn(element) {

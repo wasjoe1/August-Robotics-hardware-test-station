@@ -7,6 +7,8 @@ var lidar_data = []
 
 function convert_data_to_pointcloud(angle_increment, ranges) {
     start_ang = 0
+    console.log(ranges)
+    console.log(angle_increment)
     for (let i = 0; i < ranges.length; i++) {
         ang = start_ang + i*angle_increment
         lidar_data.push([ranges[i]*Math.cos(ang), ranges[i]*Math.sin(ang)]);
@@ -44,11 +46,17 @@ function updateCanvas() {
     ctx.putImageData(canvasData, 0, 0);
 }
 
-function drawLidar(data) {
+function drawLidar() {
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
     canvasData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);  
-    data.forEach(element => {
+    lidar_data.forEach(element => {
         drawPixel(element[0], element[1]) // process the data & put into canvasData.data
     });
     updateCanvas() // put data into the canvas
 }
+
+function resetLidarData() {
+    lidar_data = []
+}
+
+// export { convert_data_to_pointcloud, find_element, drawPixel, updateCanvas, drawLidar, resetLidarData }

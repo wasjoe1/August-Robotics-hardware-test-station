@@ -36,8 +36,6 @@ IMU_CONFIGS_CHINESE = InterfaceWithType('/imu/configs_chinese',stmsgs.String)
 IMU_SRV_CMD = InterfaceWithType('/imu/srv_cmd', GetButtonBaudrate) 
 IMU_DATA_CHECK = InterfaceWithType('/imu/reading_checker', stmsgs.String)
 
-
-
 INCLINOMETER_DATA = InterfaceWithType('/inclinometer/data',stmsgs.String)
 INCLINOMETER_STATE = InterfaceWithType('/inclinometer/state',stmsgs.String)
 INCLINOMETER_INFO = InterfaceWithType('/inclinometer/info',stmsgs.String)
@@ -139,8 +137,8 @@ msg_dict = {
    "lidar": {
         "srv": LIDAR_SRV_CMD,
         "topic_data_laserscan": LIDAR_DATA_LASERSCAN,
-        # "topic_data_pointcloud": LIDAR_DATA_POINTCLOUD,
-        # "topic_data": LIDAR_DATA_POINTCLOUD,
+        "topic_data_pointcloud": LIDAR_DATA_POINTCLOUD,
+        "topic_data": LIDAR_DATA_POINTCLOUD, # for now its point cloud
         "topic_state": LIDAR_STATE,
         "topic_info": LIDAR_INFO,
         "topic_info_chinese": LIDAR_INFO_CHINESE,
