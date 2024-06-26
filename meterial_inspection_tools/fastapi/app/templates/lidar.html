@@ -11,10 +11,21 @@
   <script src="../static/bootstrap.min.js"></script>
   <link rel="stylesheet" href="../static/hr.css">
 
-  <script src="../static/lang.js"></script>
+  <!-- <script src="../static/lang.js"></script>
   <script src="../static/index.js"></script>
-  <script src="../static/draw_lidar.js"></script>
-  <script src="../static/lidar.js"></script>
+  <script src="../static/draw_lidar.js"></script> -->
+  
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "/static/trial/three/build/three.module.js",
+        "three/addons/": "/static/trial/three/examples/jsm/"
+      }
+    }
+  </script>
+  <script type="module" src="../static/langcopy.js"></script>
+  <script type="module" src="../static/indexcopy.js"></script>
+  <script type="module" src="../static/lidar.js"></script>
 </head>
 
 <body onload="">

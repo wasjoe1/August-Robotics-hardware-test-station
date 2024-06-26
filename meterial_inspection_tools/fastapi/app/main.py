@@ -22,7 +22,7 @@ from ros_mi import MeterialInspection
 somelogger = logging.getLogger()
 somelogger.setLevel(logging.INFO)
 ch = logging.StreamHandler() # creates a stream handler object => sends log msgs to a stream (usually for python its the console)
-somelogger.addHandler(ch) # adds the stream handler to the logger object
+somelogger.addHandler(ch) # adds the stream handler to the somelogger object
 # somelogger.info("init main.py...") # TODO figure out why main does print but rosmi does
 rospy.loginfo("init main.py...") # TODO figure out why main does print but rosmi does
 somelogger.info(os.getcwd()) # os.getcwd() gets current working directory from which the python script is being executed
@@ -39,7 +39,7 @@ templates = Jinja2Templates(directory="templates") # templates directory is used
 
 h_name = socket.gethostname()
 IP_addres = socket.gethostbyname(h_name)
-logger.loginfo("h_name: {}, IP_address {}".format(h_name, IP_addres))
+rospylogger.loginfo("h_name: {}, IP_address {}".format(h_name, IP_addres))
 
 rospy.init_node("fastapi_ros") # initialize the ros node
 app.mi = MeterialInspection()
@@ -72,7 +72,7 @@ def get_lang_data():
         with open("static/lang.txt", "r") as f:
             langdata = f.read()
     except Exception as e:
-        logger.loginfo(e)
+        rospylogger.loginfo(e)
         return 0
     return langdata
 
@@ -84,7 +84,7 @@ async def startup_event():
     try:
         _thread.start_new_thread(ros_serve, ()) # run the ros rate method
     except Exception as e:
-        logger.loginfo(f"Error: cannot init thread. {e}")
+        rospylogger.loginfo(f"Error: cannot init thread. {e}")
 
 # -------------------------------------------------------------------------------------------------
 # middleware
@@ -95,16 +95,16 @@ async def get_html(request: Request): # request is the 1st arg
 
 @app.get("/step/{mode}", response_class=HTMLResponse) # indicates its a html response
 async def step(request: Request, mode: str): # mode is of string type; its from clicking the page btn
-    logger.loginfo(f"get step {mode}")
+    rospylogger.loginfo(f"get step {mode}")
 
     app.mode = mode
     
     if app.mode is not None:
 
-        logger.loginfo("static/"+app.mode+".txt")
+        rospylogger.loginfo("static/"+app.mode+".txt")
         with open("static/"+str(app.lang)+"_"+app.mode+".txt") as f:
             just_do = f.readlines() # read the lines of the txt file
-            logger.loginfo(just_do)
+            rospylogger.loginfo(just_do)
 
         return templates.TemplateResponse(app.mode+".html", { "request": request, "just_do": just_do, "responseData": responseData }) # line of code that responds with new html
     else:
@@ -113,12 +113,12 @@ async def step(request: Request, mode: str): # mode is of string type; its from 
 @app.get("/command/{cmd}", response_class=HTMLResponse)
 async def command(request: Request, cmd: str):
     try:
-        logger.loginfo(f"send ROS command {cmd}")
+        rospylogger.loginfo(f"send ROS command {cmd}")
         srv_call_formatted_data = cmd # for now put imu only; returns json string
         # msg_dict[sub_node].service_call(cmd) => json string is passed to the node in the service call; might be the old way of making a service call
         app.mi.send_srv(srv_call_formatted_data)
     except Exception as e:
-        logger.logerr(e)
+        rospylogger.logerr(e)
         raise HTTPException(status_code=500, detail="Service call failed: "+str(e))
 
 # -------------------------------------------------------------------------------------------------
@@ -130,19 +130,19 @@ async def listen_to_websocket(websocket, component, topic):
     while True:
         await asyncio.sleep(0.2)
         if app.mi.has_topic_msg(component, topic):
-            logger.loginfo(f"{topic} topic has message") # TEST its always empty [RESOLVED]
+            rospylogger.loginfo(f"{topic} topic has message") # TEST its always empty [RESOLVED]
             qData = app.mi.get_topic_msg(component, topic)
-            logger.loginfo(f"queue data: {qData}")
+            rospylogger.loginfo(f"queue data: {qData}")
             await websocket.send_text(f"{qData}")
             app.mi.pop_topic_msg(component, topic)
 
 componentToTopic = app.mi.get_topic_to_component_dict()
 
 for component, topic in componentToTopic:
-    logger.loginfo(f"create websocket {component}, for {topic}")
+    rospylogger.loginfo(f"create websocket {component}, for {topic}")
     
     @app.websocket(f"/{component}/{topic}") # topic_data, topic_info, etc.
     async def cb(websocket: WebSocket, component=component, topic=topic): #  RESOLVED using this line of code
-        logger.loginfo(f"websocket /{component}/{topic} connecting...")
+        rospylogger.loginfo(f"websocket /{component}/{topic} connecting...")
         await listen_to_websocket(websocket, component, topic)
     

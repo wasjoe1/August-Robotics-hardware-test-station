@@ -62,3 +62,9 @@ function resetLidarData() {
 }
 
 // export { convert_data_to_pointcloud, find_element, drawPixel, updateCanvas, drawLidar, resetLidarData }
+
+// Execution order
+// convert_data_to_pointcloud
+// find_element
+// drawLidar -> drawPixel(x,y,r,g,b,a), updateCanvas()
+// resetLidarData

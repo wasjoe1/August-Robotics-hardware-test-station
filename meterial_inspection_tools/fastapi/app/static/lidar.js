@@ -1,5 +1,9 @@
 // import { lang } from './lang.js'
 // import { refresh_page_once_list } from './refresh_once.js'
+import * as THREE from 'three'
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+import { setCurrentStepAndLang, executeSrvCall, formatSrvCallData, retrieveComponentData, onClickComponentPageBtn, executeSrvCallToConnect, openWebsockets } from "./indexcopy.js"
+
 
 // ip_addr is set
 // current_step is set
@@ -31,11 +35,113 @@ function formatLidarSrvCallData(component) {
 // onClickEvents
 async function onClickCommandBtn(element) {
     try {
-        executeSrvCall(formatLidarSrvCallData(current_step))
+        executeSrvCall(formatLidarSrvCallData("lidar"))
     } catch (e) {
         console.error(e)
         console.log("Failed to retrieve lidar data")
     }
+}
+
+// ------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
+// 3D Rendering
+
+// document // document.body.appendChild(renderer.domElement)
+//     -> info
+//     -> controls // const controls = new OrbitControls(camera, renderer.domElement)
+//         -> renderer // renderer.render(scene, camera)
+//             -> camera
+//             -> scene
+//                 -> grid helper // scene.add(gridHelper) 
+//                 -> points // scene.add( points ) // points = new THREE.Points( geometry, material )
+//                     -> material
+//                     -> geometry
+//                         -> vertices // geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3))
+//                         -> colors // geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3))
+const dataElement = document.getElementById("responseData-data")
+var geometry = undefined
+var points = undefined
+const material = new THREE.PointsMaterial( {size: 0.1, vertexColors: true} )
+const scene = new THREE.Scene()
+const gridHelper = new THREE.GridHelper()
+gridHelper.position.y = -0.5
+scene.add(gridHelper)
+
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100)
+camera.position.z = 2
+
+const renderer = new THREE.WebGLRenderer()
+renderer.setSize(window.innerWidth, window.innerHeight)
+dataElement.appendChild(renderer.domElement)
+
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight
+    camera.updateProjectionMatrix()
+    renderer.setSize(window.innerWidth, window.innerHeight)
+})
+
+const info = document.createElement('div')
+info.style.cssText = 'position:absolute;bottom:10px;left:10px;color:white;font-family:monospace;font-size: 17px;filter: drop-shadow(1px 1px 1px #000000);'
+dataElement.appendChild(info)
+
+const controls = new OrbitControls(camera, renderer.domElement)
+
+function animate() {
+    // everytime points change, animate is called
+    requestAnimationFrame(animate)
+
+    controls.update()
+
+    info.innerText =
+            'Polar Angle : ' +
+            ((controls.getPolarAngle() / -Math.PI) * 180 + 90).toFixed(2) +
+            '°\nAzimuth Angle : ' +
+            ((controls.getAzimuthalAngle() / Math.PI) * 180).toFixed(2) +
+            '°'
+
+    renderer.render(scene, camera) // renderer will render a new scene & camera
+}
+
+function convert_laserscan_to_vertices_and_colors(angle_increment, ranges, intensities) {
+    var vertices = []
+    var colors = []
+    console.log("configuring points...") // TEST
+    start_ang = 0
+    console.log(ranges) // TEST
+    console.log(angle_increment) // TEST
+    for (let i = 0; i < ranges.length; i++) {
+        // Vertices
+        ang = start_ang + i*angle_increment
+        vertices.push([ranges[i]*Math.cos(ang), ranges[i]*Math.sin(ang)], 0); // y is always set to 0 for now
+
+        // Colors
+        // TODO: figure out if the lidar intensity values are really <255
+        const r = intensities[i] / 255, g = intensities[i] / 255, b = intensities[i] / 255
+        colors.push(r,g,b)
+    }
+    console.log("points configured") // TEST
+    return { vertices: vertices, colors: colors }
+}
+
+function render3dData(angle_increment, ranges, intensities) { // INIT function for rendering 3D model
+    // Retrieving data from evt
+    console.log("Render data is called")
+    console.log("getting data from /depth/data ...") // TEST
+    const { vertices, colors } = convert_laserscan_to_vertices_and_colors(angle_increment, ranges, intensities)
+    
+    console.log("Rendering points...") // TEST
+    // if there was a geom in scene previously
+    if (geometry) {
+        geometry.dispose()
+        scene.remove(points)
+    }
+    geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3))
+    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3))
+    points = new THREE.Points( geometry, material )
+    scene.add( points )
+    animate() // everytime points change, animate is called
+    console.log("points rendered") // TEST
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -90,17 +196,7 @@ function displayDataOnElement(options) {
             console.log(JSON.parse(data))
             console.log(JSON.parse(data)["lidar"])
             var lidarData = JSON.parse(data)["lidar"]
-
-            // convert_data_to_pointcloud(angle_increment, ranges)
-            // find_element()
-            // drawLidar(data)
-                // drawPixel (x, y, r=255, g=0, b=0, a=266, max_len = 6)
-                // function updateCanvas()
-            
-            convert_data_to_pointcloud(lidarData["angle_increment"], lidarData["ranges"])
-            find_element()
-            drawLidar()
-            resetLidarData() // lidar_data = []
+            render3dData(lidarData["angle_increment"], lidarData["ranges"], lidarData["intensities"])
             break
         case "/lidar/topic_configs":
             ele.replaceChildren(dataEle)
@@ -123,20 +219,14 @@ window.addEventListener('load', async function() {
         console.log("windows on load...")
         console.log("init lidar...") // log the init-ing component
 
-        // Set Current step
-        setCurrentStep()
-        
-        // Refresh the page (language setting)
-        refresh_page_once(cur_lang)
+        // Set Current step and language
+        setCurrentStepAndLang()
     
-        // execute the service call
-        const initData = gComponentToData[current_step]
-        await executeSrvCall(formatSrvCallData(current_step, initData))
+        // execute service call to connect
+        await executeSrvCallToConnect("lidar")
 
         // open websockets
-        for (const socketName in socketNameToElementId) {
-            create_ws(ip_addr, socketName, socketNameToElementId[socketName], onMessageFunc)
-        }
+        openWebsockets(socketNameToElementId, onMessageFunc)
 
         console.log("init-ed lidar")
     } catch (e) {
@@ -144,3 +234,6 @@ window.addEventListener('load', async function() {
         console.log(e)
     }
 });
+
+window.onClickCommandBtn = onClickCommandBtn
+window.onClickComponentPageBtn = onClickComponentPageBtn

@@ -2,27 +2,23 @@
 // import { refresh_page_once_list } from './refresh_once.js'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
-import {setCurrentStep, refresh_page_once, executeSrvCall, formatSrvCallData, create_ws, retrieveComponentData, onClickComponentPageBtn } from "./index copy.js"
+import { setCurrentStepAndLang, executeSrvCall, formatSrvCallData, retrieveComponentData, onClickComponentPageBtn, executeSrvCallToConnect, openWebsockets } from "./indexcopy.js"
 
 // Defined in index.js:
 // ip_addr
 // current_step
 // regex
-
+var cur_lang = 0
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
 // 3D Rendering
 var count = 0
-const vertices = [] // ~200k points
-const colors = []
-const gData = undefined
+const dataElement = document.getElementById("responseData-data")
 var geometry = undefined
 var points = undefined
 const material = new THREE.PointsMaterial( {size: 0.1, vertexColors: true} )
-
 const scene = new THREE.Scene()
-
 const gridHelper = new THREE.GridHelper()
 gridHelper.position.y = -0.5
 scene.add(gridHelper)
@@ -32,57 +28,62 @@ camera.position.z = 2
 
 const renderer = new THREE.WebGLRenderer()
 renderer.setSize(window.innerWidth, window.innerHeight)
-document.body.appendChild(renderer.domElement)
+dataElement.appendChild(renderer.domElement)
 
 window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight
-  camera.updateProjectionMatrix()
-  renderer.setSize(window.innerWidth, window.innerHeight)
+    camera.aspect = window.innerWidth / window.innerHeight
+    camera.updateProjectionMatrix()
+    renderer.setSize(window.innerWidth, window.innerHeight)
 })
 
 const info = document.createElement('div')
 info.style.cssText = 'position:absolute;bottom:10px;left:10px;color:white;font-family:monospace;font-size: 17px;filter: drop-shadow(1px 1px 1px #000000);'
-document.body.appendChild(info)
+dataElement.appendChild(info)
 
 const controls = new OrbitControls(camera, renderer.domElement)
 
 function animate() {
-  requestAnimationFrame(animate)
+    // everytime points change, animate is called
+    requestAnimationFrame(animate)
 
-  controls.update()
+    controls.update()
 
-  info.innerText =
-    'Polar Angle : ' +
-    ((controls.getPolarAngle() / -Math.PI) * 180 + 90).toFixed(2) +
-    '°\nAzimuth Angle : ' +
-    ((controls.getAzimuthalAngle() / Math.PI) * 180).toFixed(2) +
-    '°'
+    info.innerText =
+            'Polar Angle : ' +
+            ((controls.getPolarAngle() / -Math.PI) * 180 + 90).toFixed(2) +
+            '°\nAzimuth Angle : ' +
+            ((controls.getAzimuthalAngle() / Math.PI) * 180).toFixed(2) +
+            '°'
 
-  renderer.render(scene, camera)
+    renderer.render(scene, camera) // renderer will render a new scene & camera
 }
 
-function render3dData() {
-    // Retrieving data from evt
-    console.log("Render data is called")
-    console.log("getting data from /depth/data ...") // TEST
-    // var evt = gData
-    // var eventData = JSON.parse(evt.data)
-    // var pointCloud2Data = JSON.parse(eventData.depth.data)
-    var pointCloud2Data = gData
-    
+function pointCloud2ToVerticesAndColorsArray(pointCloud2Data) {
     // points config logic
     console.log("configuring points...") // TEST
+    var vertices = [] // ~200k points
+    var colors = []
     for (let i = 0; i < pointCloud2Data.coords.length; i++) {
         var point = pointCloud2Data.coords[i]
         var color = pointCloud2Data.colors[i]
         const x = point[0], y = point[1], z = point[2]
         vertices.push(x, y, z)
+
         const r = color[0] / 255, g = color[1] / 255, b = color[2] / 255
         colors.push(r, g, b)
     }
     console.log("points configured") // TEST
+    return { vertices: vertices, colors: colors }
+}
+
+function render3dData(data) { // INIT function for rendering 3D model
+    // Retrieving data from evt
+    console.log("Render data is called")
+    console.log("getting data from /depth/data ...") // TEST
+    var pointCloud2Data = data
+    const { vertices, colors } = pointCloud2ToVerticesAndColorsArray(pointCloud2Data)
     
-    console.log("Trying to render points...") // TEST
+    console.log("Rendering points...") // TEST
     // if there was a geom in scene previously
     if (geometry) {
         geometry.dispose()
@@ -93,7 +94,7 @@ function render3dData() {
     geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3))
     points = new THREE.Points( geometry, material )
     scene.add( points )
-    animate()
+    animate() // everytime points change, animate is called
     console.log("points rendered") // TEST
 }
 
@@ -156,10 +157,9 @@ function displayDataOnElement(options) {
     //TODO
     switch(topic) {
         case "/depth/topic_data": //TODO
-            gData = compData
             if (count==0) {
                 // first time start async funtion, render data is renewed every 3 secs
-                setInterval(render3dData, 3000); // TODO what if data[0] is being replaced when startRenderData is called concurrently??
+                setInterval(() => render3dData(compData), 3000); // TODO what if data[0] is being replaced when startRenderData is called concurrently??
                 count++
             }
             break
@@ -184,20 +184,15 @@ window.addEventListener('load', async function() {
     try {
         console.log("windows on load...")
         console.log("init depth camera...")
-        // Set Current step
-        setCurrentStep()
         
-        // Refresh the page (language setting)
-        refresh_page_once(cur_lang)
-    
-        // execute the service call
-        const initData = gComponentToData[current_step]
-        await executeSrvCall(formatSrvCallData(current_step, initData))
+        // Set Current step and language
+        setCurrentStepAndLang()
+        
+        // execute service call to connect
+        await executeSrvCallToConnect("depth")
 
         // open websockets
-        for (const socketName in socketNameToElementId) {
-            create_ws(ip_addr, socketName, socketNameToElementId[socketName], onMessageFunc)
-        }
+        openWebsockets(socketNameToElementId, onMessageFunc)
 
         console.log("init-ed depth camera")
     } catch (e) {
@@ -205,3 +200,5 @@ window.addEventListener('load', async function() {
         console.log(e)
     }
 });
+
+window.onClickComponentPageBtn = onClickComponentPageBtn

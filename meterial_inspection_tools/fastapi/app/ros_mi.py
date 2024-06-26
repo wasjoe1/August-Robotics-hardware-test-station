@@ -9,6 +9,7 @@ from rospy_message_converter.message_converter import convert_ros_message_to_dic
 from boothbot_msgs.srv import (Command, CommandRequest)
 from meterial_inspection_tools.srv import (GetButtonBaudrate, GetButtonBaudrateRequest) # IMU, inclinometer
 from meterial_inspection_tools.srv import (GetButtonUnitID, GetButtonUnitIDRequest) # CB, Sonar
+from meterial_inspection_tools.srv import (GetButton, GetButtonRequest) # depth camera
 from meterial_inspection_tools.srv import (GetButtonModel, GetButtonModelRequest) # lidar
 
 ServiceRequestTypes = {
@@ -16,6 +17,7 @@ ServiceRequestTypes = {
     "inclinometer": GetButtonBaudrateRequest,
     "cb": GetButtonUnitIDRequest,
     "sonar": GetButtonUnitIDRequest,
+    "depth": GetButtonRequest,
     "lidar": GetButtonModelRequest,
 }
 

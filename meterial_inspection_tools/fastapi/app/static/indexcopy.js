@@ -1,28 +1,18 @@
-// NOTE:
-// 1. Anything updated here might cause errors in other _component_.js files,
-// please ensure changes are update in all _component_.js files
-// 2. Refer to test_example_new_js_file.js when creating new _component_.js files
-
 import step_to_text_dict from "./langcopy.js"
 
-// ------------------------------------------------------------------------------------------------
-// ------------------------------------------------------------------------------------------------ 
-// import step_to_text_dict from './lang.js'
-// import { refresh_page_once_list } from './refresh_once.js'
-// window.onClickComponentPageBtn = onClickComponentPageBtn;
-// window.switch_lang = switch_lang;
-// window.setCurrentStep = setCurrentStep
-
-// var ws_json
-// var hostname
-// var download_data
-// var is_gs
-// var url = window.location.href // this is to get the frontend's current url
 const ip_addr = document.location.hostname // this is the backend's ip addr => for GET/ POST reqs
 const regex = "http://(.*)/step/(.*)"
 var current_step = "home"
 var cur_lang = 0 // EN is 0, CN is 1
 // const step_to_text_dict = ... // from lang.js
+const gComponentToDataConnect = {
+    "imu": { button: "CONNECT", baudrate: "", }, // For this ver, imu is connect
+    "inclinometer": { button: "CONNECT", baudrate: "", },
+    "cb": { button: "CONNECT", ID: "", },
+    "sonar": { button: "CONNECT", ID: "", },
+    "depth": { button: "CONNECT", model: "G2", },
+    "lidar": { button: "CONNECT", },
+}
 
 console.log("init index...")
 // ------------------------------------------------------------------------------------------------
@@ -43,7 +33,7 @@ function parseStringToInt(str) {
     }
 }
 
-function setCurrentStep() {
+function setCurrentStepAndLang() {
     var url = window.location.href
     var gFound = url.match(regex)
     current_step = gFound[2]
@@ -200,16 +190,22 @@ function formatSrvCallData(component, data) {
     return formattedData
 }
 
+async function executeSrvCallToConnect(component) {
+    try {
+        console.log("Executing service call to connect ...")
+        const initData = gComponentToDataConnect[component]
+        await executeSrvCall(formatSrvCallData("depth", initData))
+        console.log("Service call successful, Component connected")
+    } catch (e) {
+        console.log("Service call Unsuccessful, Component not connected")
+        console.error(e)
+        throw e
+    }
+}
+
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
 // onClickEvents
-const gComponentToData = {
-    "imu": { button: "CONNECT", baudrate: "", }, // For this ver, imu is connect
-    "inclinometer": { button: "CONNECT", baudrate: "", },
-    "cb": { button: "CONNECT", ID: "", },
-    "sonar": { button: "CONNECT", ID: "", },
-}
-
 async function onClickComponentPageBtn(element) {
     try {
         // redirect page according to component attribute 
@@ -251,14 +247,24 @@ function create_ws(ip_addr, topic, elementId, onMessageFunc) {
     }
 }
 
+function openWebsockets(socketNameToElementId, onMessageFunc) {
+    for (const socketName in socketNameToElementId) {
+        create_ws(ip_addr, socketName, socketNameToElementId[socketName], onMessageFunc)
+    }
+}
+
 function retrieveComponentData(component, data) {
     return (!data)
     ? data
     : JSON.parse(data)[component]["data"] //TODO: see if its possible to find any other similar abstractions
 }
 
-console.log("init-ed index")
-
+// ------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
+// MISCELLANEOUS
 window.switch_lang = switch_lang
+window.onClickComponentPageBtn = onClickComponentPageBtn
+window.setCurrentStepAndLang = setCurrentStepAndLang
 
-export {setCurrentStep, refresh_page_once, executeSrvCall, formatSrvCallData, create_ws, retrieveComponentData, onClickComponentPageBtn }
+export { setCurrentStepAndLang, refresh_page_once, executeSrvCall, formatSrvCallData, create_ws, retrieveComponentData, onClickComponentPageBtn, executeSrvCallToConnect, openWebsockets }
+console.log("init-ed index")
