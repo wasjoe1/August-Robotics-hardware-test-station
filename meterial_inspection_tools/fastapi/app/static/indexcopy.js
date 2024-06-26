@@ -10,8 +10,8 @@ const gComponentToDataConnect = {
     "inclinometer": { button: "CONNECT", baudrate: "", },
     "cb": { button: "CONNECT", ID: "", },
     "sonar": { button: "CONNECT", ID: "", },
-    "depth": { button: "CONNECT", model: "G2", },
-    "lidar": { button: "CONNECT", },
+    "lidar": { button: "CONNECT", model: "G2", },
+    "depth": { button: "CONNECT", },
 }
 
 console.log("init index...")
@@ -194,7 +194,7 @@ async function executeSrvCallToConnect(component) {
     try {
         console.log("Executing service call to connect ...")
         const initData = gComponentToDataConnect[component]
-        await executeSrvCall(formatSrvCallData("depth", initData))
+        await executeSrvCall(formatSrvCallData(component, initData))
         console.log("Service call successful, Component connected")
     } catch (e) {
         console.log("Service call Unsuccessful, Component not connected")

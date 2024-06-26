@@ -64,20 +64,25 @@ var points = undefined
 const material = new THREE.PointsMaterial( {size: 0.1, vertexColors: true} )
 const scene = new THREE.Scene()
 const gridHelper = new THREE.GridHelper()
-gridHelper.position.y = -0.5
+gridHelper.rotation.x = Math.PI / 2; // Rotate 90 degrees around the X-axis, places the grid on the XY plane
 scene.add(gridHelper)
 
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100)
+// const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100)
+const camera = new THREE.PerspectiveCamera(75, dataElement.clientWidth / dataElement.clientHeight, 0.1, 100)
 camera.position.z = 2
 
 const renderer = new THREE.WebGLRenderer()
-renderer.setSize(window.innerWidth, window.innerHeight)
+// renderer.setSize(window.innerWidth, window.innerHeight)
+renderer.setSize(dataElement.clientWidth, dataElement.clientHeight)
 dataElement.appendChild(renderer.domElement)
 
 window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight
+    // camera.aspect = window.innerWidth / window.innerHeight
+    camera.aspect = dataElement.clientWidth / dataElement.clientHeight
     camera.updateProjectionMatrix()
-    renderer.setSize(window.innerWidth, window.innerHeight)
+    console.log(dataElement.clientWidth)
+    console.log(dataElement.clientHeight)
+    renderer.setSize(dataElement.clientWidth, dataElement.clientHeight)
 })
 
 const info = document.createElement('div')
@@ -106,17 +111,17 @@ function convert_laserscan_to_vertices_and_colors(angle_increment, ranges, inten
     var vertices = []
     var colors = []
     console.log("configuring points...") // TEST
-    start_ang = 0
+    var start_ang = 0
     console.log(ranges) // TEST
     console.log(angle_increment) // TEST
     for (let i = 0; i < ranges.length; i++) {
         // Vertices
-        ang = start_ang + i*angle_increment
-        vertices.push([ranges[i]*Math.cos(ang), ranges[i]*Math.sin(ang)], 0); // y is always set to 0 for now
+        var ang = start_ang + i*angle_increment
+        vertices.push(ranges[i]*Math.cos(ang), ranges[i]*Math.sin(ang), 0); // y is always set to 0 for now
 
         // Colors
         // TODO: figure out if the lidar intensity values are really <255
-        const r = intensities[i] / 255, g = intensities[i] / 255, b = intensities[i] / 255
+        const r = intensities[i] / 255, g = 1, b = 1
         colors.push(r,g,b)
     }
     console.log("points configured") // TEST
@@ -188,6 +193,8 @@ function displayDataOnElement(options) {
     const {topic, data, ele} = options
     const compData = retrieveComponentData("lidar", data)
     const {dataEle, dataVal} = formatLidarDisplayData(compData)
+    console.log("data is sent")
+    console.log(topic)
 
     //TODO
     switch(topic) {
@@ -227,6 +234,9 @@ window.addEventListener('load', async function() {
 
         // open websockets
         openWebsockets(socketNameToElementId, onMessageFunc)
+
+        // call data in intervals
+        setInterval(() => onClickCommandBtn("lidar"), 3000)
 
         console.log("init-ed lidar")
     } catch (e) {
