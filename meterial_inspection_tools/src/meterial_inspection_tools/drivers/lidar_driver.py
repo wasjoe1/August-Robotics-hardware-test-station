@@ -20,6 +20,8 @@ import rospy
 logger = rospy
 from enum import Enum,auto
 import json
+import threading
+import serial
 import sensor_msgs.point_cloud2 as pc2
 from meterial_inspection_tools.ros_interface import (
     LIDAR_SRV_CMD,
@@ -165,13 +167,14 @@ class YdlidarChecker:
         self.pub_reading_pointcloud = LIDAR_DATA_POINTCLOUD.Publisher()
         LIDAR_SRV_CMD.Services(self.srv_cb)
         self.subscriber_laserscan = rospy.Subscriber('/scan', LaserScan, self.get_laserscan_subscriber)
+        self.parse_thread  = None
+        self.lock = threading.Lock()
 
         self.__STATES_METHODS = {
         (YDLIDARCommands.NONE, YdlidarCheckerStates.INIT): self.initialize, # to IDLE
         (YDLIDARCommands.CONNECT, YdlidarCheckerStates.IDLE): self.connect, # to CONNECTED or stay
         (YDLIDARCommands.GET_POINTCLOUD, YdlidarCheckerStates.CONNECTED): self.get_pointcloud,  #get one instance of pointcloud msg
-        (YDLIDARCommands.GET_LASERSCAN,YdlidarCheckerStates.CONNECTED): self.get_laserscan, #get one instance of laserscan msg
-        (YDLIDARCommands.NONE,YdlidarCheckerStates.CONNECTED): self.check_connection, # check for unplug 
+        (YDLIDARCommands.NONE,YdlidarCheckerStates.CONNECTED): self.get_laserscan, #get one instance of laserscan msg
    } 
         
     def srv_cb(self,srv):
@@ -239,14 +242,47 @@ class YdlidarChecker:
         self.log_with_frontend(f"Failed to connect!", "无法连接")
         self.state = YdlidarCheckerStates.IDLE
         return False
-    
+
+
+    def parse_threading(self):
+        if self.parse_thread and self.parse_thread.is_alive():
+            return False
+
+        def check_connection():
+            try:
+                with self.lock:
+                    check_connection_result = self.ydliar_model.check_connection(self.port)
+                    logger.loginfo(check_connection_result)
+                    if not check_connection_result:
+                        raise ValueError("Connection check failed")
+            except Exception as e:
+                self.log_with_frontend("Ydliar unplugged, check connection!", "无法连接lidar,请确保电源再连接")
+                with self.lock:
+                    self.state = YdlidarCheckerStates.IDLE
+                logger.logwarn(str(e))
+
+        self.parse_thread = threading.Thread(target=check_connection)
+        self.parse_thread.start()
+        return True
 
     def get_laserscan(self):
-        laserscan_one_message_data = self.ydliar_model.get_laserscan()
-        self.log_with_frontend("one frame of laserscan data captured", "以获取激光扫描数据")
-        self.pub_reading_laserscan.publish(laserscan_one_message_data) # PUBLISHING laserscan data
-        self.log_with_frontend("one frame of laserscan data published", "以发出laserscan data")
+        with self.lock:
+            check_connection_result = self.ydliar_model.check_connection(self.port)
+            logger.loginfo(check_connection_result)
+            if not check_connection_result:
+                self.log_with_frontend("Ydliar unplugged, check connection!", "无法连接lidar,请确保电源再连接")
+                self.state = YdlidarCheckerStates.IDLE
+                logger.sleep(1)
+            else:
+                laserscan_one_message_data = self.ydliar_model.get_laserscan()
+                logger.loginfo(laserscan_one_message_data)
+                self.log_with_frontend("one frame of laserscan data captured", "以获取激光扫描数据")
+                self.pub_reading_laserscan.publish(laserscan_one_message_data)
+                self.log_with_frontend("one frame of laserscan data published", "以发出laserscan data")
+                logger.sleep(1)
         return True
+
+
 
     def get_pointcloud(self):
         laserscan_one_message_data = self.ydliar_model.get_laserscan()
@@ -264,13 +300,6 @@ class YdlidarChecker:
         return data
     
 
-    def check_connection(self):
-        check_connection_result = self.ydliar_model.check_connection(self.port)
-        if check_connection_result == False: 
-            self.log_with_frontend("Ydliar unplugged, check connection!", "无法连接lidar,请确保电源再连接")
-            self.state = YdlidarCheckerStates.IDLE
-
-
 #-------------------------------------------------------------------------------------------------------
 
 
@@ -278,3 +307,4 @@ if __name__ == "__main__":
     rospy.init_node("lidar_driver_node")
     lidar_driver_checker = YdlidarChecker()
     lidar_driver_checker.start()
+    threading.Thread(target=lidar_driver_checker.get_laserscan).start()
