@@ -174,9 +174,7 @@ class YdlidarChecker:
         (YDLIDARCommands.NONE, YdlidarCheckerStates.INIT): self.initialize, # to IDLE
         (YDLIDARCommands.CONNECT, YdlidarCheckerStates.IDLE): self.connect, # to CONNECTED or stay
         (YDLIDARCommands.GET_POINTCLOUD, YdlidarCheckerStates.CONNECTED): self.get_pointcloud,  #get one instance of pointcloud msg
-        #(YDLIDARCommands.GET_LASERSCAN,YdlidarCheckerStates.CONNECTED): self.get_laserscan, #get one instance of laserscan msg
         (YDLIDARCommands.NONE,YdlidarCheckerStates.CONNECTED): self.get_laserscan, #get one instance of laserscan msg
-        #(YDLIDARCommands.NONE,YdlidarCheckerStates.CONNECTED): self.parse_threading, # check for unplug 
    } 
         
     def srv_cb(self,srv):
@@ -245,23 +243,6 @@ class YdlidarChecker:
         self.state = YdlidarCheckerStates.IDLE
         return False
 
-    """
-    def get_laserscan(self):
-        #check connection first before attempting to parse out data 
-        check_connection_result = self.ydliar_model.check_connection(self.port)
-        logger.loginfo(check_connection_result)
-        if not check_connection_result:
-                self.log_with_frontend("Ydliar unplugged, check connection!", "无法连接lidar,请确保电源再连接")
-                self.state = YdlidarCheckerStates.IDLE
-        else: 
-            laserscan_one_message_data = self.ydliar_model.get_laserscan()
-            logger.loginfo(laserscan_one_message_data)
-            self.log_with_frontend("one frame of laserscan data captured", "以获取激光扫描数据")
-            self.pub_reading_laserscan.publish(laserscan_one_message_data)
-            self.log_with_frontend("one frame of laserscan data published", "以发出laserscan data")
-            rospy.sleep(1)
-        return True
-    """
 
     def parse_threading(self):
         if self.parse_thread and self.parse_thread.is_alive():
@@ -271,14 +252,14 @@ class YdlidarChecker:
             try:
                 with self.lock:
                     check_connection_result = self.ydliar_model.check_connection(self.port)
-                    rospy.loginfo(check_connection_result)
+                    logger.loginfo(check_connection_result)
                     if not check_connection_result:
                         raise ValueError("Connection check failed")
             except Exception as e:
                 self.log_with_frontend("Ydliar unplugged, check connection!", "无法连接lidar,请确保电源再连接")
                 with self.lock:
                     self.state = YdlidarCheckerStates.IDLE
-                rospy.logwarn(str(e))
+                logger.logwarn(str(e))
 
         self.parse_thread = threading.Thread(target=check_connection)
         self.parse_thread.start()
@@ -287,21 +268,19 @@ class YdlidarChecker:
     def get_laserscan(self):
         with self.lock:
             check_connection_result = self.ydliar_model.check_connection(self.port)
-            rospy.loginfo(check_connection_result)
+            logger.loginfo(check_connection_result)
             if not check_connection_result:
                 self.log_with_frontend("Ydliar unplugged, check connection!", "无法连接lidar,请确保电源再连接")
                 self.state = YdlidarCheckerStates.IDLE
-                rospy.sleep(1)
+                logger.sleep(1)
             else:
                 laserscan_one_message_data = self.ydliar_model.get_laserscan()
-                rospy.loginfo(laserscan_one_message_data)
+                logger.loginfo(laserscan_one_message_data)
                 self.log_with_frontend("one frame of laserscan data captured", "以获取激光扫描数据")
                 self.pub_reading_laserscan.publish(laserscan_one_message_data)
                 self.log_with_frontend("one frame of laserscan data published", "以发出laserscan data")
-                rospy.sleep(1)
+                logger.sleep(1)
         return True
-
-
 
 
 
@@ -320,8 +299,6 @@ class YdlidarChecker:
         laserScan_data_global = data
         return data
     
-    
-
 
 #-------------------------------------------------------------------------------------------------------
 
