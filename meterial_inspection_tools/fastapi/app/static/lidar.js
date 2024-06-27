@@ -191,13 +191,16 @@ function displayDataOnElement(options) {
     //TODO
     switch(topic) {
         case "/lidar/topic_data_laserscan": //TODO
+            console.log("data in '/lidar/topic_data_laserscan'")
             console.log(data)
             console.log(JSON.parse(data))
             console.log(JSON.parse(data)["lidar"])
             var lidarData = JSON.parse(data)["lidar"]
+            // TODO Test if rendering is able to handle update of data now that topic only has messages in 3 seconds interval
             render3dData(lidarData["angle_increment"], lidarData["ranges"], lidarData["intensities"])
             break
         case "/scan": //TODO
+            console.log("data in '/scan'")
             console.log(data)
             console.log(JSON.parse(data))
             console.log(JSON.parse(data)["lidar"])
