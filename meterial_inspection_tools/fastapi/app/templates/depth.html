@@ -27,9 +27,11 @@
     <h3 id="title"> August Robotics All-In-One hardware testing station </h3>
     <button id="homePageBtn" type="button" class="btn btn-page btn-default" onclick="location.href='/'">Home</button>
     <button id="imuPageBtn" component="imu" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">IMU</button>
-    <button id="inclinometerPageBtn" component="inclinometer" type="button" class="btn btn-page btn-default highlight" onclick="onClickComponentPageBtn(this)">Inclinometer</button>
+    <button id="inclinometerPageBtn" component="inclinometer" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">Inclinometer</button>
     <button id="cbPageBtn" component="cb" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">CB [Encoder & motor driver]</button>
     <button id="sonarPageBtn" component="sonar" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">Sonar</button>
+    <button id="depthPageBtn" component="depth" type="button" class="btn btn-page btn-default highlight" onclick="onClickComponentPageBtn(this)">Depth Camera</button>
+    <button id="lidarPageBtn" component="lidar" type="button" class="btn btn-page btn-default" onclick="onClickComponentPageBtn(this)">Lidar</button>
     <button id="switchLangBtn" type="button" class="btn btn-page btn-default" onclick="switch_lang()">中文</button>
     <hr />
   </div>
@@ -45,7 +47,8 @@
           <div id="responseData-configs" class="display-text-div english_element"></div>
           <div id="responseData-configs_chinese" class="display-text-div chinese_element"></div>
           <h4 id="dataHeader" class="display-content-header">Data</h4>
-          <div id="responseData-data" class="display-text-div"><!-- 3D model to be rendered here --></div>
+          
+          <div id="responseData-data" class="three-d-canvas"></div>
         </div>
         <!-- left-right-content -->
         <div class="left-right-content-container">

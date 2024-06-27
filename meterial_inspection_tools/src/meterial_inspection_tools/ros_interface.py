@@ -69,6 +69,7 @@ DEPTH_INFO_CHINESE = InterfaceWithType('/depth/info_chinese',stmsgs.String)
 DEPTH_SRV_CMD = InterfaceWithType('/depth/srv_cmd',GetButton)
 
 LIDAR_DATA_LASERSCAN = InterfaceWithType('/lidar/data_laserscan',ssmsgs.LaserScan)
+LIDAR_DATA_SCAN = InterfaceWithType('/scan',ssmsgs.LaserScan)
 #LIDAR_DATA_POINTCLOUD = InterfaceWithType('lidar/data_pointcloud',ssmsgs.PointCloud2)
 LIDAR_DATA_POINTCLOUD = InterfaceWithType('lidar/data_pointcloud',stmsgs.String)
 LIDAR_STATE = InterfaceWithType('lidar/state',stmsgs.String)
@@ -138,6 +139,7 @@ msg_dict = {
         "srv": LIDAR_SRV_CMD,
         "topic_data_laserscan": LIDAR_DATA_LASERSCAN,
         "topic_data_pointcloud": LIDAR_DATA_POINTCLOUD,
+        "scan": LIDAR_DATA_SCAN,
         "topic_data": LIDAR_DATA_POINTCLOUD, # for now its point cloud
         "topic_state": LIDAR_STATE,
         "topic_info": LIDAR_INFO,

@@ -100,6 +100,35 @@ function animate() { // whenever points change, animate is called
     renderer.render(scene, camera) // renderer will render a new scene & camera
 }
 
+function intensityToRGB(intensity) {
+    // rainbow scale
+    let r = 0, g = 0, b = 0;
+    
+    if (intensity <= 64) {
+        // Violet to Blue
+        r = Math.round(148 * (1 - intensity / 64));
+        g = 0;
+        b = Math.round(211 + (44 * (intensity / 64)));
+    } else if (intensity <= 128) {
+        // Blue to Green
+        r = 0;
+        g = Math.round(255 * ((intensity - 64) / 64));
+        b = Math.round(255 * (1 - (intensity - 64) / 64));
+    } else if (intensity <= 192) {
+        // Green to Yellow
+        r = Math.round(255 * ((intensity - 128) / 64));
+        g = 255;
+        b = 0;
+    } else {
+        // Yellow to Red
+        r = 255;
+        g = Math.round(255 * (1 - (intensity - 192) / 63));
+        b = 0;
+    }
+
+    return {r, g, b};
+}
+
 function convert_laserscan_to_vertices_and_colors(angle_increment, ranges, intensities) {
     var vertices = []
     var colors = []
@@ -114,7 +143,8 @@ function convert_laserscan_to_vertices_and_colors(angle_increment, ranges, inten
 
         // Colors
         // TODO: figure out if the lidar intensity values are really <255
-        const r = intensities[i] / 255, g = 1, b = 1
+        const { r, g, b } = intensityToRGB(intensities[i], 0, 255)
+        // const r = intensities[i] / 255, g = 1, b = 1
         colors.push(r,g,b)
     }
     console.log("Points configured") // TEST
@@ -122,6 +152,7 @@ function convert_laserscan_to_vertices_and_colors(angle_increment, ranges, inten
 }
 
 function render3dData(angle_increment, ranges, intensities) { // INIT function for rendering 3D model
+    
     // Retrieving data from evt
     console.log("Rendering 3D data,,,")
     const { vertices, colors } = convert_laserscan_to_vertices_and_colors(angle_increment, ranges, intensities)
@@ -151,6 +182,7 @@ const socketNameToElementId = {
     "/lidar/topic_data_pointcloud": "responseData-data",
     "/lidar/topic_info": "responseData-info",
     "/lidar/topic_info_chinese": "responseData-info_chinese",
+    "/lidar/scan": "",
     // "/lidar/topic_data_checker": "responseData-data_checker",
     // "/lidar/topic_configs": "responseData-configs",
     // "/lidar/topic_configs_chinese": "responseData-configs_chinese",
@@ -185,32 +217,27 @@ function displayDataOnElement(options) {
     const {topic, data, ele} = options
     const compData = retrieveComponentData("lidar", data)
     const {dataEle, dataVal} = formatLidarDisplayData(compData)
-    console.log("data is sent")
     console.log(topic)
 
     //TODO
     switch(topic) {
         case "/lidar/topic_data_laserscan": //TODO
-            console.log("data in '/lidar/topic_data_laserscan'")
-            console.log(data)
-            console.log(JSON.parse(data))
-            console.log(JSON.parse(data)["lidar"])
-            var lidarData = JSON.parse(data)["lidar"]
-            // TODO Test if rendering is able to handle update of data now that topic only has messages in 3 seconds interval
-            render3dData(lidarData["angle_increment"], lidarData["ranges"], lidarData["intensities"])
-            break
-        case "/scan": //TODO
             console.log("data in '/scan'")
-            console.log(data)
-            console.log(JSON.parse(data))
-            console.log(JSON.parse(data)["lidar"])
             var lidarData = JSON.parse(data)["lidar"]
             render3dData(lidarData["angle_increment"], lidarData["ranges"], lidarData["intensities"])
             break
+        // case "/lidar/scan": //TODO: Check if there are alternative ways to re-render points to make it such that refresh rate of points is the same as rviz
+        //     console.log("data in '/scan'")
+        //     var lidarData = JSON.parse(data)["lidar"]
+        //     render3dData(lidarData["angle_increment"], lidarData["ranges"], lidarData["intensities"])
+        //     break
         case "/lidar/topic_configs":
             ele.replaceChildren(dataEle)
             break
         default:
+            if (ele == null) {
+                break
+            }
             ele.textContent = compData
     }
 }

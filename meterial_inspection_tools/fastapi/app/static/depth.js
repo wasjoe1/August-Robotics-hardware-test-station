@@ -30,27 +30,28 @@ var points = undefined
 const material = new THREE.PointsMaterial( {size: 0.1, vertexColors: true} )
 const scene = new THREE.Scene()
 const gridHelper = new THREE.GridHelper()
-gridHelper.position.y = -0.5
+gridHelper.rotation.x = Math.PI / 2; // Rotate 90 degrees around the X-axis, places the grid on the XY plane
 scene.add(gridHelper)
 
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100)
+const camera = new THREE.PerspectiveCamera(75, dataElement.clientWidth / dataElement.clientHeight, 0.1, 100) // const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100)
 camera.position.z = 2
 
 const renderer = new THREE.WebGLRenderer()
-renderer.setSize(window.innerWidth, window.innerHeight)
+renderer.setSize(dataElement.clientWidth, dataElement.clientHeight) // renderer.setSize(window.innerWidth, window.innerHeight)
 dataElement.appendChild(renderer.domElement)
-
-window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight
-    camera.updateProjectionMatrix()
-    renderer.setSize(window.innerWidth, window.innerHeight)
-})
 
 const info = document.createElement('div')
 info.style.cssText = 'position:absolute;bottom:10px;left:10px;color:white;font-family:monospace;font-size: 17px;filter: drop-shadow(1px 1px 1px #000000);'
 dataElement.appendChild(info)
 
 const controls = new OrbitControls(camera, renderer.domElement)
+
+window.addEventListener('resize', () => {
+    // camera.aspect = window.innerWidth / window.innerHeight
+    camera.aspect = dataElement.clientWidth / dataElement.clientHeight
+    camera.updateProjectionMatrix()
+    renderer.setSize(dataElement.clientWidth, dataElement.clientHeight)
+})
 
 function animate() {
     // everytime points change, animate is called
@@ -73,6 +74,9 @@ function pointCloud2ToVerticesAndColorsArray(pointCloud2Data) {
     console.log("configuring points...") // TEST
     var vertices = [] // ~200k points
     var colors = []
+    console.log("TEST")
+    console.log(pointCloud2Data.coords) // TEST
+    console.log(pointCloud2Data["coords"]) // TEST
     for (let i = 0; i < pointCloud2Data.coords.length; i++) {
         var point = pointCloud2Data.coords[i]
         var color = pointCloud2Data.colors[i]
@@ -114,11 +118,11 @@ function render3dData() { // INIT function for rendering 3D model
 const socketNameToElementId = {
     "/depth/topic_state": "responseData-state",
     "/depth/topic_data": "responseData-data",
-    "/depth/topic_data_checker": "responseData-data_checker",
     "/depth/topic_info": "responseData-info",
     "/depth/topic_info_chinese": "responseData-info_chinese",
-    "/depth/topic_configs": "responseData-configs",
-    "/depth/topic_configs_chinese": "responseData-configs_chinese",
+    // "/depth/topic_data_checker": "responseData-data_checker",
+    // "/depth/topic_configs": "responseData-configs",
+    // "/depth/topic_configs_chinese": "responseData-configs_chinese",
 }
 
 function formatDepthDisplayData(data) {
@@ -150,14 +154,17 @@ function formatDepthDisplayData(data) {
 
 function displayDataOnElement(options) {
     const {topic, data, ele} = options // use object destructuring
-    const compData = retrieveComponentData(current_step, data)
+    const compData = retrieveComponentData("depth", data)
     const {dataEle, dataVal} = formatDepthDisplayData(compData)
+    console.log("incoming data...")
+    console.log(topic)
 
     //TODO
     switch(topic) {
         case "/depth/topic_data": //TODO
             // Update gData whenever new data is sent
-            gData = compData
+            console.log("Data at '/depth/topic_data'")
+            gData = dataVal // returns coords
             break
         case "/depth/topic_configs_chinese":
         case "/depth/topic_configs":
