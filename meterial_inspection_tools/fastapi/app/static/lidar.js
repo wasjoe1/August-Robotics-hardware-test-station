@@ -45,7 +45,6 @@ async function onClickCommandBtn(element) {
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
 // 3D Rendering
-
 // document // document.body.appendChild(renderer.domElement)
 //     -> info
 //     -> controls // const controls = new OrbitControls(camera, renderer.domElement)
@@ -67,14 +66,18 @@ const gridHelper = new THREE.GridHelper()
 gridHelper.rotation.x = Math.PI / 2; // Rotate 90 degrees around the X-axis, places the grid on the XY plane
 scene.add(gridHelper)
 
-// const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100)
-const camera = new THREE.PerspectiveCamera(75, dataElement.clientWidth / dataElement.clientHeight, 0.1, 100)
+const camera = new THREE.PerspectiveCamera(75, dataElement.clientWidth / dataElement.clientHeight, 0.1, 100) // const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100)
 camera.position.z = 2
 
 const renderer = new THREE.WebGLRenderer()
-// renderer.setSize(window.innerWidth, window.innerHeight)
-renderer.setSize(dataElement.clientWidth, dataElement.clientHeight)
+renderer.setSize(dataElement.clientWidth, dataElement.clientHeight) // renderer.setSize(window.innerWidth, window.innerHeight)
 dataElement.appendChild(renderer.domElement)
+
+const info = document.createElement('div')
+info.style.cssText = 'position:absolute;bottom:10px;left:10px;color:white;font-family:monospace;font-size: 17px;filter: drop-shadow(1px 1px 1px #000000);'
+dataElement.appendChild(info)
+
+const controls = new OrbitControls(camera, renderer.domElement)
 
 window.addEventListener('resize', () => {
     // camera.aspect = window.innerWidth / window.innerHeight
@@ -85,32 +88,22 @@ window.addEventListener('resize', () => {
     renderer.setSize(dataElement.clientWidth, dataElement.clientHeight)
 })
 
-const info = document.createElement('div')
-info.style.cssText = 'position:absolute;bottom:10px;left:10px;color:white;font-family:monospace;font-size: 17px;filter: drop-shadow(1px 1px 1px #000000);'
-dataElement.appendChild(info)
-
-const controls = new OrbitControls(camera, renderer.domElement)
-
-function animate() {
-    // everytime points change, animate is called
+function animate() { // whenever points change, animate is called
     requestAnimationFrame(animate)
-
     controls.update()
-
     info.innerText =
             'Polar Angle : ' +
             ((controls.getPolarAngle() / -Math.PI) * 180 + 90).toFixed(2) +
             '°\nAzimuth Angle : ' +
             ((controls.getAzimuthalAngle() / Math.PI) * 180).toFixed(2) +
             '°'
-
     renderer.render(scene, camera) // renderer will render a new scene & camera
 }
 
 function convert_laserscan_to_vertices_and_colors(angle_increment, ranges, intensities) {
     var vertices = []
     var colors = []
-    console.log("configuring points...") // TEST
+    console.log("Configuring points...") // TEST
     var start_ang = 0
     console.log(ranges) // TEST
     console.log(angle_increment) // TEST
@@ -124,14 +117,13 @@ function convert_laserscan_to_vertices_and_colors(angle_increment, ranges, inten
         const r = intensities[i] / 255, g = 1, b = 1
         colors.push(r,g,b)
     }
-    console.log("points configured") // TEST
+    console.log("Points configured") // TEST
     return { vertices: vertices, colors: colors }
 }
 
 function render3dData(angle_increment, ranges, intensities) { // INIT function for rendering 3D model
     // Retrieving data from evt
-    console.log("Render data is called")
-    console.log("getting data from /depth/data ...") // TEST
+    console.log("Rendering 3D data,,,")
     const { vertices, colors } = convert_laserscan_to_vertices_and_colors(angle_increment, ranges, intensities)
     
     console.log("Rendering points...") // TEST
@@ -205,6 +197,13 @@ function displayDataOnElement(options) {
             var lidarData = JSON.parse(data)["lidar"]
             render3dData(lidarData["angle_increment"], lidarData["ranges"], lidarData["intensities"])
             break
+        case "/scan": //TODO
+            console.log(data)
+            console.log(JSON.parse(data))
+            console.log(JSON.parse(data)["lidar"])
+            var lidarData = JSON.parse(data)["lidar"]
+            render3dData(lidarData["angle_increment"], lidarData["ranges"], lidarData["intensities"])
+            break
         case "/lidar/topic_configs":
             ele.replaceChildren(dataEle)
             break
@@ -235,8 +234,8 @@ window.addEventListener('load', async function() {
         // open websockets
         openWebsockets(socketNameToElementId, onMessageFunc)
 
-        // call data in intervals
-        setInterval(() => onClickCommandBtn("lidar"), 3000)
+        // // call data in intervals
+        // setInterval(() => onClickCommandBtn("lidar"), 3000) => this executes a srv call to push frames of data into "/lidar/topic_data_laserscan" topic
 
         console.log("init-ed lidar")
     } catch (e) {

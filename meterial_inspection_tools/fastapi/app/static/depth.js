@@ -8,12 +8,22 @@ import { setCurrentStepAndLang, executeSrvCall, formatSrvCallData, retrieveCompo
 // ip_addr
 // current_step
 // regex
-var cur_lang = 0
+
+// ------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
+// Functions
+// Defined in index.js:
+// function parseStringToInt(str)
+// function redirectToPage(page)
+// function formatSrvCallData(component, data)
+// function executeSrvCall(formattedData)
+// function create_ws(ip_addr, topic,  elementId, onMessageFunc) => onMessageFunc(evt, topic, elementId) is executed as such
+// function retrieveComponentData(component, data)
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
 // 3D Rendering
-var count = 0
+var gData = undefined
 const dataElement = document.getElementById("responseData-data")
 var geometry = undefined
 var points = undefined
@@ -76,11 +86,11 @@ function pointCloud2ToVerticesAndColorsArray(pointCloud2Data) {
     return { vertices: vertices, colors: colors }
 }
 
-function render3dData(data) { // INIT function for rendering 3D model
+function render3dData() { // INIT function for rendering 3D model
     // Retrieving data from evt
     console.log("Render data is called")
     console.log("getting data from /depth/data ...") // TEST
-    var pointCloud2Data = data
+    var pointCloud2Data = gData
     const { vertices, colors } = pointCloud2ToVerticesAndColorsArray(pointCloud2Data)
     
     console.log("Rendering points...") // TEST
@@ -97,17 +107,6 @@ function render3dData(data) { // INIT function for rendering 3D model
     animate() // everytime points change, animate is called
     console.log("points rendered") // TEST
 }
-
-// ------------------------------------------------------------------------------------------------
-// ------------------------------------------------------------------------------------------------
-// Functions
-// Defined in index.js:
-// function parseStringToInt(str)
-// function redirectToPage(page)
-// function formatSrvCallData(component, data)
-// function executeSrvCall(formattedData)
-// function create_ws(ip_addr, topic,  elementId, onMessageFunc) => onMessageFunc(evt, topic, elementId) is executed as such
-// function retrieveComponentData(component, data)
 
 // ------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------
@@ -157,11 +156,8 @@ function displayDataOnElement(options) {
     //TODO
     switch(topic) {
         case "/depth/topic_data": //TODO
-            if (count==0) {
-                // first time start async funtion, render data is renewed every 3 secs
-                setInterval(() => render3dData(compData), 3000); // TODO what if data[0] is being replaced when startRenderData is called concurrently??
-                count++
-            }
+            // Update gData whenever new data is sent
+            gData = compData
             break
         case "/depth/topic_configs_chinese":
         case "/depth/topic_configs":
@@ -193,6 +189,9 @@ window.addEventListener('load', async function() {
 
         // open websockets
         openWebsockets(socketNameToElementId, onMessageFunc)
+
+        // execute render every 3 secs
+        setInterval(() => { if (gData) {render3dData()} }, 3000); // TODO what if data[0] is being replaced when startRenderData is called concurrently??
 
         console.log("init-ed depth camera")
     } catch (e) {
